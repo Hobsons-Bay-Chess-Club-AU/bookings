@@ -3,6 +3,9 @@ import { getCurrentUser } from '@/lib/utils/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Booking, Event } from '@/lib/types/database'
+import AddToCalendar from '@/components/calendar/add-to-calendar'
+import { CalendarEvent } from '@/lib/utils/calendar'
+import HtmlContent from '@/components/ui/html-content'
 
 async function getBookingFromSession(sessionId: string): Promise<(Booking & { event: Event }) | null> {
     const supabase = await createClient()
@@ -49,7 +52,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                         <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
                             Booking Not Found
                         </h2>
-                        <p className="mt-2 text-sm text-gray-600">
+                        <p className="mt-2 text-sm text-gray-800">
                             We couldn't find your booking. Please check your email for confirmation.
                         </p>
                     </div>
@@ -62,6 +65,15 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                 </div>
             </div>
         )
+    }
+
+    // Prepare calendar event data
+    const calendarEvent: CalendarEvent = {
+        title: booking.event.title,
+        description: `${booking.event.description || ''}\n\nBooking ID: ${booking.id}\nTickets: ${booking.quantity}`,
+        location: booking.event.location,
+        startDate: new Date(booking.event.start_date),
+        endDate: new Date(booking.event.end_date)
     }
 
     return (
@@ -88,7 +100,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">
                             Booking Confirmed!
                         </h1>
-                        <p className="text-lg text-gray-600">
+                        <p className="text-lg text-gray-800">
                             Your payment was successful and your booking is confirmed.
                         </p>
                     </div>
@@ -107,7 +119,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                                             {booking.event.title}
                                         </h3>
                                     </div>
-                                    <div className="flex items-center text-sm text-gray-600">
+                                    <div className="flex items-center text-sm text-gray-800">
                                         <span className="mr-2">📅</span>
                                         <span>
                                             {new Date(booking.event.start_date).toLocaleDateString('en-US', {
@@ -118,7 +130,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                                             })}
                                         </span>
                                     </div>
-                                    <div className="flex items-center text-sm text-gray-600">
+                                    <div className="flex items-center text-sm text-gray-800">
                                         <span className="mr-2">🕒</span>
                                         <span>
                                             {new Date(booking.event.start_date).toLocaleTimeString([], {
@@ -130,7 +142,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                                             })}
                                         </span>
                                     </div>
-                                    <div className="flex items-center text-sm text-gray-600">
+                                    <div className="flex items-center text-sm text-gray-800">
                                         <span className="mr-2">📍</span>
                                         <span>{booking.event.location}</span>
                                     </div>
@@ -142,27 +154,27 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
                                     Booking Summary
                                 </h2>
-                                <div className="space-y-3">
+                                <div className="space-y-3 text-gray-800">
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600">Booking ID:</span>
+                                        <span className="text-gray-800">Booking ID:</span>
                                         <span className="font-mono text-sm">{booking.id.slice(0, 8)}...</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600">Tickets:</span>
+                                        <span className="text-gray-800">Tickets:</span>
                                         <span>{booking.quantity}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600">Price per ticket:</span>
-                                        <span>${booking.event.price.toFixed(2)}</span>
+                                        <span className="text-gray-800">Price per ticket:</span>
+                                        <span>$AUD {booking.event.price.toFixed(2)}</span>
                                     </div>
                                     <div className="border-t pt-3">
-                                        <div className="flex justify-between font-semibold">
+                                        <div className="flex justify-between font-semibold text-gray-800">
                                             <span>Total Paid:</span>
-                                            <span>${booking.total_amount.toFixed(2)}</span>
+                                            <span>$AUD {booking.total_amount.toFixed(2)}</span>
                                         </div>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600">Status:</span>
+                                        <span className="text-gray-800">Status:</span>
                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                             ✓ Confirmed
                                         </span>
@@ -171,10 +183,21 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                             </div>
                         </div>
 
+                        {/* Calendar Integration */}
+                        <div className="mt-8 p-4 bg-purple-50 rounded-lg">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-medium text-purple-900">Add to Your Calendar</h3>
+                                <AddToCalendar event={calendarEvent} />
+                            </div>
+                            <p className="text-sm text-purple-800">
+                                Don't miss your event! Add it to your calendar to get reminders.
+                            </p>
+                        </div>
+
                         {/* Next Steps */}
-                        <div className="mt-8 p-4 bg-blue-50 rounded-lg">
+                        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
                             <h3 className="font-medium text-blue-900 mb-2">What's Next?</h3>
-                            <ul className="text-sm text-blue-800 space-y-1">
+                            <ul className="text-sm text-blue-900 space-y-1">
                                 <li>• You'll receive a confirmation email shortly</li>
                                 <li>• Save this page or take a screenshot for your records</li>
                                 <li>• Arrive at the venue 15 minutes before the event starts</li>

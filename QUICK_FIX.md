@@ -1,4 +1,39 @@
-# Quick Fix for "Profiles Table Does Not Exist" Error
+# Quick Fixes for Common Database Issues
+
+## Quick Fix for "Duplicate Key Value Violates Unique Constraint" Error
+
+If you're getting this error when a user tries to book an event they've already booked:
+```
+ERROR: duplicate key value violates unique constraint "bookings_event_id_user_id_key"
+DETAIL: Key (event_id, user_id)=(some-uuid, some-uuid) already exists.
+```
+
+### Immediate Solution (1 minute)
+
+1. Go to your **Supabase Dashboard**
+2. Click on **SQL Editor**
+3. Create a **New Query**
+4. Paste this SQL command:
+   ```sql
+   -- Remove the unique constraint to allow multiple bookings
+   ALTER TABLE bookings DROP CONSTRAINT IF EXISTS bookings_event_id_user_id_key;
+   ```
+5. Click **"Run"**
+6. You should see "Success. No rows returned" message
+
+### Verify It Worked
+Run this query in the SQL Editor:
+```sql
+-- This should return no rows if the constraint was successfully removed
+SELECT constraint_name
+FROM information_schema.table_constraints
+WHERE table_name = 'bookings'
+AND constraint_name = 'bookings_event_id_user_id_key';
+```
+
+If no rows are returned, the constraint has been successfully removed and users can now book the same event multiple times.
+
+## Quick Fix for "Profiles Table Does Not Exist" Error
 
 If you're getting this error during signup:
 ```

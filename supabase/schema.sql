@@ -3,8 +3,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Create custom types
 CREATE TYPE user_role AS ENUM ('user', 'admin', 'organizer');
-CREATE TYPE booking_status AS ENUM ('pending', 'confirmed', 'cancelled', 'refunded');
-CREATE TYPE event_status AS ENUM ('draft', 'published', 'cancelled', 'completed');
+CREATE TYPE booking_status AS ENUM ('pending', 'confirmed', 'cancelled', 'refunded', 'verified');
+CREATE TYPE event_status AS ENUM ('draft', 'published', 'cancelled', 'completed', 'entry_closed');
 
 -- Create profiles table to extend auth.users
 CREATE TABLE profiles (
@@ -30,6 +30,7 @@ CREATE TABLE events (
   max_attendees INTEGER,
   current_attendees INTEGER DEFAULT 0,
   status event_status DEFAULT 'draft',
+  entry_close_date TIMESTAMP WITH TIME ZONE,
   organizer_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -47,8 +48,8 @@ CREATE TABLE bookings (
   stripe_session_id TEXT,
   booking_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(event_id, user_id)
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  -- Removed UNIQUE(event_id, user_id) constraint to allow multiple bookings for the same event by the same user
 );
 
 -- Create indexes for better performance
@@ -82,21 +83,21 @@ CREATE TRIGGER update_bookings_updated_at BEFORE UPDATE ON bookings
 CREATE OR REPLACE FUNCTION update_event_attendees()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF TG_OP = 'INSERT' AND NEW.status = 'confirmed' THEN
+  IF TG_OP = 'INSERT' AND (NEW.status = 'confirmed' OR NEW.status = 'verified') THEN
     UPDATE events 
     SET current_attendees = current_attendees + NEW.quantity
     WHERE id = NEW.event_id;
   ELSIF TG_OP = 'UPDATE' THEN
-    IF OLD.status != 'confirmed' AND NEW.status = 'confirmed' THEN
+    IF (OLD.status != 'confirmed' AND OLD.status != 'verified') AND (NEW.status = 'confirmed' OR NEW.status = 'verified') THEN
       UPDATE events 
       SET current_attendees = current_attendees + NEW.quantity
       WHERE id = NEW.event_id;
-    ELSIF OLD.status = 'confirmed' AND NEW.status != 'confirmed' THEN
+    ELSIF (OLD.status = 'confirmed' OR OLD.status = 'verified') AND (NEW.status != 'confirmed' AND NEW.status != 'verified') THEN
       UPDATE events 
       SET current_attendees = current_attendees - OLD.quantity
       WHERE id = NEW.event_id;
     END IF;
-  ELSIF TG_OP = 'DELETE' AND OLD.status = 'confirmed' THEN
+  ELSIF TG_OP = 'DELETE' AND (OLD.status = 'confirmed' OR OLD.status = 'verified') THEN
     UPDATE events 
     SET current_attendees = current_attendees - OLD.quantity
     WHERE id = OLD.event_id;
@@ -141,6 +142,16 @@ CREATE POLICY "Users can update their own profile" ON profiles
 -- Allow profile creation during signup
 CREATE POLICY "Users can insert their own profile" ON profiles
   FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Admin policies for profiles
+CREATE POLICY "Admins can view all profiles" ON profiles
+  FOR SELECT USING (get_user_role(auth.uid()) = 'admin');
+
+CREATE POLICY "Admins can update all profiles" ON profiles
+  FOR UPDATE USING (get_user_role(auth.uid()) = 'admin');
+
+CREATE POLICY "Admins can insert profiles" ON profiles
+  FOR INSERT WITH CHECK (get_user_role(auth.uid()) = 'admin');
 
 -- Events policies
 CREATE POLICY "Anyone can view published events" ON events

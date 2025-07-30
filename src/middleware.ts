@@ -40,7 +40,7 @@ export async function middleware(request: NextRequest) {
         // Protected routes that require authentication
         const protectedRoutes = ['/dashboard', '/profile', '/admin', '/organizer']
         const adminRoutes = ['/admin']
-        const organizerRoutes = ['/organizer', '/dashboard']
+        const organizerRoutes = ['/organizer']
 
         const isProtectedRoute = protectedRoutes.some(route =>
             request.nextUrl.pathname.startsWith(route)
@@ -58,7 +58,6 @@ export async function middleware(request: NextRequest) {
             redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
             return NextResponse.redirect(redirectUrl)
         }
-
         // Check role-based access
         if (user && (isAdminRoute || isOrganizerRoute)) {
             const { data: profile } = await supabase
@@ -70,7 +69,6 @@ export async function middleware(request: NextRequest) {
             if (isAdminRoute && profile?.role !== 'admin') {
                 return NextResponse.redirect(new URL('/unauthorized', request.url))
             }
-
             if (isOrganizerRoute && !['admin', 'organizer'].includes(profile?.role || '')) {
                 return NextResponse.redirect(new URL('/unauthorized', request.url))
             }
@@ -80,7 +78,7 @@ export async function middleware(request: NextRequest) {
         if (user && request.nextUrl.pathname.startsWith('/auth/')) {
             return NextResponse.redirect(new URL('/dashboard', request.url))
         }
-
+        // console.log('Middleware processed successfully')
         return supabaseResponse
     } catch (error) {
         console.error('Middleware error:', error)

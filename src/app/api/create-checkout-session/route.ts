@@ -19,10 +19,13 @@ export async function POST(request: NextRequest) {
 
         const supabase = await createClient()
 
-        // Verify the booking exists and is pending
+        // Verify the booking exists and is pending, and get user info
         const { data: booking, error: bookingError } = await supabase
             .from('bookings')
-            .select('*')
+            .select(`
+                *,
+                user:profiles(email, full_name)
+            `)
             .eq('id', bookingId)
             .eq('status', 'pending')
             .single()
@@ -34,13 +37,36 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        // Get user email for prefilling
+        const userEmail = booking.user?.email
+
+        // Fetch the event to check its status and availability
+        const { data: event, error: eventError } = await supabase
+            .from('events')
+            .select('id, status, max_attendees, current_attendees, entry_close_date')
+            .eq('id', eventId)
+            .single()
+
+        if (eventError || !event) {
+            return NextResponse.json({ error: 'Event not found' }, { status: 400 })
+        }
+        if (event.status !== 'published' || event.status === 'entry_closed') {
+            return NextResponse.json({ error: 'This event is not open for booking.' }, { status: 400 })
+        }
+        if (event.max_attendees != null && event.current_attendees >= event.max_attendees) {
+            return NextResponse.json({ error: 'This event is sold out.' }, { status: 400 })
+        }
+        if (event.entry_close_date && new Date(event.entry_close_date) < new Date()) {
+            return NextResponse.json({ error: 'Entries for this event are now closed (entry close date has passed).' }, { status: 400 })
+        }
+
         // Create Stripe checkout session
-        const session = await stripe.checkout.sessions.create({
+        const sessionConfig: Stripe.Checkout.SessionCreateParams = {
             payment_method_types: ['card'],
             line_items: [
                 {
                     price_data: {
-                        currency: 'usd',
+                        currency: 'aud',
                         product_data: {
                             name: eventTitle,
                             description: `${quantity} ticket${quantity > 1 ? 's' : ''}`,
@@ -57,17 +83,74 @@ export async function POST(request: NextRequest) {
                 bookingId: bookingId,
                 eventId: eventId,
             },
-        })
+        }
 
-        // Update booking with Stripe session ID
+        // Prefill customer email if available
+        if (userEmail) {
+            sessionConfig.customer_email = userEmail
+        }
+
+        // Collect customer details for better UX
+        sessionConfig.billing_address_collection = 'auto'
+        sessionConfig.phone_number_collection = {
+            enabled: false  // Made optional as requested
+        }
+
+        const session = await stripe.checkout.sessions.create(sessionConfig)
+        console.log('Initial session created:', session.id, 'payment_intent:', session.payment_intent)
+
+        // Try to get payment intent from initial session first
+        let paymentIntentId = session.payment_intent as string | null
+
+        // If not available, retrieve the session with expanded details
+        if (!paymentIntentId) {
+            try {
+                const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+                    expand: ['payment_intent']
+                })
+                console.log('Retrieved full session:', {
+                    id: fullSession.id,
+                    payment_intent: fullSession.payment_intent,
+                    payment_status: fullSession.payment_status
+                })
+
+                if (fullSession.payment_intent && typeof fullSession.payment_intent !== 'string') {
+                    paymentIntentId = fullSession.payment_intent.id
+                } else if (typeof fullSession.payment_intent === 'string') {
+                    paymentIntentId = fullSession.payment_intent
+                }
+            } catch (retrieveError) {
+                console.error('Error retrieving full session:', retrieveError)
+            }
+        }
+
+        // Update booking with Stripe session ID and payment intent ID (if available)
+        const updateData: any = { stripe_session_id: session.id }
+        
+        if (paymentIntentId) {
+            updateData.stripe_payment_intent_id = paymentIntentId
+            console.log('Will store payment intent ID:', paymentIntentId)
+        } else {
+            console.log('No payment intent ID available yet - will be updated via webhooks')
+        }
+
         const { error: updateError } = await supabase
             .from('bookings')
-            .update({ stripe_session_id: session.id })
+            .update(updateData)
             .eq('id', bookingId)
 
         if (updateError) {
-            console.error('Error updating booking with session ID:', updateError)
+            console.error('Error updating booking with session info:', updateError)
+        } else {
+            console.log('Successfully updated booking with:', updateData)
         }
+
+        console.log('Final checkout session result:', {
+            sessionId: session.id,
+            paymentIntentId: paymentIntentId,
+            bookingId,
+            hasPaymentIntent: !!paymentIntentId
+        })
 
         return NextResponse.json({ sessionId: session.id })
     } catch (error) {

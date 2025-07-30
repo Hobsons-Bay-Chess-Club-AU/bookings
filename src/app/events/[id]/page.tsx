@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import BookingForm from '@/components/events/booking-form'
 import { Event, Booking } from '@/lib/types/database'
+import MarkdownContent from '@/components/ui/html-content'
 
 async function getEvent(id: string): Promise<Event | null> {
     const supabase = await createClient()
@@ -58,6 +59,7 @@ export default async function EventPage({ params }: EventPageProps) {
     const userBooking = user ? await getUserBooking(event.id, user.id) : null
     const isEventFull = event.max_attendees ? event.current_attendees >= event.max_attendees : false
     const isEventPast = new Date(event.start_date) < new Date()
+    const isBookable = event.status === 'published' && !isEventFull && !isEventPast && event.status !== 'entry_closed'
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -150,7 +152,7 @@ export default async function EventPage({ params }: EventPageProps) {
                                     <div className="flex items-center">
                                         <span className="text-gray-400 mr-3">💰</span>
                                         <p className="text-2xl font-bold text-gray-900">
-                                            ${event.price.toFixed(2)}
+                                            $AUD {event.price.toFixed(2)}
                                         </p>
                                     </div>
                                 </div>
@@ -161,9 +163,10 @@ export default async function EventPage({ params }: EventPageProps) {
                                     <h3 className="text-lg font-medium text-gray-900 mb-3">
                                         About this event
                                     </h3>
-                                    <p className="text-gray-700 whitespace-pre-wrap">
-                                        {event.description}
-                                    </p>
+                                    <MarkdownContent 
+                                        content={event.description}
+                                        className="text-gray-700"
+                                    />
                                 </div>
                             )}
 
@@ -208,36 +211,65 @@ export default async function EventPage({ params }: EventPageProps) {
                                     </div>
                                 </div>
                             ) : userBooking ? (
-                                <div className="text-center">
-                                    <div className="mb-4">
-                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${userBooking.status === 'confirmed'
-                                                ? 'bg-green-100 text-green-800'
-                                                : userBooking.status === 'pending'
-                                                    ? 'bg-yellow-100 text-yellow-800'
-                                                    : 'bg-red-100 text-red-800'
-                                            }`}>
-                                            {userBooking.status === 'confirmed' ? '✓ Confirmed' :
-                                                userBooking.status === 'pending' ? '⏳ Pending' :
-                                                    '❌ ' + userBooking.status}
-                                        </span>
+                                <div>
+                                    <div className="text-center mb-6">
+                                        <div className="mb-4">
+                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                                                userBooking.status === 'confirmed' || userBooking.status === 'verified'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : userBooking.status === 'pending'
+                                                        ? 'bg-yellow-100 text-yellow-800'
+                                                        : 'bg-red-100 text-red-800'
+                                                }`}>
+                                                {userBooking.status === 'confirmed' ? '✓ Confirmed' :
+                                                    userBooking.status === 'verified' ? '✅ Verified' :
+                                                    userBooking.status === 'pending' ? '⏳ Pending' :
+                                                        '❌ ' + userBooking.status}
+                                            </span>
+                                        </div>
+                                        <p className="text-gray-600 mb-2">
+                                            You have booked {userBooking.quantity} ticket{userBooking.quantity > 1 ? 's' : ''}
+                                        </p>
+                                        <p className="text-lg font-bold text-gray-900">
+                                            Total: ${userBooking.total_amount.toFixed(2)}
+                                        </p>
+                                        <p className="text-sm text-gray-500 mt-2">
+                                            Booked on {new Date(userBooking.booking_date).toLocaleDateString()}
+                                        </p>
                                     </div>
-                                    <p className="text-gray-600 mb-2">
-                                        You have booked {userBooking.quantity} ticket{userBooking.quantity > 1 ? 's' : ''}
-                                    </p>
-                                    <p className="text-lg font-bold text-gray-900">
-                                        Total: ${userBooking.total_amount.toFixed(2)}
-                                    </p>
-                                    <p className="text-sm text-gray-500 mt-2">
-                                        Booked on {new Date(userBooking.booking_date).toLocaleDateString()}
-                                    </p>
+                                    
+                                    <div className="border-t pt-6">
+                                        <h3 className="text-lg font-medium text-gray-900 mb-3 text-center">
+                                            Book Additional Tickets
+                                        </h3>
+                                        {!isBookable ? (
+                                            <div className="text-center py-8">
+                                                {event.status === 'entry_closed' ? (
+                                                    <p className="text-xl text-gray-800 font-semibold">Entries for this event are now closed by the organizer.</p>
+                                                ) : isEventFull ? (
+                                                    <p className="text-xl text-gray-800 font-semibold">This event is sold out.</p>
+                                                ) : isEventPast ? (
+                                                    <p className="text-xl text-gray-800 font-semibold">This event has already ended.</p>
+                                                ) : event.status !== 'published' ? (
+                                                    <p className="text-xl text-gray-800 font-semibold">This event is not open for booking.</p>
+                                                ) : null}
+                                            </div>
+                                        ) : (
+                                            <BookingForm event={event} user={profile!} />
+                                        )}
+                                    </div>
                                 </div>
-                            ) : isEventPast ? (
-                                <div className="text-center">
-                                    <p className="text-gray-600">This event has already ended.</p>
-                                </div>
-                            ) : isEventFull ? (
-                                <div className="text-center">
-                                    <p className="text-gray-600">This event is sold out.</p>
+                            ) : !isBookable ? (
+                                <div className="text-center py-8">
+                                    {event.status === 'entry_closed' ? (
+                                        <p className="text-xl text-gray-800 font-semibold">Entries for this event are now closed by the organizer.</p>
+                                    ) : isEventFull ? (
+                                        <p className="text-xl text-gray-800 font-semibold">This event is sold out.</p>
+                                    ) : isEventPast ? (
+                                        <p className="text-xl text-gray-800 font-semibold">This event has already ended.</p>
+                                    ) : event.status !== 'published' ? (
+                                        <p className="text-xl text-gray-800 font-semibold">This event is not open for booking.</p>
+                                    ) : null}
                                 </div>
                             ) : (
                                 <BookingForm event={event} user={profile!} />

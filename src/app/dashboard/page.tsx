@@ -94,6 +94,14 @@ export default async function DashboardPage() {
                                     Manage Events
                                 </Link>
                             )}
+                            {profile.role === 'admin' && (
+                                <Link
+                                    href="/admin/users"
+                                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                                >
+                                    Manage Users
+                                </Link>
+                            )}
                         </nav>
                     </div>
                 </div>
@@ -175,7 +183,7 @@ export default async function DashboardPage() {
                                         </dt>
                                         <dd className="text-lg font-medium text-gray-900">
                                             ${bookings
-                                                .filter(b => b.status === 'confirmed')
+                                                .filter(b => b.status === 'confirmed' || b.status === 'verified')
                                                 .reduce((sum, b) => sum + b.total_amount, 0)
                                                 .toFixed(2)}
                                         </dd>
@@ -242,7 +250,7 @@ export default async function DashboardPage() {
 
                                             <div className="mt-2 flex items-center justify-between">
                                                 <span className="text-lg font-bold text-gray-900">
-                                                    ${booking.total_amount.toFixed(2)}
+                                                    $AUD {booking.total_amount.toFixed(2)}
                                                 </span>
                                                 <span className="text-sm text-gray-500">
                                                     Booked on {new Date(booking.booking_date).toLocaleDateString()}
@@ -250,7 +258,13 @@ export default async function DashboardPage() {
                                             </div>
                                         </div>
 
-                                        <div className="ml-6 flex-shrink-0">
+                                        <div className="ml-6 flex-shrink-0 flex space-x-2">
+                                            <Link
+                                                href={`/booking/${booking.id}`}
+                                                className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                            >
+                                                View Details
+                                            </Link>
                                             <Link
                                                 href={`/events/${booking.event.id}`}
                                                 className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"

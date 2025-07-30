@@ -311,11 +311,49 @@ SELECT get_user_role(auth.uid());
 SELECT auth.uid();
 ```
 
+## Removing Booking Unique Constraint
+
+If you need to allow users to book the same event multiple times, you need to remove the unique constraint on the bookings table.
+
+### Option 1: Using the Migration Script
+
+Run the migration script in the SQL editor:
+
+```sql
+-- Migration to remove the unique constraint on bookings table
+-- This allows users to book the same event multiple times
+
+-- Drop the existing constraint
+ALTER TABLE bookings DROP CONSTRAINT IF EXISTS bookings_event_id_user_id_key;
+```
+
+### Option 2: Manual SQL
+
+Run this SQL command directly:
+
+```sql
+-- Remove the unique constraint to allow multiple bookings
+ALTER TABLE bookings DROP CONSTRAINT IF EXISTS bookings_event_id_user_id_key;
+```
+
+### Verification
+
+Verify the constraint was removed:
+
+```sql
+-- This should return no rows if the constraint was successfully removed
+SELECT constraint_name
+FROM information_schema.table_constraints
+WHERE table_name = 'bookings'
+AND constraint_name = 'bookings_event_id_user_id_key';
+```
+
 ## Common Issues After Migration
 
 1. **"Function does not exist" errors**: Make sure you ran the complete schema
 2. **"Permission denied" errors**: Check that RLS policies are properly created
 3. **"Infinite recursion" still occurs**: Make sure you dropped the old policies before creating new ones
+4. **"duplicate key value violates unique constraint"**: If you're getting this error when a user tries to book the same event multiple times, make sure you've removed the unique constraint on the bookings table
 
 ## Need Help?
 

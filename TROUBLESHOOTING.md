@@ -4,7 +4,37 @@ This guide covers common issues you might encounter when setting up and running 
 
 ## Database Issues
 
-### 1. Profiles Table Does Not Exist Error
+### 1. Duplicate Key Value Violates Unique Constraint
+
+**Error Message:**
+```
+ERROR: duplicate key value violates unique constraint "bookings_event_id_user_id_key"
+DETAIL: Key (event_id, user_id)=(some-uuid, some-uuid) already exists.
+```
+
+**Cause:**
+The bookings table has a unique constraint that prevents a user from booking the same event multiple times. This constraint is defined in the schema as `UNIQUE(event_id, user_id)`.
+
+**Solution:**
+
+1. **Remove the unique constraint** - Run this in Supabase SQL Editor:
+```sql
+-- Remove the unique constraint to allow multiple bookings
+ALTER TABLE bookings DROP CONSTRAINT IF EXISTS bookings_event_id_user_id_key;
+```
+
+2. **Verify the constraint was removed:**
+```sql
+-- This should return no rows if the constraint was successfully removed
+SELECT constraint_name
+FROM information_schema.table_constraints
+WHERE table_name = 'bookings'
+AND constraint_name = 'bookings_event_id_user_id_key';
+```
+
+3. **If you're setting up a new database**, make sure to use the updated schema files that don't include this constraint.
+
+### 2. Profiles Table Does Not Exist Error
 
 **Error Message:**
 ```

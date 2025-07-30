@@ -1,0 +1,285 @@
+import { createClient } from '@/lib/supabase/server'
+import { getCurrentProfile } from '@/lib/utils/auth'
+import { redirect, notFound } from 'next/navigation'
+import Link from 'next/link'
+import { Booking, Event } from '@/lib/types/database'
+import AddToCalendar from '@/components/calendar/add-to-calendar'
+import { CalendarEvent } from '@/lib/utils/calendar'
+import MarkdownContent from '@/components/ui/html-content'
+
+async function getBooking(bookingId: string, userId: string): Promise<(Booking & { event: Event }) | null> {
+    const supabase = await createClient()
+
+    const { data: booking, error } = await supabase
+        .from('bookings')
+        .select(`
+      *,
+      event:events(*)
+    `)
+        .eq('id', bookingId)
+        .eq('user_id', userId) // Ensure user can only view their own bookings
+        .single()
+
+    if (error || !booking) {
+        return null
+    }
+
+    return booking as Booking & { event: Event }
+}
+
+interface BookingDetailsPageProps {
+    params: Promise<{ id: string }>
+}
+
+export default async function BookingDetailsPage({ params }: BookingDetailsPageProps) {
+    const { id } = await params
+    const profile = await getCurrentProfile()
+
+    if (!profile) {
+        redirect('/auth/login')
+    }
+
+    const booking = await getBooking(id, profile.id)
+
+    if (!booking) {
+        notFound()
+    }
+
+    // Prepare calendar event data
+    const calendarEvent: CalendarEvent = {
+        title: booking.event.title,
+        description: `${booking.event.description || ''}\n\nBooking ID: ${booking.id}\nTickets: ${booking.quantity}`,
+        location: booking.event.location,
+        startDate: new Date(booking.event.start_date),
+        endDate: new Date(booking.event.end_date)
+    }
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'confirmed':
+                return 'bg-green-100 text-green-800'
+            case 'pending':
+                return 'bg-yellow-100 text-yellow-800'
+            case 'cancelled':
+                return 'bg-red-100 text-red-800'
+            case 'refunded':
+                return 'bg-gray-100 text-gray-800'
+            default:
+                return 'bg-gray-100 text-gray-800'
+        }
+    }
+
+    const getStatusIcon = (status: string) => {
+        switch (status) {
+            case 'confirmed':
+                return '✓'
+            case 'pending':
+                return '⏳'
+            case 'cancelled':
+                return '❌'
+            case 'refunded':
+                return '💰'
+            default:
+                return '❓'
+        }
+    }
+
+    // Fetch participants for the booking
+    const supabase = await createClient()
+    const { data: participants } = await supabase
+        .from('participants')
+        .select('*')
+        .eq('booking_id', booking.id)
+        .order('created_at', { ascending: true })
+
+    return (
+        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl mx-auto">
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                    {/* Header */}
+                    <div className="bg-indigo-50 px-6 py-8">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                                    Booking Details
+                                </h1>
+                                <p className="text-lg text-gray-800">
+                                    View your booking information and event details
+                                </p>
+                            </div>
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
+                                {getStatusIcon(booking.status)} {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Booking Details */}
+                    <div className="px-6 py-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Event Details */}
+                            <div>
+                                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                                    Event Details
+                                </h2>
+                                <div className="space-y-3">
+                                    <div>
+                                        <h3 className="font-medium text-gray-900">
+                                            {booking.event.title}
+                                        </h3>
+                                        {booking.event.description && (
+                                            <MarkdownContent 
+                                                content={booking.event.description}
+                                                className="text-sm text-gray-800 mt-1"
+                                            />
+                                        )}
+                                    </div>
+                                    <div className="flex items-center text-sm text-gray-800">
+                                        <span className="mr-2">📅</span>
+                                        <span>
+                                            {new Date(booking.event.start_date).toLocaleDateString('en-US', {
+                                                weekday: 'long',
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric'
+                                            })}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center text-sm text-gray-800">
+                                        <span className="mr-2">🕒</span>
+                                        <span>
+                                            {new Date(booking.event.start_date).toLocaleTimeString([], {
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })} - {new Date(booking.event.end_date).toLocaleTimeString([], {
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center text-sm text-gray-800">
+                                        <span className="mr-2">📍</span>
+                                        <span>{booking.event.location}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Booking Summary */}
+                            <div>
+                                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                                    Booking Summary
+                                </h2>
+                                <div className="space-y-3 text-gray-800">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-800">Booking ID:</span>
+                                        <span className="font-mono text-sm">{booking.id.slice(0, 8)}...</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-800">Tickets:</span>
+                                        <span>{booking.quantity}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-800">Price per ticket:</span>
+                                        <span>$AUD {booking.event.price.toFixed(2)}</span>
+                                    </div>
+                                    <div className="border-t pt-3">
+                                        <div className="flex justify-between font-semibold text-gray-800">
+                                            <span>Total Paid:</span>
+                                            <span>$AUD {booking.total_amount.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-800">Booking Date:</span>
+                                        <span className="text-sm">
+                                            {new Date(booking.booking_date || booking.created_at).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Participant Information */}
+                        {participants && participants.length > 0 && (
+                          <div className="mt-10">
+                            <h2 className="text-xl font-semibold text-gray-900 mb-4">Participant Information</h2>
+                            <div className="space-y-6">
+                              {participants.map((p, idx) => (
+                                <div key={p.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                  <div className="flex items-center mb-2">
+                                    <span className="font-semibold text-gray-800 mr-2">Participant {idx + 1}</span>
+                                    <span className="text-xs text-gray-500">(ID: {p.id.slice(0, 8)}...)</span>
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800">
+                                    <div><span className="font-medium">First Name:</span> {p.first_name}</div>
+                                    <div><span className="font-medium">Last Name:</span> {p.last_name}</div>
+                                    {p.date_of_birth && <div><span className="font-medium">Date of Birth:</span> {p.date_of_birth}</div>}
+                                    {p.contact_email && <div><span className="font-medium">Contact Email:</span> {p.contact_email}</div>}
+                                    {p.contact_phone && <div><span className="font-medium">Contact Phone:</span> {p.contact_phone}</div>}
+                                    {/* Custom fields */}
+                                    {p.custom_data && Object.entries(p.custom_data).map(([key, value]) => (
+                                      <div key={key}><span className="font-medium">{key.replace(/_/g, ' ')}:</span> {Array.isArray(value) ? value.join(', ') : String(value)}</div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Calendar Integration */}
+                        {booking.status === 'confirmed' && (
+                            <div className="mt-8 p-4 bg-purple-50 rounded-lg">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="font-medium text-purple-900">Add to Your Calendar</h3>
+                                    <AddToCalendar event={calendarEvent} />
+                                </div>
+                                <p className="text-sm text-purple-800">
+                                    Don't miss your event! Add it to your calendar to get reminders.
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Event Guidelines */}
+                        {booking.status === 'confirmed' && (
+                            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                                <h3 className="font-medium text-blue-900 mb-2">Event Guidelines</h3>
+                                <ul className="text-sm text-blue-900 space-y-1">
+                                    <li>• Arrive at the venue 15 minutes before the event starts</li>
+                                    <li>• Bring a valid ID for entry verification</li>
+                                    <li>• Keep this booking information handy for reference</li>
+                                    <li>• Contact support if you need to make changes</li>
+                                </ul>
+                            </div>
+                        )}
+
+                        {/* Pending Payment Notice */}
+                        {booking.status === 'pending' && (
+                            <div className="mt-8 p-4 bg-yellow-50 rounded-lg">
+                                <h3 className="font-medium text-yellow-900 mb-2">Payment Pending</h3>
+                                <p className="text-sm text-yellow-900">
+                                    Your booking is pending payment confirmation. If you've already paid, 
+                                    the status will update automatically once payment is processed.
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                            <Link
+                                href="/dashboard"
+                                className="flex-1 bg-indigo-600 border border-transparent rounded-md py-2 px-4 flex items-center justify-center text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            >
+                                Back to Dashboard
+                            </Link>
+                            <Link
+                                href={`/events/${booking.event.id}`}
+                                className="flex-1 bg-white border border-gray-300 rounded-md py-2 px-4 flex items-center justify-center text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            >
+                                View Event Page
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}

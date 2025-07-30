@@ -3,6 +3,7 @@ import { getCurrentUser } from '@/lib/utils/auth'
 import Link from 'next/link'
 import LogoutButton from '@/components/auth/logout-button'
 import { Event } from '@/lib/types/database'
+import MarkdownContent from '@/components/ui/html-content'
 
 async function getPublishedEvents(): Promise<Event[]> {
   try {
@@ -47,7 +48,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <h1 className="text-3xl font-bold text-gray-900">EventBooking</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Hobsons Bay Chess Club - Booking System</h1>
             </div>
             <nav className="flex items-center space-x-4">
               {user ? (
@@ -152,9 +153,10 @@ export default async function HomePage() {
                     <h3 className="text-lg font-medium text-gray-900">
                       {event.title}
                     </h3>
-                    <p className="mt-1 text-sm text-gray-500 line-clamp-3">
-                      {event.description}
-                    </p>
+                    <MarkdownContent 
+                      content={event.description || ''}
+                      className="mt-1 text-sm text-gray-500 line-clamp-3"
+                    />
                   </div>
                   <div className="mt-4">
                     <p className="text-sm text-gray-500">
@@ -162,7 +164,7 @@ export default async function HomePage() {
                     </p>
                     <div className="mt-2 flex items-center justify-between">
                       <p className="text-lg font-bold text-gray-900">
-                        ${event.price.toFixed(2)}
+                        $AUD {event.price.toFixed(2)}
                       </p>
                       <p className="text-sm text-gray-500">
                         {event.max_attendees ?

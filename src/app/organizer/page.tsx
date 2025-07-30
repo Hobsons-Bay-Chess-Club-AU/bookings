@@ -97,6 +97,12 @@ export default async function OrganizerPage() {
                                 Dashboard
                             </Link>
                             <Link
+                                href="/organizer/custom-fields"
+                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                            >
+                                Custom Fields
+                            </Link>
+                            <Link
                                 href="/organizer/events/new"
                                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
                             >
@@ -182,7 +188,7 @@ export default async function OrganizerPage() {
                                             Total Revenue
                                         </dt>
                                         <dd className="text-lg font-medium text-gray-900">
-                                            ${totalRevenue.toFixed(2)}
+                                            $AUD {totalRevenue.toFixed(2)}
                                         </dd>
                                     </dl>
                                 </div>
@@ -253,13 +259,13 @@ export default async function OrganizerPage() {
                                                 </div>
                                                 <div className="flex items-center">
                                                     <span className="mr-2">💰</span>
-                                                    <span>${event.revenue.toFixed(2)} revenue</span>
+                                                    <span>$AUD {event.revenue.toFixed(2)} revenue</span>
                                                 </div>
                                             </div>
 
                                             <div className="flex items-center justify-between">
                                                 <span className="text-lg font-bold text-gray-900">
-                                                    ${event.price.toFixed(2)} per ticket
+                                                    $AUD {event.price.toFixed(2)} per ticket
                                                 </span>
                                                 <span className="text-sm text-gray-500">
                                                     Created {new Date(event.created_at).toLocaleDateString()}
@@ -273,6 +279,12 @@ export default async function OrganizerPage() {
                                                 className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                                             >
                                                 View Bookings
+                                            </Link>
+                                            <Link
+                                                href={`/organizer/events/${event.id}/pricing`}
+                                                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                            >
+                                                Manage Pricing
                                             </Link>
                                             <Link
                                                 href={`/organizer/events/${event.id}/edit`}
