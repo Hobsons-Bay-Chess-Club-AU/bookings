@@ -225,4 +225,63 @@ export const WelcomeEmail: React.FC<WelcomeEmailProps> = ({
       </div>
     </div>
   </div>
+)
+
+interface PasswordResetEmailProps {
+  userName: string
+  resetUrl: string
+}
+
+export const PasswordResetEmail: React.FC<PasswordResetEmailProps> = ({
+  userName,
+  resetUrl
+}) => (
+  <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ backgroundColor: '#f8f9fa', padding: '20px', textAlign: 'center' }}>
+      <h1 style={{ color: '#2d3748', margin: '0' }}>Reset Your Password</h1>
+    </div>
+    
+    <div style={{ padding: '20px' }}>
+      <h2 style={{ color: '#2d3748' }}>Hi {userName},</h2>
+      
+      <p>We received a request to reset your password for your HBCC Bookings account.</p>
+      
+      <div style={{ backgroundColor: '#f7fafc', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
+        <p style={{ margin: '0' }}>
+          Click the button below to reset your password. This link will expire in 1 hour for security reasons.
+        </p>
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: '30px' }}>
+        <a 
+          href={resetUrl}
+          style={{
+            backgroundColor: '#4299e1',
+            color: 'white',
+            padding: '12px 24px',
+            textDecoration: 'none',
+            borderRadius: '6px',
+            display: 'inline-block'
+          }}
+        >
+          Reset Password
+        </a>
+      </div>
+
+      <div style={{ backgroundColor: '#fff5f5', padding: '15px', borderRadius: '8px', marginTop: '20px' }}>
+        <h3 style={{ color: '#2d3748', marginTop: '0' }}>Security Notice</h3>
+        <ul style={{ margin: '0', paddingLeft: '20px', color: '#718096' }}>
+          <li>This link will expire in 1 hour</li>
+          <li>If you didn't request this reset, you can safely ignore this email</li>
+          <li>Your password will not be changed until you click the link above</li>
+        </ul>
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: '30px' }}>
+        <p style={{ color: '#718096', fontSize: '14px' }}>
+          If you have any questions, please contact our support team.
+        </p>
+      </div>
+    </div>
+  </div>
 ) 

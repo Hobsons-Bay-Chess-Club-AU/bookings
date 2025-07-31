@@ -231,7 +231,7 @@ export default async function DashboardPage() {
                                                 </span>
                                             </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
                                                 <div className="flex items-center">
                                                     <span className="mr-2">📅</span>
                                                     <span>
@@ -246,6 +246,10 @@ export default async function DashboardPage() {
                                                     <span className="mr-2">🎫</span>
                                                     <span>{booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}</span>
                                                 </div>
+                                                <div className="flex items-center">
+                                                    <span className="mr-2">🆔</span>
+                                                    <span className="font-mono text-xs">{booking.booking_id || booking.id.slice(0, 8)}</span>
+                                                </div>
                                             </div>
 
                                             <div className="mt-2 flex items-center justify-between">
@@ -253,17 +257,14 @@ export default async function DashboardPage() {
                                                     $AUD {booking.total_amount.toFixed(2)}
                                                 </span>
                                                 <span className="text-sm text-gray-500">
-                                                    Booked on {new Date(booking.booking_date).toLocaleDateString()} at {new Date(booking.booking_date).toLocaleTimeString([], {
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    })}
+                                                    Booked on {new Date(booking.booking_date).toLocaleDateString()}
                                                 </span>
                                             </div>
                                         </div>
 
                                         <div className="ml-6 flex-shrink-0 flex space-x-2">
                                             <Link
-                                                href={`/booking/${booking.id}`}
+                                                href={`/booking/${booking.booking_id || booking.id}`}
                                                 className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                             >
                                                 View Details

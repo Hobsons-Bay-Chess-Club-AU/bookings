@@ -1,9 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { Event } from '@/lib/types/database'
-import MarkdownContent from '@/components/ui/html-content'
-import CopyButton from '@/components/ui/copy-button'
 import Header from '@/components/layout/header'
-import Link from 'next/link'
+import EventCard from '@/components/events/EventCard'
 
 async function getPublishedEvents(): Promise<Event[]> {
   try {
@@ -77,82 +75,7 @@ export default async function HomePage() {
         ) : (
           <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {events.map((event) => (
-              <div key={event.id} className="bg-white overflow-hidden shadow rounded-lg">
-                {event.image_url && (
-                  <div className="h-48 bg-gray-200">
-                    <img
-                      className="h-full w-full object-cover"
-                      src={event.image_url}
-                      alt={event.title}
-                    />
-                  </div>
-                )}
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <p className="text-sm font-medium text-indigo-600">
-                          {new Date(event.start_date).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="ml-4">
-                        <p className="text-sm text-gray-500">
-                          {new Date(event.start_date).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                    {event.status === 'entry_closed' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                        Entry Closed
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-2">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      {event.title}
-                    </h3>
-                    <MarkdownContent 
-                      content={event.description || ''}
-                      className="mt-1 text-sm text-gray-500 line-clamp-3"
-                    />
-                  </div>
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-500">
-                      📍 {event.location}
-                    </p>
-                    <div className="mt-2 flex items-center justify-between">
-                      <p className="text-lg font-bold text-gray-900">
-                        $AUD {event.price.toFixed(2)}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {event.max_attendees ?
-                          `${event.current_attendees}/${event.max_attendees} spots` :
-                          `${event.current_attendees} attending`
-                        }
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-6 space-y-2">
-                    <Link
-                      href={event.alias ? `/e/${event.alias}` : `/events/${event.id}`}
-                      className="w-full bg-indigo-600 border border-transparent rounded-md py-2 px-4 flex items-center justify-center text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    >
-                      View Details & Book
-                    </Link>
-                    
-                    {event.alias && (
-                      <div className="flex items-center justify-center space-x-2 text-xs text-gray-500">
-                        <span>🔗</span>
-                        <span className="font-mono">localhost:3000/e/{event.alias}</span>
-                        <CopyButton text={`localhost:3000/e/${event.alias}`} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <EventCard key={event.id} event={event} />
             ))}
           </div>
         )}

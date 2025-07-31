@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { sendBookingConfirmationEmail } from '@/lib/email/service'
 
@@ -191,7 +190,7 @@ export async function POST(request: NextRequest) {
                             })
                             .eq('id', booking.id)
 
-                                            if (updateError) {
+                        if (updateError) {
                             console.error('Error updating booking to verified on payment intent created:', updateError)
                         } else {
                             console.log('✅ BOOKING STATUS UPDATED (payment_intent.created):', {
@@ -204,25 +203,10 @@ export async function POST(request: NextRequest) {
                             
                             // Send confirmation email
                             try {
-                                // Fetch participants for the booking
-                                const { data: participants } = await supabase
-                                    .from('participants')
-                                    .select('*')
-                                    .eq('booking_id', booking.id)
-
                                 await sendBookingConfirmationEmail({
-                                    userEmail: booking.profiles.email,
-                                    bookingId: booking.id,
-                                    eventName: booking.events.title,
-                                    eventDate: booking.events.start_date,
-                                    eventLocation: booking.events.location,
-                                    participantCount: booking.participant_count || booking.quantity,
-                                    totalAmount: booking.total_amount,
-                                    organizerName: booking.events.organizer_name || 'Event Organizer',
-                                    organizerEmail: booking.events.organizer_email || 'organizer@example.com',
-                                    organizerPhone: booking.events.organizer_phone,
-                                    eventDescription: booking.events.description,
-                                    participants: participants || []
+                                    booking: booking,
+                                    event: booking.events,
+                                    user: booking.profiles
                                 })
                                 console.log('📧 Booking confirmation email sent for payment_intent.created')
                             } catch (emailError) {
@@ -387,32 +371,17 @@ export async function POST(request: NextRequest) {
                                 timestamp: new Date().toISOString()
                             })
                             
-                            // Send confirmation email
-                            try {
-                                // Fetch participants for the booking
-                                const { data: participants } = await supabase
-                                    .from('participants')
-                                    .select('*')
-                                    .eq('booking_id', booking.id)
-
-                                await sendBookingConfirmationEmail({
-                                    userEmail: booking.profiles.email,
-                                    bookingId: booking.id,
-                                    eventName: booking.events.title,
-                                    eventDate: booking.events.start_date,
-                                    eventLocation: booking.events.location,
-                                    participantCount: booking.participant_count || booking.quantity,
-                                    totalAmount: booking.total_amount,
-                                    organizerName: booking.events.organizer_name || 'Event Organizer',
-                                    organizerEmail: booking.events.organizer_email || 'organizer@example.com',
-                                    organizerPhone: booking.events.organizer_phone,
-                                    eventDescription: booking.events.description,
-                                    participants: participants || []
-                                })
-                                console.log('📧 Booking confirmation email sent for payment_intent.succeeded')
-                            } catch (emailError) {
-                                console.error('❌ Failed to send confirmation email:', emailError)
-                            }
+                                                            // Send confirmation email
+                                try {
+                                    await sendBookingConfirmationEmail({
+                                        booking: booking,
+                                        event: booking.events,
+                                        user: booking.profiles
+                                    })
+                                    console.log('📧 Booking confirmation email sent for payment_intent.succeeded')
+                                } catch (emailError) {
+                                    console.error('❌ Failed to send confirmation email:', emailError)
+                                }
                         }
                     }
                 } else {
@@ -471,25 +440,10 @@ export async function POST(request: NextRequest) {
                                 
                                 // Send confirmation email
                                 try {
-                                    // Fetch participants for the booking
-                                    const { data: participants } = await supabase
-                                        .from('participants')
-                                        .select('*')
-                                        .eq('booking_id', booking.id)
-
                                     await sendBookingConfirmationEmail({
-                                        userEmail: booking.profiles.email,
-                                        bookingId: booking.id,
-                                        eventName: booking.events.title,
-                                        eventDate: booking.events.start_date,
-                                        eventLocation: booking.events.location,
-                                        participantCount: booking.participant_count || booking.quantity,
-                                        totalAmount: booking.total_amount,
-                                        organizerName: booking.events.organizer_name || 'Event Organizer',
-                                        organizerEmail: booking.events.organizer_email || 'organizer@example.com',
-                                        organizerPhone: booking.events.organizer_phone,
-                                        eventDescription: booking.events.description,
-                                        participants: participants || []
+                                        booking: booking,
+                                        event: booking.events,
+                                        user: booking.profiles
                                     })
                                     console.log('📧 Booking confirmation email sent for charge.succeeded')
                                 } catch (emailError) {

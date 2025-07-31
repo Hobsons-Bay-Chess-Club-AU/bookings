@@ -70,7 +70,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
     // Prepare calendar event data
     const calendarEvent: CalendarEvent = {
         title: booking.event.title,
-        description: `${booking.event.description || ''}\n\nBooking ID: ${booking.id}\nTickets: ${booking.quantity}`,
+        description: `${booking.event.description || ''}\n\nBooking ID: ${booking.booking_id || booking.id}\nTickets: ${booking.quantity}`,
         location: booking.event.location,
         startDate: new Date(booking.event.start_date),
         endDate: new Date(booking.event.end_date)
@@ -157,7 +157,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                                 <div className="space-y-3 text-gray-800">
                                     <div className="flex justify-between">
                                         <span className="text-gray-800">Booking ID:</span>
-                                        <span className="font-mono text-sm">{booking.id.slice(0, 8)}...</span>
+                                        <span className="font-mono text-sm font-bold">{booking.booking_id || booking.id.slice(0, 8)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-800">Tickets:</span>

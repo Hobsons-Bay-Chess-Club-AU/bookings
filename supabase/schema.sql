@@ -4,7 +4,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Create custom types
 CREATE TYPE user_role AS ENUM ('user', 'admin', 'organizer');
 CREATE TYPE booking_status AS ENUM ('pending', 'confirmed', 'cancelled', 'refunded', 'verified');
-CREATE TYPE event_status AS ENUM ('draft', 'published', 'cancelled', 'completed', 'entry_closed');
+CREATE TYPE event_status AS ENUM ('draft', 'published', 'cancelled', 'completed');
 
 -- Create profiles table to extend auth.users
 CREATE TABLE profiles (
@@ -30,7 +30,6 @@ CREATE TABLE events (
   max_attendees INTEGER,
   current_attendees INTEGER DEFAULT 0,
   status event_status DEFAULT 'draft',
-  entry_close_date TIMESTAMP WITH TIME ZONE,
   organizer_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

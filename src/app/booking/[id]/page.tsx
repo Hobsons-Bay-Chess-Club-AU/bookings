@@ -10,15 +10,26 @@ import MarkdownContent from '@/components/ui/html-content'
 async function getBooking(bookingId: string, userId: string): Promise<(Booking & { event: Event }) | null> {
     const supabase = await createClient()
 
-    const { data: booking, error } = await supabase
+    // Check if the bookingId is a UUID (36 characters) or short booking ID (7 characters)
+    const isUUID = bookingId.length === 36 && bookingId.includes('-')
+    
+    let query = supabase
         .from('bookings')
         .select(`
       *,
       event:events(*)
     `)
-        .eq('id', bookingId)
         .eq('user_id', userId) // Ensure user can only view their own bookings
-        .single()
+
+    if (isUUID) {
+        // If it's a UUID, search by id
+        query = query.eq('id', bookingId)
+    } else {
+        // If it's a short booking ID, search by booking_id
+        query = query.eq('booking_id', bookingId.toUpperCase())
+    }
+
+    const { data: booking, error } = await query.single()
 
     if (error || !booking) {
         return null
@@ -48,7 +59,7 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
     // Prepare calendar event data
     const calendarEvent: CalendarEvent = {
         title: booking.event.title,
-        description: `${booking.event.description || ''}\n\nBooking ID: ${booking.id}\nTickets: ${booking.quantity}`,
+        description: `${booking.event.description || ''}\n\nBooking ID: ${booking.booking_id || booking.id}\nTickets: ${booking.quantity}`,
         location: booking.event.location,
         startDate: new Date(booking.event.start_date),
         endDate: new Date(booking.event.end_date)
@@ -171,7 +182,7 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                 <div className="space-y-3 text-gray-800">
                                     <div className="flex justify-between">
                                         <span className="text-gray-800">Booking ID:</span>
-                                        <span className="font-mono text-sm">{booking.id.slice(0, 8)}...</span>
+                                        <span className="font-mono text-sm font-bold">{booking.booking_id || booking.id.slice(0, 8)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-800">Tickets:</span>
@@ -209,7 +220,6 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                 <div key={p.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                   <div className="flex items-center mb-2">
                                     <span className="font-semibold text-gray-800 mr-2">Participant {idx + 1}</span>
-                                    <span className="text-xs text-gray-500">(ID: {p.id.slice(0, 8)}...)</span>
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800">
                                     <div><span className="font-medium">First Name:</span> {p.first_name}</div>

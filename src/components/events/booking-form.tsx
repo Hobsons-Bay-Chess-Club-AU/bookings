@@ -4,14 +4,13 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Event, Profile, EventPricing, Participant, FormField } from '@/lib/types/database'
 import { loadStripe } from '@stripe/stripe-js'
-import ParticipantForm from './participant-form'
-import CheckoutGuard from '@/components/checkout/checkout-guard'
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+import Step1Pricing from './booking-steps/step-1-pricing'
+import Step2Contact from './booking-steps/step-2-contact'
+import Step3Participants from './booking-steps/step-3-participants'
 
 interface BookingFormProps {
     event: Event
-    user: Profile
+    user?: Profile // Make user optional
 }
 
 function isBookable(event: Event) {
@@ -21,16 +20,21 @@ function isBookable(event: Event) {
 }
 
 export default function BookingForm({ event, user }: BookingFormProps) {
-    const [step, setStep] = useState(1) // 1: Pricing & Quantity, 2: Participant Info, 3: Checkout
+    const [step, setStep] = useState(1) // 1: Pricing & Quantity, 2: Contact Info, 3: Participant Info, 4: Checkout
     const [quantity, setQuantity] = useState(1)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [availablePricing, setAvailablePricing] = useState<EventPricing[]>([])
     const [selectedPricing, setSelectedPricing] = useState<EventPricing | null>(null)
     const [pricingLoading, setPricingLoading] = useState(true)
+    const [contactInfo, setContactInfo] = useState({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: ''
+    })
     const [participants, setParticipants] = useState<Partial<Participant>[]>([])
     const [formFields, setFormFields] = useState<FormField[]>([])
-    const [participantValidation, setParticipantValidation] = useState<{ [key: string]: boolean }>({})
     const [currentBookingId, setCurrentBookingId] = useState<string | null>(null)
 
     const supabase = createClient()
@@ -47,7 +51,8 @@ export default function BookingForm({ event, user }: BookingFormProps) {
                 setPricingLoading(true)
                 
                 // Fetch pricing options
-                const pricingResponse = await fetch(`/api/events/${event.id}/pricing?membership_type=${user.membership_type}`)
+                const membershipType = user?.membership_type || 'non_member'
+                const pricingResponse = await fetch(`/api/events/${event.id}/pricing?membership_type=${membershipType}`)
                 if (!pricingResponse.ok) {
                     throw new Error('Failed to fetch pricing')
                 }
@@ -71,32 +76,59 @@ export default function BookingForm({ event, user }: BookingFormProps) {
         }
 
         fetchData()
-    }, [event.id, user.membership_type])
+    }, [event.id, user?.membership_type])
 
-    const handleContinueToParticipants = async (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleContinueToContact = () => {
         setError('')
+
+        if (!user) {
+            if (typeof window !== 'undefined') {
+                window.location.href = `/auth/login?redirectTo=${window.location.pathname}`
+            }
+            return
+        }
 
         if (!selectedPricing) {
             setError('Please select a pricing option')
             return
         }
 
-        // Initialize participants array with user data for the first participant
+        // Pre-fill contact info with user data if available
+        if (user) {
+            const userFullName = user.full_name || ''
+            const nameParts = userFullName.split(' ')
+            const firstName = nameParts[0] || ''
+            const lastName = nameParts.slice(1).join(' ') || ''
+            
+            setContactInfo({
+                first_name: firstName,
+                last_name: lastName,
+                email: user.email || '',
+                phone: user.phone || ''
+            })
+        }
+
+        setStep(2)
+    }
+
+    const handleContinueToParticipants = () => {
+        setError('')
+
+        if (!contactInfo.first_name.trim() || !contactInfo.last_name.trim() || !contactInfo.email.trim()) {
+            setError('Please complete all required contact information')
+            return
+        }
+
+        // Initialize participants array with contact info for the first participant
         const initialParticipants = Array.from({ length: quantity }, (_, index) => {
             if (index === 0) {
-                // Pre-fill first participant with user data if available
-                const userFullName = user.full_name || ''
-                const nameParts = userFullName.split(' ')
-                const firstName = nameParts[0] || ''
-                const lastName = nameParts.slice(1).join(' ') || ''
+                // Pre-fill first participant with contact info
                 
                 return {
-                    first_name: firstName,
-                    last_name: lastName,
-                    date_of_birth: '',
-                    contact_email: user.email || '',
-                    contact_phone: '',
+                    first_name: contactInfo.first_name,
+                    last_name: contactInfo.last_name,
+                    email: contactInfo.email,
+                    phone: contactInfo.phone,
                     custom_data: {}
                 }
             } else {
@@ -104,15 +136,14 @@ export default function BookingForm({ event, user }: BookingFormProps) {
                 return {
                     first_name: '',
                     last_name: '',
-                    date_of_birth: '',
-                    contact_email: '',
-                    contact_phone: '',
+                    email: '',
+                    phone: '',
                     custom_data: {}
                 }
             }
         })
         setParticipants(initialParticipants)
-        setStep(2)
+        setStep(3)
     }
 
     // Check if all participants have valid data (for button state)
@@ -167,6 +198,12 @@ export default function BookingForm({ event, user }: BookingFormProps) {
     }
 
     const handleCompleteBooking = async () => {
+        if (!user) {
+            if (typeof window !== 'undefined') {
+                window.location.href = `/auth/login?redirectTo=${window.location.pathname}`
+            }
+            return
+        }
         setLoading(true)
         setError('')
 
@@ -199,42 +236,29 @@ export default function BookingForm({ event, user }: BookingFormProps) {
                 throw new Error(bookingError.message)
             }
 
-            setCurrentBookingId(booking.id)
+            // Create participants records
+            for (let i = 0; i < participants.length; i++) {
+                const participant = participants[i]
+                if (participant.first_name && participant.last_name) {
+                    const { error: participantError } = await supabase
+                        .from('participants')
+                        .insert({
+                            booking_id: booking.id,
+                            first_name: participant.first_name,
+                            last_name: participant.last_name,
+                            contact_email: participant.email,
+                            contact_phone: participant.phone,
+                            date_of_birth: participant.date_of_birth,
+                            custom_data: participant.custom_data || {}
+                        })
 
-            // Save participant data
-            const response = await fetch(`/api/events/${event.id}/participants`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    participants,
-                    bookingId: booking.id
-                }),
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.error || 'Failed to save participant data')
-            }
-
-            // If the event is free, confirm the booking immediately
-            if (selectedPricing.price === 0) {
-                const { error: updateError } = await supabase
-                    .from('bookings')
-                    .update({ status: 'confirmed' })
-                    .eq('id', booking.id)
-
-                if (updateError) {
-                    throw new Error(updateError.message)
+                    if (participantError) {
+                        console.error('Error creating participant:', participantError)
+                    }
                 }
-
-                // Redirect to success page
-                window.location.href = `/booking/success?bookingId=${booking.id}`
-                return
             }
 
-            // Create Stripe checkout session for paid events
+            // Create Stripe checkout session
             const checkoutResponse = await fetch('/api/create-checkout-session', {
                 method: 'POST',
                 headers: {
@@ -243,31 +267,34 @@ export default function BookingForm({ event, user }: BookingFormProps) {
                 body: JSON.stringify({
                     bookingId: booking.id,
                     eventId: event.id,
-                    quantity,
+                    quantity: quantity,
                     amount: totalAmount,
-                    eventTitle: event.title,
-                }),
+                    eventTitle: event.title
+                })
             })
 
-            const { sessionId, error: sessionError } = await checkoutResponse.json()
-
-            if (sessionError) {
-                throw new Error(sessionError)
+            if (!checkoutResponse.ok) {
+                const errorData = await checkoutResponse.json()
+                throw new Error(errorData.error || 'Failed to create checkout session')
             }
 
-            // Redirect to Stripe Checkout
-            const stripe = await stripePromise
+            const { sessionId } = await checkoutResponse.json()
+
+            // Redirect to Stripe checkout
+            const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
             if (stripe) {
-                const { error: stripeError } = await stripe.redirectToCheckout({
-                    sessionId,
-                })
-
-                if (stripeError) {
-                    throw new Error(stripeError.message)
+                const { error } = await stripe.redirectToCheckout({ sessionId })
+                if (error) {
+                    throw new Error(error.message)
                 }
+            } else {
+                throw new Error('Failed to load Stripe')
             }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'An error occurred')
+
+            setCurrentBookingId(booking.id)
+            setStep(4)
+        } catch (err: any) {
+            setError(err.message || 'Failed to complete booking')
         } finally {
             setLoading(false)
         }
@@ -339,7 +366,7 @@ export default function BookingForm({ event, user }: BookingFormProps) {
                     }`}>
                         2
                     </div>
-                    <span className="ml-2 text-sm font-medium">Participant Info</span>
+                    <span className="ml-2 text-sm font-medium">Contact Info</span>
                 </div>
                 <div className={`w-8 h-0.5 ${step >= 3 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
                 <div className={`flex items-center ${step >= 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
@@ -347,6 +374,15 @@ export default function BookingForm({ event, user }: BookingFormProps) {
                         step >= 3 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
                     }`}>
                         3
+                    </div>
+                    <span className="ml-2 text-sm font-medium">Participant Info</span>
+                </div>
+                <div className={`w-8 h-0.5 ${step >= 4 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
+                <div className={`flex items-center ${step >= 4 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
+                        step >= 4 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
+                    }`}>
+                        4
                     </div>
                     <span className="ml-2 text-sm font-medium">Checkout</span>
                 </div>
@@ -371,255 +407,70 @@ export default function BookingForm({ event, user }: BookingFormProps) {
                 </div>
             )}
 
-        {step === 1 && (
-            <form onSubmit={handleContinueToParticipants} className="space-y-6">
-            {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
-                    {error}
-                </div>
-            )}
-
-            {/* Pricing Options */}
-            {availablePricing.length > 1 && (
-                <div className='text-gray-900'>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Select Pricing Option
-                    </label>
-                    <div className="space-y-3">
-                        {availablePricing.map((pricing) => (
-                            <div
-                                key={pricing.id}
-                                className={`relative rounded-lg border p-4 cursor-pointer ${
-                                    selectedPricing?.id === pricing.id
-                                        ? 'border-indigo-600 ring-2 ring-indigo-600 bg-indigo-50'
-                                        : 'border-gray-300 hover:border-gray-400'
-                                }`}
-                                onClick={() => setSelectedPricing(pricing)}
-                            >
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center">
-                                        <input
-                                            type="radio"
-                                            name="pricing-option"
-                                            checked={selectedPricing?.id === pricing.id}
-                                            onChange={() => setSelectedPricing(pricing)}
-                                            className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                                        />
-                                        <div className="ml-3">
-                                            <div className="flex items-center space-x-2">
-                                                <span className="font-medium text-gray-900">{pricing.name}</span>
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                    pricing.pricing_type === 'early_bird' ? 'bg-green-100 text-green-800' :
-                                                    pricing.pricing_type === 'regular' ? 'bg-blue-100 text-blue-800' :
-                                                    pricing.pricing_type === 'late_bird' ? 'bg-orange-100 text-orange-800' :
-                                                    'bg-purple-100 text-purple-800'
-                                                }`}>
-                                                    {pricing.pricing_type.replace('_', ' ')}
-                                                </span>
-                                                {pricing.membership_type !== 'all' && (
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                        {pricing.membership_type === 'member' ? 'Members Only' : 'Non-Members'}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {pricing.description && (
-                                                <p className="text-sm text-gray-500 mt-1">{pricing.description}</p>
-                                            )}
-                                            {pricing.available_tickets !== null && (
-                                                <p className="text-xs text-gray-500 mt-1">
-                                                    {pricing.available_tickets} tickets remaining
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-lg font-bold text-gray-900">
-                                            $AUD {pricing.price.toFixed(2)}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            <div>
-                <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
-                    Number of tickets
-                </label>
-                <select
-                    id="quantity"
-                    value={quantity}
-                    onChange={(e) => setQuantity(parseInt(e.target.value))}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    disabled={!selectedPricing}
-                >
-                    {Array.from({ length: maxQuantity }, (_, i) => i + 1).map((num) => (
-                        <option key={num} value={num}>
-                            {num} ticket{num > 1 ? 's' : ''}
-                        </option>
-                    ))}
-                </select>
-            </div>
-
-            {selectedPricing && (
-                <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">
-                            {quantity} × $AUD {selectedPricing.price.toFixed(2)}
-                        </span>
-                        <span className="text-lg font-bold text-gray-900">
-                            $AUD {totalAmount.toFixed(2)}
-                        </span>
-                    </div>
-                    {selectedPricing.name && (
-                        <div className="mt-2 text-xs text-gray-500">
-                            Pricing: {selectedPricing.name}
-                        </div>
-                    )}
-                </div>
-            )}
-
-                <button
-                    type="submit"
-                    disabled={loading || !selectedPricing}
-                    className="w-full bg-indigo-600 border border-transparent rounded-md py-3 px-4 flex items-center justify-center text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {!selectedPricing ? 'Select Pricing Option' : 'Continue to Participant Info'}
-                </button>
-            </form>
-        )}
-
-        {/* Step 2: Participant Information */}
-        {step === 2 && (
-            <div className="space-y-6">
-                {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
-                        {error}
-                    </div>
-                )}
-
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
-                        Booking Summary
-                    </h3>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">
-                                {quantity} × $AUD {selectedPricing?.price.toFixed(2)}
-                            </span>
-                            <span className="text-lg font-bold text-gray-900">
-                                $AUD {totalAmount.toFixed(2)}
-                            </span>
-                        </div>
-                        {selectedPricing?.name && (
-                            <div className="mt-2 text-xs text-gray-500">
-                                Pricing: {selectedPricing.name}
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <ParticipantForm
-                    fields={formFields}
-                    participants={participants}
-                    onChange={setParticipants}
+            {/* Step 1: Pricing & Quantity */}
+            {step === 1 && (
+                <Step1Pricing
+                    availablePricing={availablePricing}
+                    selectedPricing={selectedPricing}
+                    setSelectedPricing={setSelectedPricing}
                     quantity={quantity}
+                    setQuantity={setQuantity}
+                    maxQuantity={maxQuantity}
+                    totalAmount={totalAmount}
+                    onContinue={handleContinueToContact}
+                    loading={loading}
+                    error={error}
                 />
+            )}
 
-                {/* Validation Summary */}
-                {!areAllParticipantsValid() && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            {/* Step 2: Contact Information */}
+            {step === 2 && (
+                <Step2Contact
+                    contactInfo={contactInfo}
+                    setContactInfo={setContactInfo}
+                    onContinue={handleContinueToParticipants}
+                    onBack={() => setStep(1)}
+                    loading={loading}
+                    error={error}
+                />
+            )}
+
+            {/* Step 3: Participant Information */}
+            {step === 3 && (
+                <Step3Participants
+                    quantity={quantity}
+                    participants={participants}
+                    setParticipants={setParticipants}
+                    formFields={formFields}
+                    onComplete={handleCompleteBooking}
+                    onBack={() => setStep(2)}
+                    loading={loading}
+                    error={error}
+                />
+            )}
+
+            {/* Step 4: Processing Payment */}
+            {step === 4 && (
+                <div className="space-y-6">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <div className="flex">
                             <div className="flex-shrink-0">
-                                <span className="text-yellow-400">⚠️</span>
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                             </div>
                             <div className="ml-3">
-                                <h3 className="text-sm font-medium text-yellow-800">
-                                    Participant Information Required
+                                <h3 className="text-sm font-medium text-blue-800">
+                                    Processing Payment
                                 </h3>
-                                <div className="mt-2 text-sm text-yellow-700">
-                                    <p>Please complete the following to continue:</p>
-                                    <ul className="list-disc list-inside mt-2 space-y-1">
-                                        {participants.map((participant, index) => {
-                                            const missing = []
-                                            
-                                            if (!participant.first_name?.trim()) missing.push('First Name')
-                                            if (!participant.last_name?.trim()) missing.push('Last Name')
-                                            
-                                            formFields.forEach(field => {
-                                                if (field.required) {
-                                                    const value = participant.custom_data?.[field.name]
-                                                    if (!value || value === '') {
-                                                        missing.push(field.label)
-                                                    }
-                                                }
-                                            })
-                                            
-                                            if (missing.length > 0) {
-                                                return (
-                                                    <li key={index}>
-                                                        <strong>Participant {index + 1}:</strong> {missing.join(', ')}
-                                                    </li>
-                                                )
-                                            }
-                                            return null
-                                        }).filter(Boolean)}
-                                    </ul>
+                                <div className="mt-2 text-sm text-blue-700">
+                                    <p>Your booking has been created. Redirecting you to the payment page...</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                )}
-
-                <div className="flex items-center justify-between pt-6">
-                    <button
-                        onClick={() => setStep(1)}
-                        className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                        Back to Pricing
-                    </button>
-                    
-                    <button
-                        onClick={handleCompleteBooking}
-                        disabled={loading || !areAllParticipantsValid()}
-                        className="inline-flex items-center px-6 py-3 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {loading ? (
-                            'Processing...'
-                        ) : !areAllParticipantsValid() ? (
-                            'Complete Participant Information'
-                        ) : selectedPricing?.price === 0 ? (
-                            'Complete Free Booking'
-                        ) : (
-                            `Proceed to Payment ($AUD ${totalAmount.toFixed(2)})`
-                        )}
-                    </button>
                 </div>
-
-                <p className="text-xs text-gray-500 text-center">
-                    {!areAllParticipantsValid() ? (
-                        'Please complete all required participant information to continue.'
-                    ) : selectedPricing && selectedPricing.price > 0 ? (
-                        'You will be redirected to Stripe to complete your payment.'
-                    ) : (
-                        'Your free booking will be confirmed immediately.'
-                    )}
-                </p>
-            </div>
-        )}
+            )}
         </div>
     )
-
-    // Only wrap with CheckoutGuard if we have a valid booking ID
-    if (currentBookingId && currentBookingId.trim() !== '') {
-        return (
-            <CheckoutGuard bookingId={currentBookingId}>
-                {content}
-            </CheckoutGuard>
-        )
-    }
 
     return content
 }

@@ -13,14 +13,7 @@ export default function CheckoutGuard({ bookingId, children }: CheckoutGuardProp
   const isNavigating = useRef(false)
 
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // Only show confirmation if we have a booking ID (meaning a booking is in progress)
-      if (!isNavigating.current && bookingId && bookingId.trim() !== '') {
-        e.preventDefault()
-        e.returnValue = 'Are you sure you want to leave? Your booking will be cancelled.'
-        return e.returnValue
-      }
-    }
+    
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden' && !isNavigating.current && bookingId && bookingId.trim() !== '') {
@@ -49,12 +42,10 @@ export default function CheckoutGuard({ bookingId, children }: CheckoutGuardProp
     }
 
     // Add event listeners
-    window.addEventListener('beforeunload', handleBeforeUnload)
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
     // Cleanup function
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       
       // Clean up booking if component unmounts without navigation
