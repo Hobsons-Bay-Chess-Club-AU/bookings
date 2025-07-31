@@ -1,4 +1,5 @@
 import React from 'react'
+import { renderMarkdownForEmail } from '../utils/markdown'
 
 interface BookingConfirmationEmailProps {
   bookingId: string
@@ -38,17 +39,17 @@ export const BookingConfirmationEmail: React.FC<BookingConfirmationEmailProps> =
     <div style={{ backgroundColor: '#f8f9fa', padding: '20px', textAlign: 'center' }}>
       <h1 style={{ color: '#2d3748', margin: '0' }}>Booking Confirmation</h1>
     </div>
-    
+
     <div style={{ padding: '20px' }}>
       <h2 style={{ color: '#2d3748' }}>Your booking has been confirmed!</h2>
-      
+
       <div style={{ backgroundColor: '#f7fafc', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
         <h3 style={{ color: '#2d3748', marginTop: '0' }}>Event Details</h3>
         <p><strong>Event:</strong> {eventName}</p>
-        <p><strong>Date:</strong> {new Date(eventDate).toLocaleDateString('en-AU', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'long', 
+        <p><strong>Date:</strong> {new Date(eventDate).toLocaleDateString('en-AU', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
           day: 'numeric',
           hour: '2-digit',
           minute: '2-digit'
@@ -62,7 +63,7 @@ export const BookingConfirmationEmail: React.FC<BookingConfirmationEmailProps> =
       {eventDescription && (
         <div style={{ marginBottom: '20px' }}>
           <h3 style={{ color: '#2d3748' }}>Event Description</h3>
-          <div dangerouslySetInnerHTML={{ __html: eventDescription }} />
+          <div dangerouslySetInnerHTML={{ __html: renderMarkdownForEmail(eventDescription) }} />
         </div>
       )}
 
@@ -121,26 +122,26 @@ export const EventUpdateEmail: React.FC<EventUpdateEmailProps> = ({
   organizerPhone
 }) => (
   <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto' }}>
-    <div style={{ 
-      backgroundColor: updateType === 'cancelled' ? '#fed7d7' : '#fef5e7', 
-      padding: '20px', 
-      textAlign: 'center' 
+    <div style={{
+      backgroundColor: updateType === 'cancelled' ? '#fed7d7' : '#fef5e7',
+      padding: '20px',
+      textAlign: 'center'
     }}>
       <h1 style={{ color: '#2d3748', margin: '0' }}>
         Event {updateType === 'cancelled' ? 'Cancelled' : updateType === 'rescheduled' ? 'Rescheduled' : 'Updated'}
       </h1>
     </div>
-    
+
     <div style={{ padding: '20px' }}>
       <h2 style={{ color: '#2d3748' }}>Important Event Update</h2>
-      
+
       <div style={{ backgroundColor: '#f7fafc', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
         <h3 style={{ color: '#2d3748', marginTop: '0' }}>Event Details</h3>
         <p><strong>Event:</strong> {eventName}</p>
-        <p><strong>Date:</strong> {new Date(eventDate).toLocaleDateString('en-AU', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'long', 
+        <p><strong>Date:</strong> {new Date(eventDate).toLocaleDateString('en-AU', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
           day: 'numeric',
           hour: '2-digit',
           minute: '2-digit'
@@ -148,14 +149,14 @@ export const EventUpdateEmail: React.FC<EventUpdateEmailProps> = ({
         <p><strong>Location:</strong> {eventLocation}</p>
       </div>
 
-      <div style={{ 
-        backgroundColor: updateType === 'cancelled' ? '#fed7d7' : '#fef5e7', 
-        padding: '15px', 
-        borderRadius: '8px', 
-        marginBottom: '20px' 
+      <div style={{
+        backgroundColor: updateType === 'cancelled' ? '#fed7d7' : '#fef5e7',
+        padding: '15px',
+        borderRadius: '8px',
+        marginBottom: '20px'
       }}>
         <h3 style={{ color: '#2d3748', marginTop: '0' }}>Update Details</h3>
-        <div dangerouslySetInnerHTML={{ __html: updateDetails }} />
+        <div dangerouslySetInnerHTML={{ __html: renderMarkdownForEmail(updateDetails) }} />
       </div>
 
       <div style={{ backgroundColor: '#e6fffa', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
@@ -186,12 +187,12 @@ export const WelcomeEmail: React.FC<WelcomeEmailProps> = ({
     <div style={{ backgroundColor: '#f8f9fa', padding: '20px', textAlign: 'center' }}>
       <h1 style={{ color: '#2d3748', margin: '0' }}>Welcome to HBCC Bookings!</h1>
     </div>
-    
+
     <div style={{ padding: '20px' }}>
       <h2 style={{ color: '#2d3748' }}>Hi {userName},</h2>
-      
+
       <p>Welcome to HBCC Bookings! We're excited to have you on board.</p>
-      
+
       <div style={{ backgroundColor: '#f7fafc', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
         <h3 style={{ color: '#2d3748', marginTop: '0' }}>What you can do:</h3>
         <ul style={{ margin: '0', paddingLeft: '20px' }}>
@@ -203,7 +204,7 @@ export const WelcomeEmail: React.FC<WelcomeEmailProps> = ({
       </div>
 
       <div style={{ textAlign: 'center', marginTop: '30px' }}>
-        <a 
+        <a
           href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard`}
           style={{
             backgroundColor: '#4299e1',
@@ -240,12 +241,12 @@ export const PasswordResetEmail: React.FC<PasswordResetEmailProps> = ({
     <div style={{ backgroundColor: '#f8f9fa', padding: '20px', textAlign: 'center' }}>
       <h1 style={{ color: '#2d3748', margin: '0' }}>Reset Your Password</h1>
     </div>
-    
+
     <div style={{ padding: '20px' }}>
       <h2 style={{ color: '#2d3748' }}>Hi {userName},</h2>
-      
+
       <p>We received a request to reset your password for your HBCC Bookings account.</p>
-      
+
       <div style={{ backgroundColor: '#f7fafc', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
         <p style={{ margin: '0' }}>
           Click the button below to reset your password. This link will expire in 1 hour for security reasons.
@@ -253,7 +254,7 @@ export const PasswordResetEmail: React.FC<PasswordResetEmailProps> = ({
       </div>
 
       <div style={{ textAlign: 'center', marginTop: '30px' }}>
-        <a 
+        <a
           href={resetUrl}
           style={{
             backgroundColor: '#4299e1',

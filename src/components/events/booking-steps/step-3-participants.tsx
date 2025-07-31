@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { Participant, FormField } from '@/lib/types/database'
+import ParticipantSearchPopup from '../participant-search-popup'
+import { DynamicFormFieldset, isFieldValid } from '@/components/forms'
 
 interface Step3ParticipantsProps {
     quantity: number
@@ -12,6 +14,7 @@ interface Step3ParticipantsProps {
     onBack: () => void
     loading: boolean
     error: string
+    userId?: string
 }
 
 export default function Step3Participants({
@@ -22,9 +25,11 @@ export default function Step3Participants({
     onComplete,
     onBack,
     loading,
-    error
+    error,
+    userId
 }: Step3ParticipantsProps) {
     const [currentParticipantIndex, setCurrentParticipantIndex] = useState(0)
+    const [showSearchPopup, setShowSearchPopup] = useState(false)
 
     const currentParticipant = participants[currentParticipantIndex] || {}
     const isLastParticipant = currentParticipantIndex === quantity - 1
@@ -43,7 +48,7 @@ export default function Step3Participants({
             for (const field of formFields) {
                 if (field.required) {
                     const value = participant.custom_data?.[field.name]
-                    if (!value || value === '') {
+                    if (!isFieldValid(field, value)) {
                         return false
                     }
                 }
@@ -64,7 +69,7 @@ export default function Step3Participants({
         for (const field of formFields) {
             if (field.required) {
                 const value = participant.custom_data?.[field.name]
-                if (!value || value === '') {
+                if (!isFieldValid(field, value)) {
                     return false
                 }
             }
@@ -78,12 +83,21 @@ export default function Step3Participants({
         setParticipants(newParticipants)
     }
 
-    const handleCustomFieldChange = (fieldName: string, value: string) => {
+    const handleCustomFieldChange = (fieldName: string, value: any) => {
         const newParticipants = [...participants]
         if (!newParticipants[currentParticipantIndex].custom_data) {
             newParticipants[currentParticipantIndex].custom_data = {}
         }
         newParticipants[currentParticipantIndex].custom_data![fieldName] = value
+        setParticipants(newParticipants)
+    }
+
+    const handleSelectParticipant = (selectedParticipant: Partial<Participant>) => {
+        const newParticipants = [...participants]
+        newParticipants[currentParticipantIndex] = {
+            ...newParticipants[currentParticipantIndex],
+            ...selectedParticipant
+        }
         setParticipants(newParticipants)
     }
 
@@ -145,9 +159,24 @@ export default function Step3Participants({
 
             {/* Participant Form */}
             <div className="border border-gray-200 rounded-lg p-6">
-                <h3 className="text-xl font-medium text-gray-900 mb-6">
-                    Participant {currentParticipantIndex + 1}
-                </h3>
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-medium text-gray-900">
+                        Participant {currentParticipantIndex + 1}
+                    </h3>
+                    {userId && (
+                        <button
+                            type="button"
+                            onClick={() => setShowSearchPopup(true)}
+                            className="flex items-center space-x-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-800 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border border-indigo-200 hover:border-indigo-300"
+                            title="Search recent participants"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <span>Search Recent</span>
+                        </button>
+                    )}
+                </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Fixed Fields */}
@@ -212,30 +241,13 @@ export default function Step3Participants({
                     </div>
 
                     {/* Custom Fields */}
-                    {formFields.map((field) => (
-                        <div key={field.name} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                {field.label} {field.required && <span className="text-red-500">*</span>}
-                            </label>
-                            {field.type === 'textarea' ? (
-                                <textarea
-                                    value={currentParticipant.custom_data?.[field.name] || ''}
-                                    onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
-                                    rows={3}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    required={field.required}
-                                />
-                            ) : (
-                                <input
-                                    type={field.type}
-                                    value={currentParticipant.custom_data?.[field.name] || ''}
-                                    onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    required={field.required}
-                                />
-                            )}
-                        </div>
-                    ))}
+                    <DynamicFormFieldset
+                        fields={formFields}
+                        values={currentParticipant.custom_data || {}}
+                        onChange={handleCustomFieldChange}
+                        className="md:col-span-2"
+                        fieldClassName=""
+                    />
                 </div>
             </div>
 
@@ -257,6 +269,16 @@ export default function Step3Participants({
                     {loading ? 'Processing...' : isLastParticipant ? 'Complete Booking' : 'Next Participant'}
                 </button>
             </div>
+
+            {/* Participant Search Popup */}
+            {userId && (
+                <ParticipantSearchPopup
+                    isOpen={showSearchPopup}
+                    onClose={() => setShowSearchPopup(false)}
+                    onSelectParticipant={handleSelectParticipant}
+                    userId={userId}
+                />
+            )}
         </div>
     )
 } 

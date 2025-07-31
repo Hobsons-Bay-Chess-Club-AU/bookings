@@ -446,6 +446,7 @@ export default function BookingForm({ event, user }: BookingFormProps) {
                     onBack={() => setStep(2)}
                     loading={loading}
                     error={error}
+                    userId={user?.id}
                 />
             )}
 

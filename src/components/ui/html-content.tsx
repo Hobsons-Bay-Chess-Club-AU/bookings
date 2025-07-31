@@ -2,22 +2,33 @@
 
 import { marked } from 'marked'
 import { useEffect, useState } from 'react'
+import { renderMarkdownForEmail } from '@/lib/utils/markdown'
+import { ElementType } from 'react'
 
 interface MarkdownContentProps {
   content: string
   className?: string
-  as?: keyof JSX.IntrinsicElements
+  as?: ElementType
+  serverSafe?: boolean // Option to use server-safe rendering
 }
 
-export default function MarkdownContent({ 
-  content, 
-  className = '', 
-  as: Component = 'div' 
+export default function MarkdownContent({
+  content,
+  className = '',
+  as: Component = 'div',
+  serverSafe = false
 }: MarkdownContentProps) {
   const [sanitizedContent, setSanitizedContent] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(!serverSafe) // Don't show loading if using server-safe mode
 
   useEffect(() => {
+    if (serverSafe) {
+      // Use server-safe rendering immediately
+      setSanitizedContent(renderMarkdownForEmail(content))
+      setIsLoading(false)
+      return
+    }
+
     const sanitizeContent = async () => {
       try {
         // Configure marked for security
@@ -27,11 +38,11 @@ export default function MarkdownContent({
         })
 
         // Convert markdown to HTML
-        const htmlContent = marked(content || '')
+        const htmlContent = await marked(content || '')
 
         // Import DOMPurify dynamically for client-side only
         const { default: DOMPurify } = await import('dompurify')
-        
+
         // Sanitize HTML content to prevent XSS attacks
         const sanitized = DOMPurify.sanitize(htmlContent, {
           ALLOWED_TAGS: [
@@ -60,7 +71,7 @@ export default function MarkdownContent({
     }
 
     sanitizeContent()
-  }, [content])
+  }, [content, serverSafe])
 
   if (isLoading) {
     return (
@@ -74,7 +85,7 @@ export default function MarkdownContent({
   }
 
   return (
-    <Component 
+    <Component
       className={`prose prose-sm max-w-none ${className}`}
       dangerouslySetInnerHTML={{ __html: sanitizedContent }}
     />
