@@ -23,7 +23,7 @@ export default function SignupPage() {
         setMessage('')
 
         try {
-            const { error } = await supabase.auth.signUp({
+            const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
@@ -37,6 +37,24 @@ export default function SignupPage() {
                 setError(error.message)
             } else {
                 setMessage('Check your email for the confirmation link!')
+                
+                // Send welcome email if user was created successfully
+                if (data.user) {
+                    try {
+                        await fetch('/api/email/welcome', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                userId: data.user.id
+                            }),
+                        })
+                    } catch (emailError) {
+                        console.error('Failed to send welcome email:', emailError)
+                        // Don't show error to user as signup was successful
+                    }
+                }
             }
         } catch (err) {
             setError('An unexpected error occurred')

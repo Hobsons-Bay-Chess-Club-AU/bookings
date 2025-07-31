@@ -74,6 +74,9 @@ export interface Event {
     status: EventStatus
     entry_close_date?: string
     organizer_id: string
+    organizer_name?: string
+    organizer_email?: string
+    organizer_phone?: string
     custom_form_fields: FormField[]
     created_at: string
     updated_at: string

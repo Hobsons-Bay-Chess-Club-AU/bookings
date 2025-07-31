@@ -21,7 +21,7 @@ async function getPublishedEvents(): Promise<Event[]> {
         *,
         organizer:profiles(full_name, email)
       `)
-      .eq('status', 'published')
+      .in('status', ['published', 'entry_closed'])
       .gte('start_date', new Date().toISOString())
       .order('start_date', { ascending: true })
 
@@ -134,20 +134,27 @@ export default async function HomePage() {
                   </div>
                 )}
                 <div className="p-6">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <p className="text-sm font-medium text-indigo-600">
-                        {new Date(event.start_date).toLocaleDateString()}
-                      </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <p className="text-sm font-medium text-indigo-600">
+                          {new Date(event.start_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-sm text-gray-500">
+                          {new Date(event.start_date).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
                     </div>
-                    <div className="ml-4">
-                      <p className="text-sm text-gray-500">
-                        {new Date(event.start_date).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
+                    {event.status === 'entry_closed' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                        Entry Closed
+                      </span>
+                    )}
                   </div>
                   <div className="mt-2">
                     <h3 className="text-lg font-medium text-gray-900">

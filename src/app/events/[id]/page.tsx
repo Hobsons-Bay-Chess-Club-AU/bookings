@@ -59,7 +59,7 @@ export default async function EventPage({ params }: EventPageProps) {
     const userBooking = user ? await getUserBooking(event.id, user.id) : null
     const isEventFull = event.max_attendees ? event.current_attendees >= event.max_attendees : false
     const isEventPast = new Date(event.start_date) < new Date()
-    const isBookable = event.status === 'published' && !isEventFull && !isEventPast && event.status !== 'entry_closed'
+    const isBookable = event.status === 'published' && !isEventFull && !isEventPast
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -170,16 +170,38 @@ export default async function EventPage({ params }: EventPageProps) {
                                 </div>
                             )}
 
-                            {event.organizer && (
-                                <div className="border-t pt-6 mt-6">
-                                    <h3 className="text-lg font-medium text-gray-900 mb-3">
-                                        Organizer
-                                    </h3>
-                                    <p className="text-gray-700">
-                                        {event.organizer.full_name || event.organizer.email}
+                            <div className="border-t pt-6 mt-6">
+                                <h3 className="text-lg font-medium text-gray-900 mb-3">
+                                    Organizer
+                                </h3>
+                                <div className="space-y-2">
+                                    <p className="text-gray-700 font-medium">
+                                        {event.organizer_name || event.organizer?.full_name || event.organizer?.email || 'Event Organizer'}
                                     </p>
+                                    {event.organizer_email && (
+                                        <div className="flex items-center">
+                                            <span className="text-gray-400 mr-2">📧</span>
+                                            <a 
+                                                href={`mailto:${event.organizer_email}`}
+                                                className="text-indigo-600 hover:text-indigo-500"
+                                            >
+                                                {event.organizer_email}
+                                            </a>
+                                        </div>
+                                    )}
+                                    {event.organizer_phone && (
+                                        <div className="flex items-center">
+                                            <span className="text-gray-400 mr-2">📞</span>
+                                            <a 
+                                                href={`tel:${event.organizer_phone}`}
+                                                className="text-indigo-600 hover:text-indigo-500"
+                                            >
+                                                {event.organizer_phone}
+                                            </a>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </div>
 

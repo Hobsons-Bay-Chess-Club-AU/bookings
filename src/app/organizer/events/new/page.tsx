@@ -19,6 +19,9 @@ export default function NewEventPage() {
         price: '',
         max_attendees: '',
         image_url: '',
+        organizer_name: '',
+        organizer_email: '',
+        organizer_phone: '',
         status: 'draft' as const
     })
     const [formFields, setFormFields] = useState<FormField[]>([])
@@ -68,6 +71,9 @@ export default function NewEventPage() {
                     price: parseFloat(formData.price) || 0,
                     max_attendees: formData.max_attendees ? parseInt(formData.max_attendees) : null,
                     image_url: formData.image_url || null,
+                    organizer_name: formData.organizer_name || null,
+                    organizer_email: formData.organizer_email || null,
+                    organizer_phone: formData.organizer_phone || null,
                     status: formData.status,
                     organizer_id: user.id,
                     custom_form_fields: formFields
@@ -258,6 +264,61 @@ export default function NewEventPage() {
                                     onChange={handleChange}
                                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                     placeholder="https://example.com/image.jpg"
+                                />
+                            </div>
+
+                            {/* Organizer Contact Information */}
+                            <div className="md:col-span-2 pt-6 border-t border-gray-200">
+                                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                                    Organizer Contact Information
+                                </h3>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    Contact details for this specific event. Leave empty to use your profile information.
+                                </p>
+                            </div>
+
+                            <div>
+                                <label htmlFor="organizer_name" className="block text-sm font-medium text-gray-700">
+                                    Organizer Name
+                                </label>
+                                <input
+                                    type="text"
+                                    id="organizer_name"
+                                    name="organizer_name"
+                                    value={formData.organizer_name}
+                                    onChange={handleChange}
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    placeholder="Leave empty to use profile name"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="organizer_email" className="block text-sm font-medium text-gray-700">
+                                    Organizer Email
+                                </label>
+                                <input
+                                    type="email"
+                                    id="organizer_email"
+                                    name="organizer_email"
+                                    value={formData.organizer_email}
+                                    onChange={handleChange}
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    placeholder="Leave empty to use profile email"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="organizer_phone" className="block text-sm font-medium text-gray-700">
+                                    Organizer Phone
+                                </label>
+                                <input
+                                    type="tel"
+                                    id="organizer_phone"
+                                    name="organizer_phone"
+                                    value={formData.organizer_phone}
+                                    onChange={handleChange}
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    placeholder="Leave empty to use profile phone"
                                 />
                             </div>
 

@@ -1,133 +1,220 @@
-import { Booking, Event, Profile } from '@/lib/types/database'
+import resend from './client'
+import { 
+  BookingConfirmationEmail, 
+  EventUpdateEmail, 
+  WelcomeEmail 
+} from './templates'
+import { renderAsync } from '@react-email/render'
 
-interface EmailData {
-    booking: Booking
-    event: Event
-    user: Profile
+export interface EmailData {
+  to: string
+  subject: string
+  html: string
 }
 
-export async function sendBookingConfirmationEmail(data: EmailData) {
-    const { booking, event, user } = data
-    
-    // For now, we'll log the email content
-    // In production, you would integrate with an email service like:
-    // - Resend (recommended for Next.js)
-    // - SendGrid
-    // - AWS SES
-    // - Nodemailer with SMTP
-    
-    const emailContent = {
-        to: user.email,
-        subject: `Booking Confirmed: ${event.title}`,
-        html: generateBookingConfirmationHTML(data),
-        text: generateBookingConfirmationText(data)
+export async function sendEmail(emailData: EmailData) {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'noreply@hbccbookings.com',
+      to: emailData.to,
+      subject: emailData.subject,
+      html: emailData.html,
+    })
+
+    if (error) {
+      console.error('Email sending failed:', error)
+      throw error
     }
-    
-    console.log('📧 Email would be sent:', emailContent)
-    
-    // TODO: Replace with actual email service integration
-    // Example with Resend:
-    // const resend = new Resend(process.env.RESEND_API_KEY)
-    // await resend.emails.send(emailContent)
-    
-    return { success: true, message: 'Email logged (not sent in development)' }
+
+    console.log('Email sent successfully:', data)
+    return data
+  } catch (error) {
+    console.error('Email sending error:', error)
+    throw error
+  }
 }
 
-function generateBookingConfirmationHTML(data: EmailData): string {
-    const { booking, event, user } = data
-    
-    return `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <title>Booking Confirmation</title>
-            <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background: #4f46e5; color: white; padding: 20px; text-align: center; }
-                .content { padding: 20px; background: #f9f9f9; }
-                .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 5px; }
-                .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>🎉 Booking Confirmed!</h1>
-                </div>
-                
-                <div class="content">
-                    <p>Hi ${user.full_name || user.email},</p>
-                    
-                    <p>Great news! Your booking has been confirmed and payment has been verified.</p>
-                    
-                    <div class="booking-details">
-                        <h3>📅 Event Details</h3>
-                        <p><strong>Event:</strong> ${event.title}</p>
-                        <p><strong>Date:</strong> ${new Date(event.start_date).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        })}</p>
-                        <p><strong>Location:</strong> ${event.location}</p>
-                        
-                        <h3>🎫 Booking Details</h3>
-                        <p><strong>Booking ID:</strong> ${booking.id}</p>
-                        <p><strong>Quantity:</strong> ${booking.quantity} ticket${booking.quantity > 1 ? 's' : ''}</p>
-                        <p><strong>Total Amount:</strong> $${booking.total_amount.toFixed(2)} AUD</p>
-                        <p><strong>Status:</strong> ✅ Verified</p>
-                    </div>
-                    
-                    <p>Please save this email as your booking confirmation. You may need to present it at the event.</p>
-                    
-                    <p>If you have any questions, please contact the event organizer.</p>
-                </div>
-                
-                <div class="footer">
-                    <p>This is an automated message. Please do not reply to this email.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-    `
+export async function sendBookingConfirmationEmail({
+  userEmail,
+  bookingId,
+  eventName,
+  eventDate,
+  eventLocation,
+  participantCount,
+  totalAmount,
+  organizerName,
+  organizerEmail,
+  organizerPhone,
+  eventDescription,
+  participants
+}: {
+  userEmail: string
+  bookingId: string
+  eventName: string
+  eventDate: string
+  eventLocation: string
+  participantCount: number
+  totalAmount: number
+  organizerName: string
+  organizerEmail: string
+  organizerPhone?: string
+  eventDescription?: string
+  participants?: Array<{
+    first_name: string
+    last_name: string
+    date_of_birth?: string
+    contact_email?: string
+    contact_phone?: string
+    custom_data?: Record<string, any>
+  }>
+}) {
+  const html = await renderAsync(
+    BookingConfirmationEmail({
+      bookingId,
+      eventName,
+      eventDate,
+      eventLocation,
+      participantCount,
+      totalAmount,
+      organizerName,
+      organizerEmail,
+      organizerPhone,
+      eventDescription,
+      participants
+    })
+  )
+
+  return sendEmail({
+    to: userEmail,
+    subject: `Booking Confirmation - ${eventName}`,
+    html
+  })
 }
 
-function generateBookingConfirmationText(data: EmailData): string {
-    const { booking, event, user } = data
-    
-    return `
-Booking Confirmed!
+export async function sendEventUpdateEmail({
+  userEmail,
+  eventName,
+  eventDate,
+  eventLocation,
+  updateType,
+  updateDetails,
+  organizerName,
+  organizerEmail,
+  organizerPhone
+}: {
+  userEmail: string
+  eventName: string
+  eventDate: string
+  eventLocation: string
+  updateType: 'cancelled' | 'rescheduled' | 'updated'
+  updateDetails: string
+  organizerName: string
+  organizerEmail: string
+  organizerPhone?: string
+}) {
+  const html = await renderAsync(
+    EventUpdateEmail({
+      eventName,
+      eventDate,
+      eventLocation,
+      updateType,
+      updateDetails,
+      organizerName,
+      organizerEmail,
+      organizerPhone
+    })
+  )
 
-Hi ${user.full_name || user.email},
+  const subjectMap = {
+    cancelled: `Event Cancelled - ${eventName}`,
+    rescheduled: `Event Rescheduled - ${eventName}`,
+    updated: `Event Updated - ${eventName}`
+  }
 
-Great news! Your booking has been confirmed and payment has been verified.
+  return sendEmail({
+    to: userEmail,
+    subject: subjectMap[updateType],
+    html
+  })
+}
 
-Event Details:
-- Event: ${event.title}
-- Date: ${new Date(event.start_date).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-})}
-- Location: ${event.location}
+export async function sendWelcomeEmail({
+  userEmail,
+  userName
+}: {
+  userEmail: string
+  userName: string
+}) {
+  const html = await renderAsync(
+    WelcomeEmail({
+      userName,
+      userEmail
+    })
+  )
 
-Booking Details:
-- Booking ID: ${booking.id}
-- Quantity: ${booking.quantity} ticket${booking.quantity > 1 ? 's' : ''}
-- Total Amount: $${booking.total_amount.toFixed(2)} AUD
-- Status: Verified
+  return sendEmail({
+    to: userEmail,
+    subject: 'Welcome to HBCC Bookings!',
+    html
+  })
+}
 
-Please save this email as your booking confirmation. You may need to present it at the event.
+export async function sendEventReminderEmail({
+  userEmail,
+  eventName,
+  eventDate,
+  eventLocation,
+  organizerName,
+  organizerEmail
+}: {
+  userEmail: string
+  eventName: string
+  eventDate: string
+  eventLocation: string
+  organizerName: string
+  organizerEmail: string
+}) {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
+        <h1 style="color: #2d3748; margin: 0;">Event Reminder</h1>
+      </div>
+      
+      <div style="padding: 20px;">
+        <h2 style="color: #2d3748;">Your event is coming up!</h2>
+        
+        <div style="background-color: #f7fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+          <h3 style="color: #2d3748; margin-top: 0;">Event Details</h3>
+          <p><strong>Event:</strong> ${eventName}</p>
+          <p><strong>Date:</strong> ${new Date(eventDate).toLocaleDateString('en-AU', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}</p>
+          <p><strong>Location:</strong> ${eventLocation}</p>
+        </div>
 
-If you have any questions, please contact the event organizer.
+        <div style="background-color: #e6fffa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+          <h3 style="color: #2d3748; margin-top: 0;">Organizer Contact</h3>
+          <p><strong>Organizer:</strong> ${organizerName}</p>
+          <p><strong>Email:</strong> ${organizerEmail}</p>
+        </div>
 
-This is an automated message. Please do not reply to this email.
-    `
+        <div style="text-align: center; margin-top: 30px;">
+          <p style="color: #718096; font-size: 14px;">
+            We look forward to seeing you at the event!
+          </p>
+        </div>
+      </div>
+    </div>
+  `
+
+  return sendEmail({
+    to: userEmail,
+    subject: `Event Reminder - ${eventName}`,
+    html
+  })
 }

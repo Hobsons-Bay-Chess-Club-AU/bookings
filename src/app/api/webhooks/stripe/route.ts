@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { sendBookingConfirmationEmail } from '@/lib/email/service'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-06-30.basil',
@@ -128,7 +129,11 @@ export async function POST(request: NextRequest) {
                 // Find booking by payment intent ID and update to verified
                 const { data: booking, error: findError } = await supabase
                     .from('bookings')
-                    .select('id, status, stripe_payment_intent_id')
+                    .select(`
+                        *,
+                        events (*),
+                        profiles (*)
+                    `)
                     .eq('stripe_payment_intent_id', paymentIntent.id)
                     .single()
 
@@ -146,6 +151,33 @@ export async function POST(request: NextRequest) {
                         console.error('Error updating booking to verified on payment intent created:', updateError)
                     } else {
                         console.log(`Booking ${booking.id} marked as verified via payment_intent.created`)
+                        
+                        // Send confirmation email
+                        try {
+                            // Fetch participants for the booking
+                            const { data: participants } = await supabase
+                                .from('participants')
+                                .select('*')
+                                .eq('booking_id', booking.id)
+
+                            await sendBookingConfirmationEmail({
+                                userEmail: booking.profiles.email,
+                                bookingId: booking.id,
+                                eventName: booking.events.title,
+                                eventDate: booking.events.start_date,
+                                eventLocation: booking.events.location,
+                                participantCount: booking.participant_count || booking.quantity,
+                                totalAmount: booking.total_amount,
+                                organizerName: booking.events.organizer_name || 'Event Organizer',
+                                organizerEmail: booking.events.organizer_email || 'organizer@example.com',
+                                organizerPhone: booking.events.organizer_phone,
+                                eventDescription: booking.events.description,
+                                participants: participants || []
+                            })
+                            console.log('📧 Booking confirmation email sent for payment_intent.created')
+                        } catch (emailError) {
+                            console.error('❌ Failed to send confirmation email:', emailError)
+                        }
                     }
                 } else {
                     console.error('No booking found for payment intent created:', paymentIntent.id)
@@ -160,7 +192,11 @@ export async function POST(request: NextRequest) {
                 // Find booking by payment intent ID
                 let { data: booking, error: findError } = await supabase
                     .from('bookings')
-                    .select('id, status, stripe_payment_intent_id')
+                    .select(`
+                        *,
+                        events (*),
+                        profiles (*)
+                    `)
                     .eq('stripe_payment_intent_id', paymentIntent.id)
                     .single()
 
@@ -173,7 +209,11 @@ export async function POST(request: NextRequest) {
                         console.log('Trying to find by session ID:', paymentIntent.metadata.session_id)
                         const { data: sessionBooking, error: sessionError } = await supabase
                             .from('bookings')
-                            .select('id, status, stripe_session_id')
+                            .select(`
+                                *,
+                                events (*),
+                                profiles (*)
+                            `)
                             .eq('stripe_session_id', paymentIntent.metadata.session_id)
                             .single()
 
@@ -197,7 +237,11 @@ export async function POST(request: NextRequest) {
                         console.log('Trying to find pending booking with null payment intent...')
                         const { data: pendingBookings, error: pendingError } = await supabase
                             .from('bookings')
-                            .select('id, status, stripe_session_id, created_at')
+                            .select(`
+                                *,
+                                events (*),
+                                profiles (*)
+                            `)
                             .eq('status', 'pending')
                             .is('stripe_payment_intent_id', null)
                             .order('created_at', { ascending: false })
@@ -243,6 +287,33 @@ export async function POST(request: NextRequest) {
                             console.error('Error verifying booking on payment success:', updateError)
                         } else {
                             console.log(`Booking ${booking.id} verified via payment_intent.succeeded`)
+                            
+                            // Send confirmation email
+                            try {
+                                // Fetch participants for the booking
+                                const { data: participants } = await supabase
+                                    .from('participants')
+                                    .select('*')
+                                    .eq('booking_id', booking.id)
+
+                                await sendBookingConfirmationEmail({
+                                    userEmail: booking.profiles.email,
+                                    bookingId: booking.id,
+                                    eventName: booking.events.title,
+                                    eventDate: booking.events.start_date,
+                                    eventLocation: booking.events.location,
+                                    participantCount: booking.participant_count || booking.quantity,
+                                    totalAmount: booking.total_amount,
+                                    organizerName: booking.events.organizer_name || 'Event Organizer',
+                                    organizerEmail: booking.events.organizer_email || 'organizer@example.com',
+                                    organizerPhone: booking.events.organizer_phone,
+                                    eventDescription: booking.events.description,
+                                    participants: participants || []
+                                })
+                                console.log('📧 Booking confirmation email sent for payment_intent.succeeded')
+                            } catch (emailError) {
+                                console.error('❌ Failed to send confirmation email:', emailError)
+                            }
                         }
                     }
                 } else {
@@ -259,7 +330,11 @@ export async function POST(request: NextRequest) {
                 if (charge.payment_intent) {
                     const { data: booking, error: findError } = await supabase
                         .from('bookings')
-                        .select('id, status')
+                        .select(`
+                            *,
+                            events (*),
+                            profiles (*)
+                        `)
                         .eq('stripe_payment_intent_id', charge.payment_intent as string)
                         .single()
 
@@ -278,6 +353,33 @@ export async function POST(request: NextRequest) {
                                 console.error('Error verifying booking on charge success:', updateError)
                             } else {
                                 console.log(`Booking ${booking.id} verified via charge.succeeded`)
+                                
+                                // Send confirmation email
+                                try {
+                                    // Fetch participants for the booking
+                                    const { data: participants } = await supabase
+                                        .from('participants')
+                                        .select('*')
+                                        .eq('booking_id', booking.id)
+
+                                    await sendBookingConfirmationEmail({
+                                        userEmail: booking.profiles.email,
+                                        bookingId: booking.id,
+                                        eventName: booking.events.title,
+                                        eventDate: booking.events.start_date,
+                                        eventLocation: booking.events.location,
+                                        participantCount: booking.participant_count || booking.quantity,
+                                        totalAmount: booking.total_amount,
+                                        organizerName: booking.events.organizer_name || 'Event Organizer',
+                                        organizerEmail: booking.events.organizer_email || 'organizer@example.com',
+                                        organizerPhone: booking.events.organizer_phone,
+                                        eventDescription: booking.events.description,
+                                        participants: participants || []
+                                    })
+                                    console.log('📧 Booking confirmation email sent for charge.succeeded')
+                                } catch (emailError) {
+                                    console.error('❌ Failed to send confirmation email:', emailError)
+                                }
                             }
                         }
                     } else {

@@ -81,15 +81,35 @@ export default function BookingForm({ event, user }: BookingFormProps) {
             return
         }
 
-        // Initialize participants array
-        const initialParticipants = Array.from({ length: quantity }, () => ({
-            first_name: '',
-            last_name: '',
-            date_of_birth: '',
-            contact_email: '',
-            contact_phone: '',
-            custom_data: {}
-        }))
+        // Initialize participants array with user data for the first participant
+        const initialParticipants = Array.from({ length: quantity }, (_, index) => {
+            if (index === 0) {
+                // Pre-fill first participant with user data if available
+                const userFullName = user.full_name || ''
+                const nameParts = userFullName.split(' ')
+                const firstName = nameParts[0] || ''
+                const lastName = nameParts.slice(1).join(' ') || ''
+                
+                return {
+                    first_name: firstName,
+                    last_name: lastName,
+                    date_of_birth: '',
+                    contact_email: user.email || '',
+                    contact_phone: '',
+                    custom_data: {}
+                }
+            } else {
+                // Empty data for additional participants
+                return {
+                    first_name: '',
+                    last_name: '',
+                    date_of_birth: '',
+                    contact_email: '',
+                    contact_phone: '',
+                    custom_data: {}
+                }
+            }
+        })
         setParticipants(initialParticipants)
         setStep(2)
     }
@@ -300,7 +320,7 @@ export default function BookingForm({ event, user }: BookingFormProps) {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 text-gray-900">
             {/* Progress Steps */}
             <div className="flex items-center space-x-4 mb-8">
                 <div className={`flex items-center ${step >= 1 ? 'text-indigo-600' : 'text-gray-400'}`}>
@@ -341,7 +361,7 @@ export default function BookingForm({ event, user }: BookingFormProps) {
 
             {/* Pricing Options */}
             {availablePricing.length > 1 && (
-                <div>
+                <div className='text-gray-900'>
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                         Select Pricing Option
                     </label>
@@ -360,6 +380,7 @@ export default function BookingForm({ event, user }: BookingFormProps) {
                                     <div className="flex items-center">
                                         <input
                                             type="radio"
+                                            name="pricing-option"
                                             checked={selectedPricing?.id === pricing.id}
                                             onChange={() => setSelectedPricing(pricing)}
                                             className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
