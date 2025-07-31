@@ -91,7 +91,7 @@ export default async function EventPricingPage({ params }: EventPricingPageProps
 
             <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
                 {/* Event Info */}
-                <div className="bg-white shadow rounded-lg mb-8 p-6">
+                <div className="bg-white shadow rounded-lg mb-8 p-6 text-gray-900">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <h2 className="text-lg font-medium text-gray-900 mb-4 text-gray-900">Event Details</h2>

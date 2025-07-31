@@ -77,6 +77,7 @@ export interface Event {
     organizer_name?: string
     organizer_email?: string
     organizer_phone?: string
+    alias?: string
     custom_form_fields: FormField[]
     created_at: string
     updated_at: string

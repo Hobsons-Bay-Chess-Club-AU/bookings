@@ -3,6 +3,7 @@ import { getCurrentProfile } from '@/lib/utils/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Event, Booking } from '@/lib/types/database'
+import CopyButton from '@/components/ui/copy-button'
 
 async function getOrganizerEvents(organizerId: string): Promise<Event[]> {
     const supabase = await createClient()
@@ -271,6 +272,16 @@ export default async function OrganizerPage() {
                                                     Created {new Date(event.created_at).toLocaleDateString()}
                                                 </span>
                                             </div>
+
+                                            {event.alias && (
+                                                <div className="mt-2 flex items-center space-x-2">
+                                                    <span className="text-sm text-gray-500">🔗 Short URL:</span>
+                                                    <span className="text-sm font-mono text-indigo-600">
+                                                        localhost:3000/e/{event.alias}
+                                                    </span>
+                                                    <CopyButton text={`localhost:3000/e/${event.alias}`} />
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="ml-6 flex-shrink-0 flex space-x-2">

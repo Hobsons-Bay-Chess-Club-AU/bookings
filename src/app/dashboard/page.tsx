@@ -253,7 +253,10 @@ export default async function DashboardPage() {
                                                     $AUD {booking.total_amount.toFixed(2)}
                                                 </span>
                                                 <span className="text-sm text-gray-500">
-                                                    Booked on {new Date(booking.booking_date).toLocaleDateString()}
+                                                    Booked on {new Date(booking.booking_date).toLocaleDateString()} at {new Date(booking.booking_date).toLocaleTimeString([], {
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
                                                 </span>
                                             </div>
                                         </div>

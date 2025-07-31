@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
             ],
             mode: 'payment',
             success_url: `${process.env.NEXT_PUBLIC_APP_URL}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/events/${eventId}`,
+            cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/bookings/cancel-checkout?booking_id={CHECKOUT_SESSION_ID}`,
             metadata: {
                 bookingId: bookingId,
                 eventId: eventId,

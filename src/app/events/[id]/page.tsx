@@ -1,13 +1,14 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createSimpleClient } from '@/lib/supabase/server'
 import { getCurrentUser, getCurrentProfile } from '@/lib/utils/auth'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import BookingForm from '@/components/events/booking-form'
 import { Event, Booking } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
+import CopyButton from '@/components/ui/copy-button'
 
 async function getEvent(id: string): Promise<Event | null> {
-    const supabase = await createClient()
+    const supabase = createSimpleClient()
 
     const { data: event, error } = await supabase
         .from('events')
@@ -155,6 +156,21 @@ export default async function EventPage({ params }: EventPageProps) {
                                             $AUD {event.price.toFixed(2)}
                                         </p>
                                     </div>
+
+                                    {event.alias && (
+                                        <div className="flex items-center">
+                                            <span className="text-gray-400 mr-3">🔗</span>
+                                            <div className="flex-1">
+                                                <p className="text-sm text-gray-500">Short URL</p>
+                                                <div className="flex items-center space-x-2">
+                                                    <p className="text-gray-900 font-mono">
+                                                        localhost:3000/e/{event.alias}
+                                                    </p>
+                                                    <CopyButton text={`localhost:3000/e/${event.alias}`} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -256,7 +272,10 @@ export default async function EventPage({ params }: EventPageProps) {
                                             Total: ${userBooking.total_amount.toFixed(2)}
                                         </p>
                                         <p className="text-sm text-gray-500 mt-2">
-                                            Booked on {new Date(userBooking.booking_date).toLocaleDateString()}
+                                            Booked on {new Date(userBooking.booking_date).toLocaleDateString()} at {new Date(userBooking.booking_date).toLocaleTimeString([], {
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
                                         </p>
                                     </div>
                                     

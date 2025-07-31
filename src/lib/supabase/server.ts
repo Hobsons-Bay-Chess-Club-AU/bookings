@@ -27,3 +27,39 @@ export async function createClient() {
         }
     )
 }
+
+// Create a service role client for server-side operations that don't need user context
+export function createServiceClient() {
+    return createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return []
+                },
+                setAll() {
+                    // No-op for service client
+                },
+            },
+        }
+    )
+}
+
+// Create a simple client without cookies for operations that don't need auth
+export function createSimpleClient() {
+    return createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return []
+                },
+                setAll() {
+                    // No-op for simple client
+                },
+            },
+        }
+    )
+}

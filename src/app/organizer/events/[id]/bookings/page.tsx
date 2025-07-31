@@ -149,7 +149,7 @@ export default async function EventBookingsPage({ params }: EventBookingsPagePro
 
             <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
                 {/* Event Info */}
-                <div className="bg-white shadow rounded-lg mb-8 p-6">
+                <div className="bg-white shadow rounded-lg mb-8 p-6 text-gray-900">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <h2 className="text-lg font-medium text-gray-900 mb-4">Event Details</h2>
@@ -262,7 +262,10 @@ export default async function EventBookingsPage({ params }: EventBookingsPagePro
                                                 <div className="flex items-center">
                                                     <span className="mr-2">📅</span>
                                                     <span>
-                                                        Booked {new Date(booking.booking_date || booking.created_at).toLocaleDateString()}
+                                                        Booked {new Date(booking.booking_date || booking.created_at).toLocaleDateString()} at {new Date(booking.booking_date || booking.created_at).toLocaleTimeString([], {
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })}
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center">

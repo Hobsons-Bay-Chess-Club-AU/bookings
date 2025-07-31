@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Event, Profile, EventPricing, Participant, FormField } from '@/lib/types/database'
 import { loadStripe } from '@stripe/stripe-js'
 import ParticipantForm from './participant-form'
+import CheckoutGuard from '@/components/checkout/checkout-guard'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -319,7 +320,7 @@ export default function BookingForm({ event, user }: BookingFormProps) {
         )
     }
 
-    return (
+    const content = (
         <div className="space-y-6 text-gray-900">
             {/* Progress Steps */}
             <div className="flex items-center space-x-4 mb-8">
@@ -350,6 +351,25 @@ export default function BookingForm({ event, user }: BookingFormProps) {
                     <span className="ml-2 text-sm font-medium">Checkout</span>
                 </div>
             </div>
+
+            {/* Booking in Progress Warning */}
+            {currentBookingId && currentBookingId.trim() !== '' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex">
+                        <div className="flex-shrink-0">
+                            <span className="text-blue-400">⚠️</span>
+                        </div>
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-blue-800">
+                                Booking in Progress
+                            </h3>
+                            <div className="mt-2 text-sm text-blue-700">
+                                <p>Your booking is being processed. Please don't close this page or navigate away.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         {step === 1 && (
             <form onSubmit={handleContinueToParticipants} className="space-y-6">
@@ -589,6 +609,17 @@ export default function BookingForm({ event, user }: BookingFormProps) {
                 </p>
             </div>
         )}
-    </div>
+        </div>
     )
+
+    // Only wrap with CheckoutGuard if we have a valid booking ID
+    if (currentBookingId && currentBookingId.trim() !== '') {
+        return (
+            <CheckoutGuard bookingId={currentBookingId}>
+                {content}
+            </CheckoutGuard>
+        )
+    }
+
+    return content
 }

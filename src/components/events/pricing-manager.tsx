@@ -195,8 +195,8 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
 
             {/* Add/Edit Form */}
             {isAdding && (
-                <div className="p-6 border-b border-gray-200 bg-gray-50">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                <div className="p-6 border-b border-gray-200 bg-gray-50 text-gray-900">
+                    <h3 className="text-lg font-medium  mb-4">
                         {editingId ? 'Edit Pricing Tier' : 'Add New Pricing Tier'}
                     </h3>
                     <form onSubmit={handleSubmit} className="space-y-4">

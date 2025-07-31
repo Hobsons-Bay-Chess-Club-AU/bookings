@@ -190,7 +190,10 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                     <div className="flex justify-between">
                                         <span className="text-gray-800">Booking Date:</span>
                                         <span className="text-sm">
-                                            {new Date(booking.booking_date || booking.created_at).toLocaleDateString()}
+                                            {new Date(booking.booking_date || booking.created_at).toLocaleDateString()} at {new Date(booking.booking_date || booking.created_at).toLocaleTimeString([], {
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
                                         </span>
                                     </div>
                                 </div>

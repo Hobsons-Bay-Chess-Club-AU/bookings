@@ -22,7 +22,7 @@ export default function NewEventPage() {
         organizer_name: '',
         organizer_email: '',
         organizer_phone: '',
-        status: 'draft' as const
+        status: 'draft' as 'draft' | 'published'
     })
     const [formFields, setFormFields] = useState<FormField[]>([])
     const [loading, setLoading] = useState(false)
@@ -58,6 +58,28 @@ export default function NewEventPage() {
                 throw new Error('Start date must be in the future')
             }
 
+            // Generate alias if event is being published
+            let alias: string | null = null
+            if (formData.status === 'published') {
+                try {
+                    const response = await fetch('/api/events/generate-alias', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                    
+                    if (response.ok) {
+                        const data = await response.json()
+                        alias = data.alias
+                    } else {
+                        throw new Error('Failed to generate alias')
+                    }
+                } catch (error) {
+                    throw new Error('Failed to generate alias for event')
+                }
+            }
+
             // Create event
             const { data: event, error: eventError } = await supabase
                 .from('events')
@@ -75,6 +97,7 @@ export default function NewEventPage() {
                     organizer_email: formData.organizer_email || null,
                     organizer_phone: formData.organizer_phone || null,
                     status: formData.status,
+                    alias: alias,
                     organizer_id: user.id,
                     custom_form_fields: formFields
                 })

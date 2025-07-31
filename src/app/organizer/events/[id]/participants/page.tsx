@@ -102,7 +102,10 @@ export default function EventParticipantsPage() {
             p.date_of_birth || '',
             p.contact_email || '',
             p.contact_phone || '',
-            new Date(p.bookings.created_at).toLocaleDateString(),
+            `${new Date(p.bookings.created_at).toLocaleDateString()} at ${new Date(p.bookings.created_at).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            })}`,
             p.bookings.status,
             p.bookings.quantity,
             `$${p.bookings.total_amount}`,
@@ -269,7 +272,7 @@ export default function EventParticipantsPage() {
                 </div>
 
                 {/* Controls */}
-                <div className="bg-white shadow rounded-lg mb-6">
+                <div className="bg-white shadow rounded-lg mb-6 text-gray-900">
                     <div className="px-6 py-4 border-b border-gray-200">
                         <div className="flex items-center justify-between">
                             <div className="flex-1 max-w-lg">
@@ -379,7 +382,10 @@ export default function EventParticipantsPage() {
                                                         </span>
                                                     </div>
                                                     <div className="text-gray-500 text-xs mt-1">
-                                                        {new Date(participant.bookings.created_at).toLocaleDateString()}
+                                                        {new Date(participant.bookings.created_at).toLocaleDateString()} at {new Date(participant.bookings.created_at).toLocaleTimeString([], {
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })}
                                                     </div>
                                                 </div>
                                             </td>
@@ -497,7 +503,10 @@ export default function EventParticipantsPage() {
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700">Booking Date</label>
                                                 <p className="mt-1 text-sm text-gray-900">
-                                                    {new Date(selectedParticipant.bookings.created_at).toLocaleDateString()}
+                                                    {new Date(selectedParticipant.bookings.created_at).toLocaleDateString()} at {new Date(selectedParticipant.bookings.created_at).toLocaleTimeString([], {
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
                                                 </p>
                                             </div>
                                             <div>

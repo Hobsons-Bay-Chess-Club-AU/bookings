@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase/server'
-import { getCurrentUser } from '@/lib/utils/auth'
-import Link from 'next/link'
-import LogoutButton from '@/components/auth/logout-button'
+import { createServiceClient } from '@/lib/supabase/server'
 import { Event } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
+import CopyButton from '@/components/ui/copy-button'
+import Header from '@/components/layout/header'
+import Link from 'next/link'
 
 async function getPublishedEvents(): Promise<Event[]> {
   try {
@@ -13,7 +13,7 @@ async function getPublishedEvents(): Promise<Event[]> {
       return []
     }
 
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     const { data: events, error } = await supabase
       .from('events')
@@ -22,7 +22,6 @@ async function getPublishedEvents(): Promise<Event[]> {
         organizer:profiles(full_name, email)
       `)
       .in('status', ['published', 'entry_closed'])
-      .gte('start_date', new Date().toISOString())
       .order('start_date', { ascending: true })
 
     if (error) {
@@ -38,57 +37,12 @@ async function getPublishedEvents(): Promise<Event[]> {
 }
 
 export default async function HomePage() {
-  const user = await getCurrentUser()
   const events = await getPublishedEvents()
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">Hobsons Bay Chess Club - Booking System</h1>
-            </div>
-            <nav className="flex items-center space-x-4">
-              {user ? (
-                <>
-                  <Link
-                    href="/dashboard"
-                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/profile"
-                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Profile
-                  </Link>
-                  <LogoutButton className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                    Sign out
-                  </LogoutButton>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/auth/login"
-                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    href="/auth/signup"
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                  >
-                    Sign up
-                  </Link>
-                </>
-              )}
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero Section */}
       <div className="bg-indigo-700">
@@ -181,13 +135,21 @@ export default async function HomePage() {
                       </p>
                     </div>
                   </div>
-                  <div className="mt-6">
+                  <div className="mt-6 space-y-2">
                     <Link
-                      href={`/events/${event.id}`}
+                      href={event.alias ? `/e/${event.alias}` : `/events/${event.id}`}
                       className="w-full bg-indigo-600 border border-transparent rounded-md py-2 px-4 flex items-center justify-center text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
                       View Details & Book
                     </Link>
+                    
+                    {event.alias && (
+                      <div className="flex items-center justify-center space-x-2 text-xs text-gray-500">
+                        <span>🔗</span>
+                        <span className="font-mono">localhost:3000/e/{event.alias}</span>
+                        <CopyButton text={`localhost:3000/e/${event.alias}`} />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
