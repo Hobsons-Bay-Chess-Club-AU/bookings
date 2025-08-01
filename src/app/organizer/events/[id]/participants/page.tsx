@@ -19,6 +19,8 @@ export default function EventParticipantsPage() {
     const [error, setError] = useState('')
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedParticipant, setSelectedParticipant] = useState<ParticipantWithBooking | null>(null)
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(10)
 
     const params = useParams()
     const eventId = params.id as string
@@ -61,21 +63,42 @@ export default function EventParticipantsPage() {
     }, [eventId])
 
     const filteredParticipants = participants.filter(participant => {
+        if (!searchTerm) return true
+        
         const searchLower = searchTerm.toLowerCase()
         return (
             participant.first_name.toLowerCase().includes(searchLower) ||
             participant.last_name.toLowerCase().includes(searchLower) ||
-            participant.contact_email?.toLowerCase().includes(searchLower) ||
+            participant.email?.toLowerCase().includes(searchLower) ||
             participant.bookings.profiles.email.toLowerCase().includes(searchLower)
         )
     })
 
-    const exportToCsv = () => {
-        if (participants.length === 0) return
+    // Pagination calculations
+    const totalItems = filteredParticipants.length
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const paginatedParticipants = filteredParticipants.slice(startIndex, endIndex)
 
-        // Get all unique custom field names
+    // Reset to first page when search changes
+    const handleSearchChange = (term: string) => {
+        setSearchTerm(term)
+        setCurrentPage(1)
+    }
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page)
+        // Scroll to top of participants list
+        document.getElementById('participants-list')?.scrollIntoView({ behavior: 'smooth' })
+    }
+
+    const exportToCsv = () => {
+        if (filteredParticipants.length === 0) return
+
+        // Get all unique custom field names from filtered participants
         const customFieldNames = new Set<string>()
-        participants.forEach(p => {
+        filteredParticipants.forEach(p => {
             Object.keys(p.custom_data || {}).forEach(key => customFieldNames.add(key))
         })
 
@@ -95,13 +118,13 @@ export default function EventParticipantsPage() {
             ...Array.from(customFieldNames)
         ]
 
-        // Create CSV rows
-        const rows = participants.map(p => [
+        // Create CSV rows from filtered participants
+        const rows = filteredParticipants.map(p => [
             p.first_name,
             p.last_name,
             p.date_of_birth || '',
-            p.contact_email || '',
-            p.contact_phone || '',
+            p.email || '',
+            p.phone || '',
             `${new Date(p.bookings.created_at).toLocaleDateString()} at ${new Date(p.bookings.created_at).toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit'
@@ -222,7 +245,7 @@ export default function EventParticipantsPage() {
                                             With Contact Email
                                         </dt>
                                         <dd className="text-lg font-medium text-gray-900">
-                                            {participants.filter(p => p.contact_email).length}
+                                            {participants.filter(p => p.email).length}
                                         </dd>
                                     </dl>
                                 </div>
@@ -242,7 +265,7 @@ export default function EventParticipantsPage() {
                                             With Phone Number
                                         </dt>
                                         <dd className="text-lg font-medium text-gray-900">
-                                            {participants.filter(p => p.contact_phone).length}
+                                            {participants.filter(p => p.phone).length}
                                         </dd>
                                     </dl>
                                 </div>
@@ -271,32 +294,105 @@ export default function EventParticipantsPage() {
                     </div>
                 </div>
 
+                {/* Search and Filter Indicator */}
+                {searchTerm && (
+                    <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                                <span className="text-blue-600 mr-2">🔍</span>
+                                <span className="text-sm text-blue-800">
+                                    Showing {filteredParticipants.length} of {participants.length} participant{filteredParticipants.length !== 1 ? 's' : ''} matching "{searchTerm}"
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => handleSearchChange('')}
+                                className="text-sm text-blue-600 hover:text-blue-800 underline"
+                            >
+                                Clear search
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Controls */}
                 <div className="bg-white shadow rounded-lg mb-6 text-gray-900">
                     <div className="px-6 py-4 border-b border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <div className="flex-1 max-w-lg">
-                                <input
-                                    type="text"
-                                    placeholder="Search participants..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                                />
+                        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                            <div className="flex-1 max-w-md">
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Search by name, email, or booker info..."
+                                        value={searchTerm}
+                                        onChange={(e) => handleSearchChange(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span className="text-gray-400">🔍</span>
+                                    </div>
+                                    {searchTerm && (
+                                        <button
+                                            onClick={() => handleSearchChange('')}
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
+                                </div>
                             </div>
-                            <button
-                                onClick={exportToCsv}
-                                disabled={participants.length === 0}
-                                className="ml-4 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Export CSV
-                            </button>
+                            <div className="flex items-center space-x-4">
+                                <div className="flex items-center space-x-2">
+                                    <label htmlFor="itemsPerPage" className="text-sm text-gray-700">Show:</label>
+                                    <select
+                                        id="itemsPerPage"
+                                        value={itemsPerPage}
+                                        onChange={(e) => {
+                                            setItemsPerPage(Number(e.target.value))
+                                            setCurrentPage(1)
+                                        }}
+                                        className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                    >
+                                        <option value={5}>5</option>
+                                        <option value={10}>10</option>
+                                        <option value={25}>25</option>
+                                        <option value={50}>50</option>
+                                        <option value={100}>100</option>
+                                    </select>
+                                    <span className="text-sm text-gray-700">per page</span>
+                                </div>
+                                <button
+                                    onClick={exportToCsv}
+                                    disabled={participants.length === 0}
+                                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Export CSV ({filteredParticipants.length})
+                                </button>
+                            </div>
                         </div>
+                        {searchTerm && filteredParticipants.length < participants.length && (
+                            <div className="px-6 py-3 bg-blue-50 border-t border-blue-200">
+                                <div className="text-sm text-blue-800">
+                                    <span className="font-medium">Note:</span> Export will include all {filteredParticipants.length} filtered results, not just the current page.
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 {/* Participants List */}
-                <div className="bg-white shadow rounded-lg">
+                <div id="participants-list" className="bg-white shadow rounded-lg">
+                    <div className="px-6 py-4 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-semibold text-gray-900">
+                                Participants ({filteredParticipants.length})
+                            </h2>
+                            {totalPages > 1 && (
+                                <div className="text-sm text-gray-600">
+                                    Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                     {filteredParticipants.length === 0 ? (
                         <div className="text-center py-12">
                             <span className="text-4xl mb-4 block">👥</span>
@@ -333,7 +429,7 @@ export default function EventParticipantsPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {filteredParticipants.map((participant) => (
+                                    {paginatedParticipants.map((participant) => (
                                         <tr key={participant.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center">
@@ -358,13 +454,13 @@ export default function EventParticipantsPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="text-sm text-gray-900">
-                                                    {participant.contact_email && (
-                                                        <div>{participant.contact_email}</div>
+                                                    {participant.email && (
+                                                        <div>{participant.email}</div>
                                                     )}
-                                                    {participant.contact_phone && (
-                                                        <div className="text-gray-500">{participant.contact_phone}</div>
+                                                    {participant.phone && (
+                                                        <div className="text-gray-500">{participant.phone}</div>
                                                     )}
-                                                    {!participant.contact_email && !participant.contact_phone && (
+                                                    {!participant.email && !participant.phone && (
                                                         <span className="text-gray-400">No contact info</span>
                                                     )}
                                                 </div>
@@ -406,6 +502,62 @@ export default function EventParticipantsPage() {
                                     ))}
                                 </tbody>
                             </table>
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="px-6 py-4 border-t border-gray-200">
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-sm text-gray-700">
+                                            Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <button
+                                                onClick={() => handlePageChange(currentPage - 1)}
+                                                disabled={currentPage === 1}
+                                                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                Previous
+                                            </button>
+                                            <div className="flex space-x-1">
+                                                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                                                    let pageNumber
+                                                    if (totalPages <= 7) {
+                                                        pageNumber = i + 1
+                                                    } else if (currentPage <= 4) {
+                                                        pageNumber = i + 1
+                                                    } else if (currentPage >= totalPages - 3) {
+                                                        pageNumber = totalPages - 6 + i
+                                                    } else {
+                                                        pageNumber = currentPage - 3 + i
+                                                    }
+                                                    
+                                                    const isActive = pageNumber === currentPage
+                                                    return (
+                                                        <button
+                                                            key={pageNumber}
+                                                            onClick={() => handlePageChange(pageNumber)}
+                                                            className={`px-3 py-2 text-sm font-medium rounded-md ${
+                                                                isActive
+                                                                    ? 'bg-indigo-600 text-white'
+                                                                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                                                            }`}
+                                                        >
+                                                            {pageNumber}
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
+                                            <button
+                                                onClick={() => handlePageChange(currentPage + 1)}
+                                                disabled={currentPage === totalPages}
+                                                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                Next
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -449,16 +601,16 @@ export default function EventParticipantsPage() {
                                                 </p>
                                             </div>
                                         )}
-                                        {selectedParticipant.contact_email && (
+                                        {selectedParticipant.email && (
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700">Contact Email</label>
-                                                <p className="mt-1 text-sm text-gray-900">{selectedParticipant.contact_email}</p>
+                                                <p className="mt-1 text-sm text-gray-900">{selectedParticipant.email}</p>
                                             </div>
                                         )}
-                                        {selectedParticipant.contact_phone && (
+                                        {selectedParticipant.phone && (
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700">Contact Phone</label>
-                                                <p className="mt-1 text-sm text-gray-900">{selectedParticipant.contact_phone}</p>
+                                                <p className="mt-1 text-sm text-gray-900">{selectedParticipant.phone}</p>
                                             </div>
                                         )}
                                     </div>

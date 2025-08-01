@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Event, Booking, Profile } from '@/lib/types/database'
+import { FiSettings, FiEye, FiCreditCard, FiMail, FiPhone, FiUser } from 'react-icons/fi'
 
 interface BookingWithProfile extends Booking {
     profile: Profile
@@ -15,8 +16,22 @@ interface EventBookingsClientProps {
     bookings: BookingWithProfile[]
 }
 
+interface BookingMenuState {
+    [key: string]: boolean
+}
+
+interface PaymentModalState {
+    isOpen: boolean
+    booking: BookingWithProfile | null
+}
+
 export default function EventBookingsClient({ event, bookings }: EventBookingsClientProps) {
     const [activeFilter, setActiveFilter] = useState<FilterStatus>('all')
+    const [openMenus, setOpenMenus] = useState<BookingMenuState>({})
+    const [paymentModal, setPaymentModal] = useState<PaymentModalState>({ isOpen: false, booking: null })
+    const [searchTerm, setSearchTerm] = useState('')
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(10)
 
     // Calculate stats
     const totalBookings = bookings.length
@@ -64,6 +79,19 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
     }
 
     const filteredBookings = bookings.filter(booking => {
+        // Filter by search term
+        if (searchTerm) {
+            const searchLower = searchTerm.toLowerCase()
+            const matchesName = booking.profile.full_name?.toLowerCase().includes(searchLower)
+            const matchesEmail = booking.profile.email.toLowerCase().includes(searchLower)
+            const matchesPhone = booking.profile.phone?.toLowerCase().includes(searchLower)
+            const matchesId = (booking.booking_id || booking.id).toLowerCase().includes(searchLower)
+            
+            if (!matchesName && !matchesEmail && !matchesPhone && !matchesId) {
+                return false
+            }
+        }
+
         // Filter by booking status
         if (activeFilter === 'confirmed') {
             return booking.status === 'confirmed' || booking.status === 'verified'
@@ -74,6 +102,30 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
         }
         return true
     })
+
+    // Pagination calculations
+    const totalItems = filteredBookings.length
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const paginatedBookings = filteredBookings.slice(startIndex, endIndex)
+
+    // Reset to first page when filters change
+    const handleFilterChange = (filter: FilterStatus) => {
+        setActiveFilter(filter)
+        setCurrentPage(1)
+    }
+
+    const handleSearchChange = (term: string) => {
+        setSearchTerm(term)
+        setCurrentPage(1)
+    }
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page)
+        // Scroll to top of bookings list
+        document.getElementById('bookings-list')?.scrollIntoView({ behavior: 'smooth' })
+    }
 
     const getStatCardClass = (filterType: FilterStatus, isActive: boolean) => {
         const baseClass = "p-3 rounded cursor-pointer transition-all duration-200 hover:shadow-md"
@@ -99,8 +151,111 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
         }
     }
 
+    const toggleMenu = (bookingId: string) => {
+        setOpenMenus(prev => ({
+            ...prev,
+            [bookingId]: !prev[bookingId]
+        }))
+    }
+
+    const openPaymentModal = (booking: BookingWithProfile) => {
+        setPaymentModal({ isOpen: true, booking })
+        setOpenMenus({}) // Close all menus
+    }
+
+    const closePaymentModal = () => {
+        setPaymentModal({ isOpen: false, booking: null })
+    }
+
+    const formatRefundDate = (dateString?: string) => {
+        if (!dateString) return 'N/A'
+        return new Date(dateString).toLocaleDateString('en-AU', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        })
+    }
+
     return (
         <>
+            {/* Payment Details Modal */}
+            {paymentModal.isOpen && paymentModal.booking && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 text-gray-900">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium text-gray-900">Payment Details</h3>
+                            <button
+                                onClick={closePaymentModal}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <div className="space-y-3 text-sm">
+                            <div>
+                                <span className="font-medium text-gray-700">Booking ID:</span>
+                                <span className="ml-2 font-mono">{paymentModal.booking.booking_id || paymentModal.booking.id}</span>
+                            </div>
+                            <div>
+                                <span className="font-medium text-gray-700">Total Amount:</span>
+                                <span className="ml-2">AUD ${paymentModal.booking.total_amount.toFixed(2)}</span>
+                            </div>
+                            {paymentModal.booking.stripe_payment_intent_id && (
+                                <div>
+                                    <span className="font-medium text-gray-700">Payment Intent:</span>
+                                    <span className="ml-2 font-mono text-xs break-all">{paymentModal.booking.stripe_payment_intent_id}</span>
+                                </div>
+                            )}
+                            {paymentModal.booking.stripe_session_id && (
+                                <div>
+                                    <span className="font-medium text-gray-700">Session ID:</span>
+                                    <span className="ml-2 font-mono text-xs break-all">{paymentModal.booking.stripe_session_id}</span>
+                                </div>
+                            )}
+                            {paymentModal.booking.refund_status && paymentModal.booking.refund_status !== 'none' && (
+                                <div className="border-t pt-3 mt-3">
+                                    <div className="mb-2">
+                                        <span className="font-medium text-gray-700">Refund Status:</span>
+                                        <span className="ml-2 capitalize">{paymentModal.booking.refund_status}</span>
+                                    </div>
+                                    {paymentModal.booking.refund_amount && (
+                                        <div className="mb-2">
+                                            <span className="font-medium text-gray-700">Refund Amount:</span>
+                                            <span className="ml-2">AUD ${paymentModal.booking.refund_amount.toFixed(2)}</span>
+                                        </div>
+                                    )}
+                                    {paymentModal.booking.refund_requested_at && (
+                                        <div className="mb-2">
+                                            <span className="font-medium text-gray-700">Requested:</span>
+                                            <span className="ml-2">{formatRefundDate(paymentModal.booking.refund_requested_at)}</span>
+                                        </div>
+                                    )}
+                                    {paymentModal.booking.refund_processed_at && (
+                                        <div className="mb-2">
+                                            <span className="font-medium text-gray-700">Processed:</span>
+                                            <span className="ml-2">{formatRefundDate(paymentModal.booking.refund_processed_at)}</span>
+                                        </div>
+                                    )}
+                                    {paymentModal.booking.refund_reason && (
+                                        <div>
+                                            <span className="font-medium text-gray-700">Reason:</span>
+                                            <span className="ml-2">{paymentModal.booking.refund_reason}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                        <div className="mt-6 flex justify-end">
+                            <button
+                                onClick={closePaymentModal}
+                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* Event Info */}
             <div className="bg-white shadow rounded-lg mb-8 p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-900">
@@ -145,35 +300,35 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                         <div className="grid grid-cols-3 gap-4 text-sm mb-4">
                             <div
                                 className={getStatCardClass('all', activeFilter === 'all')}
-                                onClick={() => setActiveFilter('all')}
+                                onClick={() => handleFilterChange('all')}
                             >
                                 <div className="text-blue-800 font-medium">Total Bookings</div>
                                 <div className="text-2xl font-bold text-blue-900">{totalBookings}</div>
                             </div>
                             <div
                                 className={getStatCardClass('confirmed', activeFilter === 'confirmed')}
-                                onClick={() => setActiveFilter('confirmed')}
+                                onClick={() => handleFilterChange('confirmed')}
                             >
                                 <div className="text-green-800 font-medium">Confirmed</div>
                                 <div className="text-2xl font-bold text-green-900">{confirmedBookings}</div>
                             </div>
                             <div
                                 className={getStatCardClass('pending', activeFilter === 'pending')}
-                                onClick={() => setActiveFilter('pending')}
+                                onClick={() => handleFilterChange('pending')}
                             >
                                 <div className="text-yellow-800 font-medium">Pending</div>
                                 <div className="text-2xl font-bold text-yellow-900">{pendingBookings}</div>
                             </div>
                             <div
                                 className={getStatCardClass('cancelled', activeFilter === 'cancelled')}
-                                onClick={() => setActiveFilter('cancelled')}
+                                onClick={() => handleFilterChange('cancelled')}
                             >
                                 <div className="text-red-800 font-medium">Cancelled</div>
                                 <div className="text-xl font-bold text-red-900">{cancelledBookings}</div>
                             </div>
                             <div
                                 className={getStatCardClass('refunded', activeFilter === 'refunded')}
-                                onClick={() => setActiveFilter('refunded')}
+                                onClick={() => handleFilterChange('refunded')}
                             >
                                 <div className="text-gray-800 font-medium">Refunded</div>
                                 <div className="text-xl font-bold text-gray-900">{refundedBookings}</div>
@@ -188,31 +343,101 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
             </div>
 
             {/* Filter Indicator */}
-            {activeFilter !== 'all' && (
+            {(activeFilter !== 'all' || searchTerm) && (
                 <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center">
+                        <div className="flex items-center space-x-4">
                             <span className="text-blue-600 mr-2">🔍</span>
                             <span className="text-sm text-blue-800">
-                                Showing {filteredBookings.length} booking{filteredBookings.length !== 1 ? 's' : ''} with {activeFilter} status
+                                Showing {filteredBookings.length} of {totalBookings} booking{filteredBookings.length !== 1 ? 's' : ''}
+                                {activeFilter !== 'all' && ` with ${activeFilter} status`}
+                                {searchTerm && ` matching "${searchTerm}"`}
                             </span>
                         </div>
-                        <button
-                            onClick={() => setActiveFilter('all')}
-                            className="text-sm text-blue-600 hover:text-blue-800 underline"
-                        >
-                            Clear filter
-                        </button>
+                        <div className="flex space-x-2">
+                            {searchTerm && (
+                                <button
+                                    onClick={() => handleSearchChange('')}
+                                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                                >
+                                    Clear search
+                                </button>
+                            )}
+                            {activeFilter !== 'all' && (
+                                <button
+                                    onClick={() => handleFilterChange('all')}
+                                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                                >
+                                    Clear filter
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
 
+            {/* Search and Controls */}
+            <div className="mb-6 bg-white shadow rounded-lg p-4">
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div className="flex-1 max-w-md">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search by name, email, phone, or booking ID..."
+                                value={searchTerm}
+                                onChange={(e) => handleSearchChange(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span className="text-gray-400">🔍</span>
+                            </div>
+                            {searchTerm && (
+                                <button
+                                    onClick={() => handleSearchChange('')}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                >
+                                    ✕
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                            <label htmlFor="itemsPerPage" className="text-sm text-gray-700">Show:</label>
+                            <select
+                                id="itemsPerPage"
+                                value={itemsPerPage}
+                                onChange={(e) => {
+                                    setItemsPerPage(Number(e.target.value))
+                                    setCurrentPage(1)
+                                }}
+                                className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            >
+                                <option value={5}>5</option>
+                                <option value={10}>10</option>
+                                <option value={25}>25</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                            </select>
+                            <span className="text-sm text-gray-700">per page</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Bookings List */}
-            <div className="bg-white shadow rounded-lg">
+            <div id="bookings-list" className="bg-white shadow rounded-lg">
                 <div className="px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                        Bookings ({filteredBookings.length})
-                    </h2>
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-semibold text-gray-900">
+                            Bookings ({filteredBookings.length})
+                        </h2>
+                        {totalPages > 1 && (
+                            <div className="text-sm text-gray-600">
+                                Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {filteredBookings.length === 0 ? (
@@ -232,7 +457,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                         </p>
                         {activeFilter !== 'all' && (
                             <button
-                                onClick={() => setActiveFilter('all')}
+                                onClick={() => handleFilterChange('all')}
                                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                             >
                                 Clear Filter
@@ -240,14 +465,17 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                         )}
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-200">
-                        {filteredBookings.map((booking) => (
+                    <>
+                        <div className="divide-y divide-gray-200">
+                            {paginatedBookings.map((booking) => (
                             <div key={booking.id} className="p-6 hover:bg-gray-50">
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-start justify-between">
                                     <div className="flex-1">
+                                        {/* Header row with name, status, and booking ID */}
                                         <div className="flex items-center justify-between mb-3">
                                             <div className="flex items-center space-x-3">
-                                                <h3 className="text-lg font-medium text-gray-900">
+                                                <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                                                    <FiUser className="mr-2 text-gray-400" />
                                                     {booking.profile.full_name || 'Unknown Customer'}
                                                 </h3>
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
@@ -255,7 +483,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                 </span>
                                                 {booking.refund_status && booking.refund_status !== 'none' && (
                                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                                        💰 {booking.refund_status}
+                                                        💰 Refund: {booking.refund_status}
                                                     </span>
                                                 )}
                                             </div>
@@ -269,79 +497,167 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                             </div>
                                         </div>
 
+                                        {/* Contact Information */}
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
                                             <div className="flex items-center">
-                                                <span className="mr-2">📧</span>
-                                                <span>{booking.profile.id}</span>
+                                                <FiMail className="mr-2 text-gray-400" />
+                                                <span>{booking.profile.email}</span>
                                             </div>
+                                            {booking.profile.phone && (
+                                                <div className="flex items-center">
+                                                    <FiPhone className="mr-2 text-gray-400" />
+                                                    <span>{booking.profile.phone}</span>
+                                                </div>
+                                            )}
                                             <div className="flex items-center">
                                                 <span className="mr-2">📅</span>
                                                 <span>
-                                                    Booked {new Date(booking.booking_date || booking.created_at).toLocaleDateString()}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center">
-                                                <span className="mr-2">🆔</span>
-                                                <span className="font-mono text-xs">
-                                                    {booking.id.slice(0, 8)}...
+                                                    Booked {new Date(booking.booking_date || booking.created_at).toLocaleDateString('en-AU')}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        {booking.stripe_payment_intent_id && (
-                                            <div className="text-xs text-gray-500 mb-2">
-                                                <span className="mr-2">💳</span>
-                                                Payment Intent: {booking.stripe_payment_intent_id}
+                                        {/* Booking ID and Refund Info */}
+                                        <div className="flex items-center justify-between text-sm">
+                                            <div className="flex items-center space-x-4">
+                                                <div className="flex items-center">
+                                                    <span className="mr-2">🆔</span>
+                                                    <span className="font-mono text-gray-900">
+                                                        {booking.booking_id || booking.id.slice(0, 8)}
+                                                    </span>
+                                                </div>
+                                                {booking.refund_amount && (
+                                                    <div className="text-purple-600">
+                                                        <span className="mr-1">💰</span>
+                                                        Refunded: AUD ${booking.refund_amount.toFixed(2)}
+                                                        {booking.refund_processed_at && (
+                                                            <span className="text-gray-500 ml-2">
+                                                                on {formatRefundDate(booking.refund_processed_at)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-
-                                        {booking.stripe_session_id && (
-                                            <div className="text-xs text-gray-500">
-                                                <span className="mr-2">🔗</span>
-                                                Session: {booking.stripe_session_id}
-                                            </div>
-                                        )}
-
-                                        {booking.refund_amount && (
-                                            <div className="text-sm text-purple-600 mt-2">
-                                                <span className="mr-2">💰</span>
-                                                Refund Amount: AUD ${booking.refund_amount.toFixed(2)}
-                                            </div>
-                                        )}
+                                        </div>
                                     </div>
 
-                                    <div className="ml-6 flex-shrink-0 flex flex-col space-y-2">
-                                        <Link
-                                            href={`/booking/${booking.id}`}
-                                            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                    {/* Actions Menu */}
+                                    <div className="ml-6 flex-shrink-0 relative">
+                                        <button
+                                            onClick={() => toggleMenu(booking.id)}
+                                            className="inline-flex items-center p-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                                         >
-                                            View Details
-                                        </Link>
-                                        {booking.status === 'pending' && (
-                                            <button
-                                                className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-                                                title="Manual confirmation (if needed)"
-                                            >
-                                                Mark Confirmed
-                                            </button>
-                                        )}
-                                        {(booking.status === 'confirmed' || booking.status === 'verified') && (
-                                            <button
-                                                className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-                                                title="Refund booking"
-                                            >
-                                                Refund
-                                            </button>
+                                            <FiSettings className="w-4 h-4" />
+                                        </button>
+
+                                        {/* Dropdown Menu */}
+                                        {openMenus[booking.id] && (
+                                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-200">
+                                                <Link
+                                                    href={`/booking/${booking.id}`}
+                                                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                    onClick={() => setOpenMenus({})}
+                                                >
+                                                    <FiEye className="mr-2 w-4 h-4" />
+                                                    View Details
+                                                </Link>
+                                                <button
+                                                    onClick={() => openPaymentModal(booking)}
+                                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                >
+                                                    <FiCreditCard className="mr-2 w-4 h-4" />
+                                                    Payment Info
+                                                </button>
+                                                {booking.status === 'pending' && (
+                                                    <button
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-green-700 hover:bg-green-50"
+                                                        title="Manual confirmation (if needed)"
+                                                    >
+                                                        ✓ Mark Confirmed
+                                                    </button>
+                                                )}
+                                                {(booking.status === 'confirmed' || booking.status === 'verified') && (
+                                                    <button
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50"
+                                                        title="Refund booking"
+                                                    >
+                                                        💰 Process Refund
+                                                    </button>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
 
-            {/* Export Options */}
+                                {/* Click outside to close menus */}
+                                {openMenus[booking.id] && (
+                                    <div
+                                        className="fixed inset-0 z-5"
+                                        onClick={() => setOpenMenus({})}
+                                    />
+                                )}
+                            </div>
+                            ))}
+                        </div>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="px-6 py-4 border-t border-gray-200">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-sm text-gray-700">
+                                        Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <button
+                                            onClick={() => handlePageChange(currentPage - 1)}
+                                            disabled={currentPage === 1}
+                                            className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            Previous
+                                        </button>
+                                        <div className="flex space-x-1">
+                                            {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                                                let pageNumber
+                                                if (totalPages <= 7) {
+                                                    pageNumber = i + 1
+                                                } else if (currentPage <= 4) {
+                                                    pageNumber = i + 1
+                                                } else if (currentPage >= totalPages - 3) {
+                                                    pageNumber = totalPages - 6 + i
+                                                } else {
+                                                    pageNumber = currentPage - 3 + i
+                                                }
+                                                
+                                                const isActive = pageNumber === currentPage
+                                                return (
+                                                    <button
+                                                        key={pageNumber}
+                                                        onClick={() => handlePageChange(pageNumber)}
+                                                        className={`px-3 py-2 text-sm font-medium rounded-md ${
+                                                            isActive
+                                                                ? 'bg-indigo-600 text-white'
+                                                                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                                                        }`}
+                                                    >
+                                                        {pageNumber}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                        <button
+                                            onClick={() => handlePageChange(currentPage + 1)}
+                                            disabled={currentPage === totalPages}
+                                            className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>            {/* Export Options */}
             {filteredBookings.length > 0 && (
                 <div className="mt-8 bg-white shadow rounded-lg p-6">
                     <h3 className="text-lg font-medium text-gray-900 mb-4">Export & Actions</h3>
@@ -350,12 +666,17 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                             📊 Export to CSV ({filteredBookings.length} bookings)
                         </button>
                         <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            📧 Email Filtered Customers
+                            📧 Email Filtered Customers ({filteredBookings.length})
                         </button>
                         <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            🎫 Generate Check-in List
+                            🎫 Generate Check-in List ({filteredBookings.length})
                         </button>
                     </div>
+                    {searchTerm && (
+                        <div className="mt-3 text-sm text-gray-600">
+                            <span className="font-medium">Note:</span> Export will include all {filteredBookings.length} filtered results, not just the current page.
+                        </div>
+                    )}
                 </div>
             )}
         </>

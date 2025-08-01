@@ -10,8 +10,8 @@ interface BookingWithProfile extends Booking {
         first_name: string
         last_name: string
         date_of_birth?: string
-        contact_email?: string
-        contact_phone?: string
+        email?: string
+        phone?: string
         custom_data?: Record<string, any>
     }>
 }
@@ -33,6 +33,8 @@ export default function ParticipantsList({
 }: ParticipantsListProps) {
     const [sortBy, setSortBy] = useState<SortOption>('name')
     const [searchTerm, setSearchTerm] = useState('')
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(10)
 
     // Get display fields from event settings for public view
     const displayFields = isPublic
@@ -79,9 +81,59 @@ export default function ParticipantsList({
             if (booking.participants && booking.participants.length > 0) {
                 const participant = booking.participants[0] // For now, get first participant
                 const customValue = participant.custom_data?.[customFieldName]
+                
+                // Handle null/undefined values
+                if (!customValue) return '-'
+                
+                // Handle arrays
                 if (Array.isArray(customValue)) {
                     return customValue.join(', ')
                 }
+                
+                // Handle FIDE/ACF player objects
+                if (typeof customValue === 'object') {
+                    // Check if it's a FIDE player object
+                    if (customValue.id && customValue.name && 'std_rating' in customValue) {
+                        const ratings = []
+                        if (customValue.std_rating) ratings.push(`Std: ${customValue.std_rating}`)
+                        if (customValue.rapid_rating) ratings.push(`Rapid: ${customValue.rapid_rating}`)
+                        if (customValue.blitz_rating) ratings.push(`Blitz: ${customValue.blitz_rating}`)
+                        
+                        return `${customValue.name} (ID: ${customValue.id})${ratings.length > 0 ? ` - ${ratings.join(', ')}` : ''}`
+                    }
+                    
+                    // Check if it's an ACF player object (similar structure)
+                    if (customValue.id && customValue.name) {
+                        const ratings = []
+                        if (customValue.std_rating) ratings.push(`Std: ${customValue.std_rating}`)
+                        if (customValue.rapid_rating) ratings.push(`Rapid: ${customValue.rapid_rating}`)
+                        if (customValue.blitz_rating) ratings.push(`Blitz: ${customValue.blitz_rating}`)
+                        
+                        return `${customValue.name} (ID: ${customValue.id})${ratings.length > 0 ? ` - ${ratings.join(', ')}` : ''}`
+                    }
+                    
+                    // Handle other object types - try to display meaningful information
+                    if (customValue.name) {
+                        return customValue.name
+                    } else if (customValue.label) {
+                        return customValue.label
+                    } else if (customValue.title) {
+                        return customValue.title
+                    } else {
+                        // Fallback for generic objects - show key-value pairs
+                        const entries = Object.entries(customValue)
+                            .filter(([key, value]) => value !== null && value !== undefined && value !== '')
+                            .slice(0, 3) // Limit to first 3 entries to avoid too long text
+                        
+                        if (entries.length > 0) {
+                            return entries.map(([key, value]) => `${key}: ${value}`).join(', ')
+                        }
+                        
+                        return '[Complex Data]'
+                    }
+                }
+                
+                // Handle primitive values
                 return customValue?.toString() || '-'
             }
             return '-'
@@ -107,12 +159,12 @@ export default function ParticipantsList({
                 return '-'
             case 'contact_email':
                 if (booking.participants && booking.participants.length > 0) {
-                    return booking.participants[0].contact_email || booking.profile.email || '-'
+                    return booking.participants[0].email || booking.profile.email || '-'
                 }
                 return booking.profile.email || '-'
             case 'contact_phone':
                 if (booking.participants && booking.participants.length > 0) {
-                    return booking.participants[0].contact_phone || booking.profile.phone || '-'
+                    return booking.participants[0].phone || booking.profile.phone || '-'
                 }
                 return booking.profile.phone || '-'
             default:
@@ -164,11 +216,30 @@ export default function ParticipantsList({
         }
     })
 
+    // Pagination calculations
+    const totalItems = sortedBookings.length
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const paginatedBookings = sortedBookings.slice(startIndex, endIndex)
+
+    // Reset to first page when search changes
+    const handleSearchChange = (term: string) => {
+        setSearchTerm(term)
+        setCurrentPage(1)
+    }
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page)
+        // Scroll to top of participants list
+        document.getElementById('participants-container')?.scrollIntoView({ behavior: 'smooth' })
+    }
+
     const totalParticipants = confirmedBookings.reduce((sum, booking) => sum + booking.quantity, 0)
     const totalBookings = confirmedBookings.length
 
     return (
-        <div className="bg-white shadow rounded-lg">
+        <div id="participants-container" className="bg-white shadow rounded-lg">
             {/* Header */}
             <div className="px-6 py-4 border-b border-gray-200">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -191,21 +262,49 @@ export default function ParticipantsList({
                                 type="text"
                                 placeholder="Search participants..."
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onChange={(e) => handleSearchChange(e.target.value)}
                                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             />
+                            {searchTerm && (
+                                <button
+                                    onClick={() => handleSearchChange('')}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                >
+                                    ✕
+                                </button>
+                            )}
                         </div>
 
-                        {/* Sort */}
-                        <select
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value as SortOption)}
-                            className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                        >
-                            <option value="name">Sort by Name</option>
-                            <option value="date">Sort by Booking Date</option>
-                            <option value="tickets">Sort by Tickets</option>
-                        </select>
+                        <div className="flex gap-3">
+                            {/* Items per page */}
+                            {!isPublic && (
+                                <select
+                                    value={itemsPerPage}
+                                    onChange={(e) => {
+                                        setItemsPerPage(Number(e.target.value))
+                                        setCurrentPage(1)
+                                    }}
+                                    className="block pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                                >
+                                    <option value={5}>5 per page</option>
+                                    <option value={10}>10 per page</option>
+                                    <option value={25}>25 per page</option>
+                                    <option value={50}>50 per page</option>
+                                    <option value={100}>100 per page</option>
+                                </select>
+                            )}
+
+                            {/* Sort */}
+                            <select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                                className="block pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                            >
+                                <option value="name">Sort by Name</option>
+                                <option value="date">Sort by Booking Date</option>
+                                <option value="tickets">Sort by Tickets</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -241,10 +340,10 @@ export default function ParticipantsList({
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {sortedBookings.map((booking, index) => (
+                            {paginatedBookings.map((booking, index) => (
                                 <tr key={booking.id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {index + 1}
+                                        {startIndex + index + 1}
                                     </td>
                                     {displayFields.map((fieldId) => (
                                         <td key={fieldId} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -259,7 +358,7 @@ export default function ParticipantsList({
             ) : (
                 // Private detailed card view
                 <div className="divide-y divide-gray-200">
-                    {sortedBookings.map((booking, index) => (
+                    {paginatedBookings.map((booking, index) => (
                         <div key={booking.id} className="p-4 sm:p-6 hover:bg-gray-50">
                             {/* Desktop Layout */}
                             <div className="hidden md:flex items-center justify-between">
@@ -314,7 +413,7 @@ export default function ParticipantsList({
                                 {/* Participant Number */}
                                 <div className="flex-shrink-0 text-right">
                                     <div className="text-2xl font-bold text-gray-400">
-                                        #{index + 1}
+                                        #{startIndex + index + 1}
                                     </div>
                                 </div>
                             </div>
@@ -341,7 +440,7 @@ export default function ParticipantsList({
                                     </div>
                                     <div className="text-right">
                                         <div className="text-xl font-bold text-gray-400">
-                                            #{index + 1}
+                                            #{startIndex + index + 1}
                                         </div>
                                     </div>
                                 </div>
@@ -374,12 +473,68 @@ export default function ParticipantsList({
                 </div>
             )}
 
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="px-6 py-4 border-t border-gray-200">
+                    <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-700">
+                            Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Previous
+                            </button>
+                            <div className="flex space-x-1">
+                                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                                    let pageNumber
+                                    if (totalPages <= 7) {
+                                        pageNumber = i + 1
+                                    } else if (currentPage <= 4) {
+                                        pageNumber = i + 1
+                                    } else if (currentPage >= totalPages - 3) {
+                                        pageNumber = totalPages - 6 + i
+                                    } else {
+                                        pageNumber = currentPage - 3 + i
+                                    }
+                                    
+                                    const isActive = pageNumber === currentPage
+                                    return (
+                                        <button
+                                            key={pageNumber}
+                                            onClick={() => handlePageChange(pageNumber)}
+                                            className={`px-3 py-2 text-sm font-medium rounded-md ${
+                                                isActive
+                                                    ? 'bg-indigo-600 text-white'
+                                                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            {pageNumber}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                            <button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Footer with stats */}
             {sortedBookings.length > 0 && (
                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div className="text-sm text-gray-600">
-                            Showing {sortedBookings.length} of {totalBookings} confirmed booking{totalBookings !== 1 ? 's' : ''}
+                            Showing {Math.min(paginatedBookings.length, totalItems)} of {totalBookings} confirmed booking{totalBookings !== 1 ? 's' : ''}
                         </div>
                         <div className="text-sm font-medium text-gray-900">
                             Total: {totalParticipants} participant{totalParticipants !== 1 ? 's' : ''}
