@@ -7,6 +7,8 @@ import AddToCalendar from '@/components/calendar/add-to-calendar'
 import { CalendarEvent } from '@/lib/utils/calendar'
 import MarkdownContent from '@/components/ui/html-content'
 import SiteNav from '@/components/layout/site-nav'
+import RefundPolicyDisplay from '@/components/events/refund-policy-display'
+import RefundRequestButton from '@/components/dashboard/refund-request-button'
 
 async function getBooking(bookingId: string, userId: string): Promise<(Booking & { event: Event }) | null> {
     const supabase = await createClient()
@@ -18,7 +20,7 @@ async function getBooking(bookingId: string, userId: string): Promise<(Booking &
         .from('bookings')
         .select(`
       *,
-      event:events(*)
+      event:events(*, timeline)
     `)
         .eq('user_id', userId) // Ensure user can only view their own bookings
 
@@ -254,6 +256,69 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Refund Information - Only show if refund policy exists */}
+                            {booking.event.timeline?.refund && booking.event.timeline.refund.length > 0 && (
+                                <div className="mt-10">
+                                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Refund Information</h2>
+                                    <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                                        {/* Refund Status */}
+                                        <div className="mb-6">
+                                            <h3 className="font-medium text-gray-900 mb-3">Current Refund Status</h3>
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-gray-600">Status:</span>
+                                                    <span className={`font-medium ${
+                                                        booking.refund_status === 'none' ? 'text-gray-800' :
+                                                        booking.refund_status === 'requested' ? 'text-yellow-600' :
+                                                        booking.refund_status === 'processing' ? 'text-blue-600' :
+                                                        booking.refund_status === 'completed' ? 'text-green-600' :
+                                                        'text-red-600'
+                                                    }`}>
+                                                        {booking.refund_status === 'none' ? 'No refund requested' :
+                                                         booking.refund_status === 'requested' ? 'Refund requested' :
+                                                         booking.refund_status === 'processing' ? 'Refund processing' :
+                                                         booking.refund_status === 'completed' ? 'Refund completed' :
+                                                         'Refund failed'}
+                                                    </span>
+                                                </div>
+                                                {booking.refund_amount && (
+                                                    <div className="flex justify-between text-sm">
+                                                        <span className="text-gray-600">Refund Amount:</span>
+                                                        <span className="font-medium text-gray-800">
+                                                            AUD ${booking.refund_amount.toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {booking.refund_requested_at && (
+                                                    <div className="flex justify-between text-sm">
+                                                        <span className="text-gray-600">Requested At:</span>
+                                                        <span className="text-gray-800">
+                                                            {new Date(booking.refund_requested_at).toLocaleDateString()} at {new Date(booking.refund_requested_at).toLocaleTimeString([], {
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Refund Policy Display */}
+                                        <div className="mb-6">
+                                            <RefundPolicyDisplay 
+                                                refundTimeline={booking.event.timeline.refund}
+                                                eventStartDate={booking.event.start_date}
+                                            />
+                                        </div>
+
+                                        {/* Refund Request Button */}
+                                        <div className="pt-4 border-t border-gray-200">
+                                            <RefundRequestButton booking={booking} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Participant Information */}
                             {participants && participants.length > 0 && (

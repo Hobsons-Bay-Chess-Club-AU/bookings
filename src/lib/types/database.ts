@@ -1,9 +1,24 @@
 export type UserRole = 'user' | 'admin' | 'organizer'
 export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'refunded' | 'verified'
+export type RefundStatus = 'none' | 'requested' | 'processing' | 'completed' | 'failed'
 export type EventStatus = 'draft' | 'published' | 'cancelled' | 'completed' | 'entry_closed'
 export type MembershipType = 'member' | 'non_member' | 'all'
 export type PricingType = 'early_bird' | 'regular' | 'late_bird' | 'special'
 export type FormFieldType = 'text' | 'email' | 'phone' | 'number' | 'date' | 'select' | 'multiselect' | 'checkbox' | 'textarea' | 'file'
+export type TimelineType = 'refund'
+export type RefundValueType = 'percentage' | 'fixed'
+
+export interface RefundTimelineItem {
+    from_date: string | null  // null means from event creation
+    to_date: string | null    // null means until event date
+    type: RefundValueType
+    value: number // percentage (0-100) or fixed amount
+    description?: string
+}
+
+export interface EventTimeline {
+    refund?: RefundTimelineItem[]
+}
 
 export interface Profile {
     id: string
@@ -74,6 +89,7 @@ export interface Event {
     organizer_id: string
     entry_close_date?: string
     custom_form_fields?: FormField[]
+    timeline?: EventTimeline
     is_promoted?: boolean
     created_at: string
     updated_at: string
@@ -89,6 +105,12 @@ export interface Booking {
     quantity: number
     total_amount: number
     status: BookingStatus
+    refund_status: RefundStatus
+    refund_amount?: number
+    refund_percentage?: number
+    refund_requested_at?: string
+    refund_processed_at?: string
+    refund_reason?: string
     stripe_payment_intent_id?: string
     stripe_session_id?: string
     booking_date: string

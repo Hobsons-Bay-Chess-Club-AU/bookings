@@ -6,7 +6,8 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import MarkdownEditor from '@/components/ui/markdown-editor'
 import FormBuilder from '@/components/events/form-builder'
-import { FormField, Event } from '@/lib/types/database'
+import TimelineBuilder from '@/components/events/timeline-builder'
+import { FormField, Event, RefundTimelineItem, EventTimeline } from '@/lib/types/database'
 
 export default function EditEventPage() {
     const [formData, setFormData] = useState({
@@ -26,6 +27,8 @@ export default function EditEventPage() {
         is_promoted: false
     })
     const [formFields, setFormFields] = useState<FormField[]>([])
+    const [refundTimeline, setRefundTimeline] = useState<RefundTimelineItem[]>([])
+    const [enableRefunds, setEnableRefunds] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [initialLoading, setInitialLoading] = useState(true)
@@ -85,6 +88,12 @@ export default function EditEventPage() {
                 // Set form fields
                 setFormFields(eventData.custom_form_fields || [])
 
+                // Set refund timeline
+                if (eventData.timeline?.refund) {
+                    setRefundTimeline(eventData.timeline.refund)
+                    setEnableRefunds(true)
+                }
+
             } catch (err) {
                 console.error('Error loading event:', err)
                 setError('Failed to load event data')
@@ -134,6 +143,12 @@ export default function EditEventPage() {
                 }
             }
 
+            // Prepare timeline data
+            const timeline: EventTimeline = {}
+            if (enableRefunds && refundTimeline.length > 0) {
+                timeline.refund = refundTimeline
+            }
+
             // Update event
             const { error: eventError } = await supabase
                 .from('events')
@@ -153,6 +168,7 @@ export default function EditEventPage() {
                     status: formData.status,
                     alias: alias,
                     custom_form_fields: formFields,
+                    timeline: Object.keys(timeline).length > 0 ? timeline : null,
                     is_promoted: formData.is_promoted,
                     updated_at: new Date().toISOString()
                 })
@@ -467,6 +483,40 @@ export default function EditEventPage() {
                                     Promoted events appear first on the landing page
                                 </p>
                             </div>
+                        </div>
+
+                        {/* Refund Timeline */}
+                        <div className="mt-8 pt-6 border-t border-gray-200">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 className="text-lg font-medium text-gray-900">
+                                        Refund Policy
+                                    </h3>
+                                    <p className="text-sm text-gray-600 mt-1">
+                                        Configure automatic refund policies based on timing.
+                                    </p>
+                                </div>
+                                <div className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        id="enable_refunds"
+                                        checked={enableRefunds}
+                                        onChange={(e) => setEnableRefunds(e.target.checked)}
+                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                    />
+                                    <label htmlFor="enable_refunds" className="ml-2 block text-sm font-medium text-gray-700">
+                                        Enable Refunds
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            {enableRefunds && (
+                                <TimelineBuilder
+                                    eventStartDate={formData.start_date}
+                                    refundTimeline={refundTimeline}
+                                    onChange={setRefundTimeline}
+                                />
+                            )}
                         </div>
 
                         {/* Participant Form Fields */}

@@ -9,6 +9,7 @@ import EventStructuredData from '@/components/events/event-structured-data'
 import EventQRCode from '@/components/events/event-qr-code'
 import EventBookingSection from '@/components/events/event-booking-section'
 import EventLayout from '@/components/events/event-layout'
+import RefundPolicyDisplay from '@/components/events/refund-policy-display'
 import { Event, Booking } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
 import { Metadata } from 'next'
@@ -315,6 +316,13 @@ export default async function EventPage({ params }: EventPageProps) {
                                         className="text-gray-700"
                                     />
                                 </div>
+                            )}
+
+                            {event.timeline?.refund && (
+                                <RefundPolicyDisplay
+                                    refundTimeline={event.timeline.refund}
+                                    eventStartDate={event.start_date}
+                                />
                             )}
 
                             {event.organizer && (
