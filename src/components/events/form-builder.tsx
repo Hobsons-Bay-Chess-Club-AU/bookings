@@ -28,7 +28,9 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
         { value: 'select', label: 'Dropdown', description: 'Single selection from options' },
         { value: 'multiselect', label: 'Multi-Select', description: 'Multiple selections from options' },
         { value: 'checkbox', label: 'Checkbox', description: 'True/false checkbox' },
-        { value: 'file', label: 'File Upload', description: 'File attachment' }
+        { value: 'file', label: 'File Upload', description: 'File attachment' },
+        { value: 'fide_id', label: 'FIDE Player', description: 'Search and select FIDE-rated chess player' },
+        { value: 'acf_id', label: 'ACF Player', description: 'Search and select ACF-rated chess player' }
     ]
 
     const createNewField = (): FormField => ({

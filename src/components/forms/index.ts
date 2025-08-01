@@ -14,9 +14,12 @@ export { default as SelectField } from './form-fields/select-field'
 export { default as MultiSelectField } from './form-fields/multiselect-field'
 export { default as CheckboxField } from './form-fields/checkbox-field'
 export { default as FileField } from './form-fields/file-field'
+export { default as FidePlayerField } from './form-fields/fide-player-field'
+export { default as AcfPlayerField } from './form-fields/acf-player-field'
 
 // Utilities
 export { isFieldValid, validateFormFields, getDefaultFieldValue, formatFieldValue } from './form-utils'
 
 // Types
 export type { FormFieldProps, SelectOption } from './form-fields/types'
+export type { PlayerData } from '@/lib/types/database'

@@ -40,19 +40,17 @@ export default function MobileBookingModal({ event, user, isOpen, onClose }: Mob
     return (
         <div className="fixed inset-0 z-50 md:hidden">
             {/* Backdrop */}
-            <div 
-                className={`fixed inset-0 bg-black transition-opacity duration-300 ${
-                    isAnimating ? 'bg-opacity-50' : 'bg-opacity-0'
-                }`}
+            <div
+                className={`fixed inset-0 bg-black transition-opacity duration-300 ${isAnimating ? 'bg-opacity-50' : 'bg-opacity-0'
+                    }`}
                 onClick={handleClose}
             />
-            
+
             {/* Modal */}
-            <div 
-                className={`fixed inset-x-0 bottom-0 bg-white rounded-t-2xl shadow-2xl transition-transform duration-300 ease-out ${
-                    isAnimating ? 'transform translate-y-0' : 'transform translate-y-full'
-                }`}
-                style={{ 
+            <div
+                className={`fixed inset-x-0 bottom-0 bg-white rounded-t-2xl shadow-2xl transition-transform duration-300 ease-out ${isAnimating ? 'transform translate-y-0' : 'transform translate-y-full'
+                    }`}
+                style={{
                     maxHeight: '90vh',
                     minHeight: '70vh'
                 }}

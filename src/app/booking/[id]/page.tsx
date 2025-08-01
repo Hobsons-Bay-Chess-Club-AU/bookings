@@ -268,18 +268,17 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                             <div className="space-y-2">
                                                 <div className="flex justify-between text-sm">
                                                     <span className="text-gray-600">Status:</span>
-                                                    <span className={`font-medium ${
-                                                        booking.refund_status === 'none' ? 'text-gray-800' :
-                                                        booking.refund_status === 'requested' ? 'text-yellow-600' :
-                                                        booking.refund_status === 'processing' ? 'text-blue-600' :
-                                                        booking.refund_status === 'completed' ? 'text-green-600' :
-                                                        'text-red-600'
-                                                    }`}>
+                                                    <span className={`font-medium ${booking.refund_status === 'none' ? 'text-gray-800' :
+                                                            booking.refund_status === 'requested' ? 'text-yellow-600' :
+                                                                booking.refund_status === 'processing' ? 'text-blue-600' :
+                                                                    booking.refund_status === 'completed' ? 'text-green-600' :
+                                                                        'text-red-600'
+                                                        }`}>
                                                         {booking.refund_status === 'none' ? 'No refund requested' :
-                                                         booking.refund_status === 'requested' ? 'Refund requested' :
-                                                         booking.refund_status === 'processing' ? 'Refund processing' :
-                                                         booking.refund_status === 'completed' ? 'Refund completed' :
-                                                         'Refund failed'}
+                                                            booking.refund_status === 'requested' ? 'Refund requested' :
+                                                                booking.refund_status === 'processing' ? 'Refund processing' :
+                                                                    booking.refund_status === 'completed' ? 'Refund completed' :
+                                                                        'Refund failed'}
                                                     </span>
                                                 </div>
                                                 {booking.refund_amount && (
@@ -306,7 +305,7 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
 
                                         {/* Refund Policy Display */}
                                         <div className="mb-6">
-                                            <RefundPolicyDisplay 
+                                            <RefundPolicyDisplay
                                                 refundTimeline={booking.event.timeline.refund}
                                                 eventStartDate={booking.event.start_date}
                                             />

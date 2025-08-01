@@ -16,7 +16,7 @@ export default function EventBookingSection({ event, profile }: EventBookingSect
     return (
         <>
             {/* Mobile Book Now Button */}
-            <MobileBookingButton 
+            <MobileBookingButton
                 event={event}
                 onClick={() => setShowMobileBooking(true)}
             />

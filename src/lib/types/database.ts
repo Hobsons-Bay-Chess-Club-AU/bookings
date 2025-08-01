@@ -4,9 +4,18 @@ export type RefundStatus = 'none' | 'requested' | 'processing' | 'completed' | '
 export type EventStatus = 'draft' | 'published' | 'cancelled' | 'completed' | 'entry_closed'
 export type MembershipType = 'member' | 'non_member' | 'all'
 export type PricingType = 'early_bird' | 'regular' | 'late_bird' | 'special'
-export type FormFieldType = 'text' | 'email' | 'phone' | 'number' | 'date' | 'select' | 'multiselect' | 'checkbox' | 'textarea' | 'file'
+export type FormFieldType = 'text' | 'email' | 'phone' | 'number' | 'date' | 'select' | 'multiselect' | 'checkbox' | 'textarea' | 'file' | 'fide_id' | 'acf_id'
 export type TimelineType = 'refund'
 export type RefundValueType = 'percentage' | 'fixed'
+
+// Player data structure for FIDE and ACF composite fields
+export interface PlayerData {
+    id: string
+    name: string
+    std_rating: number | null
+    blitz_rating: number | null
+    rapid_rating: number | null
+}
 
 export interface RefundTimelineItem {
     from_date: string | null  // null means from event creation
@@ -18,6 +27,14 @@ export interface RefundTimelineItem {
 
 export interface EventTimeline {
     refund?: RefundTimelineItem[]
+}
+
+export interface EventSettings {
+    show_participants_public: boolean
+    participant_display_fields: string[]
+    // Future settings can be added here
+    show_attendance_count?: boolean
+    allow_participant_contact?: boolean
 }
 
 export interface Profile {
@@ -51,6 +68,7 @@ export interface EventPricing {
 }
 
 export interface FormField {
+    id?: string
     name: string
     label: string
     description?: string
@@ -59,6 +77,23 @@ export interface FormField {
     options?: any[]
     validation?: any
     placeholder?: string
+}
+
+export interface CustomField {
+    id: string
+    organizer_id: string
+    name: string
+    label: string
+    description?: string
+    type: FormFieldType
+    required: boolean
+    options?: any[]
+    validation?: any
+    placeholder?: string
+    is_global: boolean
+    usage_count: number
+    created_at: string
+    updated_at: string
 }
 
 export interface Participant {
@@ -91,6 +126,7 @@ export interface Event {
     custom_form_fields?: FormField[]
     timeline?: EventTimeline
     is_promoted?: boolean
+    settings?: EventSettings
     created_at: string
     updated_at: string
     organizer?: Profile

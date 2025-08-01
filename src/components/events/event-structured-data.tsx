@@ -21,8 +21,8 @@ interface EventStructuredDataProps {
 }
 
 export default function EventStructuredData({ event }: EventStructuredDataProps) {
-    const eventUrl = typeof window !== 'undefined' 
-        ? event.alias 
+    const eventUrl = typeof window !== 'undefined'
+        ? event.alias
             ? `${window.location.origin}/e/${event.alias}`
             : `${window.location.origin}/events/${event.id}`
         : ''
@@ -56,8 +56,8 @@ export default function EventStructuredData({ event }: EventStructuredDataProps)
             "url": eventUrl,
             "price": event.price.toString(),
             "priceCurrency": "AUD",
-            "availability": event.max_attendees && event.current_attendees >= event.max_attendees 
-                ? "https://schema.org/SoldOut" 
+            "availability": event.max_attendees && event.current_attendees >= event.max_attendees
+                ? "https://schema.org/SoldOut"
                 : "https://schema.org/InStock",
             "validFrom": new Date().toISOString()
         },

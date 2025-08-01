@@ -53,7 +53,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
 
         const statusColors = {
             'requested': 'text-yellow-600',
-            'processing': 'text-blue-600', 
+            'processing': 'text-blue-600',
             'completed': 'text-green-600',
             'failed': 'text-red-600'
         }
@@ -93,7 +93,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
         <>
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-                <div 
+                <div
                     className={getStatCardClass('all')}
                     onClick={() => setActiveFilter('all')}
                 >
@@ -116,7 +116,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                     </div>
                 </div>
 
-                <div 
+                <div
                     className={getStatCardClass('confirmed')}
                     onClick={() => setActiveFilter('confirmed')}
                 >
@@ -139,7 +139,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                     </div>
                 </div>
 
-                <div 
+                <div
                     className={getStatCardClass('pending')}
                     onClick={() => setActiveFilter('pending')}
                 >
@@ -162,7 +162,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                     </div>
                 </div>
 
-                <div 
+                <div
                     className={getStatCardClass('cancelled')}
                     onClick={() => setActiveFilter('cancelled')}
                 >
@@ -242,7 +242,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                             {activeFilter === 'all' ? 'No bookings yet' : `No ${activeFilter} bookings`}
                         </h3>
                         <p className="text-gray-500 mb-6">
-                            {activeFilter === 'all' 
+                            {activeFilter === 'all'
                                 ? 'Start by browsing our amazing events and book your first ticket!'
                                 : `You don't have any ${activeFilter} bookings at the moment.`
                             }
@@ -270,7 +270,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                 {/* Mobile Card Layout */}
                                 <div className="md:hidden space-y-3">
                                     <div className="flex items-start justify-between">
-                                        <Link 
+                                        <Link
                                             href={`/events/${booking.event.id}`}
                                             className="text-lg font-medium text-indigo-600 hover:text-indigo-800 flex-1 mr-3"
                                         >
@@ -283,7 +283,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                             {getRefundStatusDisplay(booking)}
                                         </div>
                                     </div>
-                                    
+
                                     <div className="space-y-2 text-sm text-gray-600">
                                         <div className="flex items-center">
                                             <span className="mr-2">📅</span>
@@ -322,7 +322,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                             </span>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="pt-3 flex gap-2">
                                         <Link
                                             href={`/booking/${booking.booking_id || booking.id}`}
@@ -341,7 +341,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                     <div className="flex items-center justify-between">
                                         <div className="flex-1 grid grid-cols-6 gap-4 items-center">
                                             <div className="col-span-2">
-                                                <Link 
+                                                <Link
                                                     href={`/events/${booking.event.id}`}
                                                     className="text-lg font-medium text-indigo-600 hover:text-indigo-800"
                                                 >
@@ -351,7 +351,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                                     {booking.event.location}
                                                 </div>
                                             </div>
-                                            
+
                                             <div className="text-sm text-gray-600">
                                                 <div>{new Date(booking.event.start_date).toLocaleDateString('en-US', {
                                                     month: 'short',
@@ -365,21 +365,21 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                                     })}
                                                 </div>
                                             </div>
-                                            
+
                                             <div className="text-sm text-gray-600">
                                                 <div>{booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}</div>
                                                 <div className="font-mono text-xs text-gray-500">
                                                     ID: {booking.booking_id || booking.id.slice(0, 8)}
                                                 </div>
                                             </div>
-                                            
+
                                             <div className="text-sm text-gray-600">
                                                 <div className="font-medium text-gray-900">AUD ${booking.total_amount.toFixed(2)}</div>
                                                 <div className="text-xs text-gray-500">
                                                     Booked: {new Date(booking.booking_date).toLocaleDateString()}
                                                 </div>
                                             </div>
-                                            
+
                                             <div className="flex items-start justify-between">
                                                 <div className="flex flex-col items-start">
                                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
@@ -389,7 +389,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <div className="ml-4 flex-shrink-0 flex gap-2">
                                             <Link
                                                 href={`/booking/${booking.booking_id || booking.id}`}

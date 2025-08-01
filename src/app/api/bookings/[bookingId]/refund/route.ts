@@ -14,7 +14,7 @@ export async function POST(
     try {
         const { bookingId } = await params
         const { reason } = await request.json()
-        
+
         const user = await getCurrentUser()
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -70,12 +70,12 @@ export async function POST(
         const calculateRefund = () => {
             const now = new Date()
             const refundTimeline = event.timeline!.refund!
-            
+
             for (const item of refundTimeline) {
                 const fromTime = item.from_date ? new Date(item.from_date).getTime() : 0
                 const toTime = item.to_date ? new Date(item.to_date).getTime() : new Date(event.start_date).getTime()
                 const currentTime = now.getTime()
-                
+
                 if (currentTime >= fromTime && currentTime <= toTime) {
                     if (item.type === 'percentage') {
                         return {
@@ -90,7 +90,7 @@ export async function POST(
                     }
                 }
             }
-            
+
             // Default to last timeline item
             const lastItem = refundTimeline[refundTimeline.length - 1]
             if (lastItem.type === 'percentage') {
@@ -107,7 +107,7 @@ export async function POST(
         }
 
         const refundCalculation = calculateRefund()
-        
+
         if (refundCalculation.amount <= 0) {
             return NextResponse.json(
                 { error: 'No refund available for this booking at this time' },
@@ -161,7 +161,7 @@ export async function POST(
                 // Update booking with Stripe refund ID and cancel the booking
                 await supabase
                     .from('bookings')
-                    .update({ 
+                    .update({
                         refund_status: 'completed',
                         refund_processed_at: new Date().toISOString(),
                         status: 'cancelled' // Cancel booking to release the seat
@@ -178,7 +178,7 @@ export async function POST(
 
             } catch (stripeError: any) {
                 console.error('Stripe refund error:', stripeError)
-                
+
                 // Update booking status to failed
                 await supabase
                     .from('bookings')
@@ -194,7 +194,7 @@ export async function POST(
             // For free events or bookings without payment
             await supabase
                 .from('bookings')
-                .update({ 
+                .update({
                     refund_status: 'completed',
                     refund_processed_at: new Date().toISOString(),
                     status: 'cancelled' // Cancel booking to release the seat

@@ -31,10 +31,10 @@ export default function EventQRCode({ event, size = 120, showLabel = true, class
             const checkMobile = () => {
                 setIsMobile(window.innerWidth < 768)
             }
-            
+
             checkMobile()
             window.addEventListener('resize', checkMobile)
-            
+
             return () => window.removeEventListener('resize', checkMobile)
         }
     }, [event.alias, event.id])
@@ -57,10 +57,9 @@ export default function EventQRCode({ event, size = 120, showLabel = true, class
     return (
         <>
             <div className={`flex flex-col items-center ${className}`}>
-                <div 
-                    className={`bg-white p-2 md:p-3 rounded-lg shadow-sm border ${
-                        isMobile ? 'cursor-pointer hover:shadow-md transition-shadow' : ''
-                    }`}
+                <div
+                    className={`bg-white p-2 md:p-3 rounded-lg shadow-sm border ${isMobile ? 'cursor-pointer hover:shadow-md transition-shadow' : ''
+                        }`}
                     onClick={handleQRClick}
                 >
                     {/* Responsive QR Code - smaller on mobile, full size on desktop */}
@@ -99,7 +98,7 @@ export default function EventQRCode({ event, size = 120, showLabel = true, class
                                 </svg>
                             </button>
                         </div>
-                        
+
                         <div className="flex flex-col items-center">
                             <div className="bg-white p-4 rounded-lg border">
                                 <QRCode value={eventUrl} size={200} />

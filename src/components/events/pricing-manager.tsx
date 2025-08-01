@@ -121,7 +121,7 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
 
             if (error) throw error
 
-            setPricing(prev => prev.map(p => 
+            setPricing(prev => prev.map(p =>
                 p.id === pricingId ? { ...p, is_active: !currentActive } : p
             ))
         } catch (err: any) {
@@ -367,8 +367,8 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
                                             {pricingItem.pricing_type.replace('_', ' ')}
                                         </span>
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getMembershipTypeColor(pricingItem.membership_type)}`}>
-                                            {pricingItem.membership_type === 'all' ? 'All Users' : 
-                                             pricingItem.membership_type === 'member' ? 'Members' : 'Non-Members'}
+                                            {pricingItem.membership_type === 'all' ? 'All Users' :
+                                                pricingItem.membership_type === 'member' ? 'Members' : 'Non-Members'}
                                         </span>
                                         {!pricingItem.is_active && (
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -420,11 +420,10 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
                                     </button>
                                     <button
                                         onClick={() => handleToggleActive(pricingItem.id, pricingItem.is_active)}
-                                        className={`inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white ${
-                                            pricingItem.is_active 
-                                                ? 'bg-yellow-600 hover:bg-yellow-700' 
+                                        className={`inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white ${pricingItem.is_active
+                                                ? 'bg-yellow-600 hover:bg-yellow-700'
                                                 : 'bg-green-600 hover:bg-green-700'
-                                        }`}
+                                            }`}
                                         disabled={loading}
                                     >
                                         {pricingItem.is_active ? 'Deactivate' : 'Activate'}

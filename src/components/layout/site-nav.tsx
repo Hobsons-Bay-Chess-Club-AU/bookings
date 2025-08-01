@@ -37,14 +37,14 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
     // Helper function to get nav link classes
     const getNavLinkClasses = (path: string, isDesktop = true) => {
         const isActive = isActivePath(path)
-        const baseClasses = isDesktop 
+        const baseClasses = isDesktop
             ? "px-3 py-2 rounded-md text-sm font-medium transition-colors relative"
             : "block px-3 py-3 rounded-md text-base font-medium transition-colors relative"
-        
+
         if (isActive) {
             return `${baseClasses} text-indigo-600 cursor-default after:content-[''] after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:bg-indigo-600`
         }
-        
+
         return `${baseClasses} text-gray-700 hover:text-gray-900 ${isDesktop ? 'hover:bg-gray-50' : 'hover:bg-gray-50'}`
     }
 
@@ -52,11 +52,11 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
         const getUser = async () => {
             try {
                 const { data: { user }, error: userError } = await supabase.auth.getUser()
-                
+
                 if (userError) {
                     console.error('Error getting user:', userError)
                 }
-                
+
                 setUser(user)
 
                 if (user) {
@@ -110,7 +110,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setProfileDropdownOpen(false)
             }
-            
+
             // Handle mobile menu - close if clicking on backdrop
             if (mobileMenuOpen && mobileMenuRef.current) {
                 const backdrop = event.target as HTMLElement
@@ -149,9 +149,9 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                         {showTitle && (
                             <div className="flex items-center">
                                 <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
-                                    <img 
-                                        src="/chess-logo.svg" 
-                                        alt="HBCC Logo" 
+                                    <img
+                                        src="/chess-logo.svg"
+                                        alt="HBCC Logo"
                                         className="h-8 w-8 mr-3"
                                     />
                                     <h1 className="text-2xl font-bold text-gray-900">Hobsons Bay Chess Club</h1>
@@ -174,9 +174,9 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                     {showTitle && (
                         <div className="flex items-center">
                             <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
-                                <img 
-                                    src="/chess-logo.svg" 
-                                    alt="HBCC Logo" 
+                                <img
+                                    src="/chess-logo.svg"
+                                    alt="HBCC Logo"
                                     className="h-8 w-8 mr-3"
                                 />
                                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Hobsons Bay Chess Club</h1>
@@ -451,15 +451,15 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                     <div className="fixed inset-x-0 top-0 z-50 md:hidden" ref={mobileMenuRef}>
                         {/* Backdrop */}
                         <div className="fixed inset-0 bg-black bg-opacity-25" aria-hidden="true"></div>
-                        
+
                         {/* Menu panel */}
                         <div className="relative bg-white shadow-lg">
                             {/* Header with logo and close button */}
                             <div className="flex justify-between items-center px-4 py-4 border-b border-gray-200">
                                 <div className="flex items-center">
-                                    <img 
-                                        src="/chess-logo.svg" 
-                                        alt="HBCC Logo" 
+                                    <img
+                                        src="/chess-logo.svg"
+                                        alt="HBCC Logo"
                                         className="h-8 w-8 mr-3"
                                     />
                                     <h1 className="text-xl font-bold text-gray-900">Hobsons Bay Chess Club</h1>
@@ -474,7 +474,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                     </svg>
                                 </button>
                             </div>
-                            
+
                             {/* Menu items */}
                             <div className="px-4 py-4 space-y-1 max-h-screen overflow-y-auto">
                                 {isActivePath('/') ? (
@@ -506,7 +506,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                                 Dashboard
                                             </Link>
                                         )}
-                                        
+
                                         {isActivePath('/profile') ? (
                                             <span className={getNavLinkClasses('/profile', false)}>
                                                 Profile Settings

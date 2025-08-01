@@ -29,7 +29,9 @@ export default function CustomFieldsPage() {
         { value: 'select', label: 'Select' },
         { value: 'multiselect', label: 'Multi-Select' },
         { value: 'checkbox', label: 'Checkbox' },
-        { value: 'file', label: 'File' }
+        { value: 'file', label: 'File' },
+        { value: 'fide_id', label: 'FIDE Player' },
+        { value: 'acf_id', label: 'ACF Player' }
     ]
 
     useEffect(() => {

@@ -126,7 +126,7 @@ export default async function EventPricingPage({ params }: EventPricingPageProps
                                 <div className="flex items-center">
                                     <span className="mr-2">👥</span>
                                     <span>
-                                        {event.max_attendees 
+                                        {event.max_attendees
                                             ? `${event.current_attendees} / ${event.max_attendees} attendees`
                                             : `${event.current_attendees} attendees`
                                         }
@@ -148,7 +148,7 @@ export default async function EventPricingPage({ params }: EventPricingPageProps
                                 <div className="flex justify-between">
                                     <span className="text-gray-800">Price Range:</span>
                                     <span className="font-medium text-gray-900">
-                                        {pricing.length > 0 
+                                        {pricing.length > 0
                                             ? `AUD $${Math.min(...pricing.map(p => p.price)).toFixed(2)} - AUD $${Math.max(...pricing.map(p => p.price)).toFixed(2)}`
                                             : 'No pricing set'
                                         }

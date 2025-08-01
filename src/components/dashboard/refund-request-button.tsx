@@ -25,35 +25,35 @@ export default function RefundRequestButton({ booking, onRefundRequested }: Refu
         if (booking.status !== 'confirmed' && booking.status !== 'verified') return false
         if (booking.refund_status !== 'none') return false
         if (!booking.event?.timeline?.refund) return false
-        
+
         const now = new Date()
         const refundTimeline = booking.event.timeline.refund
-        
+
         // Check if any timeline period allows refunds
         for (const item of refundTimeline) {
             const fromTime = item.from_date ? new Date(item.from_date).getTime() : 0
             const toTime = item.to_date ? new Date(item.to_date).getTime() : new Date(booking.event.start_date).getTime()
             const currentTime = now.getTime()
-            
+
             if (currentTime >= fromTime && currentTime <= toTime && item.value > 0) {
                 return true
             }
         }
-        
+
         return false
     }
 
     const calculateCurrentRefund = () => {
         if (!booking.event?.timeline?.refund) return null
-        
+
         const now = new Date()
         const refundTimeline = booking.event.timeline.refund
-        
+
         for (const item of refundTimeline) {
             const fromTime = item.from_date ? new Date(item.from_date).getTime() : 0
             const toTime = item.to_date ? new Date(item.to_date).getTime() : new Date(booking.event.start_date).getTime()
             const currentTime = now.getTime()
-            
+
             if (currentTime >= fromTime && currentTime <= toTime) {
                 if (item.type === 'percentage') {
                     return {
@@ -70,14 +70,14 @@ export default function RefundRequestButton({ booking, onRefundRequested }: Refu
                 }
             }
         }
-        
+
         return null
     }
 
     const handleRefundRequest = async () => {
         setLoading(true)
         setError('')
-        
+
         try {
             const response = await fetch(`/api/bookings/${booking.id}/refund`, {
                 method: 'POST',
@@ -86,25 +86,25 @@ export default function RefundRequestButton({ booking, onRefundRequested }: Refu
                 },
                 body: JSON.stringify({ reason: reason.trim() || 'User requested refund' })
             })
-            
+
             const data = await response.json()
-            
+
             if (!response.ok) {
                 throw new Error(data.error || 'Failed to process refund')
             }
-            
+
             setShowModal(false)
             setReason('')
             setAcknowledged(false)
             setError('')
-            
+
             // Call the callback if provided, otherwise refresh the page
             if (onRefundRequested) {
                 onRefundRequested()
             } else {
                 window.location.reload()
             }
-            
+
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred')
         } finally {
@@ -135,7 +135,7 @@ export default function RefundRequestButton({ booking, onRefundRequested }: Refu
                             <h3 className="text-lg font-medium text-gray-900 mb-4">
                                 Request Refund
                             </h3>
-                            
+
                             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                 <p className="text-sm text-blue-800">
                                     <strong>Event:</strong> {booking.event?.title}
@@ -145,7 +145,7 @@ export default function RefundRequestButton({ booking, onRefundRequested }: Refu
                                 </p>
                                 {currentRefund && (
                                     <p className="text-sm text-blue-800">
-                                        <strong>Refund Amount:</strong> ${currentRefund.amount.toFixed(2)} 
+                                        <strong>Refund Amount:</strong> ${currentRefund.amount.toFixed(2)}
                                         ({currentRefund.percentage.toFixed(1)}%)
                                     </p>
                                 )}
@@ -191,7 +191,7 @@ export default function RefundRequestButton({ booking, onRefundRequested }: Refu
                                     value={reason}
                                     onChange={(e) => setReason(e.target.value)}
                                     rows={3}
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
                                     placeholder="Please provide a reason for your refund request..."
                                 />
                             </div>

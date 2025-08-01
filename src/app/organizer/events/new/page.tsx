@@ -69,7 +69,7 @@ export default function NewEventPage() {
                             'Content-Type': 'application/json',
                         },
                     })
-                    
+
                     if (response.ok) {
                         const data = await response.json()
                         alias = data.alias
@@ -249,9 +249,9 @@ export default function NewEventPage() {
                             </div>
 
                             <div>
-                                                            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                                Ticket Price (AUD)
-                            </label>
+                                <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                                    Ticket Price (AUD)
+                                </label>
                                 <input
                                     type="number"
                                     id="price"

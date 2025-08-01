@@ -14,11 +14,11 @@ export default function RefundPolicyDisplay({ refundTimeline, eventStartDate }: 
 
     const calculateRefundForDate = (date: Date): { value: number; type: 'percentage' | 'fixed'; description?: string } => {
         const currentTime = date.getTime()
-        
+
         for (const item of refundTimeline) {
             const fromTime = item.from_date ? new Date(item.from_date).getTime() : 0
             const toTime = item.to_date ? new Date(item.to_date).getTime() : new Date(eventStartDate).getTime()
-            
+
             if (currentTime >= fromTime && currentTime <= toTime) {
                 return {
                     value: item.value,
@@ -27,7 +27,7 @@ export default function RefundPolicyDisplay({ refundTimeline, eventStartDate }: 
                 }
             }
         }
-        
+
         // Default to last item if no match found
         const lastItem = refundTimeline[refundTimeline.length - 1]
         return {
@@ -49,22 +49,22 @@ export default function RefundPolicyDisplay({ refundTimeline, eventStartDate }: 
     }
 
     const formatDateRange = (fromDate: string | null, toDate: string | null) => {
-        const fromText = fromDate 
-            ? new Date(fromDate).toLocaleDateString('en-US', { 
-                month: 'short', 
+        const fromText = fromDate
+            ? new Date(fromDate).toLocaleDateString('en-US', {
+                month: 'short',
                 day: 'numeric',
                 year: 'numeric'
-              })
+            })
             : 'Event creation'
-        
-        const toText = toDate 
-            ? new Date(toDate).toLocaleDateString('en-US', { 
-                month: 'short', 
+
+        const toText = toDate
+            ? new Date(toDate).toLocaleDateString('en-US', {
+                month: 'short',
                 day: 'numeric',
                 year: 'numeric'
-              })
+            })
             : 'Event date'
-        
+
         return `${fromText} → ${toText}`
     }
 
@@ -76,13 +76,12 @@ export default function RefundPolicyDisplay({ refundTimeline, eventStartDate }: 
             <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Refund Policy
             </h3>
-            
+
             {/* Current refund status */}
-            <div className={`p-4 rounded-lg mb-4 ${
-                hasRefunds 
-                    ? 'bg-green-50 border border-green-200' 
+            <div className={`p-4 rounded-lg mb-4 ${hasRefunds
+                    ? 'bg-green-50 border border-green-200'
                     : 'bg-red-50 border border-red-200'
-            }`}>
+                }`}>
                 <div className="flex items-center">
                     <div className={`flex-shrink-0 ${hasRefunds ? 'text-green-400' : 'text-red-400'}`}>
                         {hasRefunds ? (
@@ -96,9 +95,8 @@ export default function RefundPolicyDisplay({ refundTimeline, eventStartDate }: 
                         )}
                     </div>
                     <div className="ml-3">
-                        <h4 className={`text-sm font-medium ${
-                            hasRefunds ? 'text-green-800' : 'text-red-800'
-                        }`}>
+                        <h4 className={`text-sm font-medium ${hasRefunds ? 'text-green-800' : 'text-red-800'
+                            }`}>
                             Current Refund Status
                         </h4>
                         <p className={`text-sm ${hasRefunds ? 'text-green-700' : 'text-red-700'}`}>
@@ -132,15 +130,14 @@ export default function RefundPolicyDisplay({ refundTimeline, eventStartDate }: 
                                 const toTime = item.to_date ? new Date(item.to_date).getTime() : new Date(eventStartDate).getTime()
                                 return now >= fromTime && now <= toTime
                             })()
-                            
+
                             return (
-                                <div 
-                                    key={index} 
-                                    className={`flex justify-between items-center py-2 px-3 rounded ${
-                                        isCurrentPeriod 
-                                            ? 'bg-indigo-100 border border-indigo-200' 
+                                <div
+                                    key={index}
+                                    className={`flex justify-between items-center py-2 px-3 rounded ${isCurrentPeriod
+                                            ? 'bg-indigo-100 border border-indigo-200'
                                             : 'bg-white'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="flex items-center">
                                         {isCurrentPeriod && (
@@ -151,9 +148,8 @@ export default function RefundPolicyDisplay({ refundTimeline, eventStartDate }: 
                                         </span>
                                     </div>
                                     <div className="text-right">
-                                        <span className={`text-sm font-medium ${
-                                            item.value > 0 ? 'text-green-600' : 'text-red-600'
-                                        }`}>
+                                        <span className={`text-sm font-medium ${item.value > 0 ? 'text-green-600' : 'text-red-600'
+                                            }`}>
                                             {refundValue} refund
                                         </span>
                                         {item.description && (

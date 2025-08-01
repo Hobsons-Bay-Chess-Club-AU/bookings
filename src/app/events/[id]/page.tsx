@@ -10,7 +10,8 @@ import EventQRCode from '@/components/events/event-qr-code'
 import EventBookingSection from '@/components/events/event-booking-section'
 import EventLayout from '@/components/events/event-layout'
 import RefundPolicyDisplay from '@/components/events/refund-policy-display'
-import { Event, Booking } from '@/lib/types/database'
+import ParticipantsList from '@/components/events/participants-list'
+import { Event, Booking, Profile } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
 import { Metadata } from 'next'
 
@@ -50,6 +51,41 @@ async function getUserBooking(eventId: string, userId: string): Promise<Booking 
     return booking
 }
 
+interface BookingWithProfile extends Booking {
+    profile: Profile
+    participants?: Array<{
+        id: string
+        first_name: string
+        last_name: string
+        date_of_birth?: string
+        contact_email?: string
+        contact_phone?: string
+        custom_data?: Record<string, any>
+    }>
+}
+
+async function getEventParticipants(eventId: string): Promise<BookingWithProfile[]> {
+    const supabase = await createClient()
+
+    const { data: bookings, error } = await supabase
+        .from('bookings')
+        .select(`
+            *,
+            profile:profiles(*),
+            participants(*)
+        `)
+        .eq('event_id', eventId)
+        .in('status', ['confirmed', 'verified'])
+        .order('created_at', { ascending: false })
+
+    if (error) {
+        console.error('Error fetching participants:', error)
+        return []
+    }
+
+    return (bookings || []) as BookingWithProfile[]
+}
+
 interface EventPageProps {
     params: Promise<{ id: string }>
 }
@@ -67,11 +103,11 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
     }
 
     const title = `${event.title} | Hobsons Bay Chess Club Events`
-    const description = event.description 
+    const description = event.description
         ? event.description.substring(0, 160).replace(/[#*`]/g, '').trim() + (event.description.length > 160 ? '...' : '')
         : `Join us for ${event.title} at ${event.location} on ${new Date(event.start_date).toLocaleDateString()}`
 
-    const eventUrl = event.alias 
+    const eventUrl = event.alias
         ? `${process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com'}/e/${event.alias}`
         : `${process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com'}/events/${event.id}`
 
@@ -166,6 +202,7 @@ export default async function EventPage({ params }: EventPageProps) {
     }
 
     const userBooking = user ? await getUserBooking(event.id, user.id) : null
+    const participants = await getEventParticipants(event.id)
     const isEventFull = event.max_attendees ? event.current_attendees >= event.max_attendees : false
     const isEventPast = new Date(event.start_date) < new Date()
     const isBookable = event.status === 'published' && !isEventFull && !isEventPast
@@ -174,7 +211,7 @@ export default async function EventPage({ params }: EventPageProps) {
         <div className="min-h-screen bg-gray-50">
             {/* Structured Data for SEO */}
             <EventStructuredData event={event} />
-            
+
             {/* Navigation */}
             <NavWrapper />
 
@@ -297,7 +334,7 @@ export default async function EventPage({ params }: EventPageProps) {
                                     {/* QR Code and Mobile Book Button */}
                                     <div className="flex-shrink-0">
                                         <EventQRCode event={event} size={120} />
-                                        
+
                                         {/* Mobile Book Now Button - Only visible on mobile */}
                                         <div className="md:hidden mt-4">
                                             <EventBookingSection event={event} profile={profile || undefined} />
@@ -323,6 +360,18 @@ export default async function EventPage({ params }: EventPageProps) {
                                     refundTimeline={event.timeline.refund}
                                     eventStartDate={event.start_date}
                                 />
+                            )}
+
+                            {/* Participants Section - Only show if enabled in settings */}
+                            {event.settings?.show_participants_public && participants.length > 0 && (
+                                <div className="border-t pt-6 mt-6">
+                                    <ParticipantsList 
+                                        event={event} 
+                                        bookings={participants} 
+                                        isPublic={true}
+                                        showPrivateInfo={false}
+                                    />
+                                </div>
                             )}
 
                             {event.organizer && (

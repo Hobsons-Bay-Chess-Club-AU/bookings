@@ -72,6 +72,39 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
     }
 }
 
+export async function sendWelcomeEmail(userEmail: string, userName: string) {
+    try {
+        const html = await render(
+            React.createElement(WelcomeEmail, {
+                userName,
+                userEmail
+            })
+        )
+        const text = await render(
+            React.createElement(WelcomeEmail, {
+                userName,
+                userEmail
+            }),
+            { plainText: true }
+        )
+        const { data, error } = await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL || "" ,
+            to: userEmail,
+            subject: 'Welcome to HBCC Bookings!',
+            html,
+            text
+        })
+        if (error) {
+            console.error('Failed to send welcome email:', error)
+            return { success: false, error: error.message }
+        }
+        return { success: true, data }
+    } catch (error) {
+        console.error('Error sending welcome email:', error)
+        return { success: false, error: 'Failed to send welcome email' }
+    }
+}
+
 export async function sendPasswordResetEmail(userEmail: string, userName: string, resetUrl: string) {
     try {
         const html = await render(

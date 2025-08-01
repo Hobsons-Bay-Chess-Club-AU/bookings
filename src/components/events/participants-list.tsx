@@ -5,6 +5,15 @@ import { Booking, Event, Profile } from '@/lib/types/database'
 
 interface BookingWithProfile extends Booking {
     profile: Profile
+    participants?: Array<{
+        id: string
+        first_name: string
+        last_name: string
+        date_of_birth?: string
+        contact_email?: string
+        contact_phone?: string
+        custom_data?: Record<string, any>
+    }>
 }
 
 interface ParticipantsListProps {
@@ -16,17 +25,40 @@ interface ParticipantsListProps {
 
 type SortOption = 'name' | 'date' | 'tickets'
 
-export default function ParticipantsList({ 
-    event, 
-    bookings, 
-    isPublic = false, 
-    showPrivateInfo = false 
+export default function ParticipantsList({
+    event,
+    bookings,
+    isPublic = false,
+    showPrivateInfo = false
 }: ParticipantsListProps) {
     const [sortBy, setSortBy] = useState<SortOption>('name')
     const [searchTerm, setSearchTerm] = useState('')
 
+    // Get display fields from event settings for public view
+    const displayFields = isPublic
+        ? (event.settings?.participant_display_fields || ['first_name', 'last_name'])
+        : ['first_name', 'last_name', 'contact_email', 'contact_phone'] // Show all for private view
+
+    // Check if participants should be shown publicly
+    const shouldShowPublicParticipants = isPublic ? (event.settings?.show_participants_public || false) : true
+
+    // Don't show anything if public view is disabled
+    if (isPublic && !shouldShowPublicParticipants) {
+        return (
+            <div className="bg-white shadow rounded-lg p-8 text-center">
+                <span className="text-4xl mb-4 block">🔒</span>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Participant List Private
+                </h3>
+                <p className="text-gray-600">
+                    The organizer has chosen to keep the participant list private for this event.
+                </p>
+            </div>
+        )
+    }
+
     // Filter to only confirmed/verified participants
-    const confirmedBookings = bookings.filter(b => 
+    const confirmedBookings = bookings.filter(b =>
         b.status === 'confirmed' || b.status === 'verified'
     )
 
@@ -34,11 +66,86 @@ export default function ParticipantsList({
     const filteredBookings = confirmedBookings.filter(booking => {
         const searchableText = [
             booking.profile.full_name || '',
-            booking.profile.id || ''
+            booking.profile.email || ''
         ].join(' ').toLowerCase()
         
         return searchableText.includes(searchTerm.toLowerCase())
-    })
+    })    // Helper function to get field value
+    const getFieldValue = (booking: BookingWithProfile, fieldId: string): string => {
+        // Handle custom fields
+        if (fieldId.startsWith('custom_')) {
+            const customFieldName = fieldId.replace('custom_', '')
+            // Check if booking has participants with custom data
+            if (booking.participants && booking.participants.length > 0) {
+                const participant = booking.participants[0] // For now, get first participant
+                const customValue = participant.custom_data?.[customFieldName]
+                if (Array.isArray(customValue)) {
+                    return customValue.join(', ')
+                }
+                return customValue?.toString() || '-'
+            }
+            return '-'
+        }
+
+        // Handle built-in fields
+        switch (fieldId) {
+            case 'first_name':
+                if (booking.participants && booking.participants.length > 0) {
+                    return booking.participants[0].first_name || 'Unknown'
+                }
+                return booking.profile.full_name?.split(' ')[0] || 'Unknown'
+            case 'last_name':
+                if (booking.participants && booking.participants.length > 0) {
+                    return booking.participants[0].last_name || 'Player'
+                }
+                return booking.profile.full_name?.split(' ').slice(1).join(' ') || 'Player'
+            case 'date_of_birth':
+                if (booking.participants && booking.participants.length > 0) {
+                    return booking.participants[0].date_of_birth ? 
+                        new Date(booking.participants[0].date_of_birth).toLocaleDateString() : '-'
+                }
+                return '-'
+            case 'contact_email':
+                if (booking.participants && booking.participants.length > 0) {
+                    return booking.participants[0].contact_email || booking.profile.email || '-'
+                }
+                return booking.profile.email || '-'
+            case 'contact_phone':
+                if (booking.participants && booking.participants.length > 0) {
+                    return booking.participants[0].contact_phone || booking.profile.phone || '-'
+                }
+                return booking.profile.phone || '-'
+            default:
+                return '-'
+        }
+    }
+
+    // Helper function to get field label
+    const getFieldLabel = (fieldId: string): string => {
+        // Handle custom fields
+        if (fieldId.startsWith('custom_')) {
+            const customFieldName = fieldId.replace('custom_', '')
+            // Try to find the custom field definition in the event
+            if (event.custom_form_fields) {
+                const customField = event.custom_form_fields.find(field => field.name === customFieldName)
+                if (customField) {
+                    return customField.label
+                }
+            }
+            // Fallback to formatted field name
+            return customFieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+        }
+
+        // Handle built-in fields
+        switch (fieldId) {
+            case 'first_name': return 'First Name'
+            case 'last_name': return 'Last Name'
+            case 'date_of_birth': return 'Date of Birth'
+            case 'contact_email': return 'Email'
+            case 'contact_phone': return 'Phone'
+            default: return fieldId.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
+        }
+    }
 
     // Sort bookings
     const sortedBookings = [...filteredBookings].sort((a, b) => {
@@ -48,8 +155,8 @@ export default function ParticipantsList({
                 const nameB = b.profile.full_name || 'Unknown'
                 return nameA.localeCompare(nameB)
             case 'date':
-                return new Date(a.booking_date || a.created_at).getTime() - 
-                       new Date(b.booking_date || b.created_at).getTime()
+                return new Date(a.booking_date || a.created_at).getTime() -
+                    new Date(b.booking_date || b.created_at).getTime()
             case 'tickets':
                 return b.quantity - a.quantity
             default:
@@ -111,13 +218,46 @@ export default function ParticipantsList({
                         {searchTerm ? 'No participants found' : 'No participants yet'}
                     </h3>
                     <p className="text-gray-500">
-                        {searchTerm 
+                        {searchTerm
                             ? 'Try adjusting your search terms.'
                             : 'Participants will appear here once bookings are confirmed.'
                         }
                     </p>
                 </div>
+            ) : isPublic ? (
+                // Public table view with configurable fields
+                <div className="overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    #
+                                </th>
+                                {displayFields.map((fieldId) => (
+                                    <th key={fieldId} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        {getFieldLabel(fieldId)}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {sortedBookings.map((booking, index) => (
+                                <tr key={booking.id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {index + 1}
+                                    </td>
+                                    {displayFields.map((fieldId) => (
+                                        <td key={fieldId} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {getFieldValue(booking, fieldId)}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             ) : (
+                // Private detailed card view
                 <div className="divide-y divide-gray-200">
                     {sortedBookings.map((booking, index) => (
                         <div key={booking.id} className="p-4 sm:p-6 hover:bg-gray-50">
@@ -143,7 +283,7 @@ export default function ParticipantsList({
                                                 Confirmed
                                             </span>
                                         </div>
-                                        
+
                                         <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500">
                                             <span className="flex items-center">
                                                 <span className="mr-1">🎫</span>

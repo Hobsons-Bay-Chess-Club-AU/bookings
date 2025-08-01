@@ -27,7 +27,7 @@ export default function TimelineBuilder({ eventStartDate, refundTimeline, onChan
             if (b.from_date === null) return 1
             return new Date(a.from_date).getTime() - new Date(b.from_date).getTime()
         })
-        
+
         setItems(sortedItems)
         onChange(sortedItems)
     }
@@ -204,16 +204,16 @@ export default function TimelineBuilder({ eventStartDate, refundTimeline, onChan
                 <h5 className="text-sm font-medium text-blue-900 mb-2">Refund Policy Preview</h5>
                 <div className="text-sm text-blue-800 space-y-1">
                     {items.map((item, index) => {
-                        const fromText = item.from_date 
+                        const fromText = item.from_date
                             ? new Date(item.from_date).toLocaleDateString()
                             : 'Event creation'
-                        const toText = item.to_date 
+                        const toText = item.to_date
                             ? new Date(item.to_date).toLocaleDateString()
                             : 'Event date'
-                        const valueText = item.type === 'percentage' 
+                        const valueText = item.type === 'percentage'
                             ? `${item.value}%`
                             : `$${item.value.toFixed(2)} AUD`
-                        
+
                         return (
                             <div key={index}>
                                 <strong>{fromText} → {toText}:</strong> {valueText} refund

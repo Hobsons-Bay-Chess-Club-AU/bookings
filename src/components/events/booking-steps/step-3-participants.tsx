@@ -38,7 +38,7 @@ export default function Step3Participants({
     const areAllParticipantsValid = (): boolean => {
         for (let i = 0; i < participants.length; i++) {
             const participant = participants[i]
-            
+
             // Check required fixed fields
             if (!participant.first_name?.trim() || !participant.last_name?.trim() || !participant.date_of_birth) {
                 return false
@@ -59,7 +59,7 @@ export default function Step3Participants({
 
     const isCurrentParticipantValid = (): boolean => {
         const participant = currentParticipant
-        
+
         // Check required fixed fields
         if (!participant.first_name?.trim() || !participant.last_name?.trim() || !participant.date_of_birth) {
             return false
@@ -144,13 +144,12 @@ export default function Step3Participants({
                         {Array.from({ length: quantity }, (_, index) => (
                             <div
                                 key={index}
-                                className={`w-3 h-3 rounded-full ${
-                                    index < currentParticipantIndex
+                                className={`w-3 h-3 rounded-full ${index < currentParticipantIndex
                                         ? 'bg-green-500' // Completed
                                         : index === currentParticipantIndex
-                                        ? 'bg-blue-500' // Current
-                                        : 'bg-gray-300' // Pending
-                                }`}
+                                            ? 'bg-blue-500' // Current
+                                            : 'bg-gray-300' // Pending
+                                    }`}
                             />
                         ))}
                     </div>
@@ -177,7 +176,7 @@ export default function Step3Participants({
                         </button>
                     )}
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Fixed Fields */}
                     <div>

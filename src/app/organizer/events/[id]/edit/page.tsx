@@ -44,7 +44,7 @@ export default function EditEventPage() {
         const loadEvent = async () => {
             try {
                 setInitialLoading(true)
-                
+
                 // Get current user to verify they can edit this event
                 const { data: { user }, error: userError } = await supabase.auth.getUser()
                 if (userError || !user) {
@@ -131,7 +131,7 @@ export default function EditEventPage() {
                             'Content-Type': 'application/json',
                         },
                     })
-                    
+
                     if (response.ok) {
                         const data = await response.json()
                         alias = data.alias
@@ -509,7 +509,7 @@ export default function EditEventPage() {
                                     </label>
                                 </div>
                             </div>
-                            
+
                             {enableRefunds && (
                                 <TimelineBuilder
                                     eventStartDate={formData.start_date}
