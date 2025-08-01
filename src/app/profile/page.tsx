@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import LogoutButton from '@/components/auth/logout-button'
+import SiteNav from '@/components/layout/site-nav'
 import { Profile } from '@/lib/types/database'
 
 export default function ProfilePage() {
@@ -124,28 +124,15 @@ export default function ProfilePage() {
 
     return (
         <div className="min-h-screen bg-gray-50 text-gray-900">
-            {/* Header */}
-            <header className="bg-white shadow">
+            {/* Navigation */}
+            <SiteNav />
+
+            {/* Page Header */}
+            <div className="bg-white shadow">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-6">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-                            <p className="text-gray-600">Manage your account information</p>
-                        </div>
-                        <nav className="flex items-center space-x-4">
-                            <button
-                                onClick={() => router.push('/dashboard')}
-                                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Dashboard
-                            </button>
-                            <LogoutButton className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                                Sign out
-                            </LogoutButton>
-                        </nav>
-                    </div>
+
                 </div>
-            </header>
+            </div>
 
             <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
                 <div className="bg-white shadow rounded-lg">

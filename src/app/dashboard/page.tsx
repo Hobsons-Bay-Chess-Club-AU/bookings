@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/utils/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import SiteNav from '@/components/layout/site-nav'
 import { Booking, Event } from '@/lib/types/database'
 
 async function getUserBookings(userId: string): Promise<(Booking & { event: Event })[]> {
@@ -65,47 +66,15 @@ export default async function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <header className="bg-white shadow">
+            {/* Navigation */}
+            <SiteNav />
+
+            {/* Page Header */}
+            <div className="bg-white shadow">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-6">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-                            <p className="text-gray-600">Welcome back, {profile.full_name || profile.email}</p>
-                        </div>
-                        <nav className="flex items-center space-x-4">
-                            <Link
-                                href="/"
-                                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Browse Events
-                            </Link>
-                            <Link
-                                href="/profile"
-                                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Profile
-                            </Link>
-                            {(profile.role === 'admin' || profile.role === 'organizer') && (
-                                <Link
-                                    href="/organizer"
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                                >
-                                    Manage Events
-                                </Link>
-                            )}
-                            {profile.role === 'admin' && (
-                                <Link
-                                    href="/admin/users"
-                                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                                >
-                                    Manage Users
-                                </Link>
-                            )}
-                        </nav>
-                    </div>
+
                 </div>
-            </header>
+            </div>
 
             <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
                 {/* Stats */}

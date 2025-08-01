@@ -3,6 +3,7 @@ import { getCurrentUser, getCurrentProfile } from '@/lib/utils/auth'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import BookingForm from '@/components/events/booking-form'
+import NavWrapper from '@/components/layout/nav-wrapper'
 import { Event, Booking } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
 
@@ -63,16 +64,19 @@ export default async function EventPage({ params }: EventPageProps) {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <header className="bg-white shadow">
+            {/* Navigation */}
+            <NavWrapper />
+
+            {/* Breadcrumb */}
+            <div className="bg-white border-b">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-6">
-                        <Link href="/" className="text-indigo-600 hover:text-indigo-500">
+                    <div className="py-4">
+                        <Link href="/" className="text-indigo-600 hover:text-indigo-500 text-sm">
                             ← Back to Events
                         </Link>
                     </div>
                 </div>
-            </header>
+            </div>
 
             <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
                 <div className="lg:grid lg:grid-cols-2 lg:gap-8">
