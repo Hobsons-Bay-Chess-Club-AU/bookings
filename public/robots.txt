@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Disallow admin and API routes
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /organizer/
+
+# Allow public pages
+Allow: /
+Allow: /events/
+Allow: /e/
+
+# Sitemap
+Sitemap: https://your-domain.com/sitemap.xml

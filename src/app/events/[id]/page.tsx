@@ -4,8 +4,11 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import BookingForm from '@/components/events/booking-form'
 import NavWrapper from '@/components/layout/nav-wrapper'
+import SocialShare from '@/components/events/social-share'
+import EventStructuredData from '@/components/events/event-structured-data'
 import { Event, Booking } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
+import { Metadata } from 'next'
 
 async function getEvent(id: string): Promise<Event | null> {
     const supabase = await createClient()
@@ -47,6 +50,107 @@ interface EventPageProps {
     params: Promise<{ id: string }>
 }
 
+// Generate metadata for SEO
+export async function generateMetadata({ params }: EventPageProps): Promise<Metadata> {
+    const { id } = await params
+    const event = await getEvent(id)
+
+    if (!event) {
+        return {
+            title: 'Event Not Found',
+            description: 'The requested event could not be found.'
+        }
+    }
+
+    const title = `${event.title} | Hobsons Bay Chess Club Events`
+    const description = event.description 
+        ? event.description.substring(0, 160).replace(/[#*`]/g, '').trim() + (event.description.length > 160 ? '...' : '')
+        : `Join us for ${event.title} at ${event.location} on ${new Date(event.start_date).toLocaleDateString()}`
+
+    const eventUrl = event.alias 
+        ? `${process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com'}/e/${event.alias}`
+        : `${process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com'}/events/${event.id}`
+
+    const startDate = new Date(event.start_date).toISOString()
+    const endDate = new Date(event.end_date).toISOString()
+
+    return {
+        title,
+        description,
+        keywords: [
+            'chess',
+            'chess club',
+            'hobsons bay',
+            'chess tournament',
+            'chess event',
+            'melbourne chess',
+            event.title.toLowerCase(),
+            event.location.toLowerCase()
+        ].join(', '),
+        authors: [{ name: 'Hobsons Bay Chess Club' }],
+        creator: 'Hobsons Bay Chess Club',
+        publisher: 'Hobsons Bay Chess Club',
+        formatDetection: {
+            email: false,
+            address: false,
+            telephone: false,
+        },
+        metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com'),
+        alternates: {
+            canonical: eventUrl,
+        },
+        openGraph: {
+            title,
+            description,
+            url: eventUrl,
+            siteName: 'Hobsons Bay Chess Club',
+            images: event.image_url ? [
+                {
+                    url: event.image_url,
+                    width: 1200,
+                    height: 630,
+                    alt: event.title,
+                }
+            ] : [
+                {
+                    url: '/og-default.jpg', // You'll need to add a default OG image
+                    width: 1200,
+                    height: 630,
+                    alt: 'Hobsons Bay Chess Club Event',
+                }
+            ],
+            locale: 'en_AU',
+            type: 'website',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            creator: '@HobsonsBayChess', // Update with your actual Twitter handle
+            images: event.image_url ? [event.image_url] : ['/og-default.jpg'],
+        },
+        robots: {
+            index: event.status === 'published',
+            follow: true,
+            googleBot: {
+                index: event.status === 'published',
+                follow: true,
+                'max-video-preview': -1,
+                'max-image-preview': 'large',
+                'max-snippet': -1,
+            },
+        },
+        other: {
+            // Event-specific structured data
+            'event:start_time': startDate,
+            'event:end_time': endDate,
+            'event:location': event.location,
+            'event:price': event.price.toString(),
+            'event:currency': 'AUD',
+        }
+    }
+}
+
 export default async function EventPage({ params }: EventPageProps) {
     const { id } = await params
     const event = await getEvent(id)
@@ -64,12 +168,41 @@ export default async function EventPage({ params }: EventPageProps) {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            {/* Structured Data for SEO */}
+            <EventStructuredData event={event} />
+            
             {/* Navigation */}
             <NavWrapper />
 
             {/* Breadcrumb */}
             <div className="bg-white border-b">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="py-4">
+                        <nav className="flex" aria-label="Breadcrumb">
+                            <ol className="flex items-center space-x-4">
+                                <li>
+                                    <Link href="/" className="text-gray-400 hover:text-gray-500">
+                                        <span className="sr-only">Home</span>
+                                        🏠
+                                    </Link>
+                                </li>
+                                <li>
+                                    <div className="flex items-center">
+                                        <span className="text-gray-400 mx-2">/</span>
+                                        <span className="text-gray-500">Events</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div className="flex items-center">
+                                        <span className="text-gray-400 mx-2">/</span>
+                                        <span className="text-gray-900 font-medium truncate max-w-xs">
+                                            {event.title}
+                                        </span>
+                                    </div>
+                                </li>
+                            </ol>
+                        </nav>
+                    </div>
                 </div>
             </div>
 
@@ -151,7 +284,7 @@ export default async function EventPage({ params }: EventPageProps) {
                                     <div className="flex items-center">
                                         <span className="text-gray-400 mr-3">💰</span>
                                         <p className="text-2xl font-bold text-gray-900">
-                                            $AUD {event.price.toFixed(2)}
+                                            {event.price === 0 ? 'Free' : `$AUD ${event.price.toFixed(2)}`}
                                         </p>
                                     </div>
                                 </div>
@@ -180,6 +313,9 @@ export default async function EventPage({ params }: EventPageProps) {
                                 </div>
                             )}
                         </div>
+
+                        {/* Social Share Component */}
+                        <SocialShare event={event} />
                     </div>
 
                     {/* Booking Section */}
