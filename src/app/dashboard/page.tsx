@@ -37,6 +37,7 @@ export default async function DashboardPage() {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'confirmed':
+            case 'verified':
                 return 'bg-green-100 text-green-800'
             case 'pending':
                 return 'bg-yellow-100 text-yellow-800'
@@ -52,6 +53,7 @@ export default async function DashboardPage() {
     const getStatusIcon = (status: string) => {
         switch (status) {
             case 'confirmed':
+            case 'verified':
                 return '✓'
             case 'pending':
                 return '⏳'
@@ -111,7 +113,7 @@ export default async function DashboardPage() {
                                             Confirmed
                                         </dt>
                                         <dd className="text-lg font-medium text-gray-900">
-                                            {bookings.filter(b => b.status === 'confirmed').length}
+                                            {bookings.filter(b => b.status === 'confirmed' || b.status === 'verified').length}
                                         </dd>
                                     </dl>
                                 </div>
@@ -188,29 +190,41 @@ export default async function DashboardPage() {
                     ) : (
                         <div className="divide-y divide-gray-200">
                             {bookings.map((booking) => (
-                                <div key={booking.id} className="p-6">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <h3 className="text-lg font-medium text-gray-900">
-                                                    {booking.event.title}
-                                                </h3>
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                                                    {getStatusIcon(booking.status)} {booking.status}
-                                                </span>
+                                <div key={booking.id} className="p-4 md:p-6">
+                                    {/* Mobile Card Layout */}
+                                    <div className="md:hidden space-y-3">
+                                        <div className="flex items-start justify-between">
+                                            <Link 
+                                                href={`/events/${booking.event.id}`}
+                                                className="text-lg font-medium text-indigo-600 hover:text-indigo-800 flex-1 mr-3"
+                                            >
+                                                {booking.event.title}
+                                            </Link>
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                                                {getStatusIcon(booking.status)} {booking.status}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="space-y-2 text-sm text-gray-600">
+                                            <div className="flex items-center">
+                                                <span className="mr-2">📅</span>
+                                                <span>{new Date(booking.event.start_date).toLocaleDateString('en-US', {
+                                                    weekday: 'short',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    year: 'numeric'
+                                                })}</span>
+                                                <span className="mx-2">•</span>
+                                                <span>{new Date(booking.event.start_date).toLocaleTimeString([], {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}</span>
                                             </div>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                                                <div className="flex items-center">
-                                                    <span className="mr-2">📅</span>
-                                                    <span>
-                                                        {new Date(booking.event.start_date).toLocaleDateString()}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <span className="mr-2">📍</span>
-                                                    <span>{booking.event.location}</span>
-                                                </div>
+                                            <div className="flex items-center">
+                                                <span className="mr-2">📍</span>
+                                                <span>{booking.event.location}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
                                                 <div className="flex items-center">
                                                     <span className="mr-2">🎫</span>
                                                     <span>{booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}</span>
@@ -220,30 +234,85 @@ export default async function DashboardPage() {
                                                     <span className="font-mono text-xs">{booking.booking_id || booking.id.slice(0, 8)}</span>
                                                 </div>
                                             </div>
-
-                                            <div className="mt-2 flex items-center justify-between">
+                                            <div className="flex items-center justify-between pt-2 border-t">
+                                                <span className="text-sm text-gray-500">
+                                                    Booked: {new Date(booking.booking_date).toLocaleDateString()}
+                                                </span>
                                                 <span className="text-lg font-bold text-gray-900">
                                                     AUD ${booking.total_amount.toFixed(2)}
                                                 </span>
-                                                <span className="text-sm text-gray-500">
-                                                    Booked on {new Date(booking.booking_date).toLocaleDateString()}
-                                                </span>
                                             </div>
                                         </div>
-
-                                        <div className="ml-6 flex-shrink-0 flex space-x-2">
+                                        
+                                        <div className="pt-3">
                                             <Link
                                                 href={`/booking/${booking.booking_id || booking.id}`}
-                                                className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                className="w-full inline-flex justify-center items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                                             >
                                                 View Details
                                             </Link>
-                                            <Link
-                                                href={`/events/${booking.event.id}`}
-                                                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                            >
-                                                View Event
-                                            </Link>
+                                        </div>
+                                    </div>
+
+                                    {/* Desktop Table Layout */}
+                                    <div className="hidden md:block">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1 grid grid-cols-6 gap-4 items-center">
+                                                <div className="col-span-2">
+                                                    <Link 
+                                                        href={`/events/${booking.event.id}`}
+                                                        className="text-lg font-medium text-indigo-600 hover:text-indigo-800"
+                                                    >
+                                                        {booking.event.title}
+                                                    </Link>
+                                                    <div className="text-sm text-gray-500 mt-1">
+                                                        {booking.event.location}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="text-sm text-gray-600">
+                                                    <div>{new Date(booking.event.start_date).toLocaleDateString('en-US', {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        year: 'numeric'
+                                                    })}</div>
+                                                    <div className="text-xs text-gray-500">
+                                                        {new Date(booking.event.start_date).toLocaleTimeString([], {
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="text-sm text-gray-600">
+                                                    <div>{booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}</div>
+                                                    <div className="font-mono text-xs text-gray-500">
+                                                        ID: {booking.booking_id || booking.id.slice(0, 8)}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="text-sm text-gray-600">
+                                                    <div className="font-medium text-gray-900">AUD ${booking.total_amount.toFixed(2)}</div>
+                                                    <div className="text-xs text-gray-500">
+                                                        Booked: {new Date(booking.booking_date).toLocaleDateString()}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="flex items-center justify-between">
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                                                        {getStatusIcon(booking.status)} {booking.status}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="ml-4 flex-shrink-0">
+                                                <Link
+                                                    href={`/booking/${booking.booking_id || booking.id}`}
+                                                    className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                                                >
+                                                    View Details
+                                                </Link>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

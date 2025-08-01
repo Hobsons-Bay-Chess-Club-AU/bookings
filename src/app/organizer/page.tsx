@@ -54,9 +54,9 @@ export default async function OrganizerPage() {
             return {
                 ...event,
                 totalBookings: bookings.length,
-                confirmedBookings: bookings.filter(b => b.status === 'confirmed').length,
+                confirmedBookings: bookings.filter(b => b.status === 'confirmed' || b.status === 'verified').length,
                 revenue: bookings
-                    .filter(b => b.status === 'confirmed')
+                    .filter(b => b.status === 'confirmed' || b.status === 'verified')
                     .reduce((sum, b) => sum + b.total_amount, 0)
             }
         })

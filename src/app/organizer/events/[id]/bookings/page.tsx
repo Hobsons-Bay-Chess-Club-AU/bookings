@@ -82,9 +82,8 @@ export default async function EventBookingsPage({ params }: EventBookingsPagePro
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'confirmed':
-                return 'bg-green-100 text-green-800'
             case 'verified':
-                return 'bg-emerald-100 text-emerald-800'
+                return 'bg-green-100 text-green-800'
             case 'pending':
                 return 'bg-yellow-100 text-yellow-800'
             case 'cancelled':
@@ -99,9 +98,8 @@ export default async function EventBookingsPage({ params }: EventBookingsPagePro
     const getStatusIcon = (status: string) => {
         switch (status) {
             case 'confirmed':
-                return '✓'
             case 'verified':
-                return '✅'
+                return '✓'
             case 'pending':
                 return '⏳'
             case 'cancelled':
@@ -297,7 +295,7 @@ export default async function EventBookingsPage({ params }: EventBookingsPagePro
                                                     Mark Confirmed
                                                 </button>
                                             )}
-                                            {booking.status === 'confirmed' && (
+                                            {(booking.status === 'confirmed' || booking.status === 'verified') && (
                                                 <button
                                                     className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
                                                     title="Refund booking"
