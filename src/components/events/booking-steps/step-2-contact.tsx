@@ -37,9 +37,9 @@ export default function Step2Contact({
     }
 
     const isFormValid = () => {
-        return contactInfo.first_name.trim() && 
-               contactInfo.last_name.trim() && 
-               contactInfo.email.trim()
+        return contactInfo.first_name.trim() &&
+            contactInfo.last_name.trim() &&
+            contactInfo.email.trim()
     }
 
     return (
@@ -129,7 +129,7 @@ export default function Step2Contact({
                     disabled={loading || !isFormValid()}
                     className="flex-1 bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {loading ? 'Processing...' : 'Continue to Participant Information'}
+                    {loading ? 'Processing...' : 'Participant Information'}
                 </button>
             </div>
         </form>

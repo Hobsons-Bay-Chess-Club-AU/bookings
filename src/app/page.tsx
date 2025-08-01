@@ -20,6 +20,7 @@ async function getPublishedEvents(): Promise<Event[]> {
         organizer:profiles(full_name, email)
       `)
       .in('status', ['published', 'entry_closed'])
+      .order('is_promoted', { ascending: false })
       .order('start_date', { ascending: true })
 
     if (error) {

@@ -22,7 +22,8 @@ export default function EditEventPage() {
         organizer_name: '',
         organizer_email: '',
         organizer_phone: '',
-        status: 'draft' as 'draft' | 'published'
+        status: 'draft' as 'draft' | 'published',
+        is_promoted: false
     })
     const [formFields, setFormFields] = useState<FormField[]>([])
     const [loading, setLoading] = useState(false)
@@ -77,7 +78,8 @@ export default function EditEventPage() {
                     organizer_name: eventData.organizer_name || '',
                     organizer_email: eventData.organizer_email || '',
                     organizer_phone: eventData.organizer_phone || '',
-                    status: eventData.status
+                    status: eventData.status,
+                    is_promoted: eventData.is_promoted || false
                 })
 
                 // Set form fields
@@ -151,6 +153,7 @@ export default function EditEventPage() {
                     status: formData.status,
                     alias: alias,
                     custom_form_fields: formFields,
+                    is_promoted: formData.is_promoted,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', eventId)
@@ -168,8 +171,13 @@ export default function EditEventPage() {
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value } = e.target
-        setFormData(prev => ({ ...prev, [name]: value }))
+        const { name, value, type } = e.target
+        if (type === 'checkbox') {
+            const checked = (e.target as HTMLInputElement).checked
+            setFormData(prev => ({ ...prev, [name]: checked }))
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }))
+        }
     }
 
     const handleDescriptionChange = (content: string) => {
@@ -438,6 +446,25 @@ export default function EditEventPage() {
                                 </select>
                                 <p className="mt-1 text-sm text-gray-500">
                                     Only published events are visible to users
+                                </p>
+                            </div>
+
+                            <div>
+                                <div className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        id="is_promoted"
+                                        name="is_promoted"
+                                        checked={formData.is_promoted}
+                                        onChange={handleChange}
+                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                    />
+                                    <label htmlFor="is_promoted" className="ml-2 block text-sm font-medium text-gray-700">
+                                        Promote on Landing Page
+                                    </label>
+                                </div>
+                                <p className="mt-1 text-sm text-gray-500">
+                                    Promoted events appear first on the landing page
                                 </p>
                             </div>
                         </div>

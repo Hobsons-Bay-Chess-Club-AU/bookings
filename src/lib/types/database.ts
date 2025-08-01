@@ -74,6 +74,7 @@ export interface Event {
     organizer_id: string
     entry_close_date?: string
     custom_form_fields?: FormField[]
+    is_promoted?: boolean
     created_at: string
     updated_at: string
     organizer?: Profile

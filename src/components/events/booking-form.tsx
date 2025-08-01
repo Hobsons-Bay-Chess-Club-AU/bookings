@@ -14,9 +14,9 @@ interface BookingFormProps {
 }
 
 function isBookable(event: Event) {
-  const now = new Date()
-  if (event.entry_close_date && new Date(event.entry_close_date) < now) return false
-  return event.status === 'published' && (event.max_attendees == null || event.current_attendees < event.max_attendees)
+    const now = new Date()
+    if (event.entry_close_date && new Date(event.entry_close_date) < now) return false
+    return event.status === 'published' && (event.max_attendees == null || event.current_attendees < event.max_attendees)
 }
 
 export default function BookingForm({ event, user }: BookingFormProps) {
@@ -38,7 +38,7 @@ export default function BookingForm({ event, user }: BookingFormProps) {
     const [currentBookingId, setCurrentBookingId] = useState<string | null>(null)
 
     const supabase = createClient()
-    
+
     const totalAmount = selectedPricing ? selectedPricing.price * quantity : 0
     const maxQuantity = event.max_attendees
         ? Math.min(10, event.max_attendees - event.current_attendees)
@@ -49,7 +49,7 @@ export default function BookingForm({ event, user }: BookingFormProps) {
         const fetchData = async () => {
             try {
                 setPricingLoading(true)
-                
+
                 // Fetch pricing options
                 const membershipType = user?.membership_type || 'non_member'
                 const pricingResponse = await fetch(`/api/events/${event.id}/pricing?membership_type=${membershipType}`)
@@ -58,7 +58,7 @@ export default function BookingForm({ event, user }: BookingFormProps) {
                 }
                 const pricing = await pricingResponse.json()
                 setAvailablePricing(pricing)
-                
+
                 // Auto-select the first (cheapest) available pricing
                 if (pricing.length > 0) {
                     setSelectedPricing(pricing[0])
@@ -66,7 +66,7 @@ export default function BookingForm({ event, user }: BookingFormProps) {
 
                 // Set form fields from event
                 setFormFields(event.custom_form_fields || [])
-                
+
             } catch (err: any) {
                 console.error('Error fetching data:', err)
                 setError(err.message || 'Failed to load event data')
@@ -99,7 +99,7 @@ export default function BookingForm({ event, user }: BookingFormProps) {
             const nameParts = userFullName.split(' ')
             const firstName = nameParts[0] || ''
             const lastName = nameParts.slice(1).join(' ') || ''
-            
+
             setContactInfo({
                 first_name: firstName,
                 last_name: lastName,
@@ -123,7 +123,7 @@ export default function BookingForm({ event, user }: BookingFormProps) {
         const initialParticipants = Array.from({ length: quantity }, (_, index) => {
             if (index === 0) {
                 // Pre-fill first participant with contact info
-                
+
                 return {
                     first_name: contactInfo.first_name,
                     last_name: contactInfo.last_name,
@@ -154,7 +154,7 @@ export default function BookingForm({ event, user }: BookingFormProps) {
 
         for (let i = 0; i < participants.length; i++) {
             const participant = participants[i]
-            
+
             // Check required fixed fields
             if (!participant.first_name?.trim() || !participant.last_name?.trim()) {
                 return false
@@ -176,7 +176,7 @@ export default function BookingForm({ event, user }: BookingFormProps) {
     const validateParticipants = (): boolean => {
         for (let i = 0; i < participants.length; i++) {
             const participant = participants[i]
-            
+
             // Check required fixed fields
             if (!participant.first_name?.trim() || !participant.last_name?.trim()) {
                 setError(`Please complete all required fields for participant ${i + 1}`)
@@ -352,36 +352,32 @@ export default function BookingForm({ event, user }: BookingFormProps) {
             {/* Progress Steps */}
             <div className="flex items-center space-x-4 mb-8">
                 <div className={`flex items-center ${step >= 1 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-                        step >= 1 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
-                    }`}>
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${step >= 1 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
+                        }`}>
                         1
                     </div>
-                    <span className="ml-2 text-sm font-medium">Pricing & Quantity</span>
+                    <span className="ml-2 text-sm font-medium">Book</span>
                 </div>
                 <div className={`w-8 h-0.5 ${step >= 2 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
                 <div className={`flex items-center ${step >= 2 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-                        step >= 2 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
-                    }`}>
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${step >= 2 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
+                        }`}>
                         2
                     </div>
-                    <span className="ml-2 text-sm font-medium">Contact Info</span>
+                    <span className="ml-2 text-sm font-medium">Contact</span>
                 </div>
                 <div className={`w-8 h-0.5 ${step >= 3 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
                 <div className={`flex items-center ${step >= 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-                        step >= 3 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
-                    }`}>
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${step >= 3 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
+                        }`}>
                         3
                     </div>
-                    <span className="ml-2 text-sm font-medium">Participant Info</span>
+                    <span className="ml-2 text-sm font-medium">Participants</span>
                 </div>
                 <div className={`w-8 h-0.5 ${step >= 4 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
                 <div className={`flex items-center ${step >= 4 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${
-                        step >= 4 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
-                    }`}>
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${step >= 4 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
+                        }`}>
                         4
                     </div>
                     <span className="ml-2 text-sm font-medium">Checkout</span>

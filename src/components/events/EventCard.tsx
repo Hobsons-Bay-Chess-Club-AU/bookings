@@ -88,11 +88,18 @@ export default function EventCard({ event }: EventCardProps) {
               </p>
             </div>
           </div>
-          {event.status === 'entry_closed' && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-              Entry Closed
-            </span>
-          )}
+          <div className="flex space-x-2">
+            {event.is_promoted && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                ⭐ Featured
+              </span>
+            )}
+            {event.status === 'entry_closed' && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                Entry Closed
+              </span>
+            )}
+          </div>
         </div>
         <div className="mt-2">
           <h3 className="text-lg font-medium text-gray-900">

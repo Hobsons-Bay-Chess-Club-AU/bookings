@@ -70,11 +70,6 @@ export default async function EventPage({ params }: EventPageProps) {
             {/* Breadcrumb */}
             <div className="bg-white border-b">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="py-4">
-                        <Link href="/" className="text-indigo-600 hover:text-indigo-500 text-sm">
-                            ← Back to Events
-                        </Link>
-                    </div>
                 </div>
             </div>
 
@@ -167,7 +162,7 @@ export default async function EventPage({ params }: EventPageProps) {
                                     <h3 className="text-lg font-medium text-gray-900 mb-3">
                                         About this event
                                     </h3>
-                                    <MarkdownContent 
+                                    <MarkdownContent
                                         content={event.description}
                                         className="text-gray-700"
                                     />
@@ -190,7 +185,7 @@ export default async function EventPage({ params }: EventPageProps) {
                     {/* Booking Section */}
                     <div>
                         <div className="bg-white shadow rounded-lg p-6 sticky top-8">
-                            <h2 className="text-xl font-bold text-gray-900 mb-6">
+                            <h2 className="text-xl font-bold text-gray-900 mb-6 text-center">
                                 Book Your Spot
                             </h2>
 
