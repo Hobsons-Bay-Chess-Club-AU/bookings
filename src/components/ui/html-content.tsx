@@ -31,20 +31,41 @@ export default function MarkdownContent({
 
     const sanitizeContent = async () => {
       try {
-        // Configure marked for security
+        // Configure marked for security and proper paragraph handling
         marked.setOptions({
           breaks: true,
-          gfm: true,
+          gfm: true
         })
 
         // Convert markdown to HTML
         const htmlContent = await marked(content || '')
 
+        // Post-process HTML to ensure proper paragraph spacing
+        const processedHtml = htmlContent
+          // Ensure paragraphs have proper spacing
+          .replace(/<p>/g, '<p class="mb-4">')
+          // Ensure headings have proper spacing
+          .replace(/<h1>/g, '<h1 class="text-2xl font-bold mb-4 mt-6">')
+          .replace(/<h2>/g, '<h2 class="text-xl font-bold mb-3 mt-5">')
+          .replace(/<h3>/g, '<h3 class="text-lg font-bold mb-2 mt-4">')
+          .replace(/<h4>/g, '<h4 class="text-base font-bold mb-2 mt-3">')
+          .replace(/<h5>/g, '<h5 class="text-sm font-bold mb-2 mt-3">')
+          .replace(/<h6>/g, '<h6 class="text-xs font-bold mb-2 mt-3">')
+          // Ensure lists have proper spacing
+          .replace(/<ul>/g, '<ul class="list-disc ml-6 mb-4">')
+          .replace(/<ol>/g, '<ol class="list-decimal ml-6 mb-4">')
+          .replace(/<li>/g, '<li class="mb-1">')
+          // Ensure blockquotes have proper styling
+          .replace(/<blockquote>/g, '<blockquote class="border-l-4 border-gray-300 pl-4 py-2 my-4 italic bg-gray-50">')
+          // Ensure code blocks have proper styling
+          .replace(/<pre>/g, '<pre class="bg-gray-100 p-4 rounded-md my-4 overflow-x-auto">')
+          .replace(/<code>/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm">')
+
         // Import DOMPurify dynamically for client-side only
         const { default: DOMPurify } = await import('dompurify')
 
         // Sanitize HTML content to prevent XSS attacks
-        const sanitized = DOMPurify.sanitize(htmlContent, {
+        const sanitized = DOMPurify.sanitize(processedHtml, {
           ALLOWED_TAGS: [
             'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'strike',
             'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -86,8 +107,13 @@ export default function MarkdownContent({
 
   return (
     <Component
-      className={`prose prose-sm max-w-none ${className}`}
+      className={`prose prose-sm max-w-none markdown-content ${className}`}
       dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+      style={{
+        // Ensure proper line spacing and paragraph breaks
+        lineHeight: '1.6',
+        // Add custom CSS for markdown content
+      }}
     />
   )
 }

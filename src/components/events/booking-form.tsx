@@ -11,6 +11,7 @@ import Step3Participants from './booking-steps/step-3-participants'
 interface BookingFormProps {
     event: Event
     user?: Profile // Make user optional
+    onStepChange?: (step: number) => void // Callback for when booking step changes
 }
 
 function isBookable(event: Event) {
@@ -19,7 +20,7 @@ function isBookable(event: Event) {
     return event.status === 'published' && (event.max_attendees == null || event.current_attendees < event.max_attendees)
 }
 
-export default function BookingForm({ event, user }: BookingFormProps) {
+export default function BookingForm({ event, user, onStepChange }: BookingFormProps) {
     const [step, setStep] = useState(1) // 1: Pricing & Quantity, 2: Contact Info, 3: Participant Info, 4: Checkout
     const [quantity, setQuantity] = useState(1)
     const [loading, setLoading] = useState(false)
@@ -77,6 +78,11 @@ export default function BookingForm({ event, user }: BookingFormProps) {
 
         fetchData()
     }, [event.id, user?.membership_type])
+
+    // Notify parent component when step changes
+    useEffect(() => {
+        onStepChange?.(step)
+    }, [step, onStepChange])
 
     const handleContinueToContact = () => {
         setError('')

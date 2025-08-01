@@ -8,6 +8,7 @@ import SocialShare from '@/components/events/social-share'
 import EventStructuredData from '@/components/events/event-structured-data'
 import EventQRCode from '@/components/events/event-qr-code'
 import EventBookingSection from '@/components/events/event-booking-section'
+import EventLayout from '@/components/events/event-layout'
 import { Event, Booking } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
 import { Metadata } from 'next'
@@ -209,7 +210,7 @@ export default async function EventPage({ params }: EventPageProps) {
             </div>
 
             <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                <div className="lg:grid lg:grid-cols-2 lg:gap-8">
+                <EventLayout event={event} profile={profile || undefined}>
                     {/* Event Details */}
                     <div>
                         {event.image_url && (
@@ -331,17 +332,7 @@ export default async function EventPage({ params }: EventPageProps) {
                         {/* Social Share Component */}
                         <SocialShare event={event} />
                     </div>
-
-                    {/* Desktop Booking Section - Hidden on mobile */}
-                    <div className="hidden md:block">
-                        <div className="bg-white shadow rounded-lg p-6 sticky top-8">
-                            <h2 className="text-xl font-bold text-gray-900 mb-6 text-center">
-                                Book Your Spot
-                            </h2>
-                            <BookingForm event={event} user={profile || undefined} />
-                        </div>
-                    </div>
-                </div>
+                </EventLayout>
             </div>
         </div>
     )

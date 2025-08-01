@@ -98,6 +98,12 @@ export default async function OrganizerPage() {
                                 Dashboard
                             </Link>
                             <Link
+                                href="/organizer/html-to-markdown"
+                                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                            >
+                                HTML to Markdown
+                            </Link>
+                            <Link
                                 href="/organizer/custom-fields"
                                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium"
                             >

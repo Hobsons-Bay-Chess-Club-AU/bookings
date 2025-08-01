@@ -27,7 +27,7 @@ export default function EventCard({ event }: EventCardProps) {
     <div className="bg-white overflow-hidden shadow rounded-lg relative">
       {/* QR Icon */}
       <button
-        className="absolute top-2 right-2 z-20 p-1 bg-white rounded-full shadow hover:bg-gray-100"
+        className="absolute top-1 right-1 z-20 p-1 bg-white rounded-full shadow hover:bg-gray-100"
         title="Show QR code"
         onClick={() => setShowQR(true)}
         type="button"
@@ -46,7 +46,7 @@ export default function EventCard({ event }: EventCardProps) {
       {showQR && eventUrl && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-white bg-opacity-95 rounded-lg">
           <button
-            className="absolute top-2 right-2 p-1 bg-gray-100 rounded-full hover:bg-gray-200"
+            className="absolute top-1 right-1 p-1 bg-gray-100 rounded-full hover:bg-gray-200"
             onClick={() => setShowQR(false)}
             title="Close QR code"
             type="button"
@@ -88,7 +88,7 @@ export default function EventCard({ event }: EventCardProps) {
               </p>
             </div>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 pr-4">
             {event.is_promoted && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                 ⭐ Featured

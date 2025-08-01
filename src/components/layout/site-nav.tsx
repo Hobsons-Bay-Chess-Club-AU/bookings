@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import LogoutButton from '@/components/auth/logout-button'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
@@ -23,7 +23,30 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
     const mobileMenuRef = useRef<HTMLDivElement>(null)
     const mobileMenuButtonRef = useRef<HTMLButtonElement>(null)
     const router = useRouter()
+    const pathname = usePathname()
     const supabase = createClient()
+
+    // Helper function to check if a path is active
+    const isActivePath = (path: string) => {
+        if (path === '/') {
+            return pathname === '/' || pathname === '/events' || pathname.startsWith('/e/')
+        }
+        return pathname === path || pathname.startsWith(path + '/')
+    }
+
+    // Helper function to get nav link classes
+    const getNavLinkClasses = (path: string, isDesktop = true) => {
+        const isActive = isActivePath(path)
+        const baseClasses = isDesktop 
+            ? "px-3 py-2 rounded-md text-sm font-medium transition-colors relative"
+            : "block px-3 py-3 rounded-md text-base font-medium transition-colors relative"
+        
+        if (isActive) {
+            return `${baseClasses} text-indigo-600 cursor-default after:content-[''] after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:bg-indigo-600`
+        }
+        
+        return `${baseClasses} text-gray-700 hover:text-gray-900 ${isDesktop ? 'hover:bg-gray-50' : 'hover:bg-gray-50'}`
+    }
 
     useEffect(() => {
         const getUser = async () => {
@@ -163,21 +186,33 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center space-x-4">
-                        <Link
-                            href="/"
-                            className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                        >
-                            Events
-                        </Link>
+                        {isActivePath('/') ? (
+                            <span className={getNavLinkClasses('/', true)}>
+                                Events
+                            </span>
+                        ) : (
+                            <Link
+                                href="/"
+                                className={getNavLinkClasses('/', true)}
+                            >
+                                Events
+                            </Link>
+                        )}
 
                         {user ? (
                             <>
-                                <Link
-                                    href="/dashboard"
-                                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                                >
-                                    Dashboard
-                                </Link>
+                                {isActivePath('/dashboard') ? (
+                                    <span className={getNavLinkClasses('/dashboard', true)}>
+                                        Dashboard
+                                    </span>
+                                ) : (
+                                    <Link
+                                        href="/dashboard"
+                                        className={getNavLinkClasses('/dashboard', true)}
+                                    >
+                                        Dashboard
+                                    </Link>
+                                )}
 
                                 {/* Profile Dropdown */}
                                 <div className="relative" ref={dropdownRef}>
@@ -198,17 +233,28 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
 
                                     {profileDropdownOpen && (
                                         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                                            <button
-                                                onClick={() => handleNavigate('/profile')}
-                                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                            >
-                                                <span className="flex items-center">
-                                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                    </svg>
-                                                    Profile Settings
+                                            {isActivePath('/profile') ? (
+                                                <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 bg-indigo-50 cursor-default">
+                                                    <span className="flex items-center">
+                                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                        </svg>
+                                                        Profile Settings
+                                                    </span>
                                                 </span>
-                                            </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleNavigate('/profile')}
+                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                                >
+                                                    <span className="flex items-center">
+                                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                        </svg>
+                                                        Profile Settings
+                                                    </span>
+                                                </button>
+                                            )}
 
                                             {/* Admin/Organizer Menu Items */}
                                             {(profile?.role === 'admin' || profile?.role === 'organizer') && (
@@ -218,29 +264,74 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                                         Management
                                                     </div>
 
-                                                    <button
-                                                        onClick={() => handleNavigate('/organizer')}
-                                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                                    >
-                                                        <span className="flex items-center">
-                                                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                            </svg>
-                                                            Manage Events
+                                                    {isActivePath('/organizer') ? (
+                                                        <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 bg-indigo-50 cursor-default">
+                                                            <span className="flex items-center">
+                                                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                </svg>
+                                                                Manage Events
+                                                            </span>
                                                         </span>
-                                                    </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleNavigate('/organizer')}
+                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                                        >
+                                                            <span className="flex items-center">
+                                                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                </svg>
+                                                                Manage Events
+                                                            </span>
+                                                        </button>
+                                                    )}
 
-                                                    <button
-                                                        onClick={() => handleNavigate('/organizer/custom-fields')}
-                                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                                    >
-                                                        <span className="flex items-center">
-                                                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                            </svg>
-                                                            Custom Fields
+                                                    {isActivePath('/organizer/custom-fields') ? (
+                                                        <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 bg-indigo-50 cursor-default">
+                                                            <span className="flex items-center">
+                                                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                </svg>
+                                                                Custom Fields
+                                                            </span>
                                                         </span>
-                                                    </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleNavigate('/organizer/custom-fields')}
+                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                                        >
+                                                            <span className="flex items-center">
+                                                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                </svg>
+                                                                Custom Fields
+                                                            </span>
+                                                        </button>
+                                                    )}
+
+                                                    {isActivePath('/organizer/html-to-markdown') ? (
+                                                        <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 bg-indigo-50 cursor-default">
+                                                            <span className="flex items-center">
+                                                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                </svg>
+                                                                HTML to Markdown
+                                                            </span>
+                                                        </span>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleNavigate('/organizer/html-to-markdown')}
+                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                                        >
+                                                            <span className="flex items-center">
+                                                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                </svg>
+                                                                HTML to Markdown
+                                                            </span>
+                                                        </button>
+                                                    )}
                                                 </>
                                             )}
 
@@ -252,17 +343,28 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                                         Administration
                                                     </div>
 
-                                                    <button
-                                                        onClick={() => handleNavigate('/admin/users')}
-                                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                                    >
-                                                        <span className="flex items-center">
-                                                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                                                            </svg>
-                                                            Manage Users
+                                                    {isActivePath('/admin/users') ? (
+                                                        <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 bg-indigo-50 cursor-default">
+                                                            <span className="flex items-center">
+                                                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                                                                </svg>
+                                                                Manage Users
+                                                            </span>
                                                         </span>
-                                                    </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleNavigate('/admin/users')}
+                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                                        >
+                                                            <span className="flex items-center">
+                                                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                                                                </svg>
+                                                                Manage Users
+                                                            </span>
+                                                        </button>
+                                                    )}
                                                 </>
                                             )}
 
@@ -283,18 +385,30 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                             </>
                         ) : (
                             <>
-                                <Link
-                                    href="/auth/login"
-                                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                                >
-                                    Sign in
-                                </Link>
-                                <Link
-                                    href="/auth/signup"
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                                >
-                                    Sign up
-                                </Link>
+                                {isActivePath('/auth/login') ? (
+                                    <span className={getNavLinkClasses('/auth/login', true)}>
+                                        Sign in
+                                    </span>
+                                ) : (
+                                    <Link
+                                        href="/auth/login"
+                                        className={getNavLinkClasses('/auth/login', true)}
+                                    >
+                                        Sign in
+                                    </Link>
+                                )}
+                                {isActivePath('/auth/signup') ? (
+                                    <span className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium cursor-default">
+                                        Sign up
+                                    </span>
+                                ) : (
+                                    <Link
+                                        href="/auth/signup"
+                                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                                    >
+                                        Sign up
+                                    </Link>
+                                )}
                             </>
                         )}
                     </nav>
@@ -363,31 +477,49 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                             
                             {/* Menu items */}
                             <div className="px-4 py-4 space-y-1 max-h-screen overflow-y-auto">
-                                <Link
-                                    href="/"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="block text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-3 rounded-md text-base font-medium transition-colors"
-                                >
-                                    Events
-                                </Link>
+                                {isActivePath('/') ? (
+                                    <span className={getNavLinkClasses('/', false)}>
+                                        Events
+                                    </span>
+                                ) : (
+                                    <Link
+                                        href="/"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className={getNavLinkClasses('/', false)}
+                                    >
+                                        Events
+                                    </Link>
+                                )}
 
                                 {user ? (
                                     <>
-                                        <Link
-                                            href="/dashboard"
-                                            onClick={() => setMobileMenuOpen(false)}
-                                            className="block text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-3 rounded-md text-base font-medium transition-colors"
-                                        >
-                                            Dashboard
-                                        </Link>
+                                        {isActivePath('/dashboard') ? (
+                                            <span className={getNavLinkClasses('/dashboard', false)}>
+                                                Dashboard
+                                            </span>
+                                        ) : (
+                                            <Link
+                                                href="/dashboard"
+                                                onClick={() => setMobileMenuOpen(false)}
+                                                className={getNavLinkClasses('/dashboard', false)}
+                                            >
+                                                Dashboard
+                                            </Link>
+                                        )}
                                         
-                                        <Link
-                                            href="/profile"
-                                            onClick={() => setMobileMenuOpen(false)}
-                                            className="block text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-3 rounded-md text-base font-medium transition-colors"
-                                        >
-                                            Profile Settings
-                                        </Link>
+                                        {isActivePath('/profile') ? (
+                                            <span className={getNavLinkClasses('/profile', false)}>
+                                                Profile Settings
+                                            </span>
+                                        ) : (
+                                            <Link
+                                                href="/profile"
+                                                onClick={() => setMobileMenuOpen(false)}
+                                                className={getNavLinkClasses('/profile', false)}
+                                            >
+                                                Profile Settings
+                                            </Link>
+                                        )}
 
                                         {/* Admin/Organizer Menu Items */}
                                         {(profile?.role === 'admin' || profile?.role === 'organizer') && (
@@ -397,21 +529,47 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                                     Management
                                                 </div>
 
-                                                <Link
-                                                    href="/organizer"
-                                                    onClick={() => setMobileMenuOpen(false)}
-                                                    className="block text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-3 rounded-md text-base font-medium transition-colors"
-                                                >
-                                                    Manage Events
-                                                </Link>
+                                                {isActivePath('/organizer') ? (
+                                                    <span className={getNavLinkClasses('/organizer', false)}>
+                                                        Manage Events
+                                                    </span>
+                                                ) : (
+                                                    <Link
+                                                        href="/organizer"
+                                                        onClick={() => setMobileMenuOpen(false)}
+                                                        className={getNavLinkClasses('/organizer', false)}
+                                                    >
+                                                        Manage Events
+                                                    </Link>
+                                                )}
 
-                                                <Link
-                                                    href="/organizer/custom-fields"
-                                                    onClick={() => setMobileMenuOpen(false)}
-                                                    className="block text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-3 rounded-md text-base font-medium transition-colors"
-                                                >
-                                                    Custom Fields
-                                                </Link>
+                                                {isActivePath('/organizer/custom-fields') ? (
+                                                    <span className={getNavLinkClasses('/organizer/custom-fields', false)}>
+                                                        Custom Fields
+                                                    </span>
+                                                ) : (
+                                                    <Link
+                                                        href="/organizer/custom-fields"
+                                                        onClick={() => setMobileMenuOpen(false)}
+                                                        className={getNavLinkClasses('/organizer/custom-fields', false)}
+                                                    >
+                                                        Custom Fields
+                                                    </Link>
+                                                )}
+
+                                                {isActivePath('/organizer/html-to-markdown') ? (
+                                                    <span className={getNavLinkClasses('/organizer/html-to-markdown', false)}>
+                                                        HTML to Markdown
+                                                    </span>
+                                                ) : (
+                                                    <Link
+                                                        href="/organizer/html-to-markdown"
+                                                        onClick={() => setMobileMenuOpen(false)}
+                                                        className={getNavLinkClasses('/organizer/html-to-markdown', false)}
+                                                    >
+                                                        HTML to Markdown
+                                                    </Link>
+                                                )}
                                             </>
                                         )}
 
@@ -423,13 +581,19 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                                     Administration
                                                 </div>
 
-                                                <Link
-                                                    href="/admin/users"
-                                                    onClick={() => setMobileMenuOpen(false)}
-                                                    className="block text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-3 rounded-md text-base font-medium transition-colors"
-                                                >
-                                                    Manage Users
-                                                </Link>
+                                                {isActivePath('/admin/users') ? (
+                                                    <span className={getNavLinkClasses('/admin/users', false)}>
+                                                        Manage Users
+                                                    </span>
+                                                ) : (
+                                                    <Link
+                                                        href="/admin/users"
+                                                        onClick={() => setMobileMenuOpen(false)}
+                                                        className={getNavLinkClasses('/admin/users', false)}
+                                                    >
+                                                        Manage Users
+                                                    </Link>
+                                                )}
                                             </>
                                         )}
 
@@ -442,20 +606,32 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                     </>
                                 ) : (
                                     <>
-                                        <Link
-                                            href="/auth/login"
-                                            onClick={() => setMobileMenuOpen(false)}
-                                            className="block text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-3 rounded-md text-base font-medium transition-colors"
-                                        >
-                                            Sign in
-                                        </Link>
-                                        <Link
-                                            href="/auth/signup"
-                                            onClick={() => setMobileMenuOpen(false)}
-                                            className="block bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-3 rounded-md text-base font-medium transition-colors"
-                                        >
-                                            Sign up
-                                        </Link>
+                                        {isActivePath('/auth/login') ? (
+                                            <span className={getNavLinkClasses('/auth/login', false)}>
+                                                Sign in
+                                            </span>
+                                        ) : (
+                                            <Link
+                                                href="/auth/login"
+                                                onClick={() => setMobileMenuOpen(false)}
+                                                className={getNavLinkClasses('/auth/login', false)}
+                                            >
+                                                Sign in
+                                            </Link>
+                                        )}
+                                        {isActivePath('/auth/signup') ? (
+                                            <span className="block bg-indigo-600 text-white px-3 py-3 rounded-md text-base font-medium cursor-default">
+                                                Sign up
+                                            </span>
+                                        ) : (
+                                            <Link
+                                                href="/auth/signup"
+                                                onClick={() => setMobileMenuOpen(false)}
+                                                className="block bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-3 rounded-md text-base font-medium transition-colors"
+                                            >
+                                                Sign up
+                                            </Link>
+                                        )}
                                     </>
                                 )}
                             </div>
