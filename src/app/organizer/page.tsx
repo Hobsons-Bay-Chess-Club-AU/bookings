@@ -290,24 +290,30 @@ export default async function OrganizerPage() {
                                             )}
                                         </div>
 
-                                        <div className="ml-6 flex-shrink-0 flex space-x-2">
+                                        <div className="ml-6 flex-shrink-0 flex flex-wrap gap-2">
                                             <Link
                                                 href={`/organizer/events/${event.id}/bookings`}
                                                 className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                                             >
-                                                View Bookings
+                                                📋 View Bookings
+                                            </Link>
+                                            <Link
+                                                href={`/organizer/events/${event.id}/participants`}
+                                                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                            >
+                                                👥 View Participants
                                             </Link>
                                             <Link
                                                 href={`/organizer/events/${event.id}/pricing`}
                                                 className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                                             >
-                                                Manage Pricing
+                                                💰 Manage Pricing
                                             </Link>
                                             <Link
                                                 href={`/organizer/events/${event.id}/edit`}
                                                 className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                                             >
-                                                Edit
+                                                ✏️ Edit
                                             </Link>
                                         </div>
                                     </div>

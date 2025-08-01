@@ -19,7 +19,7 @@ export default function EventParticipantsPage() {
     const [error, setError] = useState('')
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedParticipant, setSelectedParticipant] = useState<ParticipantWithBooking | null>(null)
-    
+
     const params = useParams()
     const eventId = params.id as string
     const supabase = createClient()
@@ -111,7 +111,7 @@ export default function EventParticipantsPage() {
             `$${p.bookings.total_amount}`,
             p.bookings.profiles.full_name || '',
             p.bookings.profiles.email,
-            ...Array.from(customFieldNames).map(fieldName => 
+            ...Array.from(customFieldNames).map(fieldName =>
                 p.custom_data?.[fieldName] || ''
             )
         ])
@@ -304,7 +304,7 @@ export default function EventParticipantsPage() {
                                 {participants.length === 0 ? 'No participants yet' : 'No participants match your search'}
                             </h4>
                             <p className="text-gray-600">
-                                {participants.length === 0 
+                                {participants.length === 0
                                     ? 'Participant information will appear here once people book your event.'
                                     : 'Try adjusting your search criteria.'
                                 }
@@ -372,12 +372,11 @@ export default function EventParticipantsPage() {
                                             <td className="px-6 py-4">
                                                 <div className="text-sm text-gray-900">
                                                     <div className="flex items-center space-x-2">
-                                                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                                            participant.bookings.status === 'confirmed' || participant.bookings.status === 'verified' ? 'bg-green-100 text-green-800' :
-                                                            participant.bookings.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                            participant.bookings.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                                            'bg-gray-100 text-gray-800'
-                                                        }`}>
+                                                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${participant.bookings.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                                                participant.bookings.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                                    participant.bookings.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                                                        'bg-gray-100 text-gray-800'
+                                                            }`}>
                                                             {participant.bookings.status}
                                                         </span>
                                                     </div>
@@ -491,12 +490,11 @@ export default function EventParticipantsPage() {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700">Status</label>
-                                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                                    selectedParticipant.bookings.status === 'confirmed' || selectedParticipant.bookings.status === 'verified' ? 'bg-green-100 text-green-800' :
-                                                    selectedParticipant.bookings.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                    selectedParticipant.bookings.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                                    'bg-gray-100 text-gray-800'
-                                                }`}>
+                                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${selectedParticipant.bookings.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                                        selectedParticipant.bookings.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                            selectedParticipant.bookings.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                                                'bg-gray-100 text-gray-800'
+                                                    }`}>
                                                     {selectedParticipant.bookings.status}
                                                 </span>
                                             </div>
@@ -515,7 +513,7 @@ export default function EventParticipantsPage() {
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700">Total Amount</label>
-                                                <p className="mt-1 text-sm text-gray-900">AUD ${selectedParticipant.bookings.total_amount}</p>
+                                                <p className="mt-1 text-sm text-gray-900">$AUD {selectedParticipant.bookings.total_amount}</p>
                                             </div>
                                         </div>
                                     </div>
