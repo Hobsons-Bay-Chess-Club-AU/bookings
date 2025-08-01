@@ -190,12 +190,12 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-800">Price per ticket:</span>
-                                        <span>$AUD {booking.event.price.toFixed(2)}</span>
+                                        <span>AUD ${booking.event.price.toFixed(2)}</span>
                                     </div>
                                     <div className="border-t pt-3">
                                         <div className="flex justify-between font-semibold text-gray-800">
                                             <span>Total Paid:</span>
-                                            <span>$AUD {booking.total_amount.toFixed(2)}</span>
+                                            <span>AUD ${booking.total_amount.toFixed(2)}</span>
                                         </div>
                                     </div>
                                     <div className="flex justify-between">

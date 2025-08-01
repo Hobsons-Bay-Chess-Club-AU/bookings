@@ -216,7 +216,7 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Price ($AUD) *
+                                    Price (AUD) *
                                 </label>
                                 <input
                                     type="number"
@@ -386,7 +386,7 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                         <div>
                                             <span className="text-gray-800 font-medium">Price:</span>
-                                            <div className="font-semibold text-lg text-gray-900">$AUD {pricingItem.price.toFixed(2)}</div>
+                                            <div className="font-semibold text-lg text-gray-900">AUD ${pricingItem.price.toFixed(2)}</div>
                                         </div>
                                         <div>
                                             <span className="text-gray-800 font-medium">Valid:</span>

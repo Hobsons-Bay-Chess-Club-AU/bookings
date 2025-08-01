@@ -515,7 +515,7 @@ export default function EventParticipantsPage() {
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700">Total Amount</label>
-                                                <p className="mt-1 text-sm text-gray-900">$AUD {selectedParticipant.bookings.total_amount}</p>
+                                                <p className="mt-1 text-sm text-gray-900">AUD ${selectedParticipant.bookings.total_amount}</p>
                                             </div>
                                         </div>
                                     </div>

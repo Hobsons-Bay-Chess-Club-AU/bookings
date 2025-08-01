@@ -149,7 +149,7 @@ export default async function EventPricingPage({ params }: EventPricingPageProps
                                     <span className="text-gray-800">Price Range:</span>
                                     <span className="font-medium text-gray-900">
                                         {pricing.length > 0 
-                                            ? `$AUD ${Math.min(...pricing.map(p => p.price)).toFixed(2)} - $AUD ${Math.max(...pricing.map(p => p.price)).toFixed(2)}`
+                                            ? `AUD $${Math.min(...pricing.map(p => p.price)).toFixed(2)} - AUD $${Math.max(...pricing.map(p => p.price)).toFixed(2)}`
                                             : 'No pricing set'
                                         }
                                     </span>

@@ -116,7 +116,7 @@ export default function EventCard({ event }: EventCardProps) {
           </p>
           <div className="mt-2 flex items-center justify-between">
             <p className="text-lg font-bold text-gray-900">
-              $AUD {event.price.toFixed(2)}
+              AUD ${event.price.toFixed(2)}
             </p>
             <p className="text-sm text-gray-500">
               {event.max_attendees ?

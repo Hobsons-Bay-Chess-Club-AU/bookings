@@ -6,6 +6,8 @@ import BookingForm from '@/components/events/booking-form'
 import NavWrapper from '@/components/layout/nav-wrapper'
 import SocialShare from '@/components/events/social-share'
 import EventStructuredData from '@/components/events/event-structured-data'
+import EventQRCode from '@/components/events/event-qr-code'
+import EventBookingSection from '@/components/events/event-booking-section'
 import { Event, Booking } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
 import { Metadata } from 'next'
@@ -242,50 +244,62 @@ export default async function EventPage({ params }: EventPageProps) {
                                     )}
                                 </div>
 
-                                <div className="space-y-4">
-                                    <div className="flex items-center">
-                                        <span className="text-gray-400 mr-3">📅</span>
-                                        <div>
-                                            <p className="font-medium text-gray-900">
-                                                {new Date(event.start_date).toLocaleDateString('en-US', {
-                                                    weekday: 'long',
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric'
-                                                })}
+                                <div className="flex justify-between items-start">
+                                    <div className="space-y-4 flex-1 mr-6">
+                                        <div className="flex items-center">
+                                            <span className="text-gray-400 mr-3">📅</span>
+                                            <div>
+                                                <p className="font-medium text-gray-900">
+                                                    {new Date(event.start_date).toLocaleDateString('en-US', {
+                                                        weekday: 'long',
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric'
+                                                    })}
+                                                </p>
+                                                <p className="text-sm text-gray-500">
+                                                    {new Date(event.start_date).toLocaleTimeString([], {
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })} - {new Date(event.end_date).toLocaleTimeString([], {
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center">
+                                            <span className="text-gray-400 mr-3">📍</span>
+                                            <p className="text-gray-900">{event.location}</p>
+                                        </div>
+
+                                        <div className="flex items-center">
+                                            <span className="text-gray-400 mr-3">👥</span>
+                                            <p className="text-gray-900">
+                                                {event.max_attendees ?
+                                                    `${event.current_attendees} / ${event.max_attendees} attendees` :
+                                                    `${event.current_attendees} attendees`
+                                                }
                                             </p>
-                                            <p className="text-sm text-gray-500">
-                                                {new Date(event.start_date).toLocaleTimeString([], {
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })} - {new Date(event.end_date).toLocaleTimeString([], {
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
+                                        </div>
+
+                                        <div className="flex items-center">
+                                            <span className="text-gray-400 mr-3">💰</span>
+                                            <p className="text-2xl font-bold text-gray-900">
+                                                {event.price === 0 ? 'Free' : `AUD $${event.price.toFixed(2)}`}
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center">
-                                        <span className="text-gray-400 mr-3">📍</span>
-                                        <p className="text-gray-900">{event.location}</p>
-                                    </div>
-
-                                    <div className="flex items-center">
-                                        <span className="text-gray-400 mr-3">👥</span>
-                                        <p className="text-gray-900">
-                                            {event.max_attendees ?
-                                                `${event.current_attendees} / ${event.max_attendees} attendees` :
-                                                `${event.current_attendees} attendees`
-                                            }
-                                        </p>
-                                    </div>
-
-                                    <div className="flex items-center">
-                                        <span className="text-gray-400 mr-3">💰</span>
-                                        <p className="text-2xl font-bold text-gray-900">
-                                            {event.price === 0 ? 'Free' : `$AUD ${event.price.toFixed(2)}`}
-                                        </p>
+                                    {/* QR Code and Mobile Book Button */}
+                                    <div className="flex-shrink-0">
+                                        <EventQRCode event={event} size={120} />
+                                        
+                                        {/* Mobile Book Now Button - Only visible on mobile */}
+                                        <div className="md:hidden mt-4">
+                                            <EventBookingSection event={event} profile={profile || undefined} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -318,14 +332,12 @@ export default async function EventPage({ params }: EventPageProps) {
                         <SocialShare event={event} />
                     </div>
 
-                    {/* Booking Section */}
-                    <div>
+                    {/* Desktop Booking Section - Hidden on mobile */}
+                    <div className="hidden md:block">
                         <div className="bg-white shadow rounded-lg p-6 sticky top-8">
                             <h2 className="text-xl font-bold text-gray-900 mb-6 text-center">
                                 Book Your Spot
                             </h2>
-
-                            {/* Always show the booking form, pass profile (can be null/undefined) */}
                             <BookingForm event={event} user={profile || undefined} />
                         </div>
                     </div>

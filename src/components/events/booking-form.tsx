@@ -350,37 +350,37 @@ export default function BookingForm({ event, user }: BookingFormProps) {
     const content = (
         <div className="space-y-6 text-gray-900">
             {/* Progress Steps */}
-            <div className="flex items-center space-x-4 mb-8">
-                <div className={`flex items-center ${step >= 1 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${step >= 1 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
+            <div className="flex items-center justify-between mb-8">
+                <div className={`flex flex-col md:flex-row md:items-center ${step >= 1 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= 1 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
                         }`}>
                         1
                     </div>
-                    <span className="ml-2 text-sm font-medium">Book</span>
+                    <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">Book</span>
                 </div>
-                <div className={`w-8 h-0.5 ${step >= 2 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
-                <div className={`flex items-center ${step >= 2 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${step >= 2 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
+                <div className={`w-4 md:w-8 h-0.5 ${step >= 2 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
+                <div className={`flex flex-col md:flex-row md:items-center ${step >= 2 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= 2 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
                         }`}>
                         2
                     </div>
-                    <span className="ml-2 text-sm font-medium">Contact</span>
+                    <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">Contact</span>
                 </div>
-                <div className={`w-8 h-0.5 ${step >= 3 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
-                <div className={`flex items-center ${step >= 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${step >= 3 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
+                <div className={`w-4 md:w-8 h-0.5 ${step >= 3 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
+                <div className={`flex flex-col md:flex-row md:items-center ${step >= 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= 3 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
                         }`}>
                         3
                     </div>
-                    <span className="ml-2 text-sm font-medium">Participants</span>
+                    <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">Participants</span>
                 </div>
-                <div className={`w-8 h-0.5 ${step >= 4 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
-                <div className={`flex items-center ${step >= 4 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${step >= 4 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
+                <div className={`w-4 md:w-8 h-0.5 ${step >= 4 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
+                <div className={`flex flex-col md:flex-row md:items-center ${step >= 4 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= 4 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
                         }`}>
                         4
                     </div>
-                    <span className="ml-2 text-sm font-medium">Checkout</span>
+                    <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">Checkout</span>
                 </div>
             </div>
 

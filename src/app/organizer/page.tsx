@@ -189,7 +189,7 @@ export default async function OrganizerPage() {
                                             Total Revenue
                                         </dt>
                                         <dd className="text-lg font-medium text-gray-900">
-                                            $AUD {totalRevenue.toFixed(2)}
+                                            AUD ${totalRevenue.toFixed(2)}
                                         </dd>
                                     </dl>
                                 </div>
@@ -260,13 +260,13 @@ export default async function OrganizerPage() {
                                                 </div>
                                                 <div className="flex items-center">
                                                     <span className="mr-2">💰</span>
-                                                    <span>$AUD {event.revenue.toFixed(2)} revenue</span>
+                                                    <span>AUD ${event.revenue.toFixed(2)} revenue</span>
                                                 </div>
                                             </div>
 
                                             <div className="flex items-center justify-between">
                                                 <span className="text-lg font-bold text-gray-900">
-                                                    $AUD {event.price.toFixed(2)} per ticket
+                                                    AUD ${event.price.toFixed(2)} per ticket
                                                 </span>
                                                 <span className="text-sm text-gray-500">
                                                     Created {new Date(event.created_at).toLocaleDateString()}

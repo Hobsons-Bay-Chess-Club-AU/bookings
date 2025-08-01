@@ -250,7 +250,7 @@ export default function NewEventPage() {
 
                             <div>
                                                             <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                                Ticket Price ($AUD)
+                                Ticket Price (AUD)
                             </label>
                                 <input
                                     type="number"

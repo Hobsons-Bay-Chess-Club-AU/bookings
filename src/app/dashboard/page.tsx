@@ -223,7 +223,7 @@ export default async function DashboardPage() {
 
                                             <div className="mt-2 flex items-center justify-between">
                                                 <span className="text-lg font-bold text-gray-900">
-                                                    $AUD {booking.total_amount.toFixed(2)}
+                                                    AUD ${booking.total_amount.toFixed(2)}
                                                 </span>
                                                 <span className="text-sm text-gray-500">
                                                     Booked on {new Date(booking.booking_date).toLocaleDateString()}

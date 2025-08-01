@@ -177,7 +177,7 @@ export default async function EventBookingsPage({ params }: EventBookingsPagePro
                                 </div>
                                 <div className="flex items-center">
                                     <span className="mr-2">💰</span>
-                                    <span>$AUD {event.price.toFixed(2)} per ticket</span>
+                                    <span>AUD ${event.price.toFixed(2)} per ticket</span>
                                 </div>
                             </div>
                         </div>
@@ -198,7 +198,7 @@ export default async function EventBookingsPage({ params }: EventBookingsPagePro
                                 </div>
                                 <div className="bg-purple-50 p-3 rounded">
                                     <div className="text-purple-800 font-medium">Revenue</div>
-                                    <div className="text-lg font-bold text-purple-900">$AUD {totalRevenue.toFixed(2)}</div>
+                                    <div className="text-lg font-bold text-purple-900">AUD ${totalRevenue.toFixed(2)}</div>
                                 </div>
                             </div>
                         </div>
@@ -240,7 +240,7 @@ export default async function EventBookingsPage({ params }: EventBookingsPagePro
                                                 </div>
                                                 <div className="text-right">
                                                     <div className="text-lg font-bold text-gray-900">
-                                                        $AUD {booking.total_amount.toFixed(2)}
+                                                        AUD ${booking.total_amount.toFixed(2)}
                                                     </div>
                                                     <div className="text-sm text-gray-500">
                                                         {booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}
