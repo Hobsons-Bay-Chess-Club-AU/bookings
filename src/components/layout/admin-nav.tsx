@@ -260,19 +260,6 @@ export default function AdminNav({ className = '', profile: propProfile, user: p
 
                         {/* Desktop Navigation */}
                         <nav className="hidden md:flex items-center space-x-4">
-                            {isActivePath('/') ? (
-                                <span className={getNavLinkClasses('/', true)}>
-                                    Events
-                                </span>
-                            ) : (
-                                <Link
-                                    href="/"
-                                    className={getNavLinkClasses('/', true)}
-                                >
-                                    Events
-                                </Link>
-                            )}
-
                             {user && (
                                 <>
                                     {isActivePath('/dashboard') ? (
@@ -308,19 +295,6 @@ export default function AdminNav({ className = '', profile: propProfile, user: p
 
                                             {profile?.role === 'admin' && (
                                                 <>
-                                                    {isActivePath('/admin/bookings') ? (
-                                                        <span className={getNavLinkClasses('/admin/bookings', true)}>
-                                                            Bookings
-                                                        </span>
-                                                    ) : (
-                                                        <Link
-                                                            href="/admin/bookings"
-                                                            className={getNavLinkClasses('/admin/bookings', true)}
-                                                        >
-                                                            Bookings
-                                                        </Link>
-                                                    )}
-
                                                     {isActivePath('/admin/users') ? (
                                                         <span className={getNavLinkClasses('/admin/users', true)}>
                                                             Users
@@ -621,8 +595,8 @@ export default function AdminNav({ className = '', profile: propProfile, user: p
                                         </Link>
                                     ) : (
                                         <span className={`text-sm font-medium ${index === breadcrumbs.length - 1
-                                                ? 'text-gray-900'
-                                                : 'text-gray-500'
+                                            ? 'text-gray-900'
+                                            : 'text-gray-500'
                                             }`}>
                                             {item.label}
                                         </span>
