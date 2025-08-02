@@ -10,8 +10,6 @@ import { Profile } from '@/lib/types/database'
 
 interface AdminNavProps {
     className?: string
-    profile?: Profile | null
-    user?: User | null
 }
 
 interface BreadcrumbItem {
@@ -19,10 +17,10 @@ interface BreadcrumbItem {
     href?: string
 }
 
-export default function AdminNav({ className = '', profile: propProfile, user: propUser }: AdminNavProps) {
-    const [user, setUser] = useState<User | null>(propUser || null)
-    const [profile, setProfile] = useState<Profile | null>(propProfile || null)
-    const [loading, setLoading] = useState(!propProfile) // Only check profile since that's what AdminLayout guarantees
+export default function AdminNav({ className = '' }: AdminNavProps) {
+    const [user, setUser] = useState<User | null>(null)
+    const [profile, setProfile] = useState<Profile | null>(null)
+    const [loading, setLoading] = useState(true)
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
@@ -107,14 +105,6 @@ export default function AdminNav({ className = '', profile: propProfile, user: p
     }
 
     useEffect(() => {
-        // If profile is provided as props, don't fetch data
-        if (propProfile) {
-            setUser(propUser || null)
-            setProfile(propProfile)
-            setLoading(false)
-            return
-        }
-
         const getUser = async () => {
             try {
                 const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -148,35 +138,29 @@ export default function AdminNav({ className = '', profile: propProfile, user: p
 
         getUser()
 
-        // Only set up auth subscription if we're not using props
-        let subscription: any = null
-        if (!propProfile) {
-            const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-                setUser(session?.user ?? null)
+        // Set up auth state change listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+            setUser(session?.user ?? null)
 
-                if (session?.user) {
-                    const { data: profileData } = await supabase
-                        .from('profiles')
-                        .select('*')
-                        .eq('id', session.user.id)
-                        .single()
+            if (session?.user) {
+                const { data: profileData } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single()
 
-                    setProfile(profileData)
-                } else {
-                    setProfile(null)
-                }
+                setProfile(profileData)
+            } else {
+                setProfile(null)
+            }
 
-                setLoading(false)
-            })
-            subscription = authSubscription
-        }
+            setLoading(false)
+        })
 
         return () => {
-            if (subscription) {
-                subscription.unsubscribe()
-            }
+            subscription.unsubscribe()
         }
-    }, [supabase.auth, propProfile])
+    }, [supabase.auth])
 
     // Close dropdown when clicking outside or pressing escape
     useEffect(() => {

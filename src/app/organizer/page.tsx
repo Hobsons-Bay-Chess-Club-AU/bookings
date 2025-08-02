@@ -1,72 +1,103 @@
-import { createClient } from '@/lib/supabase/server'
-import { getCurrentProfile } from '@/lib/utils/auth'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { Event, Booking } from '@/lib/types/database'
 import OrganizerPageClient from '@/app/organizer/page-client'
 
-async function getOrganizerEvents(organizerId: string): Promise<Event[]> {
-    const supabase = await createClient()
-
-    const { data: events, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('organizer_id', organizerId)
-        .order('created_at', { ascending: false })
-
-    if (error) {
-        console.error('Error fetching events:', error)
-        return []
-    }
-
-    return events || []
+interface EventWithBookings extends Event {
+    totalBookings: number
+    confirmedBookings: number
+    revenue: number
 }
 
-async function getEventBookings(eventId: string): Promise<Booking[]> {
-    const supabase = await createClient()
+export default function OrganizerPage() {
+    const [events, setEvents] = useState<EventWithBookings[]>([])
+    const [totalRevenue, setTotalRevenue] = useState(0)
+    const [totalBookings, setTotalBookings] = useState(0)
+    const [loading, setLoading] = useState(true)
+    const supabase = createClient()
 
-    const { data: bookings, error } = await supabase
-        .from('bookings')
-        .select('*')
-        .eq('event_id', eventId)
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser()
+                
+                if (!user) {
+                    setLoading(false)
+                    return
+                }
 
-    if (error) {
-        console.error('Error fetching bookings:', error)
-        return []
-    }
+                // Fetch organizer events
+                const { data: eventsData, error: eventsError } = await supabase
+                    .from('events')
+                    .select('*')
+                    .eq('organizer_id', user.id)
+                    .order('created_at', { ascending: false })
 
-    return bookings || []
-}
+                if (eventsError) {
+                    console.error('Error fetching events:', eventsError)
+                    setLoading(false)
+                    return
+                }
 
-export default async function OrganizerPage() {
-    const profile = await getCurrentProfile()
+                // Get booking counts for each event
+                const eventsWithBookings: EventWithBookings[] = []
+                let totalRev = 0
+                let totalBookingCount = 0
 
-    if (!profile || !['admin', 'organizer'].includes(profile.role)) {
-        redirect('/unauthorized')
-    }
+                for (const event of eventsData || []) {
+                    const { data: bookings, error: bookingError } = await supabase
+                        .from('bookings')
+                        .select('*')
+                        .eq('event_id', event.id)
 
-    const events = await getOrganizerEvents(profile.id)
+                    if (bookingError) {
+                        console.error('Error fetching bookings:', bookingError)
+                        continue
+                    }
 
-    // Get booking counts for each event
-    const eventsWithBookings = await Promise.all(
-        events.map(async (event) => {
-            const bookings = await getEventBookings(event.id)
-            return {
-                ...event,
-                totalBookings: bookings.length,
-                confirmedBookings: bookings.filter(b => b.status === 'confirmed' || b.status === 'verified').length,
-                revenue: bookings
-                    .filter(b => b.status === 'confirmed' || b.status === 'verified')
-                    .reduce((sum, b) => sum + b.total_amount, 0)
+                    const confirmedBookings = bookings?.filter(b => b.status === 'confirmed' || b.status === 'verified') || []
+                    const revenue = confirmedBookings.reduce((sum, b) => sum + b.total_amount, 0)
+
+                    eventsWithBookings.push({
+                        ...event,
+                        totalBookings: bookings?.length || 0,
+                        confirmedBookings: confirmedBookings.length,
+                        revenue: revenue
+                    })
+
+                    totalRev += revenue
+                    totalBookingCount += confirmedBookings.length
+                }
+
+                setEvents(eventsWithBookings)
+                setTotalRevenue(totalRev)
+                setTotalBookings(totalBookingCount)
+            } catch (error) {
+                console.error('Error fetching data:', error)
+            } finally {
+                setLoading(false)
             }
-        })
-    )
+        }
 
-    const totalRevenue = eventsWithBookings.reduce((sum, event) => sum + event.revenue, 0)
-    const totalBookings = eventsWithBookings.reduce((sum, event) => sum + event.confirmedBookings, 0)
+        fetchData()
+    }, [supabase])
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading events...</p>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <OrganizerPageClient
-            events={eventsWithBookings}
+            events={events}
             totalRevenue={totalRevenue}
             totalBookings={totalBookings}
         />
