@@ -1,0 +1,107 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { Profile } from '@/lib/types/database'
+import AdminNav from '@/components/layout/admin-nav'
+
+interface AdminLayoutProps {
+    children: React.ReactNode
+    requiredRole?: 'admin' | 'organizer'
+    className?: string
+}
+
+export default function AdminLayout({ 
+    children, 
+    requiredRole = 'organizer',
+    className = '' 
+}: AdminLayoutProps) {
+    const [user, setUser] = useState<any>(null)
+    const [profile, setProfile] = useState<Profile | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [authorized, setAuthorized] = useState(false)
+    const router = useRouter()
+    const supabase = createClient()
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const { data: { user }, error: userError } = await supabase.auth.getUser()
+                
+                if (userError || !user) {
+                    router.push('/auth/login')
+                    return
+                }
+
+                setUser(user)
+
+                const { data: profileData, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single()
+
+                if (profileError || !profileData) {
+                    router.push('/unauthorized')
+                    return
+                }
+
+                setProfile(profileData)
+
+                // Check role authorization
+                const hasPermission = requiredRole === 'organizer' 
+                    ? ['admin', 'organizer'].includes(profileData.role)
+                    : profileData.role === 'admin'
+
+                if (!hasPermission) {
+                    router.push('/unauthorized')
+                    return
+                }
+
+                setAuthorized(true)
+            } catch (error) {
+                console.error('Auth check error:', error)
+                router.push('/auth/login')
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        checkAuth()
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+            if (!session?.user) {
+                router.push('/auth/login')
+            }
+        })
+
+        return () => subscription.unsubscribe()
+    }, [supabase.auth, router, requiredRole])
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <AdminNav />
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="flex justify-center items-center min-h-96">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                    </div>
+                </main>
+            </div>
+        )
+    }
+
+    if (!authorized) {
+        return null // Will redirect
+    }
+
+    return (
+        <div className={`min-h-screen bg-gray-50 ${className}`}>
+            <AdminNav profile={profile} user={user} />
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {children}
+            </main>
+        </div>
+    )
+}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import AdminLayout from '@/components/layout/admin-layout'
 import { createClient } from '@/lib/supabase/client'
 import { CustomField, FormFieldType } from '@/lib/types/database'
 import FormBuilder from '@/components/events/form-builder'
@@ -41,7 +41,7 @@ export default function CustomFieldsPage() {
     const fetchCustomFields = async () => {
         try {
             setLoading(true)
-            
+
             const params = new URLSearchParams()
             if (searchTerm) params.append('search', searchTerm)
             if (filterType !== 'all') params.append('type', filterType)
@@ -65,7 +65,7 @@ export default function CustomFieldsPage() {
         if (formFields.length === 0) return
 
         const newField = formFields[0] // We're only creating one at a time
-        
+
         try {
             const response = await fetch('/api/organizer/custom-fields', {
                 method: 'POST',
@@ -89,7 +89,7 @@ export default function CustomFieldsPage() {
         if (!editingField || formFields.length === 0) return
 
         const updatedField = formFields[0]
-        
+
         try {
             const response = await fetch(`/api/organizer/custom-fields/${editingField.id}`, {
                 method: 'PUT',
@@ -156,263 +156,243 @@ export default function CustomFieldsPage() {
         return true
     })
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
+    return (
+        <AdminLayout requiredRole="organizer">
+            {loading ? (
+                <div className="flex justify-center items-center min-h-96">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
                         <p className="mt-2 text-sm text-gray-500">Loading custom fields...</p>
                     </div>
                 </div>
+            ) : (
+                <>
+                    {/* Page Header */}
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900">Custom Field Library</h1>
+                        <p className="text-gray-600 mt-2">Manage reusable form fields for your events</p>
+                    </div>
+
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-6">
+                    {error}
+                </div>
+            )}
+
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div className="bg-white overflow-hidden shadow rounded-lg">
+                    <div className="p-5">
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <span className="text-2xl">📝</span>
+                            </div>
+                            <div className="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                        Total Fields
+                                    </dt>
+                                    <dd className="text-lg font-medium text-gray-900">
+                                        {customFields.length}
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white overflow-hidden shadow rounded-lg">
+                    <div className="p-5">
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <span className="text-2xl">👤</span>
+                            </div>
+                            <div className="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                        My Fields
+                                    </dt>
+                                    <dd className="text-lg font-medium text-gray-900">
+                                        {customFields.filter(f => !f.is_global).length}
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white overflow-hidden shadow rounded-lg">
+                    <div className="p-5">
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <span className="text-2xl">🌍</span>
+                            </div>
+                            <div className="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                        Global Fields
+                                    </dt>
+                                    <dd className="text-lg font-medium text-gray-900">
+                                        {customFields.filter(f => f.is_global).length}
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white overflow-hidden shadow rounded-lg">
+                    <div className="p-5">
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <span className="text-2xl">⭐</span>
+                            </div>
+                            <div className="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                        Most Used
+                                    </dt>
+                                    <dd className="text-lg font-medium text-gray-900">
+                                        {Math.max(...customFields.map(f => f.usage_count), 0)}
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        )
-    }
 
-    return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <header className="bg-white shadow">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-6">
+            {/* Controls */}
+            <div className="bg-white shadow rounded-lg mb-6">
+                <div className="px-6 py-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-medium text-gray-900">Field Library</h2>
+                        <button
+                            onClick={() => setIsCreating(true)}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                            Create New Field
+                        </button>
+                    </div>
+                </div>
+
+                <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Custom Field Library</h1>
-                            <p className="text-gray-600">Manage reusable form fields for your events</p>
+                            <input
+                                type="text"
+                                placeholder="Search fields..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
                         </div>
-                        <nav className="flex items-center space-x-4">
-                            <Link
-                                href="/organizer"
-                                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                        <div>
+                            <select
+                                value={filterType}
+                                onChange={(e) => setFilterType(e.target.value as FormFieldType | 'all')}
+                                className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                             >
-                                Dashboard
-                            </Link>
-                        </nav>
-                    </div>
-                </div>
-            </header>
-
-            <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-6">
-                        {error}
-                    </div>
-                )}
-
-                {/* Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-white overflow-hidden shadow rounded-lg">
-                        <div className="p-5">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <span className="text-2xl">📝</span>
-                                </div>
-                                <div className="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt className="text-sm font-medium text-gray-500 truncate">
-                                            Total Fields
-                                        </dt>
-                                        <dd className="text-lg font-medium text-gray-900">
-                                            {customFields.length}
-                                        </dd>
-                                    </dl>
-                                </div>
-                            </div>
+                                {fieldTypes.map(type => (
+                                    <option key={type.value} value={type.value}>{type.label}</option>
+                                ))}
+                            </select>
                         </div>
-                    </div>
-
-                    <div className="bg-white overflow-hidden shadow rounded-lg">
-                        <div className="p-5">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <span className="text-2xl">👤</span>
-                                </div>
-                                <div className="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt className="text-sm font-medium text-gray-500 truncate">
-                                            My Fields
-                                        </dt>
-                                        <dd className="text-lg font-medium text-gray-900">
-                                            {customFields.filter(f => !f.is_global).length}
-                                        </dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white overflow-hidden shadow rounded-lg">
-                        <div className="p-5">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <span className="text-2xl">🌍</span>
-                                </div>
-                                <div className="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt className="text-sm font-medium text-gray-500 truncate">
-                                            Global Fields
-                                        </dt>
-                                        <dd className="text-lg font-medium text-gray-900">
-                                            {customFields.filter(f => f.is_global).length}
-                                        </dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white overflow-hidden shadow rounded-lg">
-                        <div className="p-5">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <span className="text-2xl">⭐</span>
-                                </div>
-                                <div className="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt className="text-sm font-medium text-gray-500 truncate">
-                                            Most Used
-                                        </dt>
-                                        <dd className="text-lg font-medium text-gray-900">
-                                            {Math.max(...customFields.map(f => f.usage_count), 0)}
-                                        </dd>
-                                    </dl>
-                                </div>
-                            </div>
+                        <div className="flex items-center">
+                            <input
+                                type="checkbox"
+                                id="showPopular"
+                                checked={showPopular}
+                                onChange={(e) => setShowPopular(e.target.checked)}
+                                className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                            />
+                            <label htmlFor="showPopular" className="ml-2 text-sm text-gray-700">
+                                Show most popular first
+                            </label>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Controls */}
-                <div className="bg-white shadow rounded-lg mb-6">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-medium text-gray-900">Field Library</h2>
+            {/* Fields List */}
+            {filteredFields.length === 0 ? (
+                <div className="bg-white shadow rounded-lg">
+                    <div className="text-center py-12">
+                        <span className="text-4xl mb-4 block">📝</span>
+                        <h4 className="text-lg font-medium text-gray-900 mb-2">
+                            {customFields.length === 0 ? 'No custom fields yet' : 'No fields match your search'}
+                        </h4>
+                        <p className="text-gray-600 mb-6">
+                            {customFields.length === 0
+                                ? 'Create reusable form fields that you can use across multiple events.'
+                                : 'Try adjusting your search criteria or filters.'
+                            }
+                        </p>
+                        {customFields.length === 0 && (
                             <button
                                 onClick={() => setIsCreating(true)}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                             >
-                                Create New Field
+                                Create Your First Field
                             </button>
-                        </div>
-                    </div>
-
-                    <div className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div>
-                                <input
-                                    type="text"
-                                    placeholder="Search fields..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                                />
-                            </div>
-                            <div>
-                                <select
-                                    value={filterType}
-                                    onChange={(e) => setFilterType(e.target.value as FormFieldType | 'all')}
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                                >
-                                    {fieldTypes.map(type => (
-                                        <option key={type.value} value={type.value}>{type.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id="showPopular"
-                                    checked={showPopular}
-                                    onChange={(e) => setShowPopular(e.target.checked)}
-                                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                                />
-                                <label htmlFor="showPopular" className="ml-2 text-sm text-gray-700">
-                                    Show most popular first
-                                </label>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
-
-                {/* Fields List */}
-                {filteredFields.length === 0 ? (
-                    <div className="bg-white shadow rounded-lg">
-                        <div className="text-center py-12">
-                            <span className="text-4xl mb-4 block">📝</span>
-                            <h4 className="text-lg font-medium text-gray-900 mb-2">
-                                {customFields.length === 0 ? 'No custom fields yet' : 'No fields match your search'}
-                            </h4>
-                            <p className="text-gray-600 mb-6">
-                                {customFields.length === 0 
-                                    ? 'Create reusable form fields that you can use across multiple events.'
-                                    : 'Try adjusting your search criteria or filters.'
-                                }
-                            </p>
-                            {customFields.length === 0 && (
-                                <button
-                                    onClick={() => setIsCreating(true)}
-                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                                >
-                                    Create Your First Field
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="bg-white shadow rounded-lg overflow-hidden">
-                        <div className="divide-y divide-gray-200">
-                            {filteredFields.map((field) => (
-                                <div key={field.id} className="p-6">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center space-x-3 mb-2">
-                                                <h4 className="font-medium text-gray-900">{field.label}</h4>
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                    {fieldTypes.find(t => t.value === field.type)?.label}
+            ) : (
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                    <div className="divide-y divide-gray-200">
+                        {filteredFields.map((field) => (
+                            <div key={field.id} className="p-6">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                        <div className="flex items-center space-x-3 mb-2">
+                                            <h4 className="font-medium text-gray-900">{field.label}</h4>
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                {fieldTypes.find(t => t.value === field.type)?.label}
+                                            </span>
+                                            {field.required && (
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                    Required
                                                 </span>
-                                                {field.required && (
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                        Required
-                                                    </span>
-                                                )}
-                                                {field.is_global && (
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                        Global
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {field.description && (
-                                                <p className="text-sm text-gray-600 mb-2">{field.description}</p>
                                             )}
-                                            <div className="flex items-center space-x-4 text-xs text-gray-500">
-                                                <span>Field name: <code className="bg-gray-100 px-1 rounded">{field.name}</code></span>
-                                                <span>Used {field.usage_count} times</span>
-                                                <span>Created {new Date(field.created_at).toLocaleDateString()}</span>
-                                            </div>
+                                            {field.is_global && (
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    Global
+                                                </span>
+                                            )}
                                         </div>
-
-                                        <div className="ml-6 flex items-center space-x-2">
-                                            <button
-                                                onClick={() => setEditingField(field)}
-                                                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                            >
-                                                Edit
-                                            </button>
-                                            {!field.is_global && (
-                                                <button
-                                                    onClick={() => handleDeleteField(field.id)}
-                                                    className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-                                                >
-                                                    Delete
-                                                </button>
-                                            )}
+                                        {field.description && (
+                                            <p className="text-sm text-gray-600 mb-2">{field.description}</p>
+                                        )}
+                                        <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                            <span>Field name: <code className="bg-gray-100 px-1 rounded">{field.name}</code></span>
+                                            <span>Used {field.usage_count} times</span>
+                                            <span>Created {new Date(field.created_at).toLocaleDateString()}</span>
                                         </div>
                                     </div>
+
+                                    <div className="ml-6 flex items-center space-x-2">
+                                        <button
+                                            onClick={() => setEditingField(field)}
+                                            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                        >
+                                            Edit
+                                        </button>
+                                        {!field.is_global && (
+                                            <button
+                                                onClick={() => handleDeleteField(field.id)}
+                                                className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                                            >
+                                                Delete
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        ))}
                     </div>
-                )}
-            </div>
+                </div>
+            )}
 
             {/* Create Field Modal */}
             {isCreating && (
@@ -479,6 +459,8 @@ export default function CustomFieldsPage() {
                     </div>
                 </div>
             )}
-        </div>
+                </>
+            )}
+        </AdminLayout>
     )
 }

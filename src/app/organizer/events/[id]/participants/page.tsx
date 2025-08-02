@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Event, Participant, Booking, Profile, FormField } from '@/lib/types/database'
+import AdminLayout from '@/components/layout/admin-layout'
 
 interface ParticipantWithBooking extends Participant {
     bookings: (Booking & {
@@ -156,61 +157,35 @@ export default function EventParticipantsPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                        <p className="mt-2 text-sm text-gray-500">Loading participants...</p>
-                    </div>
+            <AdminLayout requiredRole="organizer">
+                <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                    <p className="mt-2 text-sm text-gray-500">Loading participants...</p>
                 </div>
-            </div>
+            </AdminLayout>
         )
     }
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center">
-                        <p className="text-red-600">{error}</p>
-                        <Link href="/organizer" className="text-indigo-600 hover:text-indigo-500 mt-4 inline-block">
-                            Back to Dashboard
-                        </Link>
-                    </div>
+            <AdminLayout requiredRole="organizer">
+                <div className="text-center py-12">
+                    <p className="text-red-600">{error}</p>
+                    <Link href="/organizer" className="text-indigo-600 hover:text-indigo-500 mt-4 inline-block">
+                        Back to Dashboard
+                    </Link>
                 </div>
-            </div>
+            </AdminLayout>
         )
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <header className="bg-white shadow">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-6">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Event Participants</h1>
-                            <p className="text-gray-600">{event?.title}</p>
-                        </div>
-                        <nav className="flex items-center space-x-4">
-                            <Link
-                                href={`/organizer/events/${eventId}/bookings`}
-                                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                View Bookings
-                            </Link>
-                            <Link
-                                href="/organizer"
-                                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                            >
-                                Dashboard
-                            </Link>
-                        </nav>
-                    </div>
-                </div>
-            </header>
-
-            <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <AdminLayout requiredRole="organizer">
+            {/* Page Header */}
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900">Event Participants</h1>
+                <p className="text-gray-600 mt-2">{event?.title}</p>
+            </div>
                 {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div className="bg-white overflow-hidden shadow rounded-lg">
@@ -561,7 +536,6 @@ export default function EventParticipantsPage() {
                         </div>
                     )}
                 </div>
-            </div>
 
             {/* Participant Details Modal */}
             {selectedParticipant && (
@@ -684,6 +658,6 @@ export default function EventParticipantsPage() {
                     </div>
                 </div>
             )}
-        </div>
+        </AdminLayout>
     )
 }

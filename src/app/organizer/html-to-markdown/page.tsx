@@ -1,10 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import TurndownService from 'turndown'
+import AdminLayout from '@/components/layout/admin-layout'
 
 // Simple Rich Text Editor component
 function SimpleRichTextEditor({ value, onChange, placeholder }: {
@@ -377,109 +375,20 @@ function HtmlToMarkdownConverter() {
 }
 
 export default function HtmlToMarkdownPage() {
-    const [user, setUser] = useState<any>(null)
-    const [profile, setProfile] = useState<any>(null)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState('')
-
-    const router = useRouter()
-    const supabase = createClient()
-
-    useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-                if (userError || !user) {
-                    router.push('/auth/login')
-                    return
-                }
-
-                setUser(user)
-
-                // Check if user has organizer or admin role
-                const { data: profileData, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', user.id)
-                    .single()
-
-                if (profileError || !profileData) {
-                    setError('Unable to load user profile')
-                    return
-                }
-
-                if (profileData.role !== 'organizer' && profileData.role !== 'admin') {
-                    router.push('/unauthorized')
-                    return
-                }
-
-                setProfile(profileData)
-            } catch (err) {
-                console.error('Auth check error:', err)
-                setError('Authentication error')
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        checkAuth()
-    }, [router, supabase])
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                        <p className="mt-2 text-sm text-gray-500">Loading...</p>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
-    if (error) {
-        return (
-            <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
-                    <div className="text-center">
-                        <p className="text-red-600 mb-4">{error}</p>
-                        <Link href="/organizer" className="text-indigo-600 hover:text-indigo-500">
-                            Back to Dashboard
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">HTML to Markdown Converter</h1>
-                            <p className="mt-2 text-gray-600">
-                                Convert rich text content to Markdown format for your event descriptions
-                            </p>
-                        </div>
-                        <Link
-                            href="/organizer"
-                            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        >
-                            Back to Dashboard
-                        </Link>
-                    </div>
-                </div>
-
-                {/* Main Content */}
-                <div className="bg-white shadow rounded-lg p-6">
-                    <HtmlToMarkdownConverter />
-                </div>
+        <AdminLayout requiredRole="organizer">
+            {/* Page Header */}
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900">HTML to Markdown Converter</h1>
+                <p className="text-gray-600 mt-2">
+                    Convert rich text content to Markdown format for your event descriptions
+                </p>
             </div>
-        </div>
+
+            {/* Main Content */}
+            <div className="bg-white shadow rounded-lg p-6">
+                <HtmlToMarkdownConverter />
+            </div>
+        </AdminLayout>
     )
 }

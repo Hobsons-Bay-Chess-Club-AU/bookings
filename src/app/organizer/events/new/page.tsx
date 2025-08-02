@@ -7,6 +7,7 @@ import Link from 'next/link'
 import MarkdownEditor from '@/components/ui/markdown-editor'
 import FormBuilder from '@/components/events/form-builder'
 import { FormField } from '@/lib/types/database'
+import AdminLayout from '@/components/layout/admin-layout'
 
 export default function NewEventPage() {
     const [formData, setFormData] = useState({
@@ -136,27 +137,20 @@ export default function NewEventPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl mx-auto">
-                <div className="bg-white shadow rounded-lg">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <h1 className="text-2xl font-bold text-gray-900">Create New Event</h1>
-                            <Link
-                                href="/organizer"
-                                className="text-gray-600 hover:text-gray-900"
-                            >
-                                ← Back to Events
-                            </Link>
+        <AdminLayout requiredRole="organizer">
+            {/* Page Header */}
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900">Create New Event</h1>
+                <p className="text-gray-600 mt-2">Set up your event details and registration form</p>
+            </div>
+            
+            <div className="bg-white shadow rounded-lg">
+                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+                            {error}
                         </div>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="p-6 space-y-6 text-gray-800">
-                        {error && (
-                            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
-                                {error}
-                            </div>
-                        )}
+                    )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="md:col-span-2">
@@ -422,7 +416,6 @@ export default function NewEventPage() {
                         </div>
                     </form>
                 </div>
-            </div>
-        </div>
+            </AdminLayout>
     )
 }

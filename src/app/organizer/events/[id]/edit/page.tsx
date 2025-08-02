@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import AdminLayout from '@/components/layout/admin-layout'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
@@ -205,21 +206,21 @@ export default function EditEventPage() {
 
     if (initialLoading) {
         return (
-            <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-3xl mx-auto">
+            <AdminLayout requiredRole="organizer">
+                <div className="flex items-center justify-center min-h-96">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
                         <p className="mt-2 text-sm text-gray-500">Loading event...</p>
                     </div>
                 </div>
-            </div>
+            </AdminLayout>
         )
     }
 
     if (error && !event) {
         return (
-            <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-3xl mx-auto">
+            <AdminLayout requiredRole="organizer">
+                <div className="flex items-center justify-center min-h-96">
                     <div className="text-center">
                         <p className="text-red-600 mb-4">{error}</p>
                         <Link href="/organizer" className="text-indigo-600 hover:text-indigo-500">
@@ -227,27 +228,27 @@ export default function EditEventPage() {
                         </Link>
                     </div>
                 </div>
-            </div>
+            </AdminLayout>
         )
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl mx-auto">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Edit Event</h1>
-                    <p className="mt-2 text-gray-600">
-                        Update your event details and participant form.
-                    </p>
-                </div>
+        <AdminLayout requiredRole="organizer">
+            {/* Page Header */}
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900">Edit Event</h1>
+                <p className="mt-2 text-gray-600">
+                    Update your event details and participant form.
+                </p>
+            </div>
 
-                <div className="bg-white shadow rounded-lg text-gray-900">
-                    <form onSubmit={handleSubmit} className="space-y-6 p-6">
-                        {error && (
-                            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
-                                {error}
-                            </div>
-                        )}
+            <div className="bg-white shadow rounded-lg text-gray-900">
+                <form onSubmit={handleSubmit} className="space-y-6 p-6">
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+                            {error}
+                        </div>
+                    )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="md:col-span-2">
@@ -560,7 +561,6 @@ export default function EditEventPage() {
                         </div>
                     </form>
                 </div>
-            </div>
-        </div>
+        </AdminLayout>
     )
 }
