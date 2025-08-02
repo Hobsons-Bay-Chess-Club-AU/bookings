@@ -8,14 +8,14 @@ import AdminNav from '@/components/layout/admin-nav'
 
 interface AdminLayoutProps {
     children: React.ReactNode
-    requiredRole?: 'admin' | 'organizer'
+    requiredRole?: 'admin' | 'organizer' | 'customer_support'
     className?: string
 }
 
-export default function AdminLayout({ 
-    children, 
+export default function AdminLayout({
+    children,
     requiredRole = 'organizer',
-    className = '' 
+    className = ''
 }: AdminLayoutProps) {
     const [user, setUser] = useState<any>(null)
     const [profile, setProfile] = useState<Profile | null>(null)
@@ -28,7 +28,7 @@ export default function AdminLayout({
         const checkAuth = async () => {
             try {
                 const { data: { user }, error: userError } = await supabase.auth.getUser()
-                
+
                 if (userError || !user) {
                     router.push('/auth/login')
                     return
@@ -50,9 +50,11 @@ export default function AdminLayout({
                 setProfile(profileData)
 
                 // Check role authorization
-                const hasPermission = requiredRole === 'organizer' 
+                const hasPermission = requiredRole === 'organizer'
                     ? ['admin', 'organizer'].includes(profileData.role)
-                    : profileData.role === 'admin'
+                    : requiredRole === 'customer_support'
+                        ? ['admin', 'customer_support'].includes(profileData.role)
+                        : profileData.role === 'admin'
 
                 if (!hasPermission) {
                     router.push('/unauthorized')
@@ -97,7 +99,7 @@ export default function AdminLayout({
     }
 
     return (
-        <div className={`min-h-screen bg-gray-50 ${className}`}>
+        <div className={`min-h-screen bg-gray-50 ${className} text-gray-900`}>
             <AdminNav />
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {children}

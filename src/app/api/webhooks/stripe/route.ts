@@ -31,6 +31,33 @@ export async function POST(request: NextRequest) {
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         )
+        
+        // Helper function to capture payment events
+        const capturePaymentEvent = async (bookingId: string, eventType: string, eventId: string) => {
+            try {
+                const { error } = await supabase
+                    .from('payment_events')
+                    .insert({
+                        booking_id: bookingId,
+                        stripe_event_type: eventType,
+                        stripe_event_id: eventId
+                    })
+                
+                if (error) {
+                    console.error('Error capturing payment event:', error)
+                } else {
+                    console.log('✅ Payment event captured:', {
+                        bookingId,
+                        eventType,
+                        eventId,
+                        timestamp: new Date().toISOString()
+                    })
+                }
+            } catch (error) {
+                console.error('Error capturing payment event:', error)
+            }
+        }
+        
         console.log('🔔 WEBHOOK RECEIVED:', {
             eventType: event.type,
             eventId: event.id,
@@ -111,6 +138,9 @@ export async function POST(request: NextRequest) {
                     updateData: updateData,
                     timestamp: new Date().toISOString()
                 })
+                
+                // Capture payment event
+                await capturePaymentEvent(bookingId, event.type, event.id)
                 break
             }
 
@@ -134,6 +164,9 @@ export async function POST(request: NextRequest) {
                         sessionId: session.id,
                         timestamp: new Date().toISOString()
                     })
+                    
+                    // Capture payment event
+                    await capturePaymentEvent(bookingId, event.type, event.id)
                 }
                 break
             }
@@ -200,6 +233,9 @@ export async function POST(request: NextRequest) {
                                 paymentIntentId: paymentIntent.id,
                                 timestamp: new Date().toISOString()
                             })
+                            
+                            // Capture payment event
+                            await capturePaymentEvent(booking.id, event.type, event.id)
                             
                             // Send confirmation email
                             try {
@@ -371,6 +407,9 @@ export async function POST(request: NextRequest) {
                                 timestamp: new Date().toISOString()
                             })
                             
+                            // Capture payment event
+                            await capturePaymentEvent(booking.id, event.type, event.id)
+                            
                                                             // Send confirmation email
                                 try {
                                     await sendBookingConfirmationEmail({
@@ -437,6 +476,9 @@ export async function POST(request: NextRequest) {
                                 paymentIntentId: charge.payment_intent,
                                 timestamp: new Date().toISOString()
                             })
+                            
+                            // Capture payment event
+                            await capturePaymentEvent(booking.id, event.type, event.id)
                                 
                                 // Send confirmation email
                                 try {
@@ -481,6 +523,9 @@ export async function POST(request: NextRequest) {
                         console.error('Error updating failed payment booking:', updateError)
                     } else {
                         console.log(`Booking ${booking.id} cancelled due to payment failure`)
+                        
+                        // Capture payment event
+                        await capturePaymentEvent(booking.id, event.type, event.id)
                     }
                 }
                 break
@@ -507,6 +552,9 @@ export async function POST(request: NextRequest) {
                         console.error('Error updating disputed booking:', updateError)
                     } else {
                         console.log(`Booking ${booking.id} cancelled due to payment dispute`)
+                        
+                        // Capture payment event
+                        await capturePaymentEvent(booking.id, event.type, event.id)
                     }
                 }
                 break

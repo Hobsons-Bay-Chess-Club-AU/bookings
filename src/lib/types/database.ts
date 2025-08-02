@@ -1,4 +1,4 @@
-export type UserRole = 'user' | 'admin' | 'organizer'
+export type UserRole = 'user' | 'admin' | 'organizer' | 'customer_support'
 export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'refunded' | 'verified'
 export type RefundStatus = 'none' | 'requested' | 'processing' | 'completed' | 'failed'
 export type EventStatus = 'draft' | 'published' | 'cancelled' | 'completed' | 'entry_closed'
@@ -48,6 +48,16 @@ export interface Profile {
     membership_type?: MembershipType
     created_at: string
     updated_at: string
+}
+
+export interface PaymentEvent {
+    id: string
+    booking_id: string
+    stripe_event_type: string
+    stripe_event_id: string
+    created_at: string
+    // Related data for joins
+    bookings?: Booking
 }
 
 export interface EventPricing {

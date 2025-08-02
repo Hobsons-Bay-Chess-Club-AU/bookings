@@ -59,3 +59,13 @@ export async function isOrganizer(): Promise<boolean> {
     const profile = await getCurrentProfile()
     return profile?.role === 'organizer' || profile?.role === 'admin' || false
 }
+
+export async function isCustomerSupport(): Promise<boolean> {
+    const profile = await getCurrentProfile()
+    return profile?.role === 'customer_support' || profile?.role === 'admin' || false
+}
+
+export async function canViewPaymentEvents(): Promise<boolean> {
+    const profile = await getCurrentProfile()
+    return ['admin', 'customer_support'].includes(profile?.role || '') || false
+}

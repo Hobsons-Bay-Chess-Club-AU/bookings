@@ -43,7 +43,9 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                 breadcrumbs.push({ label: 'Manage Users' })
             } else if (segments[1] === 'bookings') {
                 breadcrumbs.push({ label: 'Manage Bookings', href: '/admin/bookings' })
-                if (segments[2]) {
+                if (segments[2] && segments[3] === 'payment-events') {
+                    breadcrumbs.push({ label: 'Payment Events' })
+                } else if (segments[2]) {
                     breadcrumbs.push({ label: 'Booking Details' })
                 }
             } else if (segments[1] === 'create-test-data') {
@@ -289,6 +291,37 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                                                             className={getNavLinkClasses('/admin/users', true)}
                                                         >
                                                             Users
+                                                        </Link>
+                                                    )}
+
+                                                    {isActivePath('/admin/bookings') ? (
+                                                        <span className={getNavLinkClasses('/admin/bookings', true)}>
+                                                            Bookings
+                                                        </span>
+                                                    ) : (
+                                                        <Link
+                                                            href="/admin/bookings"
+                                                            className={getNavLinkClasses('/admin/bookings', true)}
+                                                        >
+                                                            Bookings
+                                                        </Link>
+                                                    )}
+                                                </>
+                                            )}
+                                            
+                                            {/* Customer Support Links */}
+                                            {profile?.role === 'customer_support' && (
+                                                <>
+                                                    {isActivePath('/admin/bookings') ? (
+                                                        <span className={getNavLinkClasses('/admin/bookings', true)}>
+                                                            Bookings
+                                                        </span>
+                                                    ) : (
+                                                        <Link
+                                                            href="/admin/bookings"
+                                                            className={getNavLinkClasses('/admin/bookings', true)}
+                                                        >
+                                                            Bookings
                                                         </Link>
                                                     )}
                                                 </>
