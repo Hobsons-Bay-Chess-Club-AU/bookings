@@ -74,12 +74,73 @@ export default function ParticipantsList({
         return searchableText.includes(searchTerm.toLowerCase())
     })    // Helper function to get field value
     const getFieldValue = (booking: BookingWithProfile, fieldId: string): string => {
-        // Handle custom fields
+        // Handle custom fields and their sub-fields
         if (fieldId.startsWith('custom_')) {
-            const customFieldName = fieldId.replace('custom_', '')
             // Check if booking has participants with custom data
             if (booking.participants && booking.participants.length > 0) {
                 const participant = booking.participants[0] // For now, get first participant
+                
+                // Check if it's a sub-field (e.g., custom_fide_id_name, custom_fide_id_std_rating, custom_acf_id_quick_rating)
+                if (fieldId.includes('_name') || fieldId.includes('_id') || fieldId.includes('_std_rating') || 
+                    fieldId.includes('_rapid_rating') || fieldId.includes('_blitz_rating') || fieldId.includes('_quick_rating')) {
+                    
+                    // Extract base field name and sub-field more accurately
+                    let baseFieldName: string
+                    let subField: string
+                    
+                    if (fieldId.endsWith('_std_rating')) {
+                        baseFieldName = fieldId.replace('custom_', '').replace('_std_rating', '')
+                        subField = 'std_rating'
+                    } else if (fieldId.endsWith('_rapid_rating')) {
+                        baseFieldName = fieldId.replace('custom_', '').replace('_rapid_rating', '')
+                        subField = 'rapid_rating'
+                    } else if (fieldId.endsWith('_blitz_rating')) {
+                        baseFieldName = fieldId.replace('custom_', '').replace('_blitz_rating', '')
+                        subField = 'blitz_rating'
+                    } else if (fieldId.endsWith('_quick_rating')) {
+                        baseFieldName = fieldId.replace('custom_', '').replace('_quick_rating', '')
+                        subField = 'quick_rating'
+                    } else if (fieldId.endsWith('_name')) {
+                        baseFieldName = fieldId.replace('custom_', '').replace('_name', '')
+                        subField = 'name'
+                    } else if (fieldId.endsWith('_id')) {
+                        baseFieldName = fieldId.replace('custom_', '').replace('_id', '')
+                        subField = 'id'
+                    } else {
+                        return '-'
+                    }
+                    
+                    const customValue = participant.custom_data?.[baseFieldName]
+                    
+                    if (!customValue || typeof customValue !== 'object') {
+                        return '-'
+                    }
+                    
+                    // Handle FIDE/ACF player object sub-fields
+                    if (customValue.id && customValue.name && ('std_rating' in customValue || 'quick_rating' in customValue)) {
+                        switch (subField) {
+                            case 'name':
+                                return customValue.name || '-'
+                            case 'id':
+                                return customValue.id || '-'
+                            case 'std_rating':
+                                return customValue.std_rating ? customValue.std_rating.toString() : '-'
+                            case 'rapid_rating':
+                                return customValue.rapid_rating ? customValue.rapid_rating.toString() : '-'
+                            case 'blitz_rating':
+                                return customValue.blitz_rating ? customValue.blitz_rating.toString() : '-'
+                            case 'quick_rating':
+                                return customValue.quick_rating ? customValue.quick_rating.toString() : '-'
+                            default:
+                                return '-'
+                        }
+                    }
+                    
+                    return '-'
+                }
+                
+                // Regular custom field (not a sub-field)
+                const customFieldName = fieldId.replace('custom_', '')
                 const customValue = participant.custom_data?.[customFieldName]
                 
                 // Handle null/undefined values
@@ -92,22 +153,17 @@ export default function ParticipantsList({
                 
                 // Handle FIDE/ACF player objects
                 if (typeof customValue === 'object') {
-                    // Check if it's a FIDE player object
-                    if (customValue.id && customValue.name && 'std_rating' in customValue) {
+                    // Check if it's a player object (FIDE or ACF)
+                    if (customValue.id && customValue.name && ('std_rating' in customValue || 'quick_rating' in customValue)) {
                         const ratings = []
                         if (customValue.std_rating) ratings.push(`Std: ${customValue.std_rating}`)
+                        
+                        // FIDE has rapid and blitz ratings
                         if (customValue.rapid_rating) ratings.push(`Rapid: ${customValue.rapid_rating}`)
                         if (customValue.blitz_rating) ratings.push(`Blitz: ${customValue.blitz_rating}`)
                         
-                        return `${customValue.name} (ID: ${customValue.id})${ratings.length > 0 ? ` - ${ratings.join(', ')}` : ''}`
-                    }
-                    
-                    // Check if it's an ACF player object (similar structure)
-                    if (customValue.id && customValue.name) {
-                        const ratings = []
-                        if (customValue.std_rating) ratings.push(`Std: ${customValue.std_rating}`)
-                        if (customValue.rapid_rating) ratings.push(`Rapid: ${customValue.rapid_rating}`)
-                        if (customValue.blitz_rating) ratings.push(`Blitz: ${customValue.blitz_rating}`)
+                        // ACF has quick rating
+                        if (customValue.quick_rating) ratings.push(`Quick: ${customValue.quick_rating}`)
                         
                         return `${customValue.name} (ID: ${customValue.id})${ratings.length > 0 ? ` - ${ratings.join(', ')}` : ''}`
                     }
@@ -174,8 +230,67 @@ export default function ParticipantsList({
 
     // Helper function to get field label
     const getFieldLabel = (fieldId: string): string => {
-        // Handle custom fields
+        // Handle custom fields and their sub-fields
         if (fieldId.startsWith('custom_')) {
+            // Check if it's a sub-field (e.g., custom_fide_id_name, custom_fide_id_std_rating, custom_acf_id_quick_rating)
+            if (fieldId.includes('_name') || fieldId.includes('_id') || fieldId.includes('_std_rating') || 
+                fieldId.includes('_rapid_rating') || fieldId.includes('_blitz_rating') || fieldId.includes('_quick_rating')) {
+                
+                // Extract base field name and sub-field using same logic as getFieldValue
+                let baseFieldName: string
+                let subField: string
+                
+                if (fieldId.endsWith('_std_rating')) {
+                    baseFieldName = fieldId.replace('custom_', '').replace('_std_rating', '')
+                    subField = 'std_rating'
+                } else if (fieldId.endsWith('_rapid_rating')) {
+                    baseFieldName = fieldId.replace('custom_', '').replace('_rapid_rating', '')
+                    subField = 'rapid_rating'
+                } else if (fieldId.endsWith('_blitz_rating')) {
+                    baseFieldName = fieldId.replace('custom_', '').replace('_blitz_rating', '')
+                    subField = 'blitz_rating'
+                } else if (fieldId.endsWith('_quick_rating')) {
+                    baseFieldName = fieldId.replace('custom_', '').replace('_quick_rating', '')
+                    subField = 'quick_rating'
+                } else if (fieldId.endsWith('_name')) {
+                    baseFieldName = fieldId.replace('custom_', '').replace('_name', '')
+                    subField = 'name'
+                } else if (fieldId.endsWith('_id')) {
+                    baseFieldName = fieldId.replace('custom_', '').replace('_id', '')
+                    subField = 'id'
+                } else {
+                    return fieldId.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
+                }
+                
+                // Try to find the base custom field definition
+                let baseLabel = baseFieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+                if (event.custom_form_fields) {
+                    const customField = event.custom_form_fields.find(field => field.name === baseFieldName)
+                    if (customField) {
+                        baseLabel = customField.label
+                    }
+                }
+                
+                // Return appropriate sub-field label
+                switch (subField) {
+                    case 'name':
+                        return `${baseLabel} - Name`
+                    case 'id':
+                        return `${baseLabel} - ID`
+                    case 'std_rating':
+                        return `${baseLabel} - Standard Rating`
+                    case 'rapid_rating':
+                        return `${baseLabel} - Rapid Rating`
+                    case 'blitz_rating':
+                        return `${baseLabel} - Blitz Rating`
+                    case 'quick_rating':
+                        return `${baseLabel} - Quick Rating`
+                    default:
+                        return `${baseLabel} - ${subField.replace(/\b\w/g, l => l.toUpperCase())}`
+                }
+            }
+            
+            // Regular custom field (not a sub-field)
             const customFieldName = fieldId.replace('custom_', '')
             // Try to find the custom field definition in the event
             if (event.custom_form_fields) {
@@ -247,9 +362,16 @@ export default function ParticipantsList({
                         <h2 className="text-xl font-semibold text-gray-900">
                             {isPublic ? 'Event Participants' : 'Participants List'}
                         </h2>
-                        <p className="text-sm text-gray-600 mt-1">
-                            {totalParticipants} participant{totalParticipants !== 1 ? 's' : ''} from {totalBookings} booking{totalBookings !== 1 ? 's' : ''}
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <p className="text-sm text-gray-600 mt-1">
+                                {totalParticipants} participant{totalParticipants !== 1 ? 's' : ''} from {totalBookings} booking{totalBookings !== 1 ? 's' : ''}
+                            </p>
+                            {totalPages > 1 && (
+                                <p className="text-sm text-gray-600 mt-1">
+                                    Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems}
+                                </p>
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3">
@@ -276,23 +398,20 @@ export default function ParticipantsList({
                         </div>
 
                         <div className="flex gap-3">
-                            {/* Items per page */}
-                            {!isPublic && (
-                                <select
-                                    value={itemsPerPage}
-                                    onChange={(e) => {
-                                        setItemsPerPage(Number(e.target.value))
-                                        setCurrentPage(1)
-                                    }}
-                                    className="block pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                                >
-                                    <option value={5}>5 per page</option>
-                                    <option value={10}>10 per page</option>
-                                    <option value={25}>25 per page</option>
-                                    <option value={50}>50 per page</option>
-                                    <option value={100}>100 per page</option>
-                                </select>
-                            )}
+                            {/* Items per page - Show for both public and private views on standalone pages */}
+                            <select
+                                value={itemsPerPage}
+                                onChange={(e) => {
+                                    setItemsPerPage(Number(e.target.value))
+                                    setCurrentPage(1)
+                                }}
+                                className="block pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                            >
+                                <option value={10}>10 per page</option>
+                                <option value={25}>25 per page</option>
+                                <option value={50}>50 per page</option>
+                                <option value={100}>100 per page</option>
+                            </select>
 
                             {/* Sort */}
                             <select
@@ -325,36 +444,69 @@ export default function ParticipantsList({
                 </div>
             ) : isPublic ? (
                 // Public table view with configurable fields
-                <div className="overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    #
-                                </th>
-                                {displayFields.map((fieldId) => (
-                                    <th key={fieldId} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        {getFieldLabel(fieldId)}
+                <>
+                    <div className="overflow-hidden">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        #
                                     </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {paginatedBookings.map((booking, index) => (
-                                <tr key={booking.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {startIndex + index + 1}
-                                    </td>
                                     {displayFields.map((fieldId) => (
-                                        <td key={fieldId} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {getFieldValue(booking, fieldId)}
-                                        </td>
+                                        <th key={fieldId} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            {getFieldLabel(fieldId)}
+                                        </th>
                                     ))}
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {paginatedBookings.map((booking, index) => (
+                                    <tr key={booking.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {startIndex + index + 1}
+                                        </td>
+                                        {displayFields.map((fieldId) => (
+                                            <td key={fieldId} className="px-6 py-4 text-sm text-gray-900">
+                                                <div className="max-w-xs" title={getFieldValue(booking, fieldId)}>
+                                                    {(() => {
+                                                        // Special handling for FIDE ID sub-fields (only FIDE gets links, not ACF)
+                                                        if (fieldId.includes('_id') && fieldId.includes('fide')) {
+                                                            const value = getFieldValue(booking, fieldId)
+                                                            if (value && value !== '-') {
+                                                                return (
+                                                                    <a 
+                                                                        href={`https://ratings.fide.com/profile/${value}`}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="text-blue-600 hover:text-blue-800 underline"
+                                                                    >
+                                                                        {value}
+                                                                    </a>
+                                                                )
+                                                            }
+                                                            return value
+                                                        }
+                                                        
+                                                        const value = getFieldValue(booking, fieldId)
+                                                        // Handle long values by truncating but showing full value in tooltip
+                                                        if (value.length > 50) {
+                                                            return (
+                                                                <span className="block truncate">
+                                                                    {value}
+                                                                </span>
+                                                            )
+                                                        }
+                                                        return value
+                                                    })()}
+                                                </div>
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
             ) : (
                 // Private detailed card view
                 <div className="divide-y divide-gray-200">

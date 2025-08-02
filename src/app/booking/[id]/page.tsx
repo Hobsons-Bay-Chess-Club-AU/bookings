@@ -336,9 +336,74 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                                     {p.contact_email && <div><span className="font-medium">Contact Email:</span> {p.contact_email}</div>}
                                                     {p.contact_phone && <div><span className="font-medium">Contact Phone:</span> {p.contact_phone}</div>}
                                                     {/* Custom fields */}
-                                                    {p.custom_data && Object.entries(p.custom_data).map(([key, value]) => (
-                                                        <div key={key}><span className="font-medium">{key.replace(/_/g, ' ')}:</span> {Array.isArray(value) ? value.join(', ') : String(value)}</div>
-                                                    ))}
+                                                    {p.custom_data && Object.entries(p.custom_data).map(([key, value]) => {
+                                                        let displayValue: string
+                                                        
+                                                        // Handle arrays
+                                                        if (Array.isArray(value)) {
+                                                            displayValue = value.join(', ')
+                                                        }
+                                                        // Handle FIDE/ACF player objects
+                                                        else if (typeof value === 'object' && value !== null) {
+                                                            const obj = value as any
+                                                            // Check if it's a FIDE/ACF player object
+                                                            if (obj.id && obj.name && 'std_rating' in obj) {
+                                                                const ratings = []
+                                                                if (obj.std_rating) ratings.push(`Std: ${obj.std_rating}`)
+                                                                if (obj.rapid_rating) ratings.push(`Rapid: ${obj.rapid_rating}`)
+                                                                if (obj.blitz_rating) ratings.push(`Blitz: ${obj.blitz_rating}`)
+                                                                
+                                                                // Check if this is a FIDE player (based on field name or other indicators)
+                                                                const isFidePlayer = key.toLowerCase().includes('fide')
+                                                                
+                                                                if (isFidePlayer) {
+                                                                    displayValue = `${obj.name} (ID: ${obj.id})${ratings.length > 0 ? ` - ${ratings.join(', ')}` : ''}`
+                                                                } else {
+                                                                    displayValue = `${obj.name} (ID: ${obj.id})${ratings.length > 0 ? ` - ${ratings.join(', ')}` : ''}`
+                                                                }
+                                                            } else {
+                                                                displayValue = JSON.stringify(value)
+                                                            }
+                                                        }
+                                                        else {
+                                                            displayValue = String(value)
+                                                        }
+                                                        
+                                                        return (
+                                                            <div key={key}>
+                                                                <span className="font-medium">{key.replace(/_/g, ' ')}:</span>{' '}
+                                                                {/* Special handling for FIDE/ACF player objects with links */}
+                                                                {typeof value === 'object' && value !== null && (value as any).id && (value as any).name && 'std_rating' in (value as any) ? (
+                                                                    <span>
+                                                                        {(value as any).name} (ID:{' '}
+                                                                        {key.toLowerCase().includes('fide') ? (
+                                                                            <a 
+                                                                                href={`https://ratings.fide.com/profile/${(value as any).id}`}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="text-blue-600 hover:text-blue-800 underline"
+                                                                            >
+                                                                                {(value as any).id}
+                                                                            </a>
+                                                                        ) : (
+                                                                            (value as any).id
+                                                                        )}
+                                                                        )
+                                                                        {(() => {
+                                                                            const obj = value as any
+                                                                            const ratings = []
+                                                                            if (obj.std_rating) ratings.push(`Std: ${obj.std_rating}`)
+                                                                            if (obj.rapid_rating) ratings.push(`Rapid: ${obj.rapid_rating}`)
+                                                                            if (obj.blitz_rating) ratings.push(`Blitz: ${obj.blitz_rating}`)
+                                                                            return ratings.length > 0 ? ` - ${ratings.join(', ')}` : ''
+                                                                        })()}
+                                                                    </span>
+                                                                ) : (
+                                                                    displayValue
+                                                                )}
+                                                            </div>
+                                                        )
+                                                    })}
                                                 </div>
                                             </div>
                                         ))}

@@ -43,6 +43,12 @@ export default function AcfPlayerField({
         if (value && typeof value === 'object' && value.id) {
             setSelectedPlayer(value as PlayerData)
             setQuery(value.name || '')
+        } else {
+            // Clear state when value is null/undefined (switching participants)
+            setSelectedPlayer(null)
+            setQuery('')
+            setPlayers([])
+            setShowDropdown(false)
         }
     }, [value])
 

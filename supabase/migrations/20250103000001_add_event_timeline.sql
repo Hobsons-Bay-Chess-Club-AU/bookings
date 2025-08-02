@@ -18,4 +18,3 @@ CREATE INDEX idx_bookings_refund_requested_at ON bookings (refund_requested_at);
 
 -- Comment explaining timeline structure
 COMMENT ON COLUMN events.timeline IS 'JSONB structure: {"refund": [{"from_date": "2024-01-01T00:00:00Z", "to_date": "2024-01-15T00:00:00Z", "type": "percentage", "value": 100}, {"from_date": "2024-01-15T00:00:00Z", "to_date": "2024-01-30T00:00:00Z", "type": "percentage", "value": 80}, {"from_date": "2024-01-30T00:00:00Z", "to_date": null, "type": "percentage", "value": 0}]}';
- 

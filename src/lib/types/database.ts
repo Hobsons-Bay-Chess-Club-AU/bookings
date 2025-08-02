@@ -13,8 +13,9 @@ export interface PlayerData {
     id: string
     name: string
     std_rating: number | null
-    blitz_rating: number | null
-    rapid_rating: number | null
+    blitz_rating: number | null  // FIDE only
+    rapid_rating: number | null  // FIDE only
+    quick_rating: number | null  // ACF only
 }
 
 export interface RefundTimelineItem {

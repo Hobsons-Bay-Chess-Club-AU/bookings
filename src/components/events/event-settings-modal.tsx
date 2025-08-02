@@ -36,12 +36,74 @@ export default function EventSettingsModal({ event, isOpen, onClose, onUpdate }:
         // Add custom fields from the event's form configuration
         if (event.custom_form_fields && event.custom_form_fields.length > 0) {
             event.custom_form_fields.forEach(customField => {
-                fields.push({
-                    id: `custom_${customField.name}`,
-                    label: customField.label,
-                    description: customField.description || `Custom field: ${customField.label}`,
-                    category: 'Custom Fields'
-                })
+                // Check if it's a FIDE or ACF player field (composite field)
+                if (customField.type === 'fide_id' || customField.type === 'acf_id') {
+                    const fieldType = customField.type === 'fide_id' ? 'FIDE' : 'ACF'
+                    const fieldPrefix = `custom_${customField.name}`
+                    
+                    // Add the main field (full player info)
+                    fields.push({
+                        id: fieldPrefix,
+                        label: `${customField.label} (Full Info)`,
+                        description: `Complete ${fieldType} player information with name, ID, and ratings`,
+                        category: `${fieldType} Player Fields`
+                    })
+                    
+                    // Add sub-fields for granular control
+                    fields.push({
+                        id: `${fieldPrefix}_name`,
+                        label: `${customField.label} - Name`,
+                        description: `${fieldType} player name only`,
+                        category: `${fieldType} Player Fields`
+                    })
+                    
+                    fields.push({
+                        id: `${fieldPrefix}_id`,
+                        label: `${customField.label} - ID`,
+                        description: `${fieldType} player ID only${customField.type === 'fide_id' ? ' (with link to FIDE profile)' : ''}`,
+                        category: `${fieldType} Player Fields`
+                    })
+                    
+                    fields.push({
+                        id: `${fieldPrefix}_std_rating`,
+                        label: `${customField.label} - Standard Rating`,
+                        description: `${fieldType} player standard rating`,
+                        category: `${fieldType} Player Fields`
+                    })
+                    
+                    if (customField.type === 'fide_id') {
+                        // FIDE has rapid and blitz ratings
+                        fields.push({
+                            id: `${fieldPrefix}_rapid_rating`,
+                            label: `${customField.label} - Rapid Rating`,
+                            description: `${fieldType} player rapid rating`,
+                            category: `${fieldType} Player Fields`
+                        })
+                        
+                        fields.push({
+                            id: `${fieldPrefix}_blitz_rating`,
+                            label: `${customField.label} - Blitz Rating`,
+                            description: `${fieldType} player blitz rating`,
+                            category: `${fieldType} Player Fields`
+                        })
+                    } else if (customField.type === 'acf_id') {
+                        // ACF has quick rating instead of rapid/blitz
+                        fields.push({
+                            id: `${fieldPrefix}_quick_rating`,
+                            label: `${customField.label} - Quick Rating`,
+                            description: `${fieldType} player quick rating`,
+                            category: `${fieldType} Player Fields`
+                        })
+                    }
+                } else {
+                    // Regular custom field
+                    fields.push({
+                        id: `custom_${customField.name}`,
+                        label: customField.label,
+                        description: customField.description || `Custom field: ${customField.label}`,
+                        category: 'Custom Fields'
+                    })
+                }
             })
         }
         

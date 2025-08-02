@@ -241,6 +241,7 @@ export default function Step3Participants({
 
                     {/* Custom Fields */}
                     <DynamicFormFieldset
+                        key={`participant-${currentParticipantIndex}`}
                         fields={formFields}
                         values={currentParticipant.custom_data || {}}
                         onChange={handleCustomFieldChange}

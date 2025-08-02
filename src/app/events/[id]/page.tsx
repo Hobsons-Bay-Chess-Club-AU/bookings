@@ -58,8 +58,8 @@ interface BookingWithProfile extends Booking {
         first_name: string
         last_name: string
         date_of_birth?: string
-        contact_email?: string
-        contact_phone?: string
+        email?: string
+        phone?: string
         custom_data?: Record<string, any>
     }>
 }
@@ -315,12 +315,22 @@ export default async function EventPage({ params }: EventPageProps) {
 
                                         <div className="flex items-center">
                                             <span className="text-gray-400 mr-3">👥</span>
-                                            <p className="text-gray-900">
-                                                {event.max_attendees ?
-                                                    `${event.current_attendees} / ${event.max_attendees} attendees` :
-                                                    `${event.current_attendees} attendees`
-                                                }
-                                            </p>
+                                            <div className="flex items-center space-x-2">
+                                                <p className="text-gray-900">
+                                                    {event.max_attendees ?
+                                                        `${event.current_attendees} / ${event.max_attendees} attendees` :
+                                                        `${event.current_attendees} attendees`
+                                                    }
+                                                </p>
+                                                {event.settings?.show_participants_public && participants.length > 0 && (
+                                                    <Link
+                                                        href={`/events/${event.id}/participants`}
+                                                        className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
+                                                    >
+                                                        View List →
+                                                    </Link>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className="flex items-center">
@@ -345,9 +355,6 @@ export default async function EventPage({ params }: EventPageProps) {
 
                             {event.description && (
                                 <div className="border-t pt-6">
-                                    <h3 className="text-lg font-medium text-gray-900 mb-3">
-                                        About this event
-                                    </h3>
                                     <MarkdownContent
                                         content={event.description}
                                         className="text-gray-700"
@@ -360,18 +367,6 @@ export default async function EventPage({ params }: EventPageProps) {
                                     refundTimeline={event.timeline.refund}
                                     eventStartDate={event.start_date}
                                 />
-                            )}
-
-                            {/* Participants Section - Only show if enabled in settings */}
-                            {event.settings?.show_participants_public && participants.length > 0 && (
-                                <div className="border-t pt-6 mt-6">
-                                    <ParticipantsList 
-                                        event={event} 
-                                        bookings={participants} 
-                                        isPublic={true}
-                                        showPrivateInfo={false}
-                                    />
-                                </div>
                             )}
 
                             {event.organizer && (
