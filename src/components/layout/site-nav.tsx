@@ -51,8 +51,9 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
     useEffect(() => {
         const getUser = async () => {
             try {
+                console.log('Fetching user data from Supabase...')
                 const { data: { user }, error: userError } = await supabase.auth.getUser()
-
+                console.error('User data:', user)
                 if (userError) {
                     console.error('Error getting user:', userError)
                 }
@@ -79,9 +80,14 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                 setLoading(false)
             }
         }
+        console.log('Fetching user data...')
+        getUser().then(() => {
+            console.log('User data fetched successfully')
+        }).catch(error => {
+            console.error('Error fetching user data:', error)
+        })
 
-        getUser()
-
+        console.log('User data fetched')
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             setUser(session?.user ?? null)
 

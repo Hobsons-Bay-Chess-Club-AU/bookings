@@ -74,8 +74,9 @@ export async function middleware(request: NextRequest) {
             }
         }
 
-        // Redirect authenticated users away from auth pages
-        if (user && request.nextUrl.pathname.startsWith('/auth/')) {
+        // Redirect authenticated users away from auth pages (except logout)
+        if (user && request.nextUrl.pathname.startsWith('/auth/') &&
+            !request.nextUrl.pathname.startsWith('/auth/logout')) {
             return NextResponse.redirect(new URL('/dashboard', request.url))
         }
         // console.log('Middleware processed successfully')

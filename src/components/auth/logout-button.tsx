@@ -11,6 +11,7 @@ interface LogoutButtonProps {
 
 export default function LogoutButton({ className, children }: LogoutButtonProps) {
     const [loading, setLoading] = useState(false)
+    const [showEmergencyOption, setShowEmergencyOption] = useState(false)
     const router = useRouter()
     const supabase = createClient()
 
@@ -22,9 +23,36 @@ export default function LogoutButton({ className, children }: LogoutButtonProps)
             router.refresh()
         } catch (error) {
             console.error('Error logging out:', error)
+            // Show emergency logout option if normal logout fails
+            setShowEmergencyOption(true)
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleEmergencyLogout = () => {
+        // Navigate to the comprehensive logout page
+        router.push('/auth/logout')
+    }
+
+    if (showEmergencyOption) {
+        return (
+            <div className="flex flex-col space-y-2">
+                <button
+                    onClick={handleLogout}
+                    disabled={loading}
+                    className={className}
+                >
+                    {children || (loading ? 'Signing out...' : 'Try Again')}
+                </button>
+                <button
+                    onClick={handleEmergencyLogout}
+                    className="text-xs text-red-600 hover:text-red-800 underline"
+                >
+                    Emergency Logout (Force cleanup)
+                </button>
+            </div>
+        )
     }
 
     return (
