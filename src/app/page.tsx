@@ -1,6 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { Event } from '@/lib/types/database'
-import NavWrapper from '@/components/layout/nav-wrapper'
 import EventCard from '@/components/events/EventCard'
 
 async function getPublishedEvents(): Promise<Event[]> {
@@ -40,9 +39,6 @@ export default async function HomePage() {
 
   return (
     <div className="bg-gray-50">
-      {/* Header */}
-      <NavWrapper />
-
       {/* Hero Section */}
       <div className="bg-indigo-700">
         <div className="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">

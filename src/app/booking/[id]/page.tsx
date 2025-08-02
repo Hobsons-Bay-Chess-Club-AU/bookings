@@ -6,7 +6,6 @@ import { Booking, Event } from '@/lib/types/database'
 import AddToCalendar from '@/components/calendar/add-to-calendar'
 import { CalendarEvent } from '@/lib/utils/calendar'
 import MarkdownContent from '@/components/ui/html-content'
-import SiteNav from '@/components/layout/site-nav'
 import RefundPolicyDisplay from '@/components/events/refund-policy-display'
 import RefundRequestButton from '@/components/dashboard/refund-request-button'
 
@@ -109,10 +108,7 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
         .order('created_at', { ascending: true })
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Navigation */}
-            <SiteNav />
-
+        <div className="bg-gray-50">
             {/* Breadcrumb */}
             <div className="bg-white border-b">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

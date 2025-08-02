@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import NavWrapper from '@/components/layout/nav-wrapper'
 import ParticipantsList from '@/components/events/participants-list'
 import { Event, Booking, Profile } from '@/lib/types/database'
 import { Metadata } from 'next'
@@ -102,9 +101,7 @@ export default async function EventParticipantsPage({ params }: ParticipantsPage
 
     if (!shouldShowPublicParticipants) {
         return (
-            <div className="min-h-screen bg-gray-50">
-                <NavWrapper />
-                
+            <div className="bg-gray-50">
                 {/* Breadcrumb */}
                 <div className="bg-white border-b">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -170,9 +167,7 @@ export default async function EventParticipantsPage({ params }: ParticipantsPage
     const participants = await getEventParticipants(event.id)
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <NavWrapper />
-            
+        <div className="bg-gray-50">
             {/* Breadcrumb */}
             <div className="bg-white border-b">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

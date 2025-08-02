@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/utils/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import SiteNav from '@/components/layout/site-nav'
 import RefundRequestButton from '@/components/dashboard/refund-request-button'
 import { Booking, Event } from '@/lib/types/database'
 import DashboardClient from '@/components/dashboard/dashboard-client'
@@ -37,10 +36,7 @@ export default async function DashboardPage() {
     const bookings = await getUserBookings(profile.id)
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Navigation */}
-            <SiteNav />
-
+        <div className="bg-gray-50">
             {/* Page Header */}
             <div className="bg-white shadow">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

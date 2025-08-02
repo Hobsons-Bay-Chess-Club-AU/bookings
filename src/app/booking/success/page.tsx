@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { Booking, Event } from '@/lib/types/database'
 import AddToCalendar from '@/components/calendar/add-to-calendar'
 import { CalendarEvent } from '@/lib/utils/calendar'
-import NavWrapper from '@/components/layout/nav-wrapper'
 
 async function getBookingFromSession(sessionId: string): Promise<(Booking & { event: Event }) | null> {
     const supabase = await createClient()
@@ -77,10 +76,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Navigation */}
-            <NavWrapper />
-
+        <div className="bg-gray-50">
             <div className="py-2 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto">
                     <div className="bg-white shadow rounded-lg overflow-hidden">

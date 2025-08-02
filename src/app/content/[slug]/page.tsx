@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Content } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
-import NavWrapper from '@/components/layout/nav-wrapper'
 
 interface ContentPageProps {
     params: {
@@ -131,9 +130,6 @@ export default async function ContentPage({ params }: ContentPageProps) {
 
     return (
         <div className="bg-gray-50">
-            {/* Header */}
-            <NavWrapper />
-
             {/* Content */}
             <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-gray-900">
                 {/* Breadcrumb Navigation */}

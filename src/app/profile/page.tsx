@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import SiteNav from '@/components/layout/site-nav'
 import { Profile } from '@/lib/types/database'
 
 export default function ProfilePage() {
@@ -123,10 +122,7 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-900">
-            {/* Navigation */}
-            <SiteNav />
-
+        <div className="bg-gray-50 text-gray-900">
             {/* Page Header */}
             <div className="bg-white shadow">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -3,7 +3,6 @@ import { getCurrentUser, getCurrentProfile } from '@/lib/utils/auth'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import BookingForm from '@/components/events/booking-form'
-import NavWrapper from '@/components/layout/nav-wrapper'
 import SocialShare from '@/components/events/social-share'
 import EventStructuredData from '@/components/events/event-structured-data'
 import EventQRCode from '@/components/events/event-qr-code'
@@ -209,12 +208,9 @@ export default async function EventPage({ params }: EventPageProps) {
     const isBookable = event.status === 'published' && !isEventFull && !isEventPast
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="bg-gray-50">
             {/* Structured Data for SEO */}
             <EventStructuredData event={event} />
-
-            {/* Navigation */}
-            <NavWrapper />
 
             {/* Breadcrumb */}
             <div className="bg-white border-b">
