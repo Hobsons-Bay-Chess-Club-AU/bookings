@@ -5,6 +5,7 @@ import AdminLayout from '@/components/layout/admin-layout'
 import { createClient } from '@/lib/supabase/client'
 import { CustomField, FormFieldType } from '@/lib/types/database'
 import FormBuilder from '@/components/events/form-builder'
+import { HiDocumentText, HiUser, HiGlobeAlt, HiStar } from 'react-icons/hi2'
 
 export default function CustomFieldsPage() {
     const [customFields, setCustomFields] = useState<CustomField[]>([])
@@ -185,7 +186,7 @@ export default function CustomFieldsPage() {
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <span className="text-2xl">📝</span>
+                                <HiDocumentText className="h-8 w-8 text-gray-400" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
@@ -205,7 +206,7 @@ export default function CustomFieldsPage() {
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <span className="text-2xl">👤</span>
+                                <HiUser className="h-8 w-8 text-gray-400" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
@@ -225,7 +226,7 @@ export default function CustomFieldsPage() {
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <span className="text-2xl">🌍</span>
+                                <HiGlobeAlt className="h-8 w-8 text-gray-400" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
@@ -245,7 +246,7 @@ export default function CustomFieldsPage() {
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <span className="text-2xl">⭐</span>
+                                <HiStar className="h-8 w-8 text-gray-400" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
@@ -318,7 +319,7 @@ export default function CustomFieldsPage() {
             {filteredFields.length === 0 ? (
                 <div className="bg-white shadow rounded-lg">
                     <div className="text-center py-12">
-                        <span className="text-4xl mb-4 block">📝</span>
+                        <HiDocumentText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                         <h4 className="text-lg font-medium text-gray-900 mb-2">
                             {customFields.length === 0 ? 'No custom fields yet' : 'No fields match your search'}
                         </h4>

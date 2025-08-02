@@ -4,6 +4,7 @@ import Link from 'next/link'
 import QRCode from 'react-qr-code'
 import MarkdownContent from '@/components/ui/html-content'
 import CopyButton from '@/components/ui/copy-button'
+import { HiStar, HiMapPin } from 'react-icons/hi2'
 
 interface EventCardProps {
   event: any
@@ -91,7 +92,8 @@ export default function EventCard({ event }: EventCardProps) {
           <div className="flex space-x-2 pr-4">
             {event.is_promoted && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                ⭐ Featured
+                <HiStar className="h-3 w-3 mr-1" />
+                Featured
               </span>
             )}
             {event.status === 'entry_closed' && (
@@ -111,8 +113,9 @@ export default function EventCard({ event }: EventCardProps) {
           />
         </div>
         <div className="mt-4">
-          <p className="text-sm text-gray-500">
-            📍 {event.location}
+          <p className="text-sm text-gray-500 flex items-center">
+            <HiMapPin className="h-4 w-4 mr-1" />
+            {event.location}
           </p>
           <div className="mt-2 flex items-center justify-between">
             <p className="text-lg font-bold text-gray-900">

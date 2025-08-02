@@ -6,6 +6,20 @@ import { Event, Booking, EventSettings } from '@/lib/types/database'
 import CopyButton from '@/components/ui/copy-button'
 import EventSettingsModal from '@/components/events/event-settings-modal'
 import { HiCog6Tooth } from 'react-icons/hi2'
+import { 
+    HiSparkles, 
+    HiCheckCircle, 
+    HiTicket, 
+    HiCurrencyDollar, 
+    HiCalendarDays,
+    HiMapPin,
+    HiUsers,
+    HiEye,
+    HiClipboardDocumentList,
+    HiPencilSquare,
+    HiCog8Tooth,
+    HiLink
+} from 'react-icons/hi2'
 
 interface EventWithBookings extends Event {
     totalBookings: number
@@ -87,7 +101,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                         <div className="p-5">
                             <div className="flex items-center">
                                 <div className="flex-shrink-0">
-                                    <span className="text-2xl">🎪</span>
+                                    <HiSparkles className="h-8 w-8 text-gray-400" />
                                 </div>
                                 <div className="ml-5 w-0 flex-1">
                                     <dl>
@@ -107,7 +121,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                         <div className="p-5">
                             <div className="flex items-center">
                                 <div className="flex-shrink-0">
-                                    <span className="text-2xl">✅</span>
+                                    <HiCheckCircle className="h-8 w-8 text-gray-400" />
                                 </div>
                                 <div className="ml-5 w-0 flex-1">
                                     <dl>
@@ -127,7 +141,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                         <div className="p-5">
                             <div className="flex items-center">
                                 <div className="flex-shrink-0">
-                                    <span className="text-2xl">🎫</span>
+                                    <HiTicket className="h-8 w-8 text-gray-400" />
                                 </div>
                                 <div className="ml-5 w-0 flex-1">
                                     <dl>
@@ -147,7 +161,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                         <div className="p-5">
                             <div className="flex items-center">
                                 <div className="flex-shrink-0">
-                                    <span className="text-2xl">💰</span>
+                                    <HiCurrencyDollar className="h-8 w-8 text-gray-400" />
                                 </div>
                                 <div className="ml-5 w-0 flex-1">
                                     <dl>
@@ -178,7 +192,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
 
                     {events.length === 0 ? (
                         <div className="text-center py-12">
-                            <span className="text-4xl mb-4 block">🎪</span>
+                            <HiSparkles className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-gray-900 mb-2">
                                 No events yet
                             </h3>
@@ -216,23 +230,23 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
 
                                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
                                                 <div className="flex items-center">
-                                                    <span className="mr-2">📅</span>
+                                                    <HiCalendarDays className="mr-2 h-4 w-4" />
                                                     <span>
                                                         {new Date(event.start_date).toLocaleDateString()}
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center">
-                                                    <span className="mr-2">📍</span>
+                                                    <HiMapPin className="mr-2 h-4 w-4" />
                                                     <span>{event.location}</span>
                                                 </div>
                                                 <div className="flex items-center">
-                                                    <span className="mr-2">🎫</span>
+                                                    <HiTicket className="mr-2 h-4 w-4" />
                                                     <span>
                                                         {event.confirmedBookings} / {event.max_attendees || '∞'} booked
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center">
-                                                    <span className="mr-2">💰</span>
+                                                    <HiCurrencyDollar className="mr-2 h-4 w-4" />
                                                     <span>AUD ${event.revenue.toFixed(2)} revenue</span>
                                                 </div>
                                             </div>
@@ -269,32 +283,32 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                                             onClick={() => setOpenDropdownId(null)}
                                                         >
-                                                            📋 View Bookings
+                                                            <HiClipboardDocumentList className="mr-2 h-4 w-4" /> View Bookings
                                                         </Link>
                                                         <Link
                                                             href={`/organizer/events/${event.id}/participants`}
                                                             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                                             onClick={() => setOpenDropdownId(null)}
                                                         >
-                                                            👥 View Participants
+                                                            <HiUsers className="mr-2 h-4 w-4" /> View Participants
                                                         </Link>
                                                         <button
                                                             onClick={() => handleOpenSettings(event)}
                                                             className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
                                                         >
-                                                            ⚙️ Event Settings
+                                                            <HiCog8Tooth className="mr-2 h-4 w-4" /> Event Settings
                                                         </button>
                                                         <Link
                                                             href={`/organizer/events/${event.id}/pricing`}
                                                             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                                             onClick={() => setOpenDropdownId(null)}
                                                         >
-                                                            💰 Manage Pricing
+                                                            <HiCurrencyDollar className="mr-2 h-4 w-4" /> Manage Pricing
                                                         </Link>
                                                         {event.alias && (
                                                             <div className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                                                 <span className="flex items-center">
-                                                                    🔗
+                                                                    <HiLink className="mr-2 h-4 w-4" />
                                                                 </span>
                                                                 <div className="flex items-center space-x-1">
                                                                     <span className="text-xs font-mono text-indigo-600">
@@ -310,7 +324,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                             className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                                             onClick={() => setOpenDropdownId(null)}
                                                         >
-                                                            ✏️ Edit Event
+                                                            <HiPencilSquare className="mr-2 h-4 w-4" /> Edit Event
                                                         </Link>
                                                     </div>
                                                 </div>

@@ -2,6 +2,18 @@
 import React, { useState, useEffect } from "react";
 import AdminLayout from '@/components/layout/admin-layout';
 import { UserRole } from '@/lib/types/database';
+import { 
+    HiUsers, 
+    HiShieldCheck, 
+    HiWrenchScrewdriver, 
+    HiCheckCircle, 
+    HiUser,
+    HiMagnifyingGlass,
+    HiXMark,
+    HiXCircle,
+    HiPencilSquare,
+    HiKey
+} from 'react-icons/hi2';
 
 type User = {
   id: string;
@@ -214,7 +226,7 @@ export default function AdminUsersPage() {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <span className="text-2xl">👥</span>
+                    <HiUsers className="h-8 w-8 text-gray-400" />
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
@@ -234,7 +246,7 @@ export default function AdminUsersPage() {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <span className="text-2xl">👑</span>
+                    <HiShieldCheck className="h-8 w-8 text-gray-400" />
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
@@ -254,7 +266,7 @@ export default function AdminUsersPage() {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <span className="text-2xl">🛠️</span>
+                    <HiWrenchScrewdriver className="h-8 w-8 text-gray-400" />
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
@@ -274,7 +286,7 @@ export default function AdminUsersPage() {
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <span className="text-2xl">✅</span>
+                    <HiCheckCircle className="h-8 w-8 text-gray-400" />
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
@@ -300,7 +312,7 @@ export default function AdminUsersPage() {
             
             {users.length === 0 ? (
               <div className="px-6 py-8 text-center">
-                <span className="text-4xl mb-4 block">👤</span>
+                <HiUser className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600">No users found</p>
               </div>
             ) : (
@@ -358,7 +370,7 @@ export default function AdminUsersPage() {
                               ? 'bg-blue-100 text-blue-800'
                               : 'bg-gray-100 text-gray-800'
                           }`}>
-                            {user.role === 'admin' && '👑'} {user.role}
+                            {user.role === 'admin' && <HiShieldCheck className="h-3 w-3 mr-1" />} {user.role}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -367,7 +379,17 @@ export default function AdminUsersPage() {
                               ? 'bg-green-100 text-green-800' 
                               : 'bg-red-100 text-red-800'
                           }`}>
-                            {user.active ? '✅ Active' : '❌ Inactive'}
+                            {user.active ? (
+                              <>
+                                <HiCheckCircle className="h-3 w-3 mr-1" />
+                                Active
+                              </>
+                            ) : (
+                              <>
+                                <HiXCircle className="h-3 w-3 mr-1" />
+                                Inactive
+                              </>
+                            )}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -382,26 +404,38 @@ export default function AdminUsersPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                           <button
                             onClick={() => openEditModal(user)}
-                            className="text-indigo-600 hover:text-indigo-900 transition"
+                            className="text-indigo-600 hover:text-indigo-900 transition inline-flex items-center"
                           >
-                            ✏️ Edit
+                            <HiPencilSquare className="h-4 w-4 mr-1" />
+                            Edit
                           </button>
                           <button
                             onClick={() => openRoleModal(user)}
-                            className="text-purple-600 hover:text-purple-900 transition"
+                            className="text-purple-600 hover:text-purple-900 transition inline-flex items-center"
                           >
-                            🔑 Role
+                            <HiKey className="h-4 w-4 mr-1" />
+                            Role
                           </button>
                           <button
                             onClick={() => toggleUserStatus(user.id)}
                             disabled={loading}
-                            className={`transition ${
+                            className={`transition inline-flex items-center ${
                               user.active 
                                 ? 'text-red-600 hover:text-red-900' 
                                 : 'text-green-600 hover:text-green-900'
                             } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
-                            {user.active ? '❌ Disable' : '✅ Enable'}
+                            {user.active ? (
+                              <>
+                                <HiXCircle className="h-4 w-4 mr-1" />
+                                Disable
+                              </>
+                            ) : (
+                              <>
+                                <HiCheckCircle className="h-4 w-4 mr-1" />
+                                Enable
+                              </>
+                            )}
                           </button>
                         </td>
                       </tr>
@@ -425,9 +459,9 @@ export default function AdminUsersPage() {
                   </h2>
                   <button
                     onClick={closeModal}
-                    className="text-gray-400 hover:text-gray-600 text-2xl"
+                    className="text-gray-400 hover:text-gray-600"
                   >
-                    ✕
+                    <HiXMark className="h-6 w-6" />
                   </button>
                 </div>
 
@@ -492,9 +526,9 @@ export default function AdminUsersPage() {
                   </h2>
                   <button
                     onClick={closeModal}
-                    className="text-gray-400 hover:text-gray-600 text-2xl"
+                    className="text-gray-400 hover:text-gray-600"
                   >
-                    ✕
+                    <HiXMark className="h-6 w-6" />
                   </button>
                 </div>
 
