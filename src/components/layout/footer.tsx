@@ -18,8 +18,8 @@ export default function Footer() {
                             <h3 className="text-lg font-bold">Hobsons Bay Chess Club</h3>
                         </div>
                         <p className="text-gray-300 text-sm leading-relaxed">
-                            Welcome to the Hobsons Bay Chess Club, where strategy meets community! 
-                            We are dedicated to promoting the game of chess within the Hobsons Bay 
+                            Welcome to the Hobsons Bay Chess Club, where strategy meets community!
+                            We are dedicated to promoting the game of chess within the Hobsons Bay
                             community and providing a welcoming environment for players of all skill levels.
                         </p>
                     </div>
