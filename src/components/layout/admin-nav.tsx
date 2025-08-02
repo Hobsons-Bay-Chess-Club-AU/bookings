@@ -43,6 +43,11 @@ export default function AdminNav({ className = '', profile: propProfile, user: p
 
             if (segments[1] === 'users') {
                 breadcrumbs.push({ label: 'Manage Users' })
+            } else if (segments[1] === 'bookings') {
+                breadcrumbs.push({ label: 'Manage Bookings', href: '/admin/bookings' })
+                if (segments[2]) {
+                    breadcrumbs.push({ label: 'Booking Details' })
+                }
             } else if (segments[1] === 'create-test-data') {
                 breadcrumbs.push({ label: 'Create Test Data' })
             } else if (segments[1] === 'email-test') {
@@ -303,6 +308,19 @@ export default function AdminNav({ className = '', profile: propProfile, user: p
 
                                             {profile?.role === 'admin' && (
                                                 <>
+                                                    {isActivePath('/admin/bookings') ? (
+                                                        <span className={getNavLinkClasses('/admin/bookings', true)}>
+                                                            Bookings
+                                                        </span>
+                                                    ) : (
+                                                        <Link
+                                                            href="/admin/bookings"
+                                                            className={getNavLinkClasses('/admin/bookings', true)}
+                                                        >
+                                                            Bookings
+                                                        </Link>
+                                                    )}
+
                                                     {isActivePath('/admin/users') ? (
                                                         <span className={getNavLinkClasses('/admin/users', true)}>
                                                             Users
@@ -512,6 +530,20 @@ export default function AdminNav({ className = '', profile: propProfile, user: p
 
                                                 {profile?.role === 'admin' && (
                                                     <>
+                                                        {isActivePath('/admin/bookings') ? (
+                                                            <span className={getNavLinkClasses('/admin/bookings', false)}>
+                                                                Manage Bookings
+                                                            </span>
+                                                        ) : (
+                                                            <Link
+                                                                href="/admin/bookings"
+                                                                onClick={() => setMobileMenuOpen(false)}
+                                                                className={getNavLinkClasses('/admin/bookings', false)}
+                                                            >
+                                                                Manage Bookings
+                                                            </Link>
+                                                        )}
+
                                                         {isActivePath('/admin/users') ? (
                                                             <span className={getNavLinkClasses('/admin/users', false)}>
                                                                 Manage Users

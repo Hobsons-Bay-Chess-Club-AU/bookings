@@ -14,6 +14,7 @@ import ParticipantsList from '@/components/events/participants-list'
 import { Event, Booking, Profile } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
 import { Metadata } from 'next'
+import { HiHome, HiCalendarDays, HiMapPin, HiUsers, HiCurrencyDollar } from 'react-icons/hi2'
 
 async function getEvent(id: string): Promise<Event | null> {
     const supabase = await createClient()
@@ -224,7 +225,7 @@ export default async function EventPage({ params }: EventPageProps) {
                                 <li>
                                     <Link href="/" className="text-gray-400 hover:text-gray-500">
                                         <span className="sr-only">Home</span>
-                                        🏠
+                                        <HiHome className="h-5 w-5" />
                                     </Link>
                                 </li>
                                 <li>
@@ -286,7 +287,7 @@ export default async function EventPage({ params }: EventPageProps) {
                                 <div className="flex justify-between items-start">
                                     <div className="space-y-4 flex-1 mr-6">
                                         <div className="flex items-center">
-                                            <span className="text-gray-400 mr-3">📅</span>
+                                            <HiCalendarDays className="h-5 w-5 text-gray-400 mr-3" />
                                             <div>
                                                 <p className="font-medium text-gray-900">
                                                     {new Date(event.start_date).toLocaleDateString('en-US', {
@@ -309,12 +310,12 @@ export default async function EventPage({ params }: EventPageProps) {
                                         </div>
 
                                         <div className="flex items-center">
-                                            <span className="text-gray-400 mr-3">📍</span>
+                                            <HiMapPin className="h-5 w-5 text-gray-400 mr-3" />
                                             <p className="text-gray-900">{event.location}</p>
                                         </div>
 
                                         <div className="flex items-center">
-                                            <span className="text-gray-400 mr-3">👥</span>
+                                            <HiUsers className="h-5 w-5 text-gray-400 mr-3" />
                                             <div className="flex items-center space-x-2">
                                                 <p className="text-gray-900">
                                                     {event.max_attendees ?
@@ -334,7 +335,7 @@ export default async function EventPage({ params }: EventPageProps) {
                                         </div>
 
                                         <div className="flex items-center">
-                                            <span className="text-gray-400 mr-3">💰</span>
+                                            <HiCurrencyDollar className="h-5 w-5 text-gray-400 mr-3" />
                                             <p className="text-2xl font-bold text-gray-900">
                                                 {event.price === 0 ? 'Free' : `AUD $${event.price.toFixed(2)}`}
                                             </p>

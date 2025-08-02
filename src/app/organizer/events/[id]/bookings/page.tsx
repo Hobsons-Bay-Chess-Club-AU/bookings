@@ -14,15 +14,25 @@ async function getEventWithBookings(eventId: string, organizerId: string): Promi
 } | null> {
     const supabase = await createClient()
 
-    // First verify the event belongs to this organizer
+    // First verify the event belongs to this organizer or user is admin
     const { data: event, error: eventError } = await supabase
         .from('events')
         .select('*')
         .eq('id', eventId)
-        .eq('organizer_id', organizerId)
         .single()
 
     if (eventError || !event) {
+        return null
+    }
+
+    // Check if user is organizer of this event or admin
+    const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', organizerId)
+        .single()
+
+    if (!userProfile || (userProfile.role !== 'admin' && event.organizer_id !== organizerId)) {
         return null
     }
 
@@ -52,14 +62,14 @@ interface EventBookingsPageProps {
 }
 
 export default async function EventBookingsPage({ params }: EventBookingsPageProps) {
-    const { id } = await params
+    const { id: eventId } = await params
     const profile = await getCurrentProfile()
 
     if (!profile || !['admin', 'organizer'].includes(profile.role)) {
         redirect('/unauthorized')
     }
 
-    const data = await getEventWithBookings(id, profile.id)
+    const data = await getEventWithBookings(eventId, profile.id)
 
     if (!data) {
         notFound()
