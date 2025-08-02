@@ -48,6 +48,17 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                 } else if (segments[2]) {
                     breadcrumbs.push({ label: 'Booking Details' })
                 }
+            } else if (segments[1] === 'cms') {
+                breadcrumbs.push({ label: 'Content Management', href: '/admin/cms' })
+                if (segments[2] === 'new') {
+                    breadcrumbs.push({ label: 'Create Content' })
+                } else if (segments[2] && segments[3] === 'edit') {
+                    breadcrumbs.push({ label: 'Edit Content' })
+                } else if (segments[2] && segments[3] === 'history') {
+                    breadcrumbs.push({ label: 'Version History' })
+                } else if (segments[2]) {
+                    breadcrumbs.push({ label: 'View Content' })
+                }
             } else if (segments[1] === 'create-test-data') {
                 breadcrumbs.push({ label: 'Create Test Data' })
             } else if (segments[1] === 'email-test') {
@@ -306,9 +317,22 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                                                             Bookings
                                                         </Link>
                                                     )}
+
+                                                    {isActivePath('/admin/cms') ? (
+                                                        <span className={getNavLinkClasses('/admin/cms', true)}>
+                                                            Content
+                                                        </span>
+                                                    ) : (
+                                                        <Link
+                                                            href="/admin/cms"
+                                                            className={getNavLinkClasses('/admin/cms', true)}
+                                                        >
+                                                            Content
+                                                        </Link>
+                                                    )}
                                                 </>
                                             )}
-                                            
+
                                             {/* Customer Support Links */}
                                             {profile?.role === 'customer_support' && (
                                                 <>
@@ -546,6 +570,20 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                                                                 className={getNavLinkClasses('/admin/users', false)}
                                                             >
                                                                 Manage Users
+                                                            </Link>
+                                                        )}
+
+                                                        {isActivePath('/admin/cms') ? (
+                                                            <span className={getNavLinkClasses('/admin/cms', false)}>
+                                                                Content Management
+                                                            </span>
+                                                        ) : (
+                                                            <Link
+                                                                href="/admin/cms"
+                                                                onClick={() => setMobileMenuOpen(false)}
+                                                                className={getNavLinkClasses('/admin/cms', false)}
+                                                            >
+                                                                Content Management
                                                             </Link>
                                                         )}
                                                     </>

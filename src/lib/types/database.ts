@@ -8,6 +8,32 @@ export type FormFieldType = 'text' | 'email' | 'phone' | 'number' | 'date' | 'se
 export type TimelineType = 'refund'
 export type RefundValueType = 'percentage' | 'fixed'
 
+// CMS Content types
+export interface Content {
+    id: string
+    title: string
+    slug: string
+    body: string // Markdown content
+    version: number
+    is_published: boolean
+    meta_description?: string
+    meta_keywords?: string[]
+    created_by?: string
+    updated_by?: string
+    created_at: string
+    updated_at: string
+}
+
+export interface ContentHistory {
+    id: string
+    content_id: string
+    title: string
+    body: string
+    version: number
+    created_by?: string
+    created_at: string
+}
+
 // Player data structure for FIDE and ACF composite fields
 export interface PlayerData {
     id: string

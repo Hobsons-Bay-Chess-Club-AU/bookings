@@ -17,6 +17,9 @@ A full-stack event booking system built with Next.js, Supabase, and Stripe. This
 - **Event Management**: Edit events, view bookings, and track revenue
 - **Role-based Access**: Different permissions for users, organizers, and admins
 - **Booking Analytics**: View booking statistics and revenue data
+- **Content Management**: Full CMS system for managing static website content
+- **Version Control**: Track content changes with automatic versioning
+- **SEO Management**: Built-in meta tag and keyword management
 
 ## Tech Stack
 
@@ -34,6 +37,8 @@ The application uses the following main tables:
 - **profiles**: User profiles with roles (user, organizer, admin)
 - **events**: Event information with organizer details
 - **bookings**: Booking records with payment status
+- **content**: CMS content with Markdown support and versioning
+- **content_history**: Version history for all content changes
 
 ## Setup Instructions
 
@@ -169,9 +174,25 @@ The application will be available at `http://localhost:3000`
 - All organizer permissions
 - Access to all events and bookings
 - User management capabilities
+- **Content Management System** - Create and manage static website content
+- **Version Control** - Track all content changes with automatic versioning
+- **SEO Management** - Manage meta descriptions and keywords
 
 ## API Endpoints
 
+### Public API
+- `GET /content/[slug]` - Render published content pages
+- `GET /api/content/[slug]` - Get published content by slug
+
+### Admin API
+- `GET /api/admin/content` - List all content (admin only)
+- `POST /api/admin/content` - Create new content (admin only)
+- `GET /api/admin/content/[id]` - Get content by ID (admin only)
+- `PUT /api/admin/content/[id]` - Update content (admin only)
+- `DELETE /api/admin/content/[id]` - Delete content (admin only)
+- `GET /api/admin/content/[id]/history` - Get content version history (admin only)
+
+### Booking API
 - `POST /api/create-checkout-session` - Create Stripe checkout session
 - `POST /api/webhooks/stripe` - Handle Stripe webhook events
 
@@ -194,19 +215,33 @@ The application will be available at `http://localhost:3000`
 - Real-time attendee count updates
 - Revenue tracking and analytics
 
+### Content Management System (CMS)
+- **Markdown Editor** with live preview for rich content creation
+- **Version History** automatically tracks all content changes
+- **SEO Optimization** with meta descriptions and keywords
+- **Draft/Published Status** for content workflow management
+- **Dynamic Routing** - published content accessible at `/content/{slug}`
+- **Admin-only Access** with role-based security
+
 ## File Structure
 
 ```
 src/
 ├── app/                    # Next.js app router pages
 │   ├── api/               # API routes
+│   │   └── admin/content/ # CMS API endpoints
 │   ├── auth/              # Authentication pages
 │   ├── booking/           # Booking-related pages
 │   ├── dashboard/         # User dashboard
 │   ├── events/            # Event pages
 │   ├── organizer/         # Organizer dashboard
-│   └── profile/           # User profile
+│   ├── admin/             # Admin pages
+│   │   └── cms/          # Content management system
+│   ├── profile/           # User profile
+│   └── content/          # CMS content pages
+│       └── [slug]/       # Dynamic content pages
 ├── components/            # Reusable components
+│   └── ui/               # UI components including markdown editor
 ├── lib/                   # Utilities and configurations
 │   ├── supabase/         # Supabase client setup
 │   ├── types/            # TypeScript type definitions
@@ -264,6 +299,13 @@ To test the complete booking flow:
    - View booking analytics
    - Manage event status
 
+4. **Test Admin/CMS Flow**:
+   - Access admin dashboard at `/admin`
+   - Navigate to Content Management (`/admin/cms`)
+   - Create new content with Markdown
+   - View version history
+   - Publish content and test dynamic routes (`/content/{slug}`)
+
 ## Troubleshooting
 
 If you encounter any issues during setup or usage, please refer to the [TROUBLESHOOTING.md](TROUBLESHOOTING.md) file which covers:
@@ -273,6 +315,12 @@ If you encounter any issues during setup or usage, please refer to the [TROUBLES
 - Authentication problems
 - Stripe integration issues
 - Common development errors
+
+## Additional Documentation
+
+- [CMS System Documentation](CMS_SYSTEM.md) - Complete guide to the Content Management System
+- [Quick Fix Guide](QUICK_FIX.md) - Emergency fixes and common solutions
+- [Schema Migration Guide](SCHEMA_MIGRATION.md) - Database migration instructions
 
 ## Contributing
 

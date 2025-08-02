@@ -1,6 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { Event } from '@/lib/types/database'
 import NavWrapper from '@/components/layout/nav-wrapper'
+import Footer from '@/components/layout/footer'
 import EventCard from '@/components/events/EventCard'
 
 async function getPublishedEvents(): Promise<Event[]> {
@@ -81,6 +82,9 @@ export default async function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }
