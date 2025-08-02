@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase/server'
 import { Content } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
 import NavWrapper from '@/components/layout/nav-wrapper'
-import Footer from '@/components/layout/footer'
 
 interface ContentPageProps {
     params: {
@@ -131,7 +130,7 @@ export default async function ContentPage({ params }: ContentPageProps) {
     console.log('✅ Rendering content page for:', content.title)
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="bg-gray-50">
             {/* Header */}
             <NavWrapper />
 
@@ -178,9 +177,6 @@ export default async function ContentPage({ params }: ContentPageProps) {
                     </div>
                 </div>
             </div>
-
-            {/* Footer */}
-            <Footer />
 
             {/* JSON-LD Structured Data for SEO */}
             <script

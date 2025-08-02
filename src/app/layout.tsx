@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import CookieConsentWrapper from "@/components/ui/cookie-consent-wrapper";
+import Footer from "@/components/layout/footer";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,7 +30,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <CookieConsentWrapper>
-          {children}
+          <div className="min-h-screen flex flex-col">
+            <main className="flex-grow">
+              {children}
+            </main>
+            <Footer />
+          </div>
         </CookieConsentWrapper>
       </body>
     </html>
