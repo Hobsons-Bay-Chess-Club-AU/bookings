@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import AdminLayout from '@/components/layout/admin-layout'
+import AdminNav from '@/components/layout/admin-nav'
+import { Profile } from '@/lib/types/database'
 import Link from 'next/link'
 
 interface PaymentEvent {
@@ -37,8 +38,12 @@ interface StripeEvent {
 
 export default function PaymentEventsPage() {
     const params = useParams()
+    const router = useRouter()
     const bookingId = params.id as string
     
+    const [currentUser, setCurrentUser] = useState<any>(null)
+    const [profile, setProfile] = useState<Profile | null>(null)
+    const [authLoading, setAuthLoading] = useState(true)
     const [booking, setBooking] = useState<Booking | null>(null)
     const [paymentEvents, setPaymentEvents] = useState<PaymentEvent[]>([])
     const [loading, setLoading] = useState(true)
@@ -49,11 +54,61 @@ export default function PaymentEventsPage() {
 
     const supabase = createClient()
 
+    // Authentication check
     useEffect(() => {
-        if (bookingId) {
+        const checkAuth = async () => {
+            try {
+                const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+                if (userError || !user) {
+                    router.push('/auth/login')
+                    return
+                }
+
+                setCurrentUser(user)
+
+                const { data: profileData, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single()
+
+                if (profileError || !profileData) {
+                    router.push('/unauthorized')
+                    return
+                }
+
+                setProfile(profileData)
+
+                // Check if user has permission (admin or customer_support)
+                if (!['admin', 'customer_support'].includes(profileData.role)) {
+                    router.push('/unauthorized')
+                    return
+                }
+
+                setAuthLoading(false)
+            } catch (error) {
+                console.error('Auth check error:', error)
+                router.push('/auth/login')
+            }
+        }
+
+        checkAuth()
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_OUT' || !session?.user) {
+                router.push('/auth/login')
+            }
+        })
+
+        return () => subscription.unsubscribe()
+    }, [supabase.auth, router])
+
+    useEffect(() => {
+        if (!authLoading && currentUser && profile && bookingId) {
             fetchBookingAndEvents()
         }
-    }, [bookingId])
+    }, [authLoading, currentUser, profile, bookingId])
 
     const fetchBookingAndEvents = async () => {
         try {
@@ -136,37 +191,64 @@ export default function PaymentEventsPage() {
         setSelectedEvent(null)
     }
 
+    // Show loading while checking authentication
+    if (authLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <AdminNav />
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="flex justify-center items-center min-h-96">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                    </div>
+                </main>
+            </div>
+        )
+    }
+
+    // Don't render content if user is not authenticated (will redirect)
+    if (!currentUser || !profile) {
+        return null
+    }
+
     if (loading) {
         return (
-            <AdminLayout requiredRole="customer_support">
-                <div className="flex justify-center items-center min-h-96">
-                    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
-                </div>
-            </AdminLayout>
+            <div className="min-h-screen bg-gray-50">
+                <AdminNav />
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="flex justify-center items-center min-h-96">
+                        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
+                    </div>
+                </main>
+            </div>
         )
     }
 
     if (error || !booking) {
         return (
-            <AdminLayout requiredRole="customer_support">
-                <div className="flex justify-center items-center min-h-96">
-                    <div className="text-center">
-                        <div className="text-red-600 text-xl mb-4">Error loading payment events</div>
-                        <p className="text-gray-600">{error || 'Booking not found'}</p>
-                        <Link
-                            href="/admin/bookings"
-                            className="mt-4 inline-block px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                        >
-                            Back to Bookings
-                        </Link>
+            <div className="min-h-screen bg-gray-50">
+                <AdminNav />
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="flex justify-center items-center min-h-96">
+                        <div className="text-center">
+                            <div className="text-red-600 text-xl mb-4">Error loading payment events</div>
+                            <p className="text-gray-600">{error || 'Booking not found'}</p>
+                            <Link
+                                href="/admin/bookings"
+                                className="mt-4 inline-block px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                            >
+                                Back to Bookings
+                            </Link>
+                        </div>
                     </div>
-                </div>
-            </AdminLayout>
+                </main>
+            </div>
         )
     }
 
     return (
-        <AdminLayout requiredRole="customer_support">
+        <div className="min-h-screen bg-gray-50">
+            <AdminNav />
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="p-8">
                 {/* Header */}
                 <div className="mb-8">
@@ -333,6 +415,7 @@ export default function PaymentEventsPage() {
                     </div>
                 </div>
             )}
-        </AdminLayout>
+            </main>
+        </div>
     )
 }

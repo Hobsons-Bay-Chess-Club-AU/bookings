@@ -1,83 +1,103 @@
-import { createClient } from '@/lib/supabase/server'
-import { getCurrentProfile } from '@/lib/utils/auth'
-import { redirect, notFound } from 'next/navigation'
-import { Event, Booking, Profile } from '@/lib/types/database'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { Event, Booking } from '@/lib/types/database'
 import EventBookingsPageClient from './page-client'
 
-interface BookingWithProfile extends Booking {
-    profile: Profile
-}
+export default function EventBookingsPage() {
+    const [event, setEvent] = useState<Event | null>(null)
+    const [bookings, setBookings] = useState<Booking[]>([])
+    const [loading, setLoading] = useState(true)
+    const params = useParams()
+    const eventId = params.id as string
+    const supabase = createClient()
 
-async function getEventWithBookings(eventId: string, organizerId: string): Promise<{
-    event: Event
-    bookings: BookingWithProfile[]
-} | null> {
-    const supabase = await createClient()
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser()
 
-    // First verify the event belongs to this organizer or user is admin
-    const { data: event, error: eventError } = await supabase
-        .from('events')
-        .select('*')
-        .eq('id', eventId)
-        .single()
+                if (!user) {
+                    setLoading(false)
+                    return
+                }
 
-    if (eventError || !event) {
-        return null
+                // Get event data (filtering by organizer_id ensures access control)
+                const { data: eventData, error: eventError } = await supabase
+                    .from('events')
+                    .select('*')
+                    .eq('id', eventId)
+                    .eq('organizer_id', user.id)
+                    .single()
+
+                if (eventError || !eventData) {
+                    console.error('Error fetching event:', eventError)
+                    setLoading(false)
+                    return
+                }
+
+                setEvent(eventData)
+
+                // Get bookings for this event
+                const { data: bookingsData, error: bookingsError } = await supabase
+                    .from('bookings')
+                    .select(`
+                        *,
+                        participants (
+                            id,
+                            name,
+                            email
+                        )
+                    `)
+                    .eq('event_id', eventId)
+                    .order('created_at', { ascending: false })
+
+                if (bookingsError) {
+                    console.error('Error fetching bookings:', bookingsError)
+                    setBookings([])
+                } else {
+                    setBookings(bookingsData || [])
+                }
+            } catch (err) {
+                console.error('Error fetching data:', err)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchData()
+    }, [eventId, supabase])
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading event bookings...</p>
+                </div>
+            </div>
+        )
     }
 
-    // Check if user is organizer of this event or admin
-    const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', organizerId)
-        .single()
-
-    if (!userProfile || (userProfile.role !== 'admin' && event.organizer_id !== organizerId)) {
-        return null
+    if (!event) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold text-gray-900">Event not found</h2>
+                    <p className="text-gray-600 mt-2">
+                        The event you're looking for doesn't exist or you don't have permission to view it.
+                    </p>
+                </div>
+            </div>
+        )
     }
-
-    // Get bookings with user profiles
-    const { data: bookings, error: bookingsError } = await supabase
-        .from('bookings')
-        .select(`
-            *,
-            profile:profiles(*)
-        `)
-        .eq('event_id', eventId)
-        .order('created_at', { ascending: false })
-
-    if (bookingsError) {
-        console.error('Error fetching bookings:', bookingsError)
-        return { event, bookings: [] }
-    }
-
-    return {
-        event,
-        bookings: (bookings || []) as BookingWithProfile[]
-    }
-}
-
-interface EventBookingsPageProps {
-    params: Promise<{ id: string }>
-}
-
-export default async function EventBookingsPage({ params }: EventBookingsPageProps) {
-    const { id: eventId } = await params
-    const profile = await getCurrentProfile()
-
-    if (!profile || !['admin', 'organizer'].includes(profile.role)) {
-        redirect('/unauthorized')
-    }
-
-    const data = await getEventWithBookings(eventId, profile.id)
-
-    if (!data) {
-        notFound()
-    }
-
-    const { event, bookings } = data
 
     return (
-        <EventBookingsPageClient event={event} bookings={bookings} />
+        <EventBookingsPageClient
+            event={event}
+            bookings={bookings}
+        />
     )
 }
