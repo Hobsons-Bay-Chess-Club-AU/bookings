@@ -8,7 +8,15 @@ export default function MultiSelectField({
     error,
     className = ''
 }: FormFieldProps) {
-    const options = field.options as SelectOption[] || []
+    // Handle both string array and SelectOption array formats
+    const rawOptions = field.options || []
+    const options = rawOptions.map(opt => {
+        if (typeof opt === 'string') {
+            return { value: opt, label: opt }
+        }
+        return opt as SelectOption
+    })
+
     const selectedValues = Array.isArray(value) ? value : []
     const [isOpen, setIsOpen] = useState(false)
 

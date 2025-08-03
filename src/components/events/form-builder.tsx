@@ -17,6 +17,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
     const [librarySearch, setLibrarySearch] = useState('')
     const [libraryFilter, setLibraryFilter] = useState<FormFieldType | 'all'>('all')
     const [saveToLibrary, setSaveToLibrary] = useState(false)
+    const [useAdvancedOptions, setUseAdvancedOptions] = useState(false)
 
     const fieldTypes: { value: FormFieldType; label: string; description: string }[] = [
         { value: 'text', label: 'Text Input', description: 'Single line text field' },
@@ -55,7 +56,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
     const fetchCustomFields = async () => {
         try {
             setLibraryLoading(true)
-            
+
             const params = new URLSearchParams()
             if (librarySearch) params.append('search', librarySearch)
             if (libraryFilter !== 'all') params.append('type', libraryFilter)
@@ -79,6 +80,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
         setEditingField(createNewField())
         setIsAdding(true)
         setSaveToLibrary(false)
+        setUseAdvancedOptions(false)
     }
 
     const handleAddFromLibrary = () => {
@@ -120,6 +122,12 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
     const handleEditField = (field: FormField) => {
         setEditingField({ ...field })
         setIsAdding(false)
+
+        // Check if field uses advanced options (has objects with value/label)
+        const hasAdvancedOptions = (field.options || []).some(opt =>
+            typeof opt === 'object' && opt.hasOwnProperty('value') && opt.hasOwnProperty('label')
+        )
+        setUseAdvancedOptions(hasAdvancedOptions)
     }
 
     const handleSaveField = async () => {
@@ -208,14 +216,25 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
 
     const addOption = () => {
         if (!editingField) return
-        const options = [...(editingField.options || []), '']
-        updateEditingField({ options })
+        if (useAdvancedOptions) {
+            const options = [...(editingField.options || []), { value: '', label: '' }]
+            updateEditingField({ options })
+        } else {
+            const options = [...(editingField.options || []), '']
+            updateEditingField({ options })
+        }
     }
 
-    const updateOption = (index: number, value: string) => {
+    const updateOption = (index: number, value: string, field?: 'value' | 'label') => {
         if (!editingField) return
         const options = [...(editingField.options || [])]
-        options[index] = value
+
+        if (useAdvancedOptions && field) {
+            const option = typeof options[index] === 'object' ? options[index] : { value: '', label: '' }
+            options[index] = { ...option, [field]: value }
+        } else {
+            options[index] = value
+        }
         updateEditingField({ options })
     }
 
@@ -224,6 +243,27 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
         const options = [...(editingField.options || [])]
         options.splice(index, 1)
         updateEditingField({ options })
+    }
+
+    const toggleAdvancedOptions = () => {
+        if (!editingField) return
+
+        const newUseAdvanced = !useAdvancedOptions
+        setUseAdvancedOptions(newUseAdvanced)
+
+        if (newUseAdvanced) {
+            // Convert string options to object options
+            const options = (editingField.options || []).map(opt =>
+                typeof opt === 'string' ? { value: opt, label: opt } : opt
+            )
+            updateEditingField({ options })
+        } else {
+            // Convert object options to string options
+            const options = (editingField.options || []).map(opt =>
+                typeof opt === 'object' ? opt.value || opt.label || '' : opt
+            )
+            updateEditingField({ options })
+        }
     }
 
     return (
@@ -455,23 +495,57 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                 {/* Options for select/multiselect */}
                                 {(editingField.type === 'select' || editingField.type === 'multiselect') && (
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Options
-                                        </label>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                Options
+                                            </label>
+                                            <div className="flex items-center space-x-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id="advancedOptions"
+                                                    checked={useAdvancedOptions}
+                                                    onChange={toggleAdvancedOptions}
+                                                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                                />
+                                                <label htmlFor="advancedOptions" className="text-xs text-gray-600">
+                                                    Advanced (separate value & label)
+                                                </label>
+                                            </div>
+                                        </div>
+
                                         <div className="space-y-2">
                                             {(editingField.options || []).map((option, index) => (
                                                 <div key={index} className="flex items-center space-x-2">
-                                                    <input
-                                                        type="text"
-                                                        value={option}
-                                                        onChange={(e) => updateOption(index, e.target.value)}
-                                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                        placeholder={`Option ${index + 1}`}
-                                                    />
+                                                    {useAdvancedOptions ? (
+                                                        <>
+                                                            <input
+                                                                type="text"
+                                                                value={typeof option === 'object' ? option.value : option}
+                                                                onChange={(e) => updateOption(index, e.target.value, 'value')}
+                                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                                placeholder="Value (stored)"
+                                                            />
+                                                            <input
+                                                                type="text"
+                                                                value={typeof option === 'object' ? option.label : option}
+                                                                onChange={(e) => updateOption(index, e.target.value, 'label')}
+                                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                                placeholder="Label (displayed)"
+                                                            />
+                                                        </>
+                                                    ) : (
+                                                        <input
+                                                            type="text"
+                                                            value={typeof option === 'string' ? option : (typeof option === 'object' ? option.label || option.value : '')}
+                                                            onChange={(e) => updateOption(index, e.target.value)}
+                                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                            placeholder={`Option ${index + 1}`}
+                                                        />
+                                                    )}
                                                     <button
                                                         type="button"
                                                         onClick={() => removeOption(index)}
-                                                        className="text-red-600 hover:text-red-800"
+                                                        className="text-red-600 hover:text-red-800 px-2 py-1"
                                                     >
                                                         Remove
                                                     </button>
@@ -485,6 +559,12 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                                 + Add Option
                                             </button>
                                         </div>
+
+                                        {useAdvancedOptions && (
+                                            <p className="text-xs text-gray-500 mt-2">
+                                                Advanced mode: Value is stored in database, Label is shown to users
+                                            </p>
+                                        )}
                                     </div>
                                 )}
 
@@ -625,7 +705,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         <span className="text-4xl mb-4 block">📝</span>
                                         <h4 className="text-lg font-medium text-gray-900 mb-2">No fields found</h4>
                                         <p className="text-gray-600">
-                                            {librarySearch || libraryFilter !== 'all' 
+                                            {librarySearch || libraryFilter !== 'all'
                                                 ? 'Try adjusting your search or filter criteria.'
                                                 : 'Create some custom fields first to use them here.'
                                             }
