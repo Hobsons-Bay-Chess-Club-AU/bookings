@@ -16,6 +16,7 @@ export interface Content {
     body: string // Markdown content
     version: number
     is_published: boolean
+    is_system?: boolean
     meta_description?: string
     meta_keywords?: string[]
     created_by?: string

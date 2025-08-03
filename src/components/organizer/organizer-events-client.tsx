@@ -6,11 +6,11 @@ import { Event, Booking, EventSettings } from '@/lib/types/database'
 import CopyButton from '@/components/ui/copy-button'
 import EventSettingsModal from '@/components/events/event-settings-modal'
 import { HiCog6Tooth } from 'react-icons/hi2'
-import { 
-    HiSparkles, 
-    HiCheckCircle, 
-    HiTicket, 
-    HiCurrencyDollar, 
+import {
+    HiSparkles,
+    HiCheckCircle,
+    HiTicket,
+    HiCurrencyDollar,
     HiCalendarDays,
     HiMapPin,
     HiUsers,
@@ -94,7 +94,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
 
     return (
         <>
-            <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-0">
                 {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div className="bg-white overflow-hidden shadow rounded-lg">

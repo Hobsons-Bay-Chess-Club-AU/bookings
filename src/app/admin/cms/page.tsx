@@ -1,9 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Content } from '@/lib/types/database'
+import { 
+    HiCog6Tooth, 
+    HiEye, 
+    HiPencilSquare, 
+    HiClock,
+    HiTrash,
+    HiShieldCheck
+} from 'react-icons/hi2'
 
 interface ContentWithProfiles extends Content {
     created_by_profile?: { full_name: string | null }
@@ -29,6 +37,8 @@ export default function CMSPage() {
         totalPages: 0
     })
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+    const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
+    const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({})
     const router = useRouter()
 
     const fetchContent = async (page = 1, search = searchTerm, published = publishedFilter) => {
@@ -64,6 +74,27 @@ export default function CMSPage() {
         fetchContent()
     }, [])
 
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (openDropdownId) {
+                const dropdownElement = dropdownRefs.current[openDropdownId]
+                if (dropdownElement && !dropdownElement.contains(event.target as Node)) {
+                    setOpenDropdownId(null)
+                }
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [openDropdownId])
+
+    const toggleDropdown = (contentId: string) => {
+        setOpenDropdownId(openDropdownId === contentId ? null : contentId)
+    }
+
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault()
         fetchContent(1, searchTerm, publishedFilter)
@@ -90,9 +121,12 @@ export default function CMSPage() {
             } else {
                 const data = await response.json()
                 console.error('Failed to delete content:', data.error)
+                // Show error message to user
+                alert(data.error || 'Failed to delete content')
             }
         } catch (error) {
             console.error('Error deleting content:', error)
+            alert('An error occurred while deleting content')
         }
     }
 
@@ -106,14 +140,14 @@ export default function CMSPage() {
         })
     }
 
+    const getStatusColor = (isPublished: boolean) => {
+        return isPublished ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+    }
+
     const getStatusBadge = (isPublished: boolean) => {
-        return isPublished ? (
-            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                Published
-            </span>
-        ) : (
-            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                Draft
+        return (
+            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(isPublished)}`}>
+                {isPublished ? 'Published' : 'Draft'}
             </span>
         )
     }
@@ -221,18 +255,23 @@ export default function CMSPage() {
                                         {content.map((item) => (
                                             <tr key={item.id} className="hover:bg-gray-50">
                                                 <td className="px-6 py-4">
-                                                    <div>
-                                                        <div className="text-sm font-medium text-gray-900">
-                                                            {item.title}
-                                                        </div>
-                                                        <div className="text-sm text-gray-500">
-                                                            /{item.slug}
-                                                        </div>
-                                                        {item.meta_description && (
-                                                            <div className="text-xs text-gray-400 mt-1 line-clamp-2">
-                                                                {item.meta_description}
+                                                    <div className="flex items-center">
+                                                        <div className="flex-grow">
+                                                            <div className="text-sm font-medium text-gray-900">
+                                                                {item.title}
+                                                                {item.is_system && (
+                                                                    <HiShieldCheck className="inline ml-2 h-4 w-4 text-blue-600" title="System Content" />
+                                                                )}
                                                             </div>
-                                                        )}
+                                                            <div className="text-sm text-gray-500">
+                                                                /{item.slug}
+                                                            </div>
+                                                            {item.meta_description && (
+                                                                <div className="text-xs text-gray-400 mt-1 line-clamp-2">
+                                                                    {item.meta_description}
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -249,35 +288,65 @@ export default function CMSPage() {
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className="text-sm text-gray-900">v{item.version}</span>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                                    {item.is_published && (
-                                                        <a
-                                                            href={`/content/${item.slug}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-blue-600 hover:text-blue-900"
+                                                <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                    <div className="relative">
+                                                        <button
+                                                            onClick={() => toggleDropdown(item.id)}
+                                                            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                                                            title="Content Actions"
                                                         >
-                                                            View
-                                                        </a>
-                                                    )}
-                                                    <Link
-                                                        href={`/admin/cms/${item.id}/edit`}
-                                                        className="text-indigo-600 hover:text-indigo-900"
-                                                    >
-                                                        Edit
-                                                    </Link>
-                                                    <Link
-                                                        href={`/admin/cms/${item.id}/history`}
-                                                        className="text-purple-600 hover:text-purple-900"
-                                                    >
-                                                        History
-                                                    </Link>
-                                                    <button
-                                                        onClick={() => setDeleteConfirm(item.id)}
-                                                        className="text-red-600 hover:text-red-900"
-                                                    >
-                                                        Delete
-                                                    </button>
+                                                            <HiCog6Tooth className="h-5 w-5" />
+                                                        </button>
+
+                                                        {/* Dropdown Menu */}
+                                                        {openDropdownId === item.id && (
+                                                            <div
+                                                                ref={(el) => { dropdownRefs.current[item.id] = el }}
+                                                                className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50"
+                                                            >
+                                                                <div className="py-1">
+                                                                    {item.is_published && (
+                                                                        <a
+                                                                            href={`/content/${item.slug}`}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                                        >
+                                                                            <HiEye className="mr-2 h-4 w-4" /> View Published
+                                                                        </a>
+                                                                    )}
+                                                                    <Link
+                                                                        href={`/admin/cms/${item.id}/edit`}
+                                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                                        onClick={() => setOpenDropdownId(null)}
+                                                                    >
+                                                                        <HiPencilSquare className="mr-2 h-4 w-4" /> Edit Content
+                                                                    </Link>
+                                                                    <Link
+                                                                        href={`/admin/cms/${item.id}/history`}
+                                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                                        onClick={() => setOpenDropdownId(null)}
+                                                                    >
+                                                                        <HiClock className="mr-2 h-4 w-4" /> Version History
+                                                                    </Link>
+                                                                    {!item.is_system && (
+                                                                        <>
+                                                                            <div className="border-t border-gray-100 my-1"></div>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    setDeleteConfirm(item.id)
+                                                                                    setOpenDropdownId(null)
+                                                                                }}
+                                                                                className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left"
+                                                                            >
+                                                                                <HiTrash className="mr-2 h-4 w-4" /> Delete Content
+                                                                            </button>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
