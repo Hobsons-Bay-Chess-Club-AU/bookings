@@ -199,17 +199,15 @@ export default function ContentFormPage({ params }: ContentFormPageProps) {
 
     if (loading) {
         return (
-            <AdminLayout requiredRole="admin">
-                <div className="flex justify-center items-center h-64">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                    <span className="ml-2 text-gray-600">Loading content...</span>
-                </div>
-            </AdminLayout>
+            <div className="flex justify-center items-center h-64">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <span className="ml-2 text-gray-600">Loading content...</span>
+            </div>
         )
     }
 
     return (
-        <AdminLayout requiredRole="admin">
+        <>
             <div className="max-w-4xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex justify-between items-center">
@@ -407,6 +405,6 @@ export default function ContentFormPage({ params }: ContentFormPageProps) {
                     </div>
                 </form>
             </div>
-        </AdminLayout>
+        </>
     )
 }

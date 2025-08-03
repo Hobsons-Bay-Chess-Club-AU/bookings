@@ -13,12 +13,12 @@ interface EventBookingsPageClientProps {
     bookings: BookingWithProfile[]
 }
 
-export default function EventBookingsPageClient({ 
-    event, 
-    bookings 
+export default function EventBookingsPageClient({
+    event,
+    bookings
 }: EventBookingsPageClientProps) {
     return (
-        <AdminLayout requiredRole="organizer">
+        <>
             {/* Page Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900">Event Bookings</h1>
@@ -27,10 +27,10 @@ export default function EventBookingsPageClient({
                 </p>
             </div>
 
-            <EventBookingsClient 
+            <EventBookingsClient
                 event={event}
                 bookings={bookings}
             />
-        </AdminLayout>
+        </>
     )
 }

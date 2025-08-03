@@ -1,6 +1,5 @@
 'use client'
 
-import AdminLayout from '@/components/layout/admin-layout'
 import PricingManager from '@/components/events/pricing-manager'
 import { Event, EventPricing } from '@/lib/types/database'
 
@@ -9,12 +8,12 @@ interface EventPricingPageClientProps {
     pricing: EventPricing[]
 }
 
-export default function EventPricingPageClient({ 
-    event, 
-    pricing 
+export default function EventPricingPageClient({
+    event,
+    pricing
 }: EventPricingPageClientProps) {
     return (
-        <AdminLayout requiredRole="organizer">
+        <div>
             {/* Page Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900">Event Pricing</h1>
@@ -94,6 +93,6 @@ export default function EventPricingPageClient({
 
             {/* Pricing Manager Component */}
             <PricingManager eventId={event.id} initialPricing={pricing} />
-        </AdminLayout>
+        </div>
     )
 }

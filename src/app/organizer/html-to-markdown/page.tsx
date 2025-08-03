@@ -376,7 +376,7 @@ function HtmlToMarkdownConverter() {
 
 export default function HtmlToMarkdownPage() {
     return (
-        <AdminLayout requiredRole="organizer">
+        <>
             {/* Page Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900">HTML to Markdown Converter</h1>
@@ -389,6 +389,6 @@ export default function HtmlToMarkdownPage() {
             <div className="bg-white shadow rounded-lg p-6">
                 <HtmlToMarkdownConverter />
             </div>
-        </AdminLayout>
+        </>
     )
 }

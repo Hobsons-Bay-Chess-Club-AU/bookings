@@ -21,9 +21,11 @@ export default function OrganizerPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // Get current user (AdminLayout already ensures user is authenticated)
                 const { data: { user } } = await supabase.auth.getUser()
-                
+
                 if (!user) {
+                    // AdminLayout should have handled this, but just in case
                     setLoading(false)
                     return
                 }

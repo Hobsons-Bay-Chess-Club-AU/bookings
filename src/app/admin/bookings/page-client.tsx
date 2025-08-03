@@ -64,7 +64,7 @@ export default function AdminBookingsPageClient({ bookings }: AdminBookingsPageC
     }
 
     return (
-        <AdminLayout requiredRole="customer_support">
+        <>
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900">Manage Bookings</h1>
                 <p className="mt-2 text-gray-600">
@@ -204,6 +204,6 @@ export default function AdminBookingsPageClient({ bookings }: AdminBookingsPageC
                     </div>
                 </div>
             )}
-        </AdminLayout>
+        </>
     )
 }

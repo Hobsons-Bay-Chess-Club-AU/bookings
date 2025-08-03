@@ -48,7 +48,7 @@ async function getEventParticipants(eventId: string): Promise<BookingWithProfile
             participants(*)
         `)
         .eq('event_id', eventId)
-        .in('status', ['confirmed', 'verified'])  
+        .in('status', ['confirmed', 'verified'])
         .order('created_at', { ascending: false })
 
     if (error) {
@@ -123,7 +123,7 @@ export default async function EventParticipantsPage({ params }: ParticipantsPage
                                     <li>
                                         <div className="flex items-center">
                                             <span className="text-gray-400 mx-2">/</span>
-                                            <Link 
+                                            <Link
                                                 href={`/events/${event.id}`}
                                                 className="text-gray-500 hover:text-gray-700 truncate max-w-xs"
                                             >
@@ -189,7 +189,7 @@ export default async function EventParticipantsPage({ params }: ParticipantsPage
                                 <li>
                                     <div className="flex items-center">
                                         <span className="text-gray-400 mx-2">/</span>
-                                        <Link 
+                                        <Link
                                             href={`/events/${event.id}`}
                                             className="text-gray-500 hover:text-gray-700 truncate max-w-xs"
                                         >
@@ -250,9 +250,9 @@ export default async function EventParticipantsPage({ params }: ParticipantsPage
                 </div>
 
                 {/* Participants List */}
-                <ParticipantsList 
-                    event={event} 
-                    bookings={participants} 
+                <ParticipantsList
+                    event={event}
+                    bookings={participants}
                     isPublic={true}
                     showPrivateInfo={false}
                 />

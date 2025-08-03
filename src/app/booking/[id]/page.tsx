@@ -265,10 +265,10 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                                 <div className="flex justify-between text-sm">
                                                     <span className="text-gray-600">Status:</span>
                                                     <span className={`font-medium ${booking.refund_status === 'none' ? 'text-gray-800' :
-                                                            booking.refund_status === 'requested' ? 'text-yellow-600' :
-                                                                booking.refund_status === 'processing' ? 'text-blue-600' :
-                                                                    booking.refund_status === 'completed' ? 'text-green-600' :
-                                                                        'text-red-600'
+                                                        booking.refund_status === 'requested' ? 'text-yellow-600' :
+                                                            booking.refund_status === 'processing' ? 'text-blue-600' :
+                                                                booking.refund_status === 'completed' ? 'text-green-600' :
+                                                                    'text-red-600'
                                                         }`}>
                                                         {booking.refund_status === 'none' ? 'No refund requested' :
                                                             booking.refund_status === 'requested' ? 'Refund requested' :
@@ -334,7 +334,7 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                                     {/* Custom fields */}
                                                     {p.custom_data && Object.entries(p.custom_data).map(([key, value]) => {
                                                         let displayValue: string
-                                                        
+
                                                         // Handle arrays
                                                         if (Array.isArray(value)) {
                                                             displayValue = value.join(', ')
@@ -348,10 +348,10 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                                                 if (obj.std_rating) ratings.push(`Std: ${obj.std_rating}`)
                                                                 if (obj.rapid_rating) ratings.push(`Rapid: ${obj.rapid_rating}`)
                                                                 if (obj.blitz_rating) ratings.push(`Blitz: ${obj.blitz_rating}`)
-                                                                
+
                                                                 // Check if this is a FIDE player (based on field name or other indicators)
                                                                 const isFidePlayer = key.toLowerCase().includes('fide')
-                                                                
+
                                                                 if (isFidePlayer) {
                                                                     displayValue = `${obj.name} (ID: ${obj.id})${ratings.length > 0 ? ` - ${ratings.join(', ')}` : ''}`
                                                                 } else {
@@ -364,7 +364,7 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                                         else {
                                                             displayValue = String(value)
                                                         }
-                                                        
+
                                                         return (
                                                             <div key={key}>
                                                                 <span className="font-medium">{key.replace(/_/g, ' ')}:</span>{' '}
@@ -373,7 +373,7 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                                                     <span>
                                                                         {(value as any).name} (ID:{' '}
                                                                         {key.toLowerCase().includes('fide') ? (
-                                                                            <a 
+                                                                            <a
                                                                                 href={`https://ratings.fide.com/profile/${(value as any).id}`}
                                                                                 target="_blank"
                                                                                 rel="noopener noreferrer"

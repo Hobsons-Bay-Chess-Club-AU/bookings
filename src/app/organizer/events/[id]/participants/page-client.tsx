@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import AdminLayout from '@/components/layout/admin-layout'
 import { Event, Participant, Booking, Profile } from '@/lib/types/database'
 
 interface ParticipantWithBooking extends Participant {
@@ -16,9 +15,9 @@ interface EventParticipantsPageClientProps {
     participants: ParticipantWithBooking[]
 }
 
-export default function EventParticipantsPageClient({ 
-    event, 
-    participants 
+export default function EventParticipantsPageClient({
+    event,
+    participants
 }: EventParticipantsPageClientProps) {
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedParticipant, setSelectedParticipant] = useState<ParticipantWithBooking | null>(null)
@@ -27,7 +26,7 @@ export default function EventParticipantsPageClient({
 
     const filteredParticipants = participants.filter(participant => {
         if (!searchTerm) return true
-        
+
         const searchLower = searchTerm.toLowerCase()
         return (
             participant.first_name.toLowerCase().includes(searchLower) ||
@@ -118,7 +117,7 @@ export default function EventParticipantsPageClient({
     }
 
     return (
-        <AdminLayout requiredRole="organizer">
+        <>
             {/* Page Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900">Event Participants</h1>
@@ -383,9 +382,9 @@ export default function EventParticipantsPageClient({
                                             <div className="text-sm text-gray-900">
                                                 <div className="flex items-center space-x-2">
                                                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${participant.bookings.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                                            participant.bookings.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                                participant.bookings.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                                                    'bg-gray-100 text-gray-800'
+                                                        participant.bookings.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                            participant.bookings.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                                                'bg-gray-100 text-gray-800'
                                                         }`}>
                                                         {participant.bookings.status}
                                                     </span>
@@ -444,17 +443,16 @@ export default function EventParticipantsPageClient({
                                                 } else {
                                                     pageNumber = currentPage - 3 + i
                                                 }
-                                                
+
                                                 const isActive = pageNumber === currentPage
                                                 return (
                                                     <button
                                                         key={pageNumber}
                                                         onClick={() => handlePageChange(pageNumber)}
-                                                        className={`px-3 py-2 text-sm font-medium rounded-md ${
-                                                            isActive
+                                                        className={`px-3 py-2 text-sm font-medium rounded-md ${isActive
                                                                 ? 'bg-indigo-600 text-white'
                                                                 : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {pageNumber}
                                                     </button>
@@ -556,9 +554,9 @@ export default function EventParticipantsPageClient({
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700">Status</label>
                                                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${selectedParticipant.bookings.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                                        selectedParticipant.bookings.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                            selectedParticipant.bookings.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                                                'bg-gray-100 text-gray-800'
+                                                    selectedParticipant.bookings.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                        selectedParticipant.bookings.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                                            'bg-gray-100 text-gray-800'
                                                     }`}>
                                                     {selectedParticipant.bookings.status}
                                                 </span>
@@ -597,6 +595,6 @@ export default function EventParticipantsPageClient({
                     </div>
                 </div>
             )}
-        </AdminLayout>
+        </>
     )
 }

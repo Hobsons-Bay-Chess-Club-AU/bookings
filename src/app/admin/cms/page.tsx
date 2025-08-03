@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import AdminLayout from '@/components/layout/admin-layout'
 import { Content } from '@/lib/types/database'
 
 interface ContentWithProfiles extends Content {
@@ -120,7 +119,7 @@ export default function CMSPage() {
     }
 
     return (
-        <AdminLayout requiredRole="admin">
+        <>
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex justify-between items-center">
@@ -391,6 +390,6 @@ export default function CMSPage() {
                     </div>
                 </div>
             )}
-        </AdminLayout>
+        </>
     )
 }

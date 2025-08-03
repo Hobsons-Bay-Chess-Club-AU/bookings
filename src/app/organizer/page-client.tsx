@@ -1,6 +1,5 @@
 'use client'
 
-import AdminLayout from '@/components/layout/admin-layout'
 import OrganizerEventsClient from '@/components/organizer/organizer-events-client'
 import Link from 'next/link'
 
@@ -10,20 +9,20 @@ interface OrganizerPageClientProps {
     totalBookings: number
 }
 
-export default function OrganizerPageClient({ 
-    events, 
-    totalRevenue, 
-    totalBookings 
+export default function OrganizerPageClient({
+    events,
+    totalRevenue,
+    totalBookings
 }: OrganizerPageClientProps) {
     return (
-        <AdminLayout requiredRole="organizer">
+        <div>
             {/* Page Header */}
             <div className="mb-8 flex justify-between items-start">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">Event Management</h1>
                     <p className="text-gray-600 mt-2">Manage your events and bookings</p>
                 </div>
-                
+
                 {/* Action Buttons */}
                 <div className="flex items-center space-x-3">
                     <Link
@@ -52,6 +51,6 @@ export default function OrganizerPageClient({
                 totalRevenue={totalRevenue}
                 totalBookings={totalBookings}
             />
-        </AdminLayout>
+        </div>
     )
 }
