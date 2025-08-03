@@ -7,6 +7,7 @@ import { loadStripe } from '@stripe/stripe-js'
 import Step1Pricing from './booking-steps/step-1-pricing'
 import Step2Contact from './booking-steps/step-2-contact'
 import Step3Participants from './booking-steps/step-3-participants'
+import Step4Review from './booking-steps/step-4-review'
 
 interface BookingFormProps {
     event: Event
@@ -21,7 +22,7 @@ function isBookable(event: Event) {
 }
 
 export default function BookingForm({ event, user, onStepChange }: BookingFormProps) {
-    const [step, setStep] = useState(1) // 1: Pricing & Quantity, 2: Contact Info, 3: Participant Info, 4: Checkout
+    const [step, setStep] = useState(1) // 1: Pricing & Quantity, 2: Contact Info, 3: Participant Info, 4: Review, 5: Checkout
     const [quantity, setQuantity] = useState(1)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
@@ -37,6 +38,8 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
     const [participants, setParticipants] = useState<Partial<Participant>[]>([])
     const [formFields, setFormFields] = useState<FormField[]>([])
     const [currentBookingId, setCurrentBookingId] = useState<string | null>(null)
+    const [agreedToTerms, setAgreedToTerms] = useState(false)
+    const [optInMarketing, setOptInMarketing] = useState(false)
 
     const supabase = createClient()
 
@@ -152,6 +155,16 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
         setStep(3)
     }
 
+    const handleContinueToReview = () => {
+        setError('')
+
+        if (!validateParticipants()) {
+            return
+        }
+
+        setStep(4)
+    }
+
     // Check if all participants have valid data (for button state)
     const areAllParticipantsValid = (): boolean => {
         if (participants.length !== quantity) {
@@ -210,6 +223,12 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
             }
             return
         }
+
+        if (!agreedToTerms) {
+            setError('Please agree to the terms and conditions to continue')
+            return
+        }
+
         setLoading(true)
         setError('')
 
@@ -298,7 +317,7 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
             }
 
             setCurrentBookingId(booking.id)
-            setStep(4)
+            setStep(5)
         } catch (err: any) {
             setError(err.message || 'Failed to complete booking')
         } finally {
@@ -364,7 +383,7 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                     </div>
                     <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">Book</span>
                 </div>
-                <div className={`w-4 md:w-8 h-0.5 ${step >= 2 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
+                <div className={`w-3 md:w-6 h-0.5 ${step >= 2 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
                 <div className={`flex flex-col md:flex-row md:items-center ${step >= 2 ? 'text-indigo-600' : 'text-gray-400'}`}>
                     <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= 2 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
                         }`}>
@@ -372,7 +391,7 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                     </div>
                     <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">Contact</span>
                 </div>
-                <div className={`w-4 md:w-8 h-0.5 ${step >= 3 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
+                <div className={`w-3 md:w-6 h-0.5 ${step >= 3 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
                 <div className={`flex flex-col md:flex-row md:items-center ${step >= 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
                     <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= 3 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
                         }`}>
@@ -380,14 +399,15 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                     </div>
                     <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">Participants</span>
                 </div>
-                <div className={`w-4 md:w-8 h-0.5 ${step >= 4 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
+                <div className={`w-3 md:w-6 h-0.5 ${step >= 4 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
                 <div className={`flex flex-col md:flex-row md:items-center ${step >= 4 ? 'text-indigo-600' : 'text-gray-400'}`}>
                     <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= 4 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300'
                         }`}>
                         4
                     </div>
-                    <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">Checkout</span>
+                    <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">Payment</span>
                 </div>
+
             </div>
 
             {/* Booking in Progress Warning */}
@@ -444,7 +464,7 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                     participants={participants}
                     setParticipants={setParticipants}
                     formFields={formFields}
-                    onComplete={handleCompleteBooking}
+                    onComplete={handleContinueToReview}
                     onBack={() => setStep(2)}
                     loading={loading}
                     error={error}
@@ -452,8 +472,29 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                 />
             )}
 
-            {/* Step 4: Processing Payment */}
+            {/* Step 4: Review & Terms */}
             {step === 4 && (
+                <Step4Review
+                    event={event}
+                    selectedPricing={selectedPricing}
+                    quantity={quantity}
+                    totalAmount={totalAmount}
+                    contactInfo={contactInfo}
+                    participants={participants}
+                    formFields={formFields}
+                    agreedToTerms={agreedToTerms}
+                    setAgreedToTerms={setAgreedToTerms}
+                    optInMarketing={optInMarketing}
+                    setOptInMarketing={setOptInMarketing}
+                    onComplete={handleCompleteBooking}
+                    onBack={() => setStep(3)}
+                    loading={loading}
+                    error={error}
+                />
+            )}
+
+            {/* Step 5: Processing Payment */}
+            {step === 5 && (
                 <div className="space-y-6">
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <div className="flex">

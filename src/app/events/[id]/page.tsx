@@ -212,38 +212,6 @@ export default async function EventPage({ params }: EventPageProps) {
             {/* Structured Data for SEO */}
             <EventStructuredData event={event} />
 
-            {/* Breadcrumb */}
-            <div className="bg-white border-b">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="py-4">
-                        <nav className="flex" aria-label="Breadcrumb">
-                            <ol className="flex items-center space-x-4">
-                                <li>
-                                    <Link href="/" className="text-gray-400 hover:text-gray-500">
-                                        <span className="sr-only">Home</span>
-                                        <HiHome className="h-5 w-5" />
-                                    </Link>
-                                </li>
-                                <li>
-                                    <div className="flex items-center">
-                                        <span className="text-gray-400 mx-2">/</span>
-                                        <span className="text-gray-500">Events</span>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div className="flex items-center">
-                                        <span className="text-gray-400 mx-2">/</span>
-                                        <span className="text-gray-900 font-medium truncate max-w-xs">
-                                            {event.title}
-                                        </span>
-                                    </div>
-                                </li>
-                            </ol>
-                        </nav>
-                    </div>
-                </div>
-            </div>
-
             <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
                 <EventLayout event={event} profile={profile || undefined}>
                     {/* Event Details */}

@@ -151,7 +151,7 @@ export default function AdminBookingsPageClient({ bookings }: AdminBookingsPageC
                                         {getStatusBadge(booking.status)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        ${(booking.total_amount / 100).toFixed(2)}
+                                        ${(booking.total_amount).toFixed(2)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {new Date(booking.created_at).toLocaleDateString()}
