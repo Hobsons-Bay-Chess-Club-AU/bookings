@@ -93,28 +93,48 @@ export default function Step1Pricing({
 
             {/* Single Pricing Option */}
             {availablePricing.length === 1 && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <div className="flex items-center space-x-2">
-                                <span className="font-medium text-gray-900">{availablePricing[0].name}</span>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${availablePricing[0].pricing_type === 'early_bird' ? 'bg-green-100 text-green-800' :
-                                    availablePricing[0].pricing_type === 'regular' ? 'bg-blue-100 text-blue-800' :
-                                        availablePricing[0].pricing_type === 'late_bird' ? 'bg-orange-100 text-orange-800' :
-                                            'bg-purple-100 text-purple-800'
-                                    }`}>
-                                    {availablePricing[0].pricing_type === 'early_bird' ? 'Early Bird' :
-                                        availablePricing[0].pricing_type === 'regular' ? 'Regular' :
-                                            availablePricing[0].pricing_type === 'late_bird' ? 'Late Bird' :
-                                                'Special'}
-                                </span>
-                            </div>
-                            <p className="text-sm text-gray-500 mt-1">{availablePricing[0].description}</p>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-2xl font-bold text-gray-900">${availablePricing[0].price}</div>
-                            <div className="text-sm text-gray-500">
-                                {availablePricing[0].available_tickets} tickets left
+                <div className='text-gray-900'>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                        Pricing Option
+                    </label>
+                    <div className="space-y-3">
+                        <div
+                            className="relative rounded-lg border p-4 border-indigo-600 ring-2 ring-indigo-600 bg-indigo-50"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <input
+                                        type="radio"
+                                        name="pricing-option"
+                                        checked={true}
+                                        readOnly
+                                        className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                                    />
+                                    <div className="ml-3">
+                                        <div className="flex items-center space-x-2">
+                                            <span className="font-medium text-gray-900">{availablePricing[0].name}</span>
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${availablePricing[0].pricing_type === 'early_bird' ? 'bg-green-100 text-green-800' :
+                                                availablePricing[0].pricing_type === 'regular' ? 'bg-blue-100 text-blue-800' :
+                                                    availablePricing[0].pricing_type === 'late_bird' ? 'bg-orange-100 text-orange-800' :
+                                                        'bg-purple-100 text-purple-800'
+                                                }`}>
+                                                {availablePricing[0].pricing_type === 'early_bird' ? 'Early Bird' :
+                                                    availablePricing[0].pricing_type === 'regular' ? 'Regular' :
+                                                        availablePricing[0].pricing_type === 'late_bird' ? 'Late Bird' :
+                                                            'Special'}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-gray-500 mt-1">{availablePricing[0].description}</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className={`text-2xl font-bold ${availablePricing[0].price === 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                                        {availablePricing[0].price === 0 ? 'Free' : `$${availablePricing[0].price}`}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                        {availablePricing[0].available_tickets} tickets left
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -160,7 +180,7 @@ export default function Step1Pricing({
             {/* Continue Button */}
             <button
                 type="submit"
-                disabled={!selectedPricing || loading}
+                disabled={loading}
                 className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 {loading ? 'Processing...' : 'Start booking'}

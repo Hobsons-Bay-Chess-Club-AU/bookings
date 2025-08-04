@@ -42,6 +42,7 @@ export default function Step4Review({
     loading,
     error
 }: Step4ReviewProps) {
+    const isFreeEvent = totalAmount === 0 || selectedPricing?.price === 0
     return (
         <div className="space-y-6">
             <div>
@@ -65,7 +66,9 @@ export default function Step4Review({
                         <span className="text-gray-700">
                             {selectedPricing?.name} × {quantity}
                         </span>
-                        <span className="font-medium">${totalAmount.toFixed(2)}</span>
+                        <span className={`font-medium ${isFreeEvent ? 'text-green-600' : ''}`}>
+                            {isFreeEvent ? 'Free' : `$${totalAmount.toFixed(2)}`}
+                        </span>
                     </div>
                 </div>
 
@@ -165,6 +168,16 @@ export default function Step4Review({
                         </div>
                     )}
 
+                    {/* Payment Warning for Paid Events */}
+                    {!isFreeEvent && (
+                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                            <p className="text-sm text-blue-700">
+                                <strong>Next Step:</strong> You will be redirected to our secure payment portal. 
+                                We do not capture or store any payment details on our system.
+                            </p>
+                        </div>
+                    )}
+
                     <div className="flex justify-between mt-6">
                         <button
                             type="button"
@@ -177,9 +190,13 @@ export default function Step4Review({
                             type="button"
                             onClick={onComplete}
                             disabled={!agreedToTerms || loading}
-                            className="px-6 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`px-6 py-2 text-white rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
+                                isFreeEvent 
+                                    ? 'bg-green-600 hover:bg-green-700' 
+                                    : 'bg-indigo-600 hover:bg-indigo-700'
+                            }`}
                         >
-                            {loading ? 'Processing...' : 'Proceed to Payment'}
+                            {loading ? 'Processing...' : isFreeEvent ? 'Finish' : 'Proceed to Payment'}
                         </button>
                     </div>
                 </div>

@@ -26,22 +26,42 @@ async function getBookingFromSession(sessionId: string): Promise<(Booking & { ev
 }
 
 interface SuccessPageProps {
-    searchParams: Promise<{ session_id?: string }>
+    searchParams: Promise<{ session_id?: string; booking_id?: string }>
 }
 
 export default async function BookingSuccessPage({ searchParams }: SuccessPageProps) {
-    const { session_id } = await searchParams
+    const { session_id, booking_id } = await searchParams
     const user = await getCurrentUser()
 
     if (!user) {
         redirect('/auth/login')
     }
 
-    if (!session_id) {
+    if (!session_id && !booking_id) {
         redirect('/')
     }
 
-    const booking = await getBookingFromSession(session_id)
+    let booking: (Booking & { event: Event }) | null = null
+
+    if (session_id) {
+        // For paid events with Stripe session
+        booking = await getBookingFromSession(session_id)
+    } else if (booking_id) {
+        // For free events with booking ID
+        const supabase = await createClient()
+        const { data, error } = await supabase
+            .from('bookings')
+            .select(`
+                *,
+                event:events(*)
+            `)
+            .eq('id', booking_id)
+            .single()
+        
+        if (!error && data) {
+            booking = data as Booking & { event: Event }
+        }
+    }
 
     if (!booking) {
         return (
@@ -101,7 +121,10 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                                 Booking Confirmed!
                             </h1>
                             <p className="text-lg text-gray-800">
-                                Your payment was successful and your booking is confirmed.
+                                {booking.total_amount === 0 
+                                    ? 'Your free event booking is confirmed.' 
+                                    : 'Your payment was successful and your booking is confirmed.'
+                                }
                             </p>
                         </div>
 
@@ -165,12 +188,12 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-800">Price per ticket:</span>
-                                            <span>AUD ${booking.event.price.toFixed(2)}</span>
+                                            <span>{booking.total_amount === 0 ? 'Free' : `AUD $${booking.event.price.toFixed(2)}`}</span>
                                         </div>
                                         <div className="border-t pt-3">
                                             <div className="flex justify-between font-semibold text-gray-800">
-                                                <span>Total Paid:</span>
-                                                <span>AUD ${booking.total_amount.toFixed(2)}</span>
+                                                <span>{booking.total_amount === 0 ? 'Total:' : 'Total Paid:'}</span>
+                                                <span>{booking.total_amount === 0 ? 'Free' : `AUD $${booking.total_amount.toFixed(2)}`}</span>
                                             </div>
                                         </div>
                                         <div className="flex justify-between">
