@@ -88,6 +88,8 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                 breadcrumbs.push({ label: 'Custom Fields' })
             } else if (segments[1] === 'html-to-markdown') {
                 breadcrumbs.push({ label: 'HTML to Markdown' })
+            } else if (segments[1] === 'mailing-list') {
+                breadcrumbs.push({ label: 'Mailing List' })
             } else if (segments.length === 1) {
                 breadcrumbs.push({ label: 'Manage Events' })
             }
@@ -293,6 +295,19 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                                                     className={getNavLinkClasses('/organizer', true)}
                                                 >
                                                     Manage Events
+                                                </Link>
+                                            )}
+
+                                            {isActivePath('/organizer/mailing-list') ? (
+                                                <span className={getNavLinkClasses('/organizer/mailing-list', true)}>
+                                                    Mailing List
+                                                </span>
+                                            ) : (
+                                                <Link
+                                                    href="/organizer/mailing-list"
+                                                    className={getNavLinkClasses('/organizer/mailing-list', true)}
+                                                >
+                                                    Mailing List
                                                 </Link>
                                             )}
 
@@ -534,6 +549,20 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                                                         className={getNavLinkClasses('/organizer', false)}
                                                     >
                                                         Manage Events
+                                                    </Link>
+                                                )}
+
+                                                {isActivePath('/organizer/mailing-list') ? (
+                                                    <span className={getNavLinkClasses('/organizer/mailing-list', false)}>
+                                                        Mailing List
+                                                    </span>
+                                                ) : (
+                                                    <Link
+                                                        href="/organizer/mailing-list"
+                                                        onClick={() => setMobileMenuOpen(false)}
+                                                        className={getNavLinkClasses('/organizer/mailing-list', false)}
+                                                    >
+                                                        Mailing List
                                                     </Link>
                                                 )}
 

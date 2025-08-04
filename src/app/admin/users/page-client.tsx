@@ -34,6 +34,16 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
     const [searchTerm, setSearchTerm] = useState('')
     const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
     const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
+    const [showEditModal, setShowEditModal] = useState(false)
+    const [editingUser, setEditingUser] = useState<User | null>(null)
+    const [editForm, setEditForm] = useState({
+        full_name: '',
+        email: '',
+        role: 'user' as UserRole
+    })
+    const [editLoading, setEditLoading] = useState(false)
+    const [editError, setEditError] = useState('')
+    const [editSuccess, setEditSuccess] = useState('')
 
     // Filter users based on search and filters
     const filteredUsers = users.filter(user => {
@@ -105,6 +115,91 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
                 Active
             </span>
         )
+    }
+
+    const handleEditUser = (user: User) => {
+        setEditingUser(user)
+        setEditForm({
+            full_name: user.full_name || '',
+            email: user.email,
+            role: user.role
+        })
+        setShowEditModal(true)
+        setEditError('')
+        setEditSuccess('')
+    }
+
+    const handleSaveEdit = async () => {
+        if (!editingUser) return
+
+        setEditLoading(true)
+        setEditError('')
+        setEditSuccess('')
+
+        try {
+            const response = await fetch(`/api/admin/users/${editingUser.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'update_profile',
+                    full_name: editForm.full_name,
+                    email: editForm.email
+                })
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Failed to update user')
+            }
+
+            // Update role separately if changed
+            if (editForm.role !== editingUser.role) {
+                const roleResponse = await fetch(`/api/admin/users/${editingUser.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'update_role',
+                        role: editForm.role
+                    })
+                })
+
+                if (!roleResponse.ok) {
+                    const roleErrorData = await roleResponse.json()
+                    throw new Error(roleErrorData.error || 'Failed to update role')
+                }
+            }
+
+            setEditSuccess('User updated successfully')
+            
+            // Update the local users array
+            const updatedUsers = users.map(user => 
+                user.id === editingUser.id 
+                    ? { ...user, full_name: editForm.full_name, email: editForm.email, role: editForm.role }
+                    : user
+            )
+            
+            // We need to trigger a re-render, but since users is passed as prop, we'll need to refresh the page
+            setTimeout(() => {
+                window.location.reload()
+            }, 1000)
+
+        } catch (err) {
+            setEditError(err instanceof Error ? err.message : 'An unexpected error occurred')
+        } finally {
+            setEditLoading(false)
+        }
+    }
+
+    const handleCloseEditModal = () => {
+        setShowEditModal(false)
+        setEditingUser(null)
+        setEditForm({ full_name: '', email: '', role: 'user' })
+        setEditError('')
+        setEditSuccess('')
     }
 
     const stats = {
@@ -327,10 +422,14 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
                                         }
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button className="text-indigo-600 hover:text-indigo-900 mr-4">
+                                        <button 
+                                            onClick={() => handleEditUser(user)}
+                                            className="text-indigo-600 hover:text-indigo-900 mr-4"
+                                            title="Edit user"
+                                        >
                                             <HiPencilSquare className="h-4 w-4" />
                                         </button>
-                                        <button className="text-indigo-600 hover:text-indigo-900">
+                                        <button className="text-indigo-600 hover:text-indigo-900" title="Reset password">
                                             <HiKey className="h-4 w-4" />
                                         </button>
                                     </td>
@@ -346,6 +445,83 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
                     </div>
                 )}
             </div>
+
+            {/* Edit User Modal */}
+            {showEditModal && editingUser && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                        <div className="mt-3">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">Edit User</h3>
+                            
+                            {editError && (
+                                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                                    <p className="text-sm text-red-600">{editError}</p>
+                                </div>
+                            )}
+
+                            {editSuccess && (
+                                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                                    <p className="text-sm text-green-600">{editSuccess}</p>
+                                </div>
+                            )}
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                                    <input
+                                        type="text"
+                                        value={editForm.full_name}
+                                        onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        placeholder="Enter full name"
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                                    <input
+                                        type="email"
+                                        value={editForm.email}
+                                        onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        placeholder="Enter email address"
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Role</label>
+                                    <select
+                                        value={editForm.role}
+                                        onChange={(e) => setEditForm({ ...editForm, role: e.target.value as UserRole })}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                    >
+                                        <option value="user">User</option>
+                                        <option value="organizer">Organizer</option>
+                                        <option value="customer_support">Customer Support</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={handleSaveEdit}
+                                        disabled={editLoading}
+                                        className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                                    >
+                                        {editLoading ? 'Saving...' : 'Save Changes'}
+                                    </button>
+                                    <button
+                                        onClick={handleCloseEditModal}
+                                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

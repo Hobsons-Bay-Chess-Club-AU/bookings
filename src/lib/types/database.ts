@@ -9,6 +9,20 @@ export type PricingType = 'early_bird' | 'regular' | 'late_bird' | 'special'
 export type FormFieldType = 'text' | 'email' | 'phone' | 'number' | 'date' | 'select' | 'multiselect' | 'checkbox' | 'textarea' | 'file' | 'fide_id' | 'acf_id'
 export type TimelineType = 'refund'
 export type RefundValueType = 'percentage' | 'fixed'
+export type MailingListStatus = 'subscribed' | 'unsubscribed'
+
+// Mailing List types
+export interface MailingList {
+    id: string
+    email: string
+    unsubscribe_reason?: string
+    status: MailingListStatus
+    datetime: string
+    filter_event: string[]
+    unsubscribe_code: string
+    created_at: string
+    updated_at: string
+}
 
 // CMS Content types
 export interface Content {

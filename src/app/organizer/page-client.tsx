@@ -26,6 +26,12 @@ export default function OrganizerPageClient({
                 {/* Action Buttons */}
                 <div className="flex items-center space-x-3">
                     <Link
+                        href="/organizer/mailing-list"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                        Mailing List
+                    </Link>
+                    <Link
                         href="/organizer/html-to-markdown"
                         className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                     >

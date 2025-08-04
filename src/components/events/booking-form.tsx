@@ -295,7 +295,8 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                     eventId: event.id,
                     quantity: quantity,
                     amount: totalAmount,
-                    eventTitle: event.title
+                    eventTitle: event.title,
+                    optInMarketing: optInMarketing
                 })
             })
 

@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
     try {
-        const { bookingId, eventId, quantity, amount, eventTitle } = await request.json()
+        const { bookingId, eventId, quantity, amount, eventTitle, optInMarketing } = await request.json()
 
         if (!bookingId || !eventId || !quantity || !amount || !eventTitle) {
             return NextResponse.json(
@@ -39,6 +39,32 @@ export async function POST(request: NextRequest) {
 
         // Get user email for prefilling
         const userEmail = booking.user?.email
+
+        // Handle mailing list opt-in if user agreed
+        if (optInMarketing && userEmail) {
+            try {
+                // Check if email already exists in mailing list
+                const { data: existingSubscriber } = await supabase
+                    .from('mailing_list')
+                    .select('id')
+                    .eq('email', userEmail)
+                    .single()
+
+                if (!existingSubscriber) {
+                    // Add to mailing list
+                    await supabase
+                        .from('mailing_list')
+                        .insert({
+                            email: userEmail,
+                            status: 'subscribed',
+                            filter_event: ['all']
+                        })
+                }
+            } catch (error) {
+                console.error('Error handling mailing list opt-in:', error)
+                // Don't fail the checkout if mailing list fails
+            }
+        }
 
         // Fetch the event to check its status and availability
         const { data: event, error: eventError } = await supabase
