@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { EventPricing, PricingType, MembershipType } from '@/lib/types/database'
+import ConfirmationModal from '@/components/ui/confirmation-modal'
 import { createClient } from '@/lib/supabase/client'
 
 interface PricingManagerProps {
@@ -15,6 +16,8 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
     const [editingId, setEditingId] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
+    const [showConfirmModal, setShowConfirmModal] = useState(false)
+    const [pricingToDelete, setPricingToDelete] = useState<string | null>(null)
 
     const [formData, setFormData] = useState({
         name: '',
@@ -133,23 +136,30 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
     }
 
     const handleDelete = async (pricingId: string) => {
-        if (!confirm('Are you sure you want to delete this pricing tier?')) return
+        setPricingToDelete(pricingId)
+        setShowConfirmModal(true)
+    }
+
+    const confirmDelete = async () => {
+        if (!pricingToDelete) return
 
         try {
             setLoading(true)
             const { error } = await supabase
                 .from('event_pricing')
                 .delete()
-                .eq('id', pricingId)
+                .eq('id', pricingToDelete)
 
             if (error) throw error
 
-            setPricing(prev => prev.filter(p => p.id !== pricingId))
+            setPricing(prev => prev.filter(p => p.id !== pricingToDelete))
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to delete pricing'
             setError(errorMessage)
         } finally {
             setLoading(false)
+            setShowConfirmModal(false)
+            setPricingToDelete(null)
         }
     }
 
@@ -443,6 +453,22 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
                     ))
                 )}
             </div>
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showConfirmModal}
+                onClose={() => {
+                    setShowConfirmModal(false)
+                    setPricingToDelete(null)
+                }}
+                onConfirm={confirmDelete}
+                title="Delete Pricing Tier"
+                message="Are you sure you want to delete this pricing tier? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+                loading={loading}
+            />
         </div>
     )
 }

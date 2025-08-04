@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import { HiExclamationTriangle, HiCheckCircle, HiExclamationCircle } from 'react-icons/hi2'
 import MarkdownEditor from '@/components/ui/markdown-editor'
 import FormBuilder from '@/components/events/form-builder'
 import TimelineBuilder from '@/components/events/timeline-builder'
@@ -31,6 +32,8 @@ export default function EditEventPage() {
     const [enableRefunds, setEnableRefunds] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
+    const [success, setSuccess] = useState('')
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
     const [initialLoading, setInitialLoading] = useState(true)
     const [event, setEvent] = useState<Event | null>(null)
 
@@ -111,14 +114,15 @@ export default function EditEventPage() {
         e.preventDefault()
         setLoading(true)
         setError('')
+        setSuccess('')
+        setFieldErrors({})
 
         try {
-            // Validate dates
-            const startDate = new Date(formData.start_date)
-            const endDate = new Date(formData.end_date)
-
-            if (startDate >= endDate) {
-                throw new Error('End date must be after start date')
+            // Validate form before submission
+            if (!validateForm()) {
+                setError('Please fix the errors below before saving')
+                setLoading(false)
+                return
             }
 
             // Handle alias for published events
@@ -178,16 +182,104 @@ export default function EditEventPage() {
                 throw new Error(eventError.message)
             }
 
-            router.push('/organizer')
+            setSuccess('Event updated successfully!')
+            setError('')
+            
+            // Redirect after a short delay to show success message
+            setTimeout(() => {
+                router.push('/organizer')
+            }, 1500)
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An error occurred')
+            const errorMessage = err instanceof Error ? err.message : 'An error occurred while updating the event'
+            setError(errorMessage)
+            console.error('Event update error:', err)
         } finally {
             setLoading(false)
         }
     }
 
+    const validateForm = (): boolean => {
+        const errors: Record<string, string> = {}
+        
+        // Required field validation
+        if (!formData.title.trim()) {
+            errors.title = 'Event title is required'
+        }
+        
+        if (!formData.start_date) {
+            errors.start_date = 'Start date is required'
+        }
+        
+        if (!formData.end_date) {
+            errors.end_date = 'End date is required'
+        }
+        
+        if (!formData.location.trim()) {
+            errors.location = 'Location is required'
+        }
+        
+        // Date validation
+        if (formData.start_date && formData.end_date) {
+            const startDate = new Date(formData.start_date)
+            const endDate = new Date(formData.end_date)
+            
+            if (startDate >= endDate) {
+                errors.end_date = 'End date must be after start date'
+            }
+            
+            if (startDate < new Date()) {
+                errors.start_date = 'Start date cannot be in the past'
+            }
+        }
+        
+        // Entry close date validation
+        if (formData.entry_close_date) {
+            const entryCloseDate = new Date(formData.entry_close_date)
+            const startDate = new Date(formData.start_date)
+            
+            if (entryCloseDate >= startDate) {
+                errors.entry_close_date = 'Entry close date must be before the event start date'
+            }
+        }
+        
+        // Price validation
+        if (formData.price && parseFloat(formData.price) < 0) {
+            errors.price = 'Price cannot be negative'
+        }
+        
+        // Max attendees validation
+        if (formData.max_attendees && parseInt(formData.max_attendees) < 1) {
+            errors.max_attendees = 'Maximum attendees must be at least 1'
+        }
+        
+        // Email validation
+        if (formData.organizer_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.organizer_email)) {
+            errors.organizer_email = 'Please enter a valid email address'
+        }
+        
+        // Phone validation (basic)
+        if (formData.organizer_phone && formData.organizer_phone.length < 8) {
+            errors.organizer_phone = 'Please enter a valid phone number'
+        }
+        
+        setFieldErrors(errors)
+        return Object.keys(errors).length === 0
+    }
+
+    const clearFieldError = (fieldName: string) => {
+        setFieldErrors(prev => {
+            const newErrors = { ...prev }
+            delete newErrors[fieldName]
+            return newErrors
+        })
+    }
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target
+        
+        // Clear field error when user starts typing
+        clearFieldError(name)
+        
         if (type === 'checkbox') {
             const checked = (e.target as HTMLInputElement).checked
             setFormData(prev => ({ ...prev, [name]: checked }))
@@ -201,6 +293,17 @@ export default function EditEventPage() {
             ...prev,
             description: content
         }))
+    }
+
+    const getFieldClasses = (fieldName: string) => {
+        const baseClasses = "mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 sm:text-sm"
+        const hasError = fieldErrors[fieldName]
+        
+        if (hasError) {
+            return `${baseClasses} border-red-300 focus:ring-red-500 focus:border-red-500`
+        }
+        
+        return `${baseClasses} border-gray-300 focus:ring-indigo-500 focus:border-indigo-500`
     }
 
     if (initialLoading) {
@@ -240,8 +343,22 @@ export default function EditEventPage() {
             <div className="bg-white shadow rounded-lg text-gray-900">
                 <form onSubmit={handleSubmit} className="space-y-6 p-6">
                     {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
-                            {error}
+                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded flex items-start">
+                            <HiExclamationTriangle className="h-5 w-5 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+                            <div>
+                                <p className="font-medium">Error</p>
+                                <p className="text-sm">{error}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {success && (
+                        <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded flex items-start">
+                            <HiCheckCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                            <div>
+                                <p className="font-medium">Success</p>
+                                <p className="text-sm">{success}</p>
+                            </div>
                         </div>
                     )}
 
@@ -257,9 +374,15 @@ export default function EditEventPage() {
                                 required
                                 value={formData.title}
                                 onChange={handleChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className={getFieldClasses('title')}
                                 placeholder="Enter event title"
                             />
+                            {fieldErrors.title && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                    <HiExclamationCircle className="h-4 w-4 mr-1" />
+                                    {fieldErrors.title}
+                                </p>
+                            )}
                         </div>
 
                         <div className="md:col-span-2">
@@ -284,8 +407,14 @@ export default function EditEventPage() {
                                 required
                                 value={formData.start_date}
                                 onChange={handleChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className={getFieldClasses('start_date')}
                             />
+                            {fieldErrors.start_date && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                    <HiExclamationCircle className="h-4 w-4 mr-1" />
+                                    {fieldErrors.start_date}
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -299,8 +428,14 @@ export default function EditEventPage() {
                                 required
                                 value={formData.end_date}
                                 onChange={handleChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className={getFieldClasses('end_date')}
                             />
+                            {fieldErrors.end_date && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                    <HiExclamationCircle className="h-4 w-4 mr-1" />
+                                    {fieldErrors.end_date}
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -313,9 +448,15 @@ export default function EditEventPage() {
                                 name="entry_close_date"
                                 value={formData.entry_close_date || ''}
                                 onChange={handleChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className={getFieldClasses('entry_close_date')}
                                 placeholder="Leave empty for no entry close date"
                             />
+                            {fieldErrors.entry_close_date && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                    <HiExclamationCircle className="h-4 w-4 mr-1" />
+                                    {fieldErrors.entry_close_date}
+                                </p>
+                            )}
                             <p className="mt-1 text-sm text-gray-500">If set, entries will close automatically after this date/time.</p>
                         </div>
 
@@ -330,9 +471,15 @@ export default function EditEventPage() {
                                 required
                                 value={formData.location}
                                 onChange={handleChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className={getFieldClasses('location')}
                                 placeholder="Enter event location"
                             />
+                            {fieldErrors.location && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                    <HiExclamationCircle className="h-4 w-4 mr-1" />
+                                    {fieldErrors.location}
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -347,9 +494,15 @@ export default function EditEventPage() {
                                 step="0.01"
                                 value={formData.price}
                                 onChange={handleChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className={getFieldClasses('price')}
                                 placeholder="0.00"
                             />
+                            {fieldErrors.price && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                    <HiExclamationCircle className="h-4 w-4 mr-1" />
+                                    {fieldErrors.price}
+                                </p>
+                            )}
                             <p className="mt-1 text-sm text-gray-500">Leave empty or set to 0 for free events</p>
                         </div>
 
@@ -364,9 +517,15 @@ export default function EditEventPage() {
                                 min="1"
                                 value={formData.max_attendees}
                                 onChange={handleChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className={getFieldClasses('max_attendees')}
                                 placeholder="Leave empty for unlimited"
                             />
+                            {fieldErrors.max_attendees && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                    <HiExclamationCircle className="h-4 w-4 mr-1" />
+                                    {fieldErrors.max_attendees}
+                                </p>
+                            )}
                         </div>
 
                         <div className="md:col-span-2">
@@ -419,9 +578,15 @@ export default function EditEventPage() {
                                 name="organizer_email"
                                 value={formData.organizer_email}
                                 onChange={handleChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className={getFieldClasses('organizer_email')}
                                 placeholder="Leave empty to use profile email"
                             />
+                            {fieldErrors.organizer_email && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                    <HiExclamationCircle className="h-4 w-4 mr-1" />
+                                    {fieldErrors.organizer_email}
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -434,9 +599,15 @@ export default function EditEventPage() {
                                 name="organizer_phone"
                                 value={formData.organizer_phone}
                                 onChange={handleChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className={getFieldClasses('organizer_phone')}
                                 placeholder="Leave empty to use profile phone"
                             />
+                            {fieldErrors.organizer_phone && (
+                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                    <HiExclamationCircle className="h-4 w-4 mr-1" />
+                                    {fieldErrors.organizer_phone}
+                                </p>
+                            )}
                         </div>
 
                         <div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { MailingList, UserRole } from '@/lib/types/database'
+import ConfirmationModal from '@/components/ui/confirmation-modal'
 
 interface MailingListClientProps {
     initialMailingList: MailingList[]
@@ -19,6 +20,8 @@ export default function MailingListClient({ initialMailingList, userRole }: Mail
     const [showEmailForm, setShowEmailForm] = useState(false)
     const [emailSubject, setEmailSubject] = useState('')
     const [emailBody, setEmailBody] = useState('')
+    const [showConfirmModal, setShowConfirmModal] = useState(false)
+    const [subscriberToRemove, setSubscriberToRemove] = useState<string | null>(null)
 
     const supabase = createClient()
 
@@ -65,29 +68,34 @@ export default function MailingListClient({ initialMailingList, userRole }: Mail
     }
 
     const handleRemoveSubscriber = async (id: string) => {
-        if (!confirm('Are you sure you want to remove this subscriber?')) {
-            return
-        }
+        setSubscriberToRemove(id)
+        setShowConfirmModal(true)
+    }
+
+    const confirmRemoveSubscriber = async () => {
+        if (!subscriberToRemove) return
 
         setLoading(true)
         setError('')
+        setShowConfirmModal(false)
 
         try {
             const { error } = await supabase
                 .from('mailing_list')
                 .delete()
-                .eq('id', id)
+                .eq('id', subscriberToRemove)
 
             if (error) {
                 setError('Failed to remove subscriber: ' + error.message)
             } else {
                 setSuccess('Subscriber removed successfully')
-                setMailingList(mailingList.filter(sub => sub.id !== id))
+                setMailingList(mailingList.filter(sub => sub.id !== subscriberToRemove))
             }
         } catch (err) {
             setError('An unexpected error occurred')
         } finally {
             setLoading(false)
+            setSubscriberToRemove(null)
         }
     }
 
@@ -321,6 +329,22 @@ export default function MailingListClient({ initialMailingList, userRole }: Mail
                     </table>
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showConfirmModal}
+                onClose={() => {
+                    setShowConfirmModal(false)
+                    setSubscriberToRemove(null)
+                }}
+                onConfirm={confirmRemoveSubscriber}
+                title="Remove Subscriber"
+                message="Are you sure you want to remove this subscriber from the mailing list? This action cannot be undone."
+                confirmText="Remove"
+                cancelText="Cancel"
+                variant="danger"
+                loading={loading}
+            />
         </div>
     )
 } 

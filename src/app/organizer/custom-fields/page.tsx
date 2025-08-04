@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { CustomField, FormField, FormFieldType } from '@/lib/types/database'
 import FormBuilder from '@/components/events/form-builder'
 import { HiDocumentText, HiUser, HiGlobeAlt, HiStar } from 'react-icons/hi2'
+import ConfirmationModal from '@/components/ui/confirmation-modal'
 
 export default function CustomFieldsPage() {
     const [customFields, setCustomFields] = useState<CustomField[]>([])
@@ -15,6 +16,8 @@ export default function CustomFieldsPage() {
     const [showPopular, setShowPopular] = useState(false)
     const [isCreating, setIsCreating] = useState(false)
     const [editingField, setEditingField] = useState<CustomField | null>(null)
+    const [showConfirmModal, setShowConfirmModal] = useState(false)
+    const [fieldToDelete, setFieldToDelete] = useState<string | null>(null)
 
     // (supabase client import removed, not used)
 
@@ -110,12 +113,15 @@ export default function CustomFieldsPage() {
     }
 
     const handleDeleteField = async (fieldId: string) => {
-        if (!confirm('Are you sure you want to delete this field? This action cannot be undone.')) {
-            return
-        }
+        setFieldToDelete(fieldId)
+        setShowConfirmModal(true)
+    }
+
+    const confirmDeleteField = async () => {
+        if (!fieldToDelete) return
 
         try {
-            const response = await fetch(`/api/organizer/custom-fields/${fieldId}`, {
+            const response = await fetch(`/api/organizer/custom-fields/${fieldToDelete}`, {
                 method: 'DELETE'
             })
 
@@ -127,6 +133,9 @@ export default function CustomFieldsPage() {
             fetchCustomFields()
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to delete field')
+        } finally {
+            setShowConfirmModal(false)
+            setFieldToDelete(null)
         }
     }
 
@@ -459,6 +468,21 @@ export default function CustomFieldsPage() {
                             </div>
                         </div>
                     )}
+
+                    {/* Confirmation Modal */}
+                    <ConfirmationModal
+                        isOpen={showConfirmModal}
+                        onClose={() => {
+                            setShowConfirmModal(false)
+                            setFieldToDelete(null)
+                        }}
+                        onConfirm={confirmDeleteField}
+                        title="Delete Custom Field"
+                        message="Are you sure you want to delete this custom field? This action cannot be undone and will affect all events using this field."
+                        confirmText="Delete"
+                        cancelText="Cancel"
+                        variant="danger"
+                    />
                 </>
             )}
         </>

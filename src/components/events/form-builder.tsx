@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { FormField, FormFieldType, CustomField, FormFieldValidation } from '@/lib/types/database'
+import ConfirmationModal from '@/components/ui/confirmation-modal'
 
 // Define a type for option objects that's used in the UI but converted to strings/numbers for storage
 type OptionObject = { value: string; label: string }
@@ -25,6 +26,8 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
     const [libraryFilter, setLibraryFilter] = useState<FormFieldType | 'all'>('all')
     const [saveToLibrary, setSaveToLibrary] = useState(false)
     const [useAdvancedOptions, setUseAdvancedOptions] = useState(false)
+    const [showConfirmModal, setShowConfirmModal] = useState(false)
+    const [fieldToDelete, setFieldToDelete] = useState<string | null>(null)
 
     const fieldTypes: { value: FormFieldType; label: string; description: string }[] = [
         { value: 'text', label: 'Text Input', description: 'Single line text field' },
@@ -198,8 +201,15 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
     }
 
     const handleDeleteField = (fieldId: string) => {
-        if (confirm('Are you sure you want to delete this field?')) {
-            onChange(fields.filter(f => f.id !== fieldId))
+        setFieldToDelete(fieldId)
+        setShowConfirmModal(true)
+    }
+
+    const confirmDeleteField = () => {
+        if (fieldToDelete) {
+            onChange(fields.filter(f => f.id !== fieldToDelete))
+            setFieldToDelete(null)
+            setShowConfirmModal(false)
         }
     }
 
@@ -859,6 +869,21 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                     </div>
                 </div>
             )}
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showConfirmModal}
+                onClose={() => {
+                    setShowConfirmModal(false)
+                    setFieldToDelete(null)
+                }}
+                onConfirm={confirmDeleteField}
+                title="Delete Field"
+                message="Are you sure you want to delete this field? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+            />
         </div>
     )
 }
