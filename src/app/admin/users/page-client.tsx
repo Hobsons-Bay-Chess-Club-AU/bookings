@@ -41,6 +41,7 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
         email: '',
         role: 'user' as UserRole
     })
+    const [originalUserData, setOriginalUserData] = useState<User | null>(null)
     const [editLoading, setEditLoading] = useState(false)
     const [editError, setEditError] = useState('')
     const [editSuccess, setEditSuccess] = useState('')
@@ -119,6 +120,7 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
 
     const handleEditUser = (user: User) => {
         setEditingUser(user)
+        setOriginalUserData(user) // Store original data for comparison
         setEditForm({
             full_name: user.full_name || '',
             email: user.email,
@@ -130,32 +132,48 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
     }
 
     const handleSaveEdit = async () => {
-        if (!editingUser) return
+        if (!editingUser || !originalUserData) return
 
         setEditLoading(true)
         setEditError('')
         setEditSuccess('')
 
         try {
-            const response = await fetch(`/api/admin/users/${editingUser.id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'update_profile',
-                    full_name: editForm.full_name,
-                    email: editForm.email
-                })
-            })
+            // Check if there are any changes
+            const hasProfileChanges = 
+                editForm.full_name !== originalUserData.full_name ||
+                editForm.email !== originalUserData.email
+            
+            const hasRoleChanges = editForm.role !== originalUserData.role
 
-            if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.error || 'Failed to update user')
+            if (!hasProfileChanges && !hasRoleChanges) {
+                setEditSuccess('No changes detected')
+                setEditLoading(false)
+                return
             }
 
-            // Update role separately if changed
-            if (editForm.role !== editingUser.role) {
+            // Update profile if changed
+            if (hasProfileChanges) {
+                const response = await fetch(`/api/admin/users/${editingUser.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'update_profile',
+                        full_name: editForm.full_name,
+                        email: editForm.email
+                    })
+                })
+
+                if (!response.ok) {
+                    const errorData = await response.json()
+                    throw new Error(errorData.error || 'Failed to update user profile')
+                }
+            }
+
+            // Update role if changed
+            if (hasRoleChanges) {
                 const roleResponse = await fetch(`/api/admin/users/${editingUser.id}`, {
                     method: 'PATCH',
                     headers: {
@@ -197,6 +215,7 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
     const handleCloseEditModal = () => {
         setShowEditModal(false)
         setEditingUser(null)
+        setOriginalUserData(null)
         setEditForm({ full_name: '', email: '', role: 'user' })
         setEditError('')
         setEditSuccess('')
