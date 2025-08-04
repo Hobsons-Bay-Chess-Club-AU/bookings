@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Get all subscribed emails
+        // Get all subscribed emails using service client to bypass RLS
         const { data: subscribers, error: fetchError } = await supabase
             .from('mailing_list')
             .select('email, unsubscribe_code')
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Send emails to all subscribers
-        const emailPromises = subscribers.map(async (subscriber) => {
+        const emailPromises = subscribers.map(async (subscriber: { email: string; unsubscribe_code: string }) => {
             const unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?code=${subscriber.unsubscribe_code}`
             
             const emailContent = `
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 
         const results = await Promise.allSettled(emailPromises)
         
-        const successful = results.filter(result => 
+        const successful = results.filter((result: PromiseSettledResult<any>) => 
             result.status === 'fulfilled' && result.value.success
         ).length
         
