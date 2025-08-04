@@ -21,14 +21,14 @@ interface AcfPlayerFieldProps extends FormFieldProps {
     onPlayerSelect?: (player: PlayerData | null) => void
 }
 
-export default function AcfPlayerField({ 
-    field, 
-    value, 
-    onChange, 
-    error, 
-    className = '', 
+export default function AcfPlayerField({
+    field,
+    value,
+    onChange,
+    error,
+    className = '',
     disabled = false,
-    onPlayerSelect 
+    onPlayerSelect
 }: AcfPlayerFieldProps) {
     const [query, setQuery] = useState('')
     const [players, setPlayers] = useState<PlayerData[]>([])
@@ -40,9 +40,10 @@ export default function AcfPlayerField({
 
     // Initialize from existing value
     useEffect(() => {
-        if (value && typeof value === 'object' && value.id) {
+        const proxyValue = value as PlayerData
+        if (proxyValue && typeof proxyValue === 'object' && proxyValue.id) {
             setSelectedPlayer(value as PlayerData)
-            setQuery(value.name || '')
+            setQuery(proxyValue.name || '')
         } else {
             // Clear state when value is null/undefined (switching participants)
             setSelectedPlayer(null)
@@ -135,7 +136,7 @@ export default function AcfPlayerField({
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newQuery = e.target.value
         setQuery(newQuery)
-        
+
         if (!newQuery.trim()) {
             setSelectedPlayer(null)
             onChange('')
@@ -171,7 +172,7 @@ export default function AcfPlayerField({
                         ${className}
                     `}
                 />
-                
+
                 {/* Loading spinner or clear button */}
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3">
                     {isLoading ? (
@@ -192,7 +193,7 @@ export default function AcfPlayerField({
 
             {/* Dropdown with search results */}
             {showDropdown && players.length > 0 && (
-                <div 
+                <div
                     ref={dropdownRef}
                     className="absolute z-50 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none"
                 >

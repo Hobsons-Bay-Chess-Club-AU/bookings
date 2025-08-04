@@ -2,13 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isAdmin } from '@/lib/utils/auth'
 
-interface RouteParams {
-  params: {
-    id: string
-  }
-}
-
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export async function PATCH(request: NextRequest, context: unknown) {
+  const { params } = context as { params: { id: string } };
   try {
     // Check if user is admin
     if (!(await isAdmin())) {
@@ -43,7 +38,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
           const { error: authError } = await supabase.auth.admin.updateUserById(id, {
             email: updateData.email
           })
-          
+
           if (authError) {
             console.error('Error updating auth email:', authError)
             // Continue even if auth update fails, profile is already updated
@@ -72,9 +67,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         // For now, we'll just return the requested status
         // In production, you'd implement actual user deactivation logic
         const newActiveStatus = updateData.active
-        
-        return NextResponse.json({ 
-          id, 
+
+        return NextResponse.json({
+          id,
           active: newActiveStatus,
           message: newActiveStatus ? 'User activated' : 'User deactivated'
         })

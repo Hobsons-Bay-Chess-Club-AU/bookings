@@ -1,7 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { FormField, FormFieldType, CustomField } from '@/lib/types/database'
+import { useState, useEffect, useCallback } from 'react'
+import { FormField, FormFieldType, CustomField, FormFieldValidation } from '@/lib/types/database'
+
+// Define a type for option objects that's used in the UI but converted to strings/numbers for storage
+type OptionObject = { value: string; label: string }
+// This type represents options as they're used in the UI (before being converted to the database format)
+type FormFieldUIOption = string | number | OptionObject
+// This type represents the array of options as used in the UI
+type FormFieldUIOptions = FormFieldUIOption[]
 
 interface FormBuilderProps {
     fields: FormField[]
@@ -42,18 +49,12 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
         type: 'text',
         required: false,
         options: [],
-        validation: {},
+        validation: {} as unknown as FormFieldValidation, // Initialize with empty validation
         placeholder: ''
     })
 
     // Fetch custom fields from library
-    useEffect(() => {
-        if (showLibrary) {
-            fetchCustomFields()
-        }
-    }, [showLibrary, librarySearch, libraryFilter])
-
-    const fetchCustomFields = async () => {
+    const fetchCustomFields = useCallback(async () => {
         try {
             setLibraryLoading(true)
 
@@ -74,7 +75,13 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
         } finally {
             setLibraryLoading(false)
         }
-    }
+    }, [librarySearch, libraryFilter])
+
+    useEffect(() => {
+        if (showLibrary) {
+            fetchCustomFields()
+        }
+    }, [showLibrary, fetchCustomFields])
 
     const handleAddField = () => {
         setEditingField(createNewField())
@@ -97,7 +104,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
             type: customField.type,
             required: customField.required,
             options: customField.options,
-            validation: customField.validation,
+            validation: customField.validation as unknown as FormFieldValidation,
             placeholder: customField.placeholder
         }
 
@@ -125,7 +132,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
 
         // Check if field uses advanced options (has objects with value/label)
         const hasAdvancedOptions = (field.options || []).some(opt =>
-            typeof opt === 'object' && opt.hasOwnProperty('value') && opt.hasOwnProperty('label')
+            typeof opt === 'object' && 'value' in opt && 'label' in opt
         )
         setUseAdvancedOptions(hasAdvancedOptions)
     }
@@ -217,32 +224,102 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
     const addOption = () => {
         if (!editingField) return
         if (useAdvancedOptions) {
-            const options = [...(editingField.options || []), { value: '', label: '' }]
-            updateEditingField({ options })
+            // Create UI options with object format, will be converted to string/number when saved
+            const uiOptions: FormFieldUIOptions = [...(editingField.options || []).map(opt =>
+                typeof opt === 'string' || typeof opt === 'number' ?
+                    { value: String(opt), label: String(opt) } :
+                    opt as OptionObject
+            ), { value: '', label: '' }]
+
+            // When saving to the form field, convert object options to strings
+            // Determine if all values are strings or numbers to match the FormField.options type
+            const allValues = uiOptions.map(opt =>
+                typeof opt === 'object' ? opt.value : opt
+            )
+
+            // Check if all values are strings or numbers and create appropriate array type
+            const allStrings = allValues.every(val => typeof val === 'string')
+            const allNumbers = allValues.every(val => typeof val === 'number')
+
+            if (allStrings) {
+                const stringOptions: string[] = allValues as string[]
+                updateEditingField({ options: stringOptions })
+            } else if (allNumbers) {
+                const numberOptions: number[] = allValues as number[]
+                updateEditingField({ options: numberOptions })
+            } else {
+                // If mixed types, convert all to strings for consistency
+                const stringOptions: string[] = allValues.map(val => String(val))
+                updateEditingField({ options: stringOptions })
+            }
         } else {
-            const options = [...(editingField.options || []), '']
+            const options: string[] = [...(editingField.options || []), ''].map(opt => String(opt))
             updateEditingField({ options })
         }
     }
 
     const updateOption = (index: number, value: string, field?: 'value' | 'label') => {
         if (!editingField) return
-        const options = [...(editingField.options || [])]
+        // Create a UI representation of the options for editing
+        const uiOptions: FormFieldUIOptions = [...(editingField.options || [])].map(opt => {
+            // If we're using advanced options, convert string/number options to objects
+            if (useAdvancedOptions && (typeof opt === 'string' || typeof opt === 'number')) {
+                return { value: String(opt), label: String(opt) };
+            }
+            return opt;
+        });
 
         if (useAdvancedOptions && field) {
-            const option = typeof options[index] === 'object' ? options[index] : { value: '', label: '' }
-            options[index] = { ...option, [field]: value }
+            const option = typeof uiOptions[index] === 'object' ?
+                uiOptions[index] as OptionObject :
+                { value: '', label: '' };
+            uiOptions[index] = { ...option, [field]: value } as OptionObject;
         } else {
-            options[index] = value
+            uiOptions[index] = value;
         }
-        updateEditingField({ options })
+
+        // Convert back to database format (string[] | number[])
+        const allValues = uiOptions.map(opt =>
+            typeof opt === 'object' ? opt.value : opt
+        );
+
+        // Check if all values are strings or numbers and create appropriate array type
+        const allStrings = allValues.every(val => typeof val === 'string')
+        const allNumbers = allValues.every(val => typeof val === 'number')
+
+        if (allStrings) {
+            const stringOptions: string[] = allValues as string[]
+            updateEditingField({ options: stringOptions })
+        } else if (allNumbers) {
+            const numberOptions: number[] = allValues as number[]
+            updateEditingField({ options: numberOptions })
+        } else {
+            // If mixed types, convert all to strings for consistency
+            const stringOptions: string[] = allValues.map(val => String(val))
+            updateEditingField({ options: stringOptions })
+        }
     }
 
     const removeOption = (index: number) => {
         if (!editingField) return
-        const options = [...(editingField.options || [])]
-        options.splice(index, 1)
-        updateEditingField({ options })
+        const currentOptions = [...(editingField.options || [])]
+        currentOptions.splice(index, 1)
+
+        // Ensure we maintain the correct type (string[] or number[])
+        const allStrings = currentOptions.every(val => typeof val === 'string')
+        const allNumbers = currentOptions.every(val => typeof val === 'number')
+
+        if (allStrings) {
+            const stringOptions: string[] = currentOptions as string[]
+            updateEditingField({ options: stringOptions })
+        } else if (allNumbers) {
+            const numberOptions: number[] = currentOptions as number[]
+            updateEditingField({ options: numberOptions })
+        } else {
+            // If mixed types, convert all to strings for consistency
+            const stringOptions: string[] = currentOptions.map(val => String(val))
+            updateEditingField({ options: stringOptions })
+        }
     }
 
     const toggleAdvancedOptions = () => {
@@ -252,17 +329,24 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
         setUseAdvancedOptions(newUseAdvanced)
 
         if (newUseAdvanced) {
-            // Convert string options to object options
-            const options = (editingField.options || []).map(opt =>
-                typeof opt === 'string' ? { value: opt, label: opt } : opt
+            // Convert string/number options to object options for UI
+            const uiOptions: FormFieldUIOptions = (editingField.options || []).map(opt =>
+                typeof opt === 'string' || typeof opt === 'number' ?
+                    { value: String(opt), label: String(opt) } :
+                    opt as OptionObject
             )
-            updateEditingField({ options })
+
+            // Keep the original options type since we're just changing the UI representation
+            // The actual database format doesn't change here
+            updateEditingField({ options: editingField.options })
         } else {
-            // Convert object options to string options
-            const options = (editingField.options || []).map(opt =>
-                typeof opt === 'object' ? opt.value || opt.label || '' : opt
+            // When switching to simple mode, ensure all options are strings
+            const simpleOptions: string[] = (editingField.options || []).map(opt =>
+                typeof opt === 'object' && 'value' in opt && 'label' in opt ?
+                    String((opt as OptionObject).value) || String((opt as OptionObject).label) || '' :
+                    String(opt)
             )
-            updateEditingField({ options })
+            updateEditingField({ options: simpleOptions })
         }
     }
 
@@ -348,7 +432,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                     <div className="ml-6 flex items-center space-x-2">
                                         <button
                                             type="button"
-                                            onClick={() => handleMoveField(field.id, 'up')}
+                                            onClick={() => handleMoveField(field.id || '', 'up')}
                                             disabled={index === 0}
                                             className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
                                         >
@@ -356,7 +440,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => handleMoveField(field.id, 'down')}
+                                            onClick={() => handleMoveField(field.id || '', 'down')}
                                             disabled={index === fields.length - 1}
                                             className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
                                         >
@@ -371,7 +455,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => handleDeleteField(field.id)}
+                                            onClick={() => handleDeleteField(field.id || '')}
                                             className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
                                         >
                                             Delete
@@ -520,14 +604,14 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                                         <>
                                                             <input
                                                                 type="text"
-                                                                value={typeof option === 'object' ? option.value : option}
+                                                                value={typeof option === 'object' && 'value' in option ? (option as OptionObject).value : String(option)}
                                                                 onChange={(e) => updateOption(index, e.target.value, 'value')}
                                                                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                                 placeholder="Value (stored)"
                                                             />
                                                             <input
                                                                 type="text"
-                                                                value={typeof option === 'object' ? option.label : option}
+                                                                value={typeof option === 'object' && 'label' in option ? (option as OptionObject).label : String(option)}
                                                                 onChange={(e) => updateOption(index, e.target.value, 'label')}
                                                                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                                 placeholder="Label (displayed)"
@@ -536,7 +620,9 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                                     ) : (
                                                         <input
                                                             type="text"
-                                                            value={typeof option === 'string' ? option : (typeof option === 'object' ? option.label || option.value : '')}
+                                                            value={typeof option === 'string' ? option : (typeof option === 'object' && ('label' in option || 'value' in option) ?
+                                                                (option as OptionObject).label || (option as OptionObject).value || '' :
+                                                                String(option))}
                                                             onChange={(e) => updateOption(index, e.target.value)}
                                                             className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                             placeholder={`Option ${index + 1}`}
@@ -577,12 +663,12 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                                 <label className="block text-xs text-gray-600 mb-1">Min Length</label>
                                                 <input
                                                     type="number"
-                                                    value={editingField.validation?.minLength || ''}
+                                                    value={(editingField.validation?.minLength || '') as string}
                                                     onChange={(e) => updateEditingField({
                                                         validation: {
-                                                            ...editingField.validation,
+                                                            ...(editingField.validation || {}),
                                                             minLength: e.target.value ? parseInt(e.target.value) : undefined
-                                                        }
+                                                        } as unknown as FormFieldValidation
                                                     })}
                                                     className="w-full px-3 py-1 border border-gray-300 rounded text-sm"
                                                 />
@@ -591,12 +677,12 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                                 <label className="block text-xs text-gray-600 mb-1">Max Length</label>
                                                 <input
                                                     type="number"
-                                                    value={editingField.validation?.maxLength || ''}
+                                                    value={(editingField.validation?.maxLength || '') as string}
                                                     onChange={(e) => updateEditingField({
                                                         validation: {
-                                                            ...editingField.validation,
+                                                            ...(editingField.validation || {}),
                                                             maxLength: e.target.value ? parseInt(e.target.value) : undefined
-                                                        }
+                                                        } as unknown as FormFieldValidation
                                                     })}
                                                     className="w-full px-3 py-1 border border-gray-300 rounded text-sm"
                                                 />

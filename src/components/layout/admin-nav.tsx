@@ -7,6 +7,7 @@ import LogoutButton from '@/components/auth/logout-button'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
 import { Profile } from '@/lib/types/database'
+import Image from 'next/image'
 
 interface AdminNavProps {
     className?: string
@@ -140,7 +141,7 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                         console.error('Error getting profile:', profileError)
                     }
 
-                    setProfile(profileData)
+                    setProfile(profileData as import('@/lib/types/database').Profile)
                 }
             } catch (error) {
                 console.error('Error in getUser:', error)
@@ -173,7 +174,7 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
         return () => {
             subscription.unsubscribe()
         }
-    }, [supabase.auth])
+    }, [supabase])
 
     // Close dropdown when clicking outside or pressing escape
     useEffect(() => {
@@ -222,10 +223,13 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                     <div className="flex justify-between items-center py-6">
                         <div className="flex items-center">
                             <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
-                                <img
+                                <Image
                                     src="/chess-logo.svg"
                                     alt="HBCC Logo"
                                     className="h-8 w-8 mr-3"
+                                    width={32}
+                                    height={32}
+                                    priority
                                 />
                                 <h1 className="text-2xl font-bold text-gray-900">Hobsons Bay Chess Club</h1>
                             </Link>
@@ -246,8 +250,10 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                     <div className="flex justify-between items-center py-6">
                         <div className="flex items-center">
                             <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
-                                <img
+                                <Image
                                     src="/chess-logo.svg"
+                                    width={32}
+                                    height={32}
                                     alt="HBCC Logo"
                                     className="h-8 w-8 mr-3"
                                 />
@@ -334,7 +340,7 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                                             )}
 
                                             {/* Customer Support Links */}
-                                            {profile?.role === 'customer_support' && (
+                                            {(profile?.role as unknown as string) === 'customer_support' && (
                                                 <>
                                                     {isActivePath('/admin/bookings') ? (
                                                         <span className={getNavLinkClasses('/admin/bookings', true)}>
@@ -457,10 +463,12 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                             {/* Header with logo and close button */}
                             <div className="flex justify-between items-center px-4 py-4 border-b border-gray-200">
                                 <div className="flex items-center">
-                                    <img
+                                    <Image
                                         src="/chess-logo.svg"
                                         alt="HBCC Logo"
                                         className="h-8 w-8 mr-3"
+                                        width={32}
+                                        height={32}
                                     />
                                     <h1 className="text-xl font-bold text-gray-900">Hobsons Bay Chess Club</h1>
                                 </div>

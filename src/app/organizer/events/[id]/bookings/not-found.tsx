@@ -9,7 +9,7 @@ export default function EventBookingsNotFound() {
             Event Not Found
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            The event you're looking for doesn't exist or you don't have permission to view its bookings.
+            The event you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view its bookings.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4">

@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isAdmin } from '@/lib/utils/auth'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2025-06-30.basil',
+  apiVersion: '2025-06-30.basil',
 })
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Check if user is admin
     if (!(await isAdmin())) {
@@ -29,14 +29,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (!bookings?.length) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         message: 'No bookings found with missing payment intent IDs',
-        fixed: 0 
+        fixed: 0
       })
     }
 
     console.log(`Found ${bookings.length} bookings missing payment intent IDs`)
-    
+
     let fixedCount = 0
     const results = []
 

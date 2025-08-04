@@ -1,12 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FormField, Participant } from '@/lib/types/database'
+import { CustomDataValue, FormField, Participant } from '@/lib/types/database'
+
+type ExtendedParticipant = Partial<Participant> & {
+    contact_email?: string
+    contact_phone?: string
+    first_name?: string
+    last_name?: string
+    date_of_birth?: string
+    custom_data?: Record<string, unknown>
+}
 
 interface ParticipantFormProps {
     fields: FormField[]
-    participants: Partial<Participant>[]
-    onChange: (participants: Partial<Participant>[]) => void
+    participants: ExtendedParticipant[]
+    onChange: (participants: ExtendedParticipant[]) => void
     quantity: number
 }
 
@@ -16,7 +25,7 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
 
     // Initialize participants array if needed
     useEffect(() => {
-        const newParticipants = Array.from({ length: quantity }, (_, index) => 
+        const newParticipants = Array.from({ length: quantity }, (_, index) =>
             participants[index] || {
                 first_name: '',
                 last_name: '',
@@ -26,13 +35,13 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
                 custom_data: {}
             }
         )
-        
+
         if (newParticipants.length !== participants.length) {
             onChange(newParticipants)
         }
-    }, [quantity])
+    }, [onChange, participants, quantity])
 
-    const updateParticipant = (index: number, field: string, value: any) => {
+    const updateParticipant = (index: number, field: string, value: unknown) => {
         const newParticipants = [...participants]
         if (!newParticipants[index]) {
             newParticipants[index] = {
@@ -51,12 +60,12 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
             // Custom field
             newParticipants[index] = {
                 ...newParticipants[index],
-                custom_data: { ...newParticipants[index].custom_data, [field]: value }
+                custom_data: ({ ...newParticipants[index].custom_data, [field]: value }) as Record<string, CustomDataValue>
             }
         }
 
         onChange(newParticipants)
-        
+
         // Clear error for this field
         const errorKey = `${index}_${field}`
         if (errors[errorKey]) {
@@ -85,7 +94,7 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
         // Validate custom fields
         fields.forEach(field => {
             const value = participant.custom_data?.[field.name]
-            
+
             if (field.required && (!value || value === '')) {
                 newErrors[`${index}_${field.name}`] = `${field.label} is required`
                 isValid = false
@@ -95,7 +104,7 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
             if (value && field.validation) {
                 if (field.type === 'email' && value) {
                     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-                    if (!emailRegex.test(value)) {
+                    if (!emailRegex.test(value as string)) {
                         newErrors[`${index}_${field.name}`] = 'Please enter a valid email address'
                         isValid = false
                     }
@@ -103,18 +112,18 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
 
                 if (field.validation.regex && value) {
                     const regex = new RegExp(field.validation.regex)
-                    if (!regex.test(value)) {
+                    if (!regex.test(value as string)) {
                         newErrors[`${index}_${field.name}`] = `Please enter a valid ${field.label.toLowerCase()}`
                         isValid = false
                     }
                 }
 
-                if (field.validation.minLength && value.length < field.validation.minLength) {
+                if (field.validation.minLength && (value as string).length < field.validation.minLength) {
                     newErrors[`${index}_${field.name}`] = `${field.label} must be at least ${field.validation.minLength} characters`
                     isValid = false
                 }
 
-                if (field.validation.maxLength && value.length > field.validation.maxLength) {
+                if (field.validation.maxLength && (value as string).length > field.validation.maxLength) {
                     newErrors[`${index}_${field.name}`] = `${field.label} must be no more than ${field.validation.maxLength} characters`
                     isValid = false
                 }
@@ -144,18 +153,17 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
     }
 
     const renderField = (field: FormField, participant: Partial<Participant>, index: number) => {
-        const value = field.name === 'first_name' || field.name === 'last_name' || 
-                     field.name === 'date_of_birth' || field.name === 'contact_email' || 
-                     field.name === 'contact_phone' 
-                     ? participant[field.name as keyof Participant] 
-                     : participant.custom_data?.[field.name] || ''
-        
+        const value = field.name === 'first_name' || field.name === 'last_name' ||
+            field.name === 'date_of_birth' || field.name === 'contact_email' ||
+            field.name === 'contact_phone'
+            ? participant[field.name as keyof Participant]
+            : participant.custom_data?.[field.name] || ''
+
         const errorKey = `${index}_${field.name}`
         const hasError = !!errors[errorKey]
 
-        const baseClasses = `w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-            hasError ? 'border-red-300' : 'border-gray-300'
-        }`
+        const baseClasses = `w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${hasError ? 'border-red-300' : 'border-gray-300'
+            }`
 
         switch (field.type) {
             case 'text':
@@ -164,7 +172,7 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
                 return (
                     <input
                         type={field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}
-                        value={value}
+                        value={value as string}
                         onChange={(e) => updateParticipant(index, field.name, e.target.value)}
                         placeholder={field.placeholder}
                         className={baseClasses}
@@ -175,7 +183,7 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
                 return (
                     <input
                         type="number"
-                        value={value}
+                        value={value as string}
                         onChange={(e) => updateParticipant(index, field.name, e.target.value)}
                         placeholder={field.placeholder}
                         min={field.validation?.min}
@@ -188,7 +196,7 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
                 return (
                     <input
                         type="date"
-                        value={value}
+                        value={value as string}
                         onChange={(e) => updateParticipant(index, field.name, e.target.value)}
                         className={baseClasses}
                     />
@@ -197,7 +205,7 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
             case 'textarea':
                 return (
                     <textarea
-                        value={value}
+                        value={value as string}
                         onChange={(e) => updateParticipant(index, field.name, e.target.value)}
                         placeholder={field.placeholder}
                         rows={3}
@@ -208,7 +216,7 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
             case 'select':
                 return (
                     <select
-                        value={value}
+                        value={value as string}
                         onChange={(e) => updateParticipant(index, field.name, e.target.value)}
                         className={baseClasses}
                     >
@@ -287,10 +295,10 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
                         </div>
                     )}
                 </div>
-                
+
                 {quantity > 1 && (
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
+                        <div
                             className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
                             style={{ width: `${((currentStep + 1) / quantity) * 100}%` }}
                         />
@@ -350,9 +358,8 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
                             type="text"
                             value={participant.first_name || ''}
                             onChange={(e) => updateParticipant(currentStep, 'first_name', e.target.value)}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                                errors[`${currentStep}_first_name`] ? 'border-red-300' : 'border-gray-300'
-                            }`}
+                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors[`${currentStep}_first_name`] ? 'border-red-300' : 'border-gray-300'
+                                }`}
                         />
                         {errors[`${currentStep}_first_name`] && (
                             <p className="text-sm text-red-600 mt-1">{errors[`${currentStep}_first_name`]}</p>
@@ -366,9 +373,8 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
                             type="text"
                             value={participant.last_name || ''}
                             onChange={(e) => updateParticipant(currentStep, 'last_name', e.target.value)}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                                errors[`${currentStep}_last_name`] ? 'border-red-300' : 'border-gray-300'
-                            }`}
+                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors[`${currentStep}_last_name`] ? 'border-red-300' : 'border-gray-300'
+                                }`}
                         />
                         {errors[`${currentStep}_last_name`] && (
                             <p className="text-sm text-red-600 mt-1">{errors[`${currentStep}_last_name`]}</p>
@@ -447,7 +453,7 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
                     >
                         Previous
                     </button>
-                    
+
                     <div className="text-sm text-gray-600">
                         {currentStep + 1} of {quantity} participants
                     </div>

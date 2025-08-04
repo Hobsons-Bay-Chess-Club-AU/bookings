@@ -335,33 +335,27 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                                     {p.custom_data && Object.entries(p.custom_data).map(([key, value]) => {
                                                         let displayValue: string
 
-                                                        // Handle arrays
+                                                        // Type guard for FIDE/ACF player object
+                                                        function isPlayerObject(val: unknown): val is { id: string, name: string, std_rating?: number, rapid_rating?: number, blitz_rating?: number } {
+                                                            return (
+                                                                typeof val === 'object' && val !== null &&
+                                                                'id' in val && typeof (val as { id: unknown }).id === 'string' &&
+                                                                'name' in val && typeof (val as { name: unknown }).name === 'string' &&
+                                                                'std_rating' in val
+                                                            )
+                                                        }
+
                                                         if (Array.isArray(value)) {
                                                             displayValue = value.join(', ')
-                                                        }
-                                                        // Handle FIDE/ACF player objects
-                                                        else if (typeof value === 'object' && value !== null) {
-                                                            const obj = value as any
-                                                            // Check if it's a FIDE/ACF player object
-                                                            if (obj.id && obj.name && 'std_rating' in obj) {
-                                                                const ratings = []
-                                                                if (obj.std_rating) ratings.push(`Std: ${obj.std_rating}`)
-                                                                if (obj.rapid_rating) ratings.push(`Rapid: ${obj.rapid_rating}`)
-                                                                if (obj.blitz_rating) ratings.push(`Blitz: ${obj.blitz_rating}`)
-
-                                                                // Check if this is a FIDE player (based on field name or other indicators)
-                                                                const isFidePlayer = key.toLowerCase().includes('fide')
-
-                                                                if (isFidePlayer) {
-                                                                    displayValue = `${obj.name} (ID: ${obj.id})${ratings.length > 0 ? ` - ${ratings.join(', ')}` : ''}`
-                                                                } else {
-                                                                    displayValue = `${obj.name} (ID: ${obj.id})${ratings.length > 0 ? ` - ${ratings.join(', ')}` : ''}`
-                                                                }
-                                                            } else {
-                                                                displayValue = JSON.stringify(value)
-                                                            }
-                                                        }
-                                                        else {
+                                                        } else if (isPlayerObject(value)) {
+                                                            const ratings = []
+                                                            if (value.std_rating) ratings.push(`Std: ${value.std_rating}`)
+                                                            if (value.rapid_rating) ratings.push(`Rapid: ${value.rapid_rating}`)
+                                                            if (value.blitz_rating) ratings.push(`Blitz: ${value.blitz_rating}`)
+                                                            displayValue = `${value.name} (ID: ${value.id})${ratings.length > 0 ? ` - ${ratings.join(', ')}` : ''}`
+                                                        } else if (typeof value === 'object' && value !== null) {
+                                                            displayValue = JSON.stringify(value)
+                                                        } else {
                                                             displayValue = String(value)
                                                         }
 
@@ -369,28 +363,27 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                                             <div key={key}>
                                                                 <span className="font-medium">{key.replace(/_/g, ' ')}:</span>{' '}
                                                                 {/* Special handling for FIDE/ACF player objects with links */}
-                                                                {typeof value === 'object' && value !== null && (value as any).id && (value as any).name && 'std_rating' in (value as any) ? (
+                                                                {isPlayerObject(value) ? (
                                                                     <span>
-                                                                        {(value as any).name} (ID:{' '}
+                                                                        {value.name} (ID:{' '}
                                                                         {key.toLowerCase().includes('fide') ? (
                                                                             <a
-                                                                                href={`https://ratings.fide.com/profile/${(value as any).id}`}
+                                                                                href={`https://ratings.fide.com/profile/${value.id}`}
                                                                                 target="_blank"
                                                                                 rel="noopener noreferrer"
                                                                                 className="text-blue-600 hover:text-blue-800 underline"
                                                                             >
-                                                                                {(value as any).id}
+                                                                                {value.id}
                                                                             </a>
                                                                         ) : (
-                                                                            (value as any).id
+                                                                            value.id
                                                                         )}
                                                                         )
                                                                         {(() => {
-                                                                            const obj = value as any
                                                                             const ratings = []
-                                                                            if (obj.std_rating) ratings.push(`Std: ${obj.std_rating}`)
-                                                                            if (obj.rapid_rating) ratings.push(`Rapid: ${obj.rapid_rating}`)
-                                                                            if (obj.blitz_rating) ratings.push(`Blitz: ${obj.blitz_rating}`)
+                                                                            if (value.std_rating) ratings.push(`Std: ${value.std_rating}`)
+                                                                            if (value.rapid_rating) ratings.push(`Rapid: ${value.rapid_rating}`)
+                                                                            if (value.blitz_rating) ratings.push(`Blitz: ${value.blitz_rating}`)
                                                                             return ratings.length > 0 ? ` - ${ratings.join(', ')}` : ''
                                                                         })()}
                                                                     </span>
@@ -415,7 +408,7 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                         <AddToCalendar event={calendarEvent} />
                                     </div>
                                     <p className="text-sm text-purple-800">
-                                        Don't miss your event! Add it to your calendar to get reminders.
+                                        Don&apos;t miss your event! Add it to your calendar to get reminders.
                                     </p>
                                 </div>
                             )}
@@ -438,7 +431,7 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                 <div className="mt-8 p-4 bg-yellow-50 rounded-lg">
                                     <h3 className="font-medium text-yellow-900 mb-2">Payment Pending</h3>
                                     <p className="text-sm text-yellow-900">
-                                        Your booking is pending payment confirmation. If you've already paid,
+                                        Your booking is pending payment confirmation. If you&apos;ve already paid,
                                         the status will update automatically once payment is processed.
                                     </p>
                                 </div>

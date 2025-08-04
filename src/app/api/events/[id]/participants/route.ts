@@ -3,18 +3,17 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/utils/auth'
 
 export async function GET(
-    request: NextRequest,
-    { params }: { params: { id: string } }
-) {
+    request: NextRequest, context: unknown) {
+    const { params } = context as { params: { id: string } };
     try {
         const supabase = await createClient()
-        const profile = await getCurrentProfile(supabase)
+        const profile = await getCurrentProfile()
 
         if (!profile) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const eventId = params.id
+        const { id: eventId } = params
 
         // Check if user is organizer of this event or admin
         const { data: event, error: eventError } = await supabase
@@ -67,11 +66,11 @@ export async function GET(
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { id: string } }
-) {
+    context: unknown) {
+    const { params } = context as { params: { id: string } };
     try {
         const supabase = await createClient()
-        const profile = await getCurrentProfile(supabase)
+        const profile = await getCurrentProfile()
 
         if (!profile) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -103,8 +102,8 @@ export async function POST(
         }
 
         if (participants.length > booking.quantity) {
-            return NextResponse.json({ 
-                error: `Cannot add ${participants.length} participants. Booking quantity is ${booking.quantity}` 
+            return NextResponse.json({
+                error: `Cannot add ${participants.length} participants. Booking quantity is ${booking.quantity}`
             }, { status: 400 })
         }
 

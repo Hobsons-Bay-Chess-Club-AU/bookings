@@ -1,11 +1,12 @@
 import ContentFormPage from '../../new/page'
 
 interface EditContentPageProps {
-    params: {
+    params: Promise<{
         id: string
-    }
+    }>
 }
 
-export default function EditContentPage({ params }: EditContentPageProps) {
-    return <ContentFormPage params={params} />
+export default async function EditContentPage({ params }: EditContentPageProps) {
+    const { id } = await params
+    return Promise.resolve(<ContentFormPage params={{ id }} />)
 }

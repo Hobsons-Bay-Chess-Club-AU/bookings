@@ -9,7 +9,7 @@ export default function BookingNotFound() {
             Booking Not Found
           </h2>
           <p className="mt-2 text-sm text-gray-800">
-            The booking you're looking for doesn't exist or you don't have permission to view it.
+            The booking you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4">

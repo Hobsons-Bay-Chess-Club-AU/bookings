@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+// ...existing code...
 import { EventPricing } from '@/lib/types/database'
 
 interface Step1PricingProps {
@@ -47,8 +47,8 @@ export default function Step1Pricing({
                             <div
                                 key={pricing.id}
                                 className={`relative rounded-lg border p-4 cursor-pointer ${selectedPricing?.id === pricing.id
-                                        ? 'border-indigo-600 ring-2 ring-indigo-600 bg-indigo-50'
-                                        : 'border-gray-300 hover:border-gray-400'
+                                    ? 'border-indigo-600 ring-2 ring-indigo-600 bg-indigo-50'
+                                    : 'border-gray-300 hover:border-gray-400'
                                     }`}
                                 onClick={() => setSelectedPricing(pricing)}
                             >
@@ -65,9 +65,9 @@ export default function Step1Pricing({
                                             <div className="flex items-center space-x-2">
                                                 <span className="font-medium text-gray-900">{pricing.name}</span>
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${pricing.pricing_type === 'early_bird' ? 'bg-green-100 text-green-800' :
-                                                        pricing.pricing_type === 'regular' ? 'bg-blue-100 text-blue-800' :
-                                                            pricing.pricing_type === 'late_bird' ? 'bg-orange-100 text-orange-800' :
-                                                                'bg-purple-100 text-purple-800'
+                                                    pricing.pricing_type === 'regular' ? 'bg-blue-100 text-blue-800' :
+                                                        pricing.pricing_type === 'late_bird' ? 'bg-orange-100 text-orange-800' :
+                                                            'bg-purple-100 text-purple-800'
                                                     }`}>
                                                     {pricing.pricing_type === 'early_bird' ? 'Early Bird' :
                                                         pricing.pricing_type === 'regular' ? 'Regular' :
@@ -99,9 +99,9 @@ export default function Step1Pricing({
                             <div className="flex items-center space-x-2">
                                 <span className="font-medium text-gray-900">{availablePricing[0].name}</span>
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${availablePricing[0].pricing_type === 'early_bird' ? 'bg-green-100 text-green-800' :
-                                        availablePricing[0].pricing_type === 'regular' ? 'bg-blue-100 text-blue-800' :
-                                            availablePricing[0].pricing_type === 'late_bird' ? 'bg-orange-100 text-orange-800' :
-                                                'bg-purple-100 text-purple-800'
+                                    availablePricing[0].pricing_type === 'regular' ? 'bg-blue-100 text-blue-800' :
+                                        availablePricing[0].pricing_type === 'late_bird' ? 'bg-orange-100 text-orange-800' :
+                                            'bg-purple-100 text-purple-800'
                                     }`}>
                                     {availablePricing[0].pricing_type === 'early_bird' ? 'Early Bird' :
                                         availablePricing[0].pricing_type === 'regular' ? 'Regular' :

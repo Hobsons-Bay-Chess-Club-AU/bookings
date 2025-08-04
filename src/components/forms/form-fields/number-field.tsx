@@ -10,7 +10,7 @@ export default function NumberField({
     return (
         <input
             type="number"
-            value={value || ''}
+            value={value as string || ''}
             onChange={(e) => onChange(e.target.value)}
             placeholder={field.placeholder}
             className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${error ? 'border-red-500' : ''

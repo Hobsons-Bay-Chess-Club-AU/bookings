@@ -199,7 +199,7 @@ export default function EventSettingsModal({ event, isOpen, onClose, onUpdate }:
                                         Show Participants Publicly
                                     </label>
                                     <p className="text-sm text-gray-500 mt-1">
-                                        Display a list of confirmed participants on your event's public page.
+                                        Display a list of confirmed participants on your event&apos;s public page.
                                         This can help build excitement and show the caliber of participants.
                                     </p>
                                 </div>
@@ -243,7 +243,7 @@ export default function EventSettingsModal({ event, isOpen, onClose, onUpdate }:
                                     {settings.participant_display_fields.length === 0 && (
                                         <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                                             <p className="text-sm text-yellow-700">
-                                                ⚠️ Please select at least one field to display. Otherwise, participants won't be shown.
+                                                ⚠️ Please select at least one field to display. Otherwise, participants won&apos;t be shown.
                                             </p>
                                         </div>
                                     )}
@@ -314,7 +314,7 @@ export default function EventSettingsModal({ event, isOpen, onClose, onUpdate }:
                                         <p>
                                             Only information from confirmed participants will be displayed.
                                             Sensitive information like email addresses and phone numbers are never shown publicly.
-                                            Participants can contact you if they don't want their information displayed.
+                                            Participants can contact you if they don&apos;t want their information displayed.
                                         </p>
                                     </div>
                                 </div>

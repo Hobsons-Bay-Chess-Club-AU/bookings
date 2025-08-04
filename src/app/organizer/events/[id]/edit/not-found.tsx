@@ -10,7 +10,7 @@ export default function NotFound() {
                         Event Not Found
                     </h2>
                     <p className="text-gray-600 mb-8">
-                        The event you're trying to edit doesn't exist or you don't have permission to edit it.
+                        The event you&apos;re trying to edit doesn&apos;t exist or you don&apos;t have permission to edit it.
                     </p>
                     <div className="space-y-4">
                         <Link

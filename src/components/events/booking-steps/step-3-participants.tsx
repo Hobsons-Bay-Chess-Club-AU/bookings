@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { Participant, FormField } from '@/lib/types/database'
+import { Participant, FormField, CustomDataValue } from '@/lib/types/database'
 import ParticipantSearchPopup from '../participant-search-popup'
 import { DynamicFormFieldset, isFieldValid } from '@/components/forms'
 
@@ -35,28 +35,6 @@ export default function Step3Participants({
     const isLastParticipant = currentParticipantIndex === quantity - 1
     const isFirstParticipant = currentParticipantIndex === 0
 
-    const areAllParticipantsValid = (): boolean => {
-        for (let i = 0; i < participants.length; i++) {
-            const participant = participants[i]
-
-            // Check required fixed fields
-            if (!participant.first_name?.trim() || !participant.last_name?.trim() || !participant.date_of_birth) {
-                return false
-            }
-
-            // Check required custom fields
-            for (const field of formFields) {
-                if (field.required) {
-                    const value = participant.custom_data?.[field.name]
-                    if (!isFieldValid(field, value)) {
-                        return false
-                    }
-                }
-            }
-        }
-        return true
-    }
-
     const isCurrentParticipantValid = (): boolean => {
         const participant = currentParticipant
 
@@ -83,7 +61,7 @@ export default function Step3Participants({
         setParticipants(newParticipants)
     }
 
-    const handleCustomFieldChange = (fieldName: string, value: any) => {
+    const handleCustomFieldChange = (fieldName: string, value: CustomDataValue) => {
         const newParticipants = [...participants]
         if (!newParticipants[currentParticipantIndex].custom_data) {
             newParticipants[currentParticipantIndex].custom_data = {}
@@ -145,10 +123,10 @@ export default function Step3Participants({
                             <div
                                 key={index}
                                 className={`w-3 h-3 rounded-full ${index < currentParticipantIndex
-                                        ? 'bg-green-500' // Completed
-                                        : index === currentParticipantIndex
-                                            ? 'bg-blue-500' // Current
-                                            : 'bg-gray-300' // Pending
+                                    ? 'bg-green-500' // Completed
+                                    : index === currentParticipantIndex
+                                        ? 'bg-blue-500' // Current
+                                        : 'bg-gray-300' // Pending
                                     }`}
                             />
                         ))}

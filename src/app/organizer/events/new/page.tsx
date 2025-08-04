@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -28,7 +28,6 @@ export default function NewEventPage() {
     const [formFields, setFormFields] = useState<FormField[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
-
     const router = useRouter()
     const supabase = createClient()
 
@@ -76,13 +75,13 @@ export default function NewEventPage() {
                     } else {
                         throw new Error('Failed to generate alias')
                     }
-                } catch (error) {
+                } catch (_) {
                     throw new Error('Failed to generate alias for event')
                 }
             }
 
             // Create event
-            const { data: event, error: eventError } = await supabase
+            const { error: eventError } = await supabase
                 .from('events')
                 .insert({
                     title: formData.title,

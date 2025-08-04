@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { UserRole, Profile } from '@/lib/types/database'
+import { UserRole } from '@/lib/types/database'
 import {
     HiUsers,
     HiShieldCheck,

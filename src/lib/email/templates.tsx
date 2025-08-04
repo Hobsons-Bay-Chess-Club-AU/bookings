@@ -10,15 +10,15 @@ interface BookingConfirmationEmailProps {
   totalAmount: number
   organizerName: string
   organizerEmail: string
-  organizerPhone?: string
   eventDescription?: string
+  organizerPhone?: string
   participants?: Array<{
     first_name: string
     last_name: string
     date_of_birth?: string
     contact_email?: string
     contact_phone?: string
-    custom_data?: Record<string, any>
+    custom_data?: Record<string, unknown>
   }>
 }
 
@@ -118,8 +118,8 @@ export const EventUpdateEmail: React.FC<EventUpdateEmailProps> = ({
   updateType,
   updateDetails,
   organizerName,
-  organizerEmail,
-  organizerPhone
+  organizerEmail
+  // organizerPhone is not used but might be needed in the future
 }) => (
   <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto' }}>
     <div style={{
@@ -175,13 +175,13 @@ export const EventUpdateEmail: React.FC<EventUpdateEmailProps> = ({
 )
 
 interface WelcomeEmailProps {
-  userName: string
-  userEmail: string
+  userName: string,
+  userEmail?: string // Optional, not used in the email but might be needed in the future
 }
 
 export const WelcomeEmail: React.FC<WelcomeEmailProps> = ({
-  userName,
-  userEmail
+  userName
+  // userEmail is not used but might be needed in the future
 }) => (
   <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto' }}>
     <div style={{ backgroundColor: '#f8f9fa', padding: '20px', textAlign: 'center' }}>
@@ -191,7 +191,7 @@ export const WelcomeEmail: React.FC<WelcomeEmailProps> = ({
     <div style={{ padding: '20px' }}>
       <h2 style={{ color: '#2d3748' }}>Hi {userName},</h2>
 
-      <p>Welcome to HBCC Bookings! We're excited to have you on board.</p>
+      <p>Welcome to HBCC Bookings! We&apos;re excited to have you on board.</p>
 
       <div style={{ backgroundColor: '#f7fafc', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
         <h3 style={{ color: '#2d3748', marginTop: '0' }}>What you can do:</h3>
@@ -221,7 +221,7 @@ export const WelcomeEmail: React.FC<WelcomeEmailProps> = ({
 
       <div style={{ textAlign: 'center', marginTop: '30px' }}>
         <p style={{ color: '#718096', fontSize: '14px' }}>
-          If you have any questions, please don't hesitate to contact us.
+          If you have any questions, please don&apos;t hesitate to contact us.
         </p>
       </div>
     </div>
@@ -273,7 +273,7 @@ export const PasswordResetEmail: React.FC<PasswordResetEmailProps> = ({
         <h3 style={{ color: '#2d3748', marginTop: '0' }}>Security Notice</h3>
         <ul style={{ margin: '0', paddingLeft: '20px', color: '#718096' }}>
           <li>This link will expire in 1 hour</li>
-          <li>If you didn't request this reset, you can safely ignore this email</li>
+          <li>If you didn&apos;t request this reset, you can safely ignore this email</li>
           <li>Your password will not be changed until you click the link above</li>
         </ul>
       </div>
@@ -285,4 +285,4 @@ export const PasswordResetEmail: React.FC<PasswordResetEmailProps> = ({
       </div>
     </div>
   </div>
-) 
+)

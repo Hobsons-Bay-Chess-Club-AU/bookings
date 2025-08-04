@@ -166,7 +166,7 @@ export default function RefundRequestButton({ booking, onRefundRequested }: Refu
                                         <div className="mt-2 text-sm text-yellow-700">
                                             <ul className="list-disc list-inside space-y-1">
                                                 <li><strong>Your booking will be cancelled</strong> if the refund is approved</li>
-                                                <li>If you wish to join the event again, you'll need to <strong>book a new ticket</strong></li>
+                                                <li>If you wish to join the event again, you&apos;ll need to <strong>book a new ticket</strong></li>
                                                 <li>Availability is not guaranteed - the event may be sold out</li>
                                                 <li>Ticket prices may have changed since your original booking</li>
                                                 <li>This action cannot be undone once processed</li>

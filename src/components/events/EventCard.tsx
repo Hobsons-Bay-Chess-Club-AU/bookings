@@ -4,10 +4,12 @@ import Link from 'next/link'
 import QRCode from 'react-qr-code'
 import MarkdownContent from '@/components/ui/html-content'
 import CopyButton from '@/components/ui/copy-button'
+import Image from 'next/image'
 import { HiStar, HiMapPin } from 'react-icons/hi2'
+import type { Event } from '@/lib/types/database'
 
 interface EventCardProps {
-  event: any
+  event: Event
 }
 
 export default function EventCard({ event }: EventCardProps) {
@@ -65,10 +67,13 @@ export default function EventCard({ event }: EventCardProps) {
 
       {event.image_url && (
         <div className="h-48 bg-gray-200">
-          <img
+          <Image
             className="h-full w-full object-cover"
             src={event.image_url}
             alt={event.title}
+            width={400}
+            height={200}
+            priority={true}
           />
         </div>
       )}
@@ -84,7 +89,8 @@ export default function EventCard({ event }: EventCardProps) {
               <p className="text-sm text-gray-500">
                 {new Date(event.start_date).toLocaleTimeString([], {
                   hour: '2-digit',
-                  minute: '2-digit'
+                  minute: '2-digit',
+                  hour12: false
                 })}
               </p>
             </div>

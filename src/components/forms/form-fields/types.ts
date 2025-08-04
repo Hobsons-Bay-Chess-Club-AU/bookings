@@ -1,9 +1,10 @@
-import { FormField } from '@/lib/types/database'
+import { CustomDataValue, FormField } from '@/lib/types/database'
+
 
 export interface FormFieldProps {
     field: FormField
-    value: any
-    onChange: (value: any) => void
+    value: unknown
+    onChange: (value: CustomDataValue) => void
     error?: string
     className?: string
     disabled?: boolean

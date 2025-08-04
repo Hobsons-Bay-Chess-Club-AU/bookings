@@ -1,16 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-interface RouteContext {
-    params: {
-        slug: string
-    }
-}
 
 // GET /api/content/[slug] - Get published content by slug
-export async function GET(request: NextRequest, context: RouteContext) {
+export async function GET(request: NextRequest, context: unknown) {
+    const { params } = context as { params: { slug: string } };
     try {
-        const { params } = context
         const supabase = await createClient()
 
         const { data: content, error } = await supabase

@@ -34,7 +34,7 @@ export default function EmailTestPage() {
       } else {
         setResult({ success: false, message: data.error || 'Failed to send email' })
       }
-    } catch (error) {
+    } catch {
       setResult({ success: false, message: 'Network error occurred' })
     } finally {
       setLoading(false)
@@ -119,11 +119,10 @@ export default function EmailTestPage() {
           </form>
 
           {result && (
-            <div className={`mt-6 p-4 rounded-md ${
-              result.success 
-                ? 'bg-green-50 border border-green-200' 
+            <div className={`mt-6 p-4 rounded-md ${result.success
+                ? 'bg-green-50 border border-green-200'
                 : 'bg-red-50 border border-red-200'
-            }`}>
+              }`}>
               <div className="flex">
                 <div className="flex-shrink-0">
                   {result.success ? (
@@ -137,9 +136,8 @@ export default function EmailTestPage() {
                   )}
                 </div>
                 <div className="ml-3">
-                  <p className={`text-sm font-medium ${
-                    result.success ? 'text-green-800' : 'text-red-800'
-                  }`}>
+                  <p className={`text-sm font-medium ${result.success ? 'text-green-800' : 'text-red-800'
+                    }`}>
                     {result.message}
                   </p>
                 </div>

@@ -7,11 +7,11 @@ export default function SelectField({
     error,
     className = ''
 }: FormFieldProps) {
-    const options = field.options as SelectOption[] || []
+    const options = field.options as unknown as SelectOption[] || []
 
     return (
         <select
-            value={value || ''}
+            value={value as string || ''}
             onChange={(e) => onChange(e.target.value)}
             className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${error ? 'border-red-500' : ''
                 } ${className}`}

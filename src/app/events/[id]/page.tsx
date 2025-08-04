@@ -2,18 +2,18 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser, getCurrentProfile } from '@/lib/utils/auth'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import BookingForm from '@/components/events/booking-form'
 import SocialShare from '@/components/events/social-share'
 import EventStructuredData from '@/components/events/event-structured-data'
 import EventQRCode from '@/components/events/event-qr-code'
 import EventBookingSection from '@/components/events/event-booking-section'
 import EventLayout from '@/components/events/event-layout'
 import RefundPolicyDisplay from '@/components/events/refund-policy-display'
-import ParticipantsList from '@/components/events/participants-list'
 import { Event, Booking, Profile } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
 import { Metadata } from 'next'
-import { HiHome, HiCalendarDays, HiMapPin, HiUsers, HiCurrencyDollar } from 'react-icons/hi2'
+import { HiCalendarDays, HiMapPin, HiUsers, HiCurrencyDollar } from 'react-icons/hi2'
+import Image from 'next/image'
+import { BookingWithProfile } from '@/lib/types/ui'
 
 async function getEvent(id: string): Promise<Event | null> {
     const supabase = await createClient()
@@ -34,35 +34,6 @@ async function getEvent(id: string): Promise<Event | null> {
     return event
 }
 
-async function getUserBooking(eventId: string, userId: string): Promise<Booking | null> {
-    const supabase = await createClient()
-
-    const { data: booking, error } = await supabase
-        .from('bookings')
-        .select('*')
-        .eq('event_id', eventId)
-        .eq('user_id', userId)
-        .single()
-
-    if (error || !booking) {
-        return null
-    }
-
-    return booking
-}
-
-interface BookingWithProfile extends Booking {
-    profile: Profile
-    participants?: Array<{
-        id: string
-        first_name: string
-        last_name: string
-        date_of_birth?: string
-        email?: string
-        phone?: string
-        custom_data?: Record<string, any>
-    }>
-}
 
 async function getEventParticipants(eventId: string): Promise<BookingWithProfile[]> {
     const supabase = await createClient()
@@ -194,18 +165,17 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
 export default async function EventPage({ params }: EventPageProps) {
     const { id } = await params
     const event = await getEvent(id)
-    const user = await getCurrentUser()
+    // User information is fetched but used in child components
+    await getCurrentUser()
     const profile = await getCurrentProfile()
 
     if (!event) {
         notFound()
     }
 
-    const userBooking = user ? await getUserBooking(event.id, user.id) : null
     const participants = await getEventParticipants(event.id)
     const isEventFull = event.max_attendees ? event.current_attendees >= event.max_attendees : false
     const isEventPast = new Date(event.start_date) < new Date()
-    const isBookable = event.status === 'published' && !isEventFull && !isEventPast
 
     return (
         <div className="bg-gray-50">
@@ -218,10 +188,14 @@ export default async function EventPage({ params }: EventPageProps) {
                     <div>
                         {event.image_url && (
                             <div className="aspect-w-16 aspect-h-9 mb-8">
-                                <img
+                                <Image
                                     className="w-full h-64 object-cover rounded-lg"
                                     src={event.image_url}
                                     alt={event.title}
+                                    width={800}
+                                    height={400}
+                                    priority
+                                    style={{ objectFit: 'cover' }}
                                 />
                             </div>
                         )}

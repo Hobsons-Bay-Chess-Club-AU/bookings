@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
             } else {
                 setSuccess(true)
             }
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred')
         } finally {
             setLoading(false)
@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
                         Reset your password
                     </h2>
                     <p className="mt-2 text-center text-sm text-gray-600">
-                        Enter your email address and we'll send you a link to reset your password.
+                        Enter your email address and we&apos;ll send you a link to reset your password.
                     </p>
                 </div>
 
@@ -54,7 +54,7 @@ export default function ForgotPasswordPage() {
                     <div className="mt-8 space-y-6">
                         <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded">
                             <p className="text-sm">
-                                Check your email for a link to reset your password. If it doesn't appear within a few minutes, check your spam folder.
+                                Check your email for a link to reset your password. If it doesn&apos;t appear within a few minutes, check your spam folder.
                             </p>
                         </div>
                         <div className="text-center">
@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
                                 {error}
                             </div>
                         )}
-                        
+
                         <div>
                             <label htmlFor="email" className="sr-only">
                                 Email address

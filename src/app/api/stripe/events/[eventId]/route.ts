@@ -7,13 +7,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 })
 
 export async function GET(
-    request: NextRequest,
-    { params }: { params: { eventId: string } }
-) {
+    request: NextRequest, context: unknown) {
+    const { params } = context as { params: { eventId: string } };
     try {
         // Check authentication and authorization
         const profile = await getCurrentProfile()
-        
+
         if (!profile) {
             return NextResponse.json(
                 { error: 'Authentication required' },
@@ -44,10 +43,10 @@ export async function GET(
         // Return the event data (Stripe automatically handles sensitive data filtering)
         return NextResponse.json(event)
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error retrieving Stripe event:', error)
-        
-        if (error.type === 'StripeInvalidRequestError') {
+
+        if (typeof error === 'object' && error !== null && 'type' in error && (error as { type?: string }).type === 'StripeInvalidRequestError') {
             return NextResponse.json(
                 { error: 'Event not found' },
                 { status: 404 }

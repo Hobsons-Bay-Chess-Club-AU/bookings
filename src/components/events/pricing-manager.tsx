@@ -89,8 +89,8 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
             }
 
             resetForm()
-        } catch (err: any) {
-            setError(err.message || 'Failed to save pricing')
+        } catch (err: unknown) {
+            setError((err as Error).message || 'Failed to save pricing')
         } finally {
             setLoading(false)
         }
@@ -124,8 +124,9 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
             setPricing(prev => prev.map(p =>
                 p.id === pricingId ? { ...p, is_active: !currentActive } : p
             ))
-        } catch (err: any) {
-            setError(err.message || 'Failed to update pricing status')
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'Failed to update pricing status'
+            setError(errorMessage)
         } finally {
             setLoading(false)
         }
@@ -144,8 +145,9 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
             if (error) throw error
 
             setPricing(prev => prev.filter(p => p.id !== pricingId))
-        } catch (err: any) {
-            setError(err.message || 'Failed to delete pricing')
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'Failed to delete pricing'
+            setError(errorMessage)
         } finally {
             setLoading(false)
         }
@@ -421,8 +423,8 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
                                     <button
                                         onClick={() => handleToggleActive(pricingItem.id, pricingItem.is_active)}
                                         className={`inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white ${pricingItem.is_active
-                                                ? 'bg-yellow-600 hover:bg-yellow-700'
-                                                : 'bg-green-600 hover:bg-green-700'
+                                            ? 'bg-yellow-600 hover:bg-yellow-700'
+                                            : 'bg-green-600 hover:bg-green-700'
                                             }`}
                                         disabled={loading}
                                     >

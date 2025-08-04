@@ -45,9 +45,10 @@ export default function FidePlayerField({
 
     // Initialize from existing value
     useEffect(() => {
-        if (value && typeof value === 'object' && value.id) {
+        const pvalue = value as PlayerData
+        if (pvalue && typeof pvalue === 'object' && pvalue.id) {
             setSelectedPlayer(value as PlayerData)
-            setQuery(value.name || '')
+            setQuery(pvalue.name || '')
         } else {
             // Clear state when value is null/undefined (switching participants)
             setSelectedPlayer(null)

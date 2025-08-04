@@ -47,7 +47,7 @@ export default async function HomePage() {
               Discover Amazing Events
             </h1>
             <p className="mt-3 max-w-md mx-auto text-base text-indigo-200 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-              Find and book tickets for the best events in your area. From concerts to conferences, we've got you covered.
+              Find and book tickets for the best events in your area. From concerts to conferences, we&apos;ve got you covered.
             </p>
           </div>
         </div>

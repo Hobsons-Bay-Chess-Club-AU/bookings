@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { Event, Booking, EventSettings } from '@/lib/types/database'
+import { Event, EventSettings } from '@/lib/types/database'
 import CopyButton from '@/components/ui/copy-button'
 import EventSettingsModal from '@/components/events/event-settings-modal'
 import { HiCog6Tooth } from 'react-icons/hi2'
@@ -14,14 +14,13 @@ import {
     HiCalendarDays,
     HiMapPin,
     HiUsers,
-    HiEye,
     HiClipboardDocumentList,
     HiPencilSquare,
     HiCog8Tooth,
     HiLink
 } from 'react-icons/hi2'
 
-interface EventWithBookings extends Event {
+export interface EventWithBookings extends Event {
     totalBookings: number
     confirmedBookings: number
     revenue: number

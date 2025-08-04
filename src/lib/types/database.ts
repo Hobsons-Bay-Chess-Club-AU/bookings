@@ -1,3 +1,5 @@
+import { FieldOption } from "@stripe/stripe-js"
+
 export type UserRole = 'user' | 'admin' | 'organizer' | 'customer_support'
 export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'refunded' | 'verified'
 export type RefundStatus = 'none' | 'requested' | 'processing' | 'completed' | 'failed'
@@ -71,7 +73,7 @@ export interface Profile {
     full_name?: string
     avatar_url?: string
     phone?: string
-    role: UserRole
+    role: UserRole // 'user' | 'admin' | 'organizer' | 'customer_support'
     membership_type?: MembershipType
     created_at: string
     updated_at: string
@@ -105,6 +107,15 @@ export interface EventPricing {
     updated_at: string
 }
 
+export interface FormFieldValidation {
+    regex?: string
+    minLength?: number
+    maxLength?: number
+    customMessage?: string
+    min: number
+    max: number
+    accept?: string
+}
 export interface FormField {
     id?: string
     name: string
@@ -112,8 +123,8 @@ export interface FormField {
     description?: string
     type: FormFieldType
     required: boolean
-    options?: any[]
-    validation?: any
+    options?: string[] | number[] | FieldOption[] | undefined
+    validation?: FormFieldValidation | undefined
     placeholder?: string
 }
 
@@ -125,8 +136,8 @@ export interface CustomField {
     description?: string
     type: FormFieldType
     required: boolean
-    options?: any[]
-    validation?: any
+    options?: string[] | number[] | undefined
+    validation?: Record<string, FormFieldValidation> | undefined
     placeholder?: string
     is_global: boolean
     usage_count: number
@@ -134,6 +145,7 @@ export interface CustomField {
     updated_at: string
 }
 
+export type CustomDataValue = string | number | boolean | PlayerData | Record<string, unknown> | null
 export interface Participant {
     id?: string
     booking_id?: string
@@ -142,7 +154,7 @@ export interface Participant {
     email?: string
     phone?: string
     date_of_birth?: string
-    custom_data?: Record<string, any>
+    custom_data?: Record<string, CustomDataValue>
     created_at?: string
     updated_at?: string
 }

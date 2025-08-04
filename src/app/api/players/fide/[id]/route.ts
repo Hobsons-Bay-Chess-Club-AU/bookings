@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PlayerData } from '@/lib/types/database'
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-    const fideId = params.id
+export async function GET(request: NextRequest, context: unknown) {
+    const { params } = context as { params: { id: string } };
+    const { id: fideId } = params
 
     if (!fideId || !/^\d+$/.test(fideId)) {
         return NextResponse.json({ error: 'Invalid FIDE ID' }, { status: 400 })
@@ -109,7 +110,8 @@ function parseFideProfile(html: string, fideId: string): PlayerData | null {
             name: name,
             std_rating: stdRating,
             rapid_rating: rapidRating,
-            blitz_rating: blitzRating
+            blitz_rating: blitzRating,
+            quick_rating: null // ACF specific, not applicable for FIDE
         }
     } catch (error) {
         console.error('Error parsing FIDE profile:', error)

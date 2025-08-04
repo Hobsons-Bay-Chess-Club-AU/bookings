@@ -125,8 +125,8 @@ export async function POST(request: NextRequest) {
         }
 
         // Update booking with Stripe session ID and payment intent ID (if available)
-        const updateData: any = { stripe_session_id: session.id }
-        
+        const updateData: Record<string, unknown> = { stripe_session_id: session.id }
+
         if (paymentIntentId) {
             updateData.stripe_payment_intent_id = paymentIntentId
             console.log('Will store payment intent ID:', paymentIntentId)

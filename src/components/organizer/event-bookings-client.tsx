@@ -2,12 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Event, Booking, Profile } from '@/lib/types/database'
+import { Event } from '@/lib/types/database'
 import { FiSettings, FiEye, FiCreditCard, FiMail, FiPhone, FiUser } from 'react-icons/fi'
-
-interface BookingWithProfile extends Booking {
-    profile: Profile
-}
+import { BookingWithProfile } from '@/lib/types/ui'
 
 type FilterStatus = 'all' | 'confirmed' | 'pending' | 'cancelled' | 'refunded'
 
@@ -42,9 +39,9 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
     const totalRevenue = bookings
         .filter(b => b.status === 'confirmed' || b.status === 'verified')
         .reduce((sum, b) => sum + b.total_amount, 0)
-    const totalTickets = bookings
-        .filter(b => b.status === 'confirmed' || b.status === 'verified')
-        .reduce((sum, b) => sum + b.quantity, 0)
+    // const totalTickets = bookings
+    //     .filter(b => b.status === 'confirmed' || b.status === 'verified')
+    //     .reduce((sum, b) => sum + b.quantity, 0)
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -86,7 +83,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
             const matchesEmail = booking.profile.email.toLowerCase().includes(searchLower)
             const matchesPhone = booking.profile.phone?.toLowerCase().includes(searchLower)
             const matchesId = (booking.booking_id || booking.id).toLowerCase().includes(searchLower)
-            
+
             if (!matchesName && !matchesEmail && !matchesPhone && !matchesId) {
                 return false
             }
@@ -468,135 +465,135 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                     <>
                         <div className="divide-y divide-gray-200">
                             {paginatedBookings.map((booking) => (
-                            <div key={booking.id} className="p-6 hover:bg-gray-50">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                        {/* Header row with name, status, and booking ID */}
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div className="flex items-center space-x-3">
-                                                <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                                                    <FiUser className="mr-2 text-gray-400" />
-                                                    {booking.profile.full_name || 'Unknown Customer'}
-                                                </h3>
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                                                    {getStatusIcon(booking.status)} {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                                                </span>
-                                                {booking.refund_status && booking.refund_status !== 'none' && (
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                                        💰 Refund: {booking.refund_status}
+                                <div key={booking.id} className="p-6 hover:bg-gray-50">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                            {/* Header row with name, status, and booking ID */}
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="flex items-center space-x-3">
+                                                    <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                                                        <FiUser className="mr-2 text-gray-400" />
+                                                        {booking.profile.full_name || 'Unknown Customer'}
+                                                    </h3>
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                                                        {getStatusIcon(booking.status)} {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                                                     </span>
-                                                )}
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="text-lg font-bold text-gray-900">
-                                                    AUD ${booking.total_amount.toFixed(2)}
+                                                    {booking.refund_status && booking.refund_status !== 'none' && (
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                            💰 Refund: {booking.refund_status}
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                <div className="text-sm text-gray-500">
-                                                    {booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}
+                                                <div className="text-right">
+                                                    <div className="text-lg font-bold text-gray-900">
+                                                        AUD ${booking.total_amount.toFixed(2)}
+                                                    </div>
+                                                    <div className="text-sm text-gray-500">
+                                                        {booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        {/* Contact Information */}
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
-                                            <div className="flex items-center">
-                                                <FiMail className="mr-2 text-gray-400" />
-                                                <span>{booking.profile.email}</span>
-                                            </div>
-                                            {booking.profile.phone && (
+                                            {/* Contact Information */}
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
                                                 <div className="flex items-center">
-                                                    <FiPhone className="mr-2 text-gray-400" />
-                                                    <span>{booking.profile.phone}</span>
+                                                    <FiMail className="mr-2 text-gray-400" />
+                                                    <span>{booking.profile.email}</span>
                                                 </div>
-                                            )}
-                                            <div className="flex items-center">
-                                                <span className="mr-2">📅</span>
-                                                <span>
-                                                    Booked {new Date(booking.booking_date || booking.created_at).toLocaleDateString('en-AU')}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Booking ID and Refund Info */}
-                                        <div className="flex items-center justify-between text-sm">
-                                            <div className="flex items-center space-x-4">
-                                                <div className="flex items-center">
-                                                    <span className="mr-2">🆔</span>
-                                                    <span className="font-mono text-gray-900">
-                                                        {booking.booking_id || booking.id.slice(0, 8)}
-                                                    </span>
-                                                </div>
-                                                {booking.refund_amount && (
-                                                    <div className="text-purple-600">
-                                                        <span className="mr-1">💰</span>
-                                                        Refunded: AUD ${booking.refund_amount.toFixed(2)}
-                                                        {booking.refund_processed_at && (
-                                                            <span className="text-gray-500 ml-2">
-                                                                on {formatRefundDate(booking.refund_processed_at)}
-                                                            </span>
-                                                        )}
+                                                {booking.profile.phone && (
+                                                    <div className="flex items-center">
+                                                        <FiPhone className="mr-2 text-gray-400" />
+                                                        <span>{booking.profile.phone}</span>
                                                     </div>
                                                 )}
+                                                <div className="flex items-center">
+                                                    <span className="mr-2">📅</span>
+                                                    <span>
+                                                        Booked {new Date(booking.booking_date || booking.created_at).toLocaleDateString('en-AU')}
+                                                    </span>
+                                                </div>
                                             </div>
+
+                                            {/* Booking ID and Refund Info */}
+                                            <div className="flex items-center justify-between text-sm">
+                                                <div className="flex items-center space-x-4">
+                                                    <div className="flex items-center">
+                                                        <span className="mr-2">🆔</span>
+                                                        <span className="font-mono text-gray-900">
+                                                            {booking.booking_id || booking.id.slice(0, 8)}
+                                                        </span>
+                                                    </div>
+                                                    {booking.refund_amount && (
+                                                        <div className="text-purple-600">
+                                                            <span className="mr-1">💰</span>
+                                                            Refunded: AUD ${booking.refund_amount.toFixed(2)}
+                                                            {booking.refund_processed_at && (
+                                                                <span className="text-gray-500 ml-2">
+                                                                    on {formatRefundDate(booking.refund_processed_at)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Actions Menu */}
+                                        <div className="ml-6 flex-shrink-0 relative">
+                                            <button
+                                                onClick={() => toggleMenu(booking.id)}
+                                                className="inline-flex items-center p-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                            >
+                                                <FiSettings className="w-4 h-4" />
+                                            </button>
+
+                                            {/* Dropdown Menu */}
+                                            {openMenus[booking.id] && (
+                                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-200">
+                                                    <Link
+                                                        href={`/organizer/events/${event.id}/bookings/${booking.id}`}
+                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                        onClick={() => setOpenMenus({})}
+                                                    >
+                                                        <FiEye className="mr-2 w-4 h-4" />
+                                                        View Details
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => openPaymentModal(booking)}
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                    >
+                                                        <FiCreditCard className="mr-2 w-4 h-4" />
+                                                        Payment Info
+                                                    </button>
+                                                    {booking.status === 'pending' && (
+                                                        <button
+                                                            className="flex items-center w-full px-4 py-2 text-sm text-green-700 hover:bg-green-50"
+                                                            title="Manual confirmation (if needed)"
+                                                        >
+                                                            ✓ Mark Confirmed
+                                                        </button>
+                                                    )}
+                                                    {(booking.status === 'confirmed' || booking.status === 'verified') && (
+                                                        <button
+                                                            className="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50"
+                                                            title="Refund booking"
+                                                        >
+                                                            💰 Process Refund
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
-                                    {/* Actions Menu */}
-                                    <div className="ml-6 flex-shrink-0 relative">
-                                        <button
-                                            onClick={() => toggleMenu(booking.id)}
-                                            className="inline-flex items-center p-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                        >
-                                            <FiSettings className="w-4 h-4" />
-                                        </button>
-
-                                        {/* Dropdown Menu */}
-                                        {openMenus[booking.id] && (
-                                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-200">
-                                                <Link
-                                                    href={`/organizer/events/${event.id}/bookings/${booking.id}`}
-                                                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                                    onClick={() => setOpenMenus({})}
-                                                >
-                                                    <FiEye className="mr-2 w-4 h-4" />
-                                                    View Details
-                                                </Link>
-                                                <button
-                                                    onClick={() => openPaymentModal(booking)}
-                                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                                >
-                                                    <FiCreditCard className="mr-2 w-4 h-4" />
-                                                    Payment Info
-                                                </button>
-                                                {booking.status === 'pending' && (
-                                                    <button
-                                                        className="flex items-center w-full px-4 py-2 text-sm text-green-700 hover:bg-green-50"
-                                                        title="Manual confirmation (if needed)"
-                                                    >
-                                                        ✓ Mark Confirmed
-                                                    </button>
-                                                )}
-                                                {(booking.status === 'confirmed' || booking.status === 'verified') && (
-                                                    <button
-                                                        className="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50"
-                                                        title="Refund booking"
-                                                    >
-                                                        💰 Process Refund
-                                                    </button>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
+                                    {/* Click outside to close menus */}
+                                    {openMenus[booking.id] && (
+                                        <div
+                                            className="fixed inset-0 z-5"
+                                            onClick={() => setOpenMenus({})}
+                                        />
+                                    )}
                                 </div>
-
-                                {/* Click outside to close menus */}
-                                {openMenus[booking.id] && (
-                                    <div
-                                        className="fixed inset-0 z-5"
-                                        onClick={() => setOpenMenus({})}
-                                    />
-                                )}
-                            </div>
                             ))}
                         </div>
 
@@ -627,17 +624,16 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                 } else {
                                                     pageNumber = currentPage - 3 + i
                                                 }
-                                                
+
                                                 const isActive = pageNumber === currentPage
                                                 return (
                                                     <button
                                                         key={pageNumber}
                                                         onClick={() => handlePageChange(pageNumber)}
-                                                        className={`px-3 py-2 text-sm font-medium rounded-md ${
-                                                            isActive
-                                                                ? 'bg-indigo-600 text-white'
-                                                                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                                                        }`}
+                                                        className={`px-3 py-2 text-sm font-medium rounded-md ${isActive
+                                                            ? 'bg-indigo-600 text-white'
+                                                            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                                                            }`}
                                                     >
                                                         {pageNumber}
                                                     </button>

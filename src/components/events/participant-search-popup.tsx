@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Participant } from '@/lib/types/database'
+import { CustomDataValue, Participant } from '@/lib/types/database'
 
 interface ParticipantSearchPopupProps {
     isOpen: boolean
@@ -17,7 +17,7 @@ interface RecentParticipant {
     date_of_birth: string
     contact_email?: string
     contact_phone?: string
-    custom_data?: Record<string, any>
+    custom_data?: Record<string, CustomDataValue>
 }
 
 export default function ParticipantSearchPopup({
@@ -30,18 +30,11 @@ export default function ParticipantSearchPopup({
     const [loading, setLoading] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
 
-    useEffect(() => {
-        if (isOpen && userId) {
-            console.log('Opening popup for userId:', userId)
-            fetchRecentParticipants()
-        }
-    }, [isOpen, userId])
-
-    const fetchRecentParticipants = async () => {
+    const fetchRecentParticipants = useCallback(async () => {
         setLoading(true)
         try {
             const supabase = createClient()
-            
+
             // First get all booking IDs for this user
             const { data: userBookings, error: bookingsError } = await supabase
                 .from('bookings')
@@ -53,7 +46,7 @@ export default function ParticipantSearchPopup({
                 console.error('Error fetching user bookings:', bookingsError)
                 return
             }
-            
+
             if (!userBookings || userBookings.length === 0) {
                 console.log('No bookings found for user:', userId)
                 setRecentParticipants([])
@@ -95,7 +88,7 @@ export default function ParticipantSearchPopup({
             // Filter to unique participants by first_name + last_name + date_of_birth
             const uniqueParticipants = data.reduce((acc: RecentParticipant[], participant) => {
                 const key = `${participant.first_name}-${participant.last_name}-${participant.date_of_birth}`
-                const exists = acc.find(p => 
+                const exists = acc.find(p =>
                     `${p.first_name}-${p.last_name}-${p.date_of_birth}` === key
                 )
                 if (!exists) {
@@ -111,7 +104,14 @@ export default function ParticipantSearchPopup({
         } finally {
             setLoading(false)
         }
-    }
+    }, [userId])
+
+    useEffect(() => {
+        if (isOpen && userId) {
+            console.log('Opening popup for userId:', userId)
+            fetchRecentParticipants()
+        }
+    }, [isOpen, userId, fetchRecentParticipants])
 
     const handleSelectParticipant = (participant: RecentParticipant) => {
         onSelectParticipant({
@@ -196,8 +196,8 @@ export default function ParticipantSearchPopup({
                                 {searchTerm ? 'No matches found' : 'No recent participants'}
                             </h3>
                             <p className="text-sm text-gray-500">
-                                {searchTerm 
-                                    ? 'Try adjusting your search terms' 
+                                {searchTerm
+                                    ? 'Try adjusting your search terms'
                                     : 'Your previous participants will appear here after making bookings. Visit /admin/create-test-data to create sample data for testing.'
                                 }
                             </p>
@@ -261,4 +261,4 @@ export default function ParticipantSearchPopup({
             </div>
         </div>
     )
-} 
+}

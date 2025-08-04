@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Event, Booking } from '@/lib/types/database'
+import { Event } from '@/lib/types/database'
 import OrganizerPageClient from '@/app/organizer/page-client'
 
 interface EventWithBookings extends Event {

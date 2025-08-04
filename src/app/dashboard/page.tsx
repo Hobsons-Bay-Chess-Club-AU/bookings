@@ -1,8 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/utils/auth'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import RefundRequestButton from '@/components/dashboard/refund-request-button'
+// ...existing code...
 import { Booking, Event } from '@/lib/types/database'
 import DashboardClient from '@/components/dashboard/dashboard-client'
 

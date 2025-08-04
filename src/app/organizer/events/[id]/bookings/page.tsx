@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Event, Booking } from '@/lib/types/database'
 import EventBookingsPageClient from './page-client'
+import { BookingWithProfile } from '@/lib/types/ui'
 
 export default function EventBookingsPage() {
     const [event, setEvent] = useState<Event | null>(null)
@@ -87,7 +88,7 @@ export default function EventBookingsPage() {
                 <div className="text-center">
                     <h2 className="text-2xl font-bold text-gray-900">Event not found</h2>
                     <p className="text-gray-600 mt-2">
-                        The event you're looking for doesn't exist or you don't have permission to view it.
+                        The event you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.
                     </p>
                 </div>
             </div>
@@ -97,7 +98,7 @@ export default function EventBookingsPage() {
     return (
         <EventBookingsPageClient
             event={event}
-            bookings={bookings}
+            bookings={bookings as unknown as BookingWithProfile[]}
         />
     )
 }

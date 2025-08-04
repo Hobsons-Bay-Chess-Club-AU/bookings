@@ -50,10 +50,13 @@ export default function TimelineBuilder({ eventStartDate, refundTimeline, onChan
         updateItems(newItems)
     }
 
-    const updateItem = (index: number, field: keyof RefundTimelineItem, value: any) => {
+    const updateItem = (index: number, field: keyof RefundTimelineItem, value: unknown) => {
         const newItems = [...items]
         newItems[index] = { ...newItems[index], [field]: value }
-        updateItems(newItems)
+        updateItems(newItems.map(item => ({
+            ...item,
+            description: item.description?.replace(/"([^"]*)"/g, '&quot;$1&quot;')
+        })))
     }
 
     const formatDateTime = (dateStr: string | null): string => {
@@ -93,7 +96,7 @@ export default function TimelineBuilder({ eventStartDate, refundTimeline, onChan
                         <div className="mt-2 text-sm text-yellow-700">
                             <ul className="list-disc pl-5 space-y-1">
                                 <li>Periods should not overlap and should be in chronological order</li>
-                                <li>Leave dates empty for open-ended periods (e.g., "from event creation" or "until event date")</li>
+                                <li>Leave dates empty for open-ended periods (e.g., &quot;from event creation&quot; or &quot;until event date&quot;)</li>
                                 <li>Percentages are calculated based on the original booking amount</li>
                                 <li>Fixed amounts are in AUD</li>
                             </ul>
@@ -191,7 +194,7 @@ export default function TimelineBuilder({ eventStartDate, refundTimeline, onChan
                                     value={item.description || ''}
                                     onChange={(e) => updateItem(index, 'description', e.target.value)}
                                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                    placeholder="e.g., 'Full refund', 'Partial refund', 'No refund'"
+                                    placeholder="e.g., &apos;Full refund&apos;, &apos;Partial refund&apos;, &apos;No refund&apos;"
                                 />
                             </div>
                         </div>

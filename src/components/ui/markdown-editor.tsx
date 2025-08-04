@@ -26,7 +26,7 @@ export default function MarkdownEditor({
       const selectedText = value.substring(start, end)
       const newValue = value.substring(0, start) + before + selectedText + after + value.substring(end)
       onChange(newValue)
-      
+
       // Set cursor position after insertion
       setTimeout(() => {
         textarea.focus()
@@ -40,19 +40,18 @@ export default function MarkdownEditor({
     const textarea = document.querySelector('textarea[data-markdown-editor="true"]') as HTMLTextAreaElement
     if (textarea) {
       const start = textarea.selectionStart
-      const lines = value.split('\n')
       const lineStartPos = value.lastIndexOf('\n', start - 1) + 1
       const lineEndPos = value.indexOf('\n', start)
       const currentLineEnd = lineEndPos === -1 ? value.length : lineEndPos
       const currentLine = value.substring(lineStartPos, currentLineEnd)
-      
+
       // Remove existing header if present
       const cleanLine = currentLine.replace(/^#+\s*/, '')
       const newLine = prefix + cleanLine
-      
+
       const newValue = value.substring(0, lineStartPos) + newLine + value.substring(currentLineEnd)
       onChange(newValue)
-      
+
       setTimeout(() => {
         textarea.focus()
         const newPos = lineStartPos + newLine.length
@@ -68,27 +67,27 @@ export default function MarkdownEditor({
       .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold text-gray-900 mt-4 mb-2">$1</h3>')
       .replace(/^## (.*$)/gim, '<h2 class="text-xl font-semibold text-gray-900 mt-6 mb-3">$1</h2>')
       .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold text-gray-900 mt-6 mb-4">$1</h1>')
-      
+
       // Bold and Italic
       .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      
+
       // Links
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">$1</a>')
-      
+
       // Lists
       .replace(/^\* (.+$)/gim, '<li class="ml-4">• $1</li>')
       .replace(/^(\d+)\. (.+$)/gim, '<li class="ml-4">$1. $2</li>')
-      
+
       // Line breaks
       .replace(/\n\n/g, '</p><p class="mb-3">')
       .replace(/\n/g, '<br/>')
-      
+
       // Wrap in paragraphs
       .replace(/^(?!<[h|l])/gm, '<p class="mb-3">')
       .replace(/(?!>)$/gm, '</p>')
-      
+
       // Clean up extra paragraph tags
       .replace(/<p class="mb-3"><\/p>/g, '')
       .replace(/<p class="mb-3">(<h[1-6])/g, '$1')
@@ -126,9 +125,9 @@ export default function MarkdownEditor({
           >
             H3
           </button>
-          
+
           <div className="w-px h-4 bg-gray-300 mx-1"></div>
-          
+
           <button
             type="button"
             onClick={() => insertText('**', '**')}
@@ -145,9 +144,9 @@ export default function MarkdownEditor({
           >
             I
           </button>
-          
+
           <div className="w-px h-4 bg-gray-300 mx-1"></div>
-          
+
           <button
             type="button"
             onClick={() => insertText('[Link Text](https://example.com)')}
@@ -165,7 +164,7 @@ export default function MarkdownEditor({
             •
           </button>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <button
             type="button"
@@ -190,15 +189,15 @@ export default function MarkdownEditor({
         <div className="p-3 bg-blue-50 border-b border-gray-300 text-xs">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <strong>Headers:</strong><br/>
-              # Heading 1<br/>
-              ## Heading 2<br/>
+              <strong>Headers:</strong><br />
+              # Heading 1<br />
+              ## Heading 2<br />
               ### Heading 3
             </div>
             <div>
-              <strong>Formatting:</strong><br/>
-              **bold text**<br/>
-              *italic text*<br/>
+              <strong>Formatting:</strong><br />
+              **bold text**<br />
+              *italic text*<br />
               [link text](URL)
             </div>
           </div>

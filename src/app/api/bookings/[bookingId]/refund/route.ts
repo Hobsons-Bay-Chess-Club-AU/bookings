@@ -176,7 +176,7 @@ export async function POST(
                     message: 'Refund processed successfully'
                 })
 
-            } catch (stripeError: any) {
+            } catch (stripeError: unknown) {
                 console.error('Stripe refund error:', stripeError)
 
                 // Update booking status to failed

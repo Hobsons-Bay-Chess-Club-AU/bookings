@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         )
-        
+
         // Helper function to capture payment events
         const capturePaymentEvent = async (bookingId: string, eventType: string, eventId: string) => {
             try {
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
                         stripe_event_type: eventType,
                         stripe_event_id: eventId
                     })
-                
+
                 if (error) {
                     console.error('Error capturing payment event:', error)
                 } else {
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
                 console.error('Error capturing payment event:', error)
             }
         }
-        
+
         console.log('🔔 WEBHOOK RECEIVED:', {
             eventType: event.type,
             eventId: event.id,
@@ -85,8 +85,8 @@ export async function POST(request: NextRequest) {
                 }
 
                 // Prepare update data
-                const updateData: any = { status: 'confirmed' }
-                
+                const updateData: Record<string, unknown> = { status: 'confirmed' }
+
                 // Add payment intent ID if available
                 if (session.payment_intent) {
                     updateData.stripe_payment_intent_id = session.payment_intent as string
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
                     updateData: updateData,
                     timestamp: new Date().toISOString()
                 })
-                
+
                 // Capture payment event
                 await capturePaymentEvent(bookingId, event.type, event.id)
                 break
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
                         sessionId: session.id,
                         timestamp: new Date().toISOString()
                     })
-                    
+
                     // Capture payment event
                     await capturePaymentEvent(bookingId, event.type, event.id)
                 }
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
                     paymentIntentId: paymentIntent.id,
                     timestamp: new Date().toISOString()
                 })
-                
+
                 const { data: booking, error: findError } = await supabase
                     .from('bookings')
                     .select(`
@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
                         paymentIntentId: paymentIntent.id,
                         timestamp: new Date().toISOString()
                     })
-                    
+
                     // Only update if booking is not already verified
                     if (booking.status !== 'verified') {
                         console.log('🔄 UPDATING BOOKING STATUS (payment_intent.created):', {
@@ -214,10 +214,10 @@ export async function POST(request: NextRequest) {
                             paymentIntentId: paymentIntent.id,
                             timestamp: new Date().toISOString()
                         })
-                        
+
                         const { error: updateError } = await supabase
                             .from('bookings')
-                            .update({ 
+                            .update({
                                 status: 'verified',
                                 stripe_payment_intent_id: paymentIntent.id
                             })
@@ -233,10 +233,10 @@ export async function POST(request: NextRequest) {
                                 paymentIntentId: paymentIntent.id,
                                 timestamp: new Date().toISOString()
                             })
-                            
+
                             // Capture payment event
                             await capturePaymentEvent(booking.id, event.type, event.id)
-                            
+
                             // Send confirmation email
                             try {
                                 await sendBookingConfirmationEmail({
@@ -282,7 +282,7 @@ export async function POST(request: NextRequest) {
                     paymentIntentId: paymentIntent.id,
                     timestamp: new Date().toISOString()
                 })
-                
+
                 let { data: booking, error: findError } = await supabase
                     .from('bookings')
                     .select(`
@@ -296,7 +296,7 @@ export async function POST(request: NextRequest) {
                 // If not found by payment intent ID, try alternative methods
                 if (findError) {
                     console.log('Payment intent not found directly, trying alternatives...')
-                    
+
                     // Method 1: Try to find by session ID in metadata
                     if (paymentIntent.metadata?.session_id) {
                         console.log('Trying to find by session ID:', paymentIntent.metadata.session_id)
@@ -324,7 +324,7 @@ export async function POST(request: NextRequest) {
                             }
                         }
                     }
-                    
+
                     // Method 2: Try to find any pending booking with null payment intent
                     if (findError) {
                         console.log('Trying to find pending booking with null payment intent...')
@@ -345,7 +345,7 @@ export async function POST(request: NextRequest) {
                             // For safety, only auto-link if there's exactly one recent pending booking
                             const recentBooking = pendingBookings[0]
                             const timeDiff = Date.now() - new Date(recentBooking.created_at).getTime()
-                            
+
                             // Only link if booking was created within last 30 minutes
                             if (timeDiff < 30 * 60 * 1000) {
                                 console.log('Linking recent pending booking:', recentBooking.id)
@@ -369,7 +369,7 @@ export async function POST(request: NextRequest) {
                     paymentIntentId: paymentIntent.id,
                     timestamp: new Date().toISOString()
                 })
-                
+
                 if (!findError && booking) {
                     console.log('📋 FOUND BOOKING (payment_intent.succeeded):', {
                         bookingId: booking.id,
@@ -377,7 +377,7 @@ export async function POST(request: NextRequest) {
                         paymentIntentId: paymentIntent.id,
                         timestamp: new Date().toISOString()
                     })
-                    
+
                     // Only update if booking is still pending or not already verified
                     if (booking.status === 'pending' || booking.status !== 'verified') {
                         console.log('🔄 UPDATING BOOKING STATUS (payment_intent.succeeded):', {
@@ -387,10 +387,10 @@ export async function POST(request: NextRequest) {
                             paymentIntentId: paymentIntent.id,
                             timestamp: new Date().toISOString()
                         })
-                        
+
                         const { error: updateError } = await supabase
                             .from('bookings')
-                            .update({ 
+                            .update({
                                 status: 'verified',
                                 stripe_payment_intent_id: paymentIntent.id // Ensure it's stored
                             })
@@ -406,21 +406,21 @@ export async function POST(request: NextRequest) {
                                 paymentIntentId: paymentIntent.id,
                                 timestamp: new Date().toISOString()
                             })
-                            
+
                             // Capture payment event
                             await capturePaymentEvent(booking.id, event.type, event.id)
-                            
-                                                            // Send confirmation email
-                                try {
-                                    await sendBookingConfirmationEmail({
-                                        booking: booking,
-                                        event: booking.events,
-                                        user: booking.profiles
-                                    })
-                                    console.log('📧 Booking confirmation email sent for payment_intent.succeeded')
-                                } catch (emailError) {
-                                    console.error('❌ Failed to send confirmation email:', emailError)
-                                }
+
+                            // Send confirmation email
+                            try {
+                                await sendBookingConfirmationEmail({
+                                    booking: booking,
+                                    event: booking.events,
+                                    user: booking.profiles
+                                })
+                                console.log('📧 Booking confirmation email sent for payment_intent.succeeded')
+                            } catch (emailError) {
+                                console.error('❌ Failed to send confirmation email:', emailError)
+                            }
                         }
                     }
                 } else {
@@ -460,7 +460,7 @@ export async function POST(request: NextRequest) {
                         if (booking.status === 'pending' || booking.status !== 'verified') {
                             const { error: updateError } = await supabase
                                 .from('bookings')
-                                .update({ 
+                                .update({
                                     status: 'verified',
                                     stripe_payment_intent_id: charge.payment_intent as string // Ensure it's stored
                                 })
@@ -468,18 +468,18 @@ export async function POST(request: NextRequest) {
 
                             if (updateError) {
                                 console.error('Error verifying booking on charge success:', updateError)
-                                                    } else {
-                            console.log('✅ BOOKING STATUS UPDATED (charge.succeeded):', {
-                                bookingId: booking.id,
-                                oldStatus: booking.status,
-                                newStatus: 'verified',
-                                paymentIntentId: charge.payment_intent,
-                                timestamp: new Date().toISOString()
-                            })
-                            
-                            // Capture payment event
-                            await capturePaymentEvent(booking.id, event.type, event.id)
-                                
+                            } else {
+                                console.log('✅ BOOKING STATUS UPDATED (charge.succeeded):', {
+                                    bookingId: booking.id,
+                                    oldStatus: booking.status,
+                                    newStatus: 'verified',
+                                    paymentIntentId: charge.payment_intent,
+                                    timestamp: new Date().toISOString()
+                                })
+
+                                // Capture payment event
+                                await capturePaymentEvent(booking.id, event.type, event.id)
+
                                 // Send confirmation email
                                 try {
                                     await sendBookingConfirmationEmail({
@@ -523,7 +523,7 @@ export async function POST(request: NextRequest) {
                         console.error('Error updating failed payment booking:', updateError)
                     } else {
                         console.log(`Booking ${booking.id} cancelled due to payment failure`)
-                        
+
                         // Capture payment event
                         await capturePaymentEvent(booking.id, event.type, event.id)
                     }
@@ -552,7 +552,7 @@ export async function POST(request: NextRequest) {
                         console.error('Error updating disputed booking:', updateError)
                     } else {
                         console.log(`Booking ${booking.id} cancelled due to payment dispute`)
-                        
+
                         // Capture payment event
                         await capturePaymentEvent(booking.id, event.type, event.id)
                     }
@@ -601,7 +601,7 @@ export async function POST(request: NextRequest) {
             eventId: event.id,
             timestamp: new Date().toISOString()
         })
-        
+
         return NextResponse.json({ received: true })
     } catch (error) {
         console.error('Webhook error:', error)

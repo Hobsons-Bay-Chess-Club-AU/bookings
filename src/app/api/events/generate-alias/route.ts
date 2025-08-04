@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createSimpleClient } from '@/lib/supabase/server'
 
 /**
@@ -26,8 +26,8 @@ async function generateUniqueAlias(): Promise<string> {
 
   while (!isUnique && attempts < maxAttempts) {
     alias = generateRandomAlias()
-    
-    const { data, error } = await supabase
+
+    const { error } = await supabase
       .from('events')
       .select('id')
       .eq('alias', alias)

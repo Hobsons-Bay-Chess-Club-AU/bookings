@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sendWelcomeEmail } from '@/lib/email/service'
 import { createClient } from '@/lib/supabase/server'
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest, _: unknown) {
   try {
     const { userId } = await request.json()
 
@@ -24,10 +24,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Send welcome email
-    await sendWelcomeEmail({
-      userEmail: profile.email,
-      userName: profile.full_name || profile.email
-    })
+    await sendWelcomeEmail(
+      profile.email,
+      profile.full_name || profile.email
+    )
 
     return NextResponse.json({ success: true, message: 'Welcome email sent' })
   } catch (error) {

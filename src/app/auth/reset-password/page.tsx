@@ -63,7 +63,7 @@ export default function ResetPasswordPage() {
                     router.push('/dashboard')
                 }, 3000)
             }
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred')
         } finally {
             setLoading(false)
@@ -118,7 +118,7 @@ export default function ResetPasswordPage() {
                                 {error}
                             </div>
                         )}
-                        
+
                         <div className="space-y-4">
                             <div>
                                 <label htmlFor="password" className="sr-only">

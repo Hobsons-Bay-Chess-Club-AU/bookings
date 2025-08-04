@@ -6,9 +6,9 @@ import { Content } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
 
 interface ContentPageProps {
-    params: {
+    params: Promise<{
         slug: string
-    }
+    }>
 }
 
 // Fetch content for the page

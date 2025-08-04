@@ -1,3 +1,4 @@
+import { CustomDataValue } from '@/lib/types/database'
 import { FormFieldProps, SelectOption } from './types'
 import { useState } from 'react'
 
@@ -14,7 +15,7 @@ export default function MultiSelectField({
         if (typeof opt === 'string') {
             return { value: opt, label: opt }
         }
-        return opt as SelectOption
+        return opt as unknown as SelectOption
     })
 
     const selectedValues = Array.isArray(value) ? value : []
@@ -24,7 +25,7 @@ export default function MultiSelectField({
         const newValues = selectedValues.includes(optionValue)
             ? selectedValues.filter(v => v !== optionValue)
             : [...selectedValues, optionValue]
-        onChange(newValues)
+        onChange(newValues as unknown as CustomDataValue)
     }
 
     const selectedLabels = selectedValues

@@ -86,7 +86,7 @@ export default function CookieConsent({ onAccept, onDecline }: CookieConsentProp
                                         <div className="text-xs text-gray-500 space-y-1">
                                             <p><strong>Essential Cookies:</strong> Authentication, session management, security</p>
                                             <p><strong>Data Retention:</strong> Session cookies expire when you close your browser</p>
-                                            <p><strong>No Tracking:</strong> We don't use advertising or analytics cookies</p>
+                                            <p><strong>No Tracking:</strong> We don&apos;t use advertising or analytics cookies</p>
                                         </div>
                                     </div>
                                 </div>

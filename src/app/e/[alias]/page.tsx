@@ -10,11 +10,6 @@ interface PageProps {
 export default async function ShortUrlPage({ params }: PageProps) {
   const { alias } = await params
 
-  console.log('alias', alias)
-  if (!alias || alias.length !== 5) {
-    //redirect('/')
-  }
-
   const supabase = createServiceClient()
 
   const { data: event, error } = await supabase
@@ -23,7 +18,6 @@ export default async function ShortUrlPage({ params }: PageProps) {
     .eq('alias', alias.toUpperCase())
     .single()
 
-    console.log('event', event, error)
   if (error || !event) {
     redirect('/')
   }

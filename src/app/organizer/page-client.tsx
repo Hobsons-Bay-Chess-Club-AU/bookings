@@ -1,10 +1,10 @@
 'use client'
 
-import OrganizerEventsClient from '@/components/organizer/organizer-events-client'
+import OrganizerEventsClient, { EventWithBookings } from '@/components/organizer/organizer-events-client'
 import Link from 'next/link'
 
 interface OrganizerPageClientProps {
-    events: any[]
+    events: unknown[]
     totalRevenue: number
     totalBookings: number
 }
@@ -47,7 +47,7 @@ export default function OrganizerPageClient({
             </div>
 
             <OrganizerEventsClient
-                events={events}
+                events={events as unknown as EventWithBookings[]} 
                 totalRevenue={totalRevenue}
                 totalBookings={totalBookings}
             />

@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
@@ -13,10 +14,13 @@ const SiteNav = dynamic(() => import('./site-nav'), {
                 <div className="flex justify-between items-center py-6">
                     <div className="flex items-center">
                         <Link href="/" className="flex items-center">
-                            <img
+                            <Image
                                 src="/chess-logo.svg"
                                 alt="HBCC Logo"
+                                width={32}
+                                height={32}
                                 className="h-8 w-8 mr-3"
+                                priority
                             />
                             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Hobsons Bay Chess Club</h1>
                         </Link>
@@ -79,10 +83,13 @@ export default function NavWrapper({ className, showTitle = true }: NavWrapperPr
                         {showTitle && (
                             <div className="flex items-center">
                                 <Link href="/" className="flex items-center">
-                                    <img
+                                    <Image
                                         src="/chess-logo.svg"
                                         alt="HBCC Logo"
+                                        width={32}
+                                        height={32}
                                         className="h-8 w-8 mr-3"
+                                        priority
                                     />
                                     <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Hobsons Bay Chess Club</h1>
                                 </Link>

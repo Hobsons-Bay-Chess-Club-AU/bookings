@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Profile } from '@/lib/types/database'
 import AdminNav from '@/components/layout/admin-nav'
 
 interface AdminLayoutProps {
@@ -17,8 +16,7 @@ export default function AdminLayout({
     requiredRole = 'organizer',
     className = ''
 }: AdminLayoutProps) {
-    const [user, setUser] = useState<any>(null)
-    const [profile, setProfile] = useState<Profile | null>(null)
+    // Removed unused user and profile state
     const [loading, setLoading] = useState(true)
     const [authorized, setAuthorized] = useState(false)
     const router = useRouter()
@@ -28,39 +26,29 @@ export default function AdminLayout({
         const checkAuth = async () => {
             try {
                 const { data: { user }, error: userError } = await supabase.auth.getUser()
-
                 if (userError || !user) {
                     router.push('/auth/login')
                     return
                 }
-
-                setUser(user)
-
                 const { data: profileData, error: profileError } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('id', user.id)
                     .single()
-
                 if (profileError || !profileData) {
                     router.push('/unauthorized')
                     return
                 }
-
-                setProfile(profileData)
-
                 // Check role authorization
                 const hasPermission = requiredRole === 'organizer'
                     ? ['admin', 'organizer'].includes(profileData.role)
                     : requiredRole === 'customer_support'
                         ? ['admin', 'customer_support'].includes(profileData.role)
                         : profileData.role === 'admin'
-
                 if (!hasPermission) {
                     router.push('/unauthorized')
                     return
                 }
-
                 setAuthorized(true)
             } catch (error) {
                 console.error('Auth check error:', error)
@@ -69,17 +57,14 @@ export default function AdminLayout({
                 setLoading(false)
             }
         }
-
         checkAuth()
-
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             if (!session?.user) {
                 router.push('/auth/login')
             }
         })
-
         return () => subscription.unsubscribe()
-    }, [supabase.auth, router, requiredRole])
+    }, [supabase, router, requiredRole])
 
     if (loading) {
         return (

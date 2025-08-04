@@ -5,7 +5,7 @@ import { getCurrentProfile } from '@/lib/utils/auth'
 export async function GET(request: NextRequest) {
     try {
         const supabase = await createClient()
-        const profile = await getCurrentProfile(supabase)
+        const profile = await getCurrentProfile()
 
         if (!profile) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const supabase = await createClient()
-        const profile = await getCurrentProfile(supabase)
+        const profile = await getCurrentProfile()
 
         if (!profile) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -83,8 +83,8 @@ export async function POST(request: NextRequest) {
 
         // Validate required fields
         if (!name || !label || !type) {
-            return NextResponse.json({ 
-                error: 'Name, label, and type are required' 
+            return NextResponse.json({
+                error: 'Name, label, and type are required'
             }, { status: 400 })
         }
 
@@ -105,8 +105,8 @@ export async function POST(request: NextRequest) {
         }
 
         if (existing) {
-            return NextResponse.json({ 
-                error: 'A field with this name already exists' 
+            return NextResponse.json({
+                error: 'A field with this name already exists'
             }, { status: 400 })
         }
 

@@ -1,12 +1,8 @@
 'use client'
 
-import AdminLayout from '@/components/layout/admin-layout'
 import EventBookingsClient from '@/components/organizer/event-bookings-client'
-import { Event, Booking, Profile } from '@/lib/types/database'
-
-interface BookingWithProfile extends Booking {
-    profile: Profile
-}
+import { Event, } from '@/lib/types/database'
+import { BookingWithProfile } from '@/lib/types/ui'
 
 interface EventBookingsPageClientProps {
     event: Event

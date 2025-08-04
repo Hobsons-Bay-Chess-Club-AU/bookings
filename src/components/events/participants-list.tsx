@@ -1,20 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Booking, Event, Profile } from '@/lib/types/database'
+import { Event, } from '@/lib/types/database'
+import { BookingWithProfile } from '@/lib/types/ui'
 
-interface BookingWithProfile extends Booking {
-    profile: Profile
-    participants?: Array<{
-        id: string
-        first_name: string
-        last_name: string
-        date_of_birth?: string
-        email?: string
-        phone?: string
-        custom_data?: Record<string, any>
-    }>
-}
 
 interface ParticipantsListProps {
     event: Event
@@ -70,7 +59,7 @@ export default function ParticipantsList({
             booking.profile.full_name || '',
             booking.profile.email || ''
         ].join(' ').toLowerCase()
-        
+
         return searchableText.includes(searchTerm.toLowerCase())
     })    // Helper function to get field value
     const getFieldValue = (booking: BookingWithProfile, fieldId: string): string => {
@@ -79,15 +68,15 @@ export default function ParticipantsList({
             // Check if booking has participants with custom data
             if (booking.participants && booking.participants.length > 0) {
                 const participant = booking.participants[0] // For now, get first participant
-                
+
                 // Check if it's a sub-field (e.g., custom_fide_id_name, custom_fide_id_std_rating, custom_acf_id_quick_rating)
-                if (fieldId.includes('_name') || fieldId.includes('_id') || fieldId.includes('_std_rating') || 
+                if (fieldId.includes('_name') || fieldId.includes('_id') || fieldId.includes('_std_rating') ||
                     fieldId.includes('_rapid_rating') || fieldId.includes('_blitz_rating') || fieldId.includes('_quick_rating')) {
-                    
+
                     // Extract base field name and sub-field more accurately
                     let baseFieldName: string
                     let subField: string
-                    
+
                     if (fieldId.endsWith('_std_rating')) {
                         baseFieldName = fieldId.replace('custom_', '').replace('_std_rating', '')
                         subField = 'std_rating'
@@ -109,20 +98,20 @@ export default function ParticipantsList({
                     } else {
                         return '-'
                     }
-                    
+
                     const customValue = participant.custom_data?.[baseFieldName]
-                    
+
                     if (!customValue || typeof customValue !== 'object') {
                         return '-'
                     }
-                    
+
                     // Handle FIDE/ACF player object sub-fields
                     if (customValue.id && customValue.name && ('std_rating' in customValue || 'quick_rating' in customValue)) {
                         switch (subField) {
                             case 'name':
-                                return customValue.name || '-'
+                                return (customValue.name as string) || '-'
                             case 'id':
-                                return customValue.id || '-'
+                                return (customValue.id as string) || '-'
                             case 'std_rating':
                                 return customValue.std_rating ? customValue.std_rating.toString() : '-'
                             case 'rapid_rating':
@@ -135,60 +124,60 @@ export default function ParticipantsList({
                                 return '-'
                         }
                     }
-                    
+
                     return '-'
                 }
-                
+
                 // Regular custom field (not a sub-field)
                 const customFieldName = fieldId.replace('custom_', '')
                 const customValue = participant.custom_data?.[customFieldName]
-                
+
                 // Handle null/undefined values
                 if (!customValue) return '-'
-                
+
                 // Handle arrays
                 if (Array.isArray(customValue)) {
                     return customValue.join(', ')
                 }
-                
+
                 // Handle FIDE/ACF player objects
                 if (typeof customValue === 'object') {
                     // Check if it's a player object (FIDE or ACF)
                     if (customValue.id && customValue.name && ('std_rating' in customValue || 'quick_rating' in customValue)) {
                         const ratings = []
                         if (customValue.std_rating) ratings.push(`Std: ${customValue.std_rating}`)
-                        
+
                         // FIDE has rapid and blitz ratings
                         if (customValue.rapid_rating) ratings.push(`Rapid: ${customValue.rapid_rating}`)
                         if (customValue.blitz_rating) ratings.push(`Blitz: ${customValue.blitz_rating}`)
-                        
+
                         // ACF has quick rating
                         if (customValue.quick_rating) ratings.push(`Quick: ${customValue.quick_rating}`)
-                        
+
                         return `${customValue.name} (ID: ${customValue.id})${ratings.length > 0 ? ` - ${ratings.join(', ')}` : ''}`
                     }
-                    
+
                     // Handle other object types - try to display meaningful information
                     if (customValue.name) {
-                        return customValue.name
-                    } else if (customValue.label) {
-                        return customValue.label
-                    } else if (customValue.title) {
-                        return customValue.title
+                        return customValue.name as string
+                        // } else if (customValue.label as string) {
+                        //     return customValue.label as string
+                        // } else if (customValue.title) {
+                        //     return customValue.title as string
                     } else {
                         // Fallback for generic objects - show key-value pairs
                         const entries = Object.entries(customValue)
-                            .filter(([key, value]) => value !== null && value !== undefined && value !== '')
+                            .filter(([, value]) => value !== null && value !== undefined && value !== '')
                             .slice(0, 3) // Limit to first 3 entries to avoid too long text
-                        
+
                         if (entries.length > 0) {
                             return entries.map(([key, value]) => `${key}: ${value}`).join(', ')
                         }
-                        
+
                         return '[Complex Data]'
                     }
                 }
-                
+
                 // Handle primitive values
                 return customValue?.toString() || '-'
             }
@@ -209,7 +198,7 @@ export default function ParticipantsList({
                 return booking.profile.full_name?.split(' ').slice(1).join(' ') || 'Player'
             case 'date_of_birth':
                 if (booking.participants && booking.participants.length > 0) {
-                    return booking.participants[0].date_of_birth ? 
+                    return booking.participants[0].date_of_birth ?
                         new Date(booking.participants[0].date_of_birth).toLocaleDateString() : '-'
                 }
                 return '-'
@@ -233,13 +222,13 @@ export default function ParticipantsList({
         // Handle custom fields and their sub-fields
         if (fieldId.startsWith('custom_')) {
             // Check if it's a sub-field (e.g., custom_fide_id_name, custom_fide_id_std_rating, custom_acf_id_quick_rating)
-            if (fieldId.includes('_name') || fieldId.includes('_id') || fieldId.includes('_std_rating') || 
+            if (fieldId.includes('_name') || fieldId.includes('_id') || fieldId.includes('_std_rating') ||
                 fieldId.includes('_rapid_rating') || fieldId.includes('_blitz_rating') || fieldId.includes('_quick_rating')) {
-                
+
                 // Extract base field name and sub-field using same logic as getFieldValue
                 let baseFieldName: string
                 let subField: string
-                
+
                 if (fieldId.endsWith('_std_rating')) {
                     baseFieldName = fieldId.replace('custom_', '').replace('_std_rating', '')
                     subField = 'std_rating'
@@ -261,7 +250,7 @@ export default function ParticipantsList({
                 } else {
                     return fieldId.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
                 }
-                
+
                 // Try to find the base custom field definition
                 let baseLabel = baseFieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
                 if (event.custom_form_fields) {
@@ -270,7 +259,7 @@ export default function ParticipantsList({
                         baseLabel = customField.label
                     }
                 }
-                
+
                 // Return appropriate sub-field label
                 switch (subField) {
                     case 'name':
@@ -289,7 +278,7 @@ export default function ParticipantsList({
                         return `${baseLabel} - ${subField.replace(/\b\w/g, l => l.toUpperCase())}`
                 }
             }
-            
+
             // Regular custom field (not a sub-field)
             const customFieldName = fieldId.replace('custom_', '')
             // Try to find the custom field definition in the event
@@ -474,7 +463,7 @@ export default function ParticipantsList({
                                                             const value = getFieldValue(booking, fieldId)
                                                             if (value && value !== '-') {
                                                                 return (
-                                                                    <a 
+                                                                    <a
                                                                         href={`https://ratings.fide.com/profile/${value}`}
                                                                         target="_blank"
                                                                         rel="noopener noreferrer"
@@ -486,7 +475,7 @@ export default function ParticipantsList({
                                                             }
                                                             return value
                                                         }
-                                                        
+
                                                         const value = getFieldValue(booking, fieldId)
                                                         // Handle long values by truncating but showing full value in tooltip
                                                         if (value.length > 50) {
@@ -652,17 +641,16 @@ export default function ParticipantsList({
                                     } else {
                                         pageNumber = currentPage - 3 + i
                                     }
-                                    
+
                                     const isActive = pageNumber === currentPage
                                     return (
                                         <button
                                             key={pageNumber}
                                             onClick={() => handlePageChange(pageNumber)}
-                                            className={`px-3 py-2 text-sm font-medium rounded-md ${
-                                                isActive
-                                                    ? 'bg-indigo-600 text-white'
-                                                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                                            }`}
+                                            className={`px-3 py-2 text-sm font-medium rounded-md ${isActive
+                                                ? 'bg-indigo-600 text-white'
+                                                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                                                }`}
                                         >
                                             {pageNumber}
                                         </button>

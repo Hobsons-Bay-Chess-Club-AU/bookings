@@ -15,11 +15,12 @@ interface BookingFormProps {
     onStepChange?: (step: number) => void // Callback for when booking step changes
 }
 
-function isBookable(event: Event) {
-    const now = new Date()
-    if (event.entry_close_date && new Date(event.entry_close_date) < now) return false
-    return event.status === 'published' && (event.max_attendees == null || event.current_attendees < event.max_attendees)
-}
+// Function removed as it was unused
+// function isBookable(event: Event) {
+//     const now = new Date()
+//     if (event.entry_close_date && new Date(event.entry_close_date) < now) return false
+//     return event.status === 'published' && (event.max_attendees == null || event.current_attendees < event.max_attendees)
+// }
 
 export default function BookingForm({ event, user, onStepChange }: BookingFormProps) {
     const [step, setStep] = useState(1) // 1: Pricing & Quantity, 2: Contact Info, 3: Participant Info, 4: Review, 5: Checkout
@@ -71,16 +72,16 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                 // Set form fields from event
                 setFormFields(event.custom_form_fields || [])
 
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error('Error fetching data:', err)
-                setError(err.message || 'Failed to load event data')
+                setError((err as Error).message || 'Failed to load event data')
             } finally {
                 setPricingLoading(false)
             }
         }
 
         fetchData()
-    }, [event.id, user?.membership_type])
+    }, [event.id, user?.membership_type, event.custom_form_fields])
 
     // Notify parent component when step changes
     useEffect(() => {
@@ -165,32 +166,32 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
         setStep(4)
     }
 
-    // Check if all participants have valid data (for button state)
-    const areAllParticipantsValid = (): boolean => {
-        if (participants.length !== quantity) {
-            return false
-        }
+    // Function removed as it was unused
+    // const areAllParticipantsValid = (): boolean => {
+    //     if (participants.length !== quantity) {
+    //         return false
+    //     }
 
-        for (let i = 0; i < participants.length; i++) {
-            const participant = participants[i]
+    //     for (let i = 0; i < participants.length; i++) {
+    //         const participant = participants[i]
 
-            // Check required fixed fields
-            if (!participant.first_name?.trim() || !participant.last_name?.trim()) {
-                return false
-            }
+    //         // Check required fixed fields
+    //         if (!participant.first_name?.trim() || !participant.last_name?.trim()) {
+    //             return false
+    //         }
 
-            // Check required custom fields
-            for (const field of formFields) {
-                if (field.required) {
-                    const value = participant.custom_data?.[field.name]
-                    if (!value || value === '') {
-                        return false
-                    }
-                }
-            }
-        }
-        return true
-    }
+    //         // Check required custom fields
+    //         for (const field of formFields) {
+    //             if (field.required) {
+    //                 const value = participant.custom_data?.[field.name]
+    //                 if (!value || value === '') {
+    //                     return false
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return true
+    // }
 
     const validateParticipants = (): boolean => {
         for (let i = 0; i < participants.length; i++) {
@@ -318,8 +319,8 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
 
             setCurrentBookingId(booking.id)
             setStep(5)
-        } catch (err: any) {
-            setError(err.message || 'Failed to complete booking')
+        } catch (err: unknown) {
+            setError((err as Error).message || 'Failed to complete booking')
         } finally {
             setLoading(false)
         }
@@ -422,7 +423,7 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                                 Booking in Progress
                             </h3>
                             <div className="mt-2 text-sm text-blue-700">
-                                <p>Your booking is being processed. Please don't close this page or navigate away.</p>
+                                <p>Your booking is being processed. Please don&apos;t close this page or navigate away.</p>
                             </div>
                         </div>
                     </div>

@@ -9,7 +9,7 @@ export default function TextAreaField({
 }: FormFieldProps) {
     return (
         <textarea
-            value={value || ''}
+            value={value as string || ''}
             onChange={(e) => onChange(e.target.value)}
             placeholder={field.placeholder}
             rows={3}

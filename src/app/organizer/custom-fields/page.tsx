@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { CustomField, FormFieldType } from '@/lib/types/database'
+import { useState, useEffect, useCallback } from 'react'
+// import { createClient } from '@/lib/supabase/client'
+import { CustomField, FormField, FormFieldType } from '@/lib/types/database'
 import FormBuilder from '@/components/events/form-builder'
 import { HiDocumentText, HiUser, HiGlobeAlt, HiStar } from 'react-icons/hi2'
 
@@ -16,7 +16,7 @@ export default function CustomFieldsPage() {
     const [isCreating, setIsCreating] = useState(false)
     const [editingField, setEditingField] = useState<CustomField | null>(null)
 
-    const supabase = createClient()
+    // (supabase client import removed, not used)
 
     const fieldTypes: { value: FormFieldType | 'all'; label: string }[] = [
         { value: 'all', label: 'All Types' },
@@ -34,11 +34,7 @@ export default function CustomFieldsPage() {
         { value: 'acf_id', label: 'ACF Player' }
     ]
 
-    useEffect(() => {
-        fetchCustomFields()
-    }, [searchTerm, filterType, showPopular])
-
-    const fetchCustomFields = async () => {
+    const fetchCustomFields = useCallback(async () => {
         try {
             setLoading(true)
 
@@ -59,13 +55,17 @@ export default function CustomFieldsPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [searchTerm, filterType, showPopular])
 
-    const handleCreateField = async (formFields: any[]) => {
+    useEffect(() => {
+        fetchCustomFields()
+    }, [fetchCustomFields])
+
+    const handleCreateField = async (formFields: FormField[]) => {
         if (formFields.length === 0) return
 
-        const newField = formFields[0] // We're only creating one at a time
-
+        // Convert FormField to CustomField shape for API
+        const newField = formFields[0]
         try {
             const response = await fetch('/api/organizer/custom-fields', {
                 method: 'POST',
@@ -85,11 +85,11 @@ export default function CustomFieldsPage() {
         }
     }
 
-    const handleUpdateField = async (formFields: any[]) => {
+    const handleUpdateField = async (formFields: FormField[]) => {
         if (!editingField || formFields.length === 0) return
 
+        // Convert FormField to CustomField shape for API
         const updatedField = formFields[0]
-
         try {
             const response = await fetch(`/api/organizer/custom-fields/${editingField.id}`, {
                 method: 'PUT',
@@ -443,7 +443,7 @@ export default function CustomFieldsPage() {
                                     </div>
 
                                     <FormBuilder
-                                        fields={[convertToFormField(editingField)]}
+                                        fields={[convertToFormField(editingField) as FormField]}
                                         onChange={handleUpdateField}
                                     />
 

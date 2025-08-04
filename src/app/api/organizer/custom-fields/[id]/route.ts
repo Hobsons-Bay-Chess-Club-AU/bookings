@@ -3,12 +3,13 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/utils/auth'
 
 export async function GET(
-    request: NextRequest,
-    { params }: { params: { id: string } }
-) {
+    request: NextRequest
+    , context: unknown) {
+    const { params } = context as { params: { id: string } };
+
     try {
         const supabase = await createClient()
-        const profile = await getCurrentProfile(supabase)
+        const profile = await getCurrentProfile()
 
         if (!profile) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -35,12 +36,11 @@ export async function GET(
 }
 
 export async function PUT(
-    request: NextRequest,
-    { params }: { params: { id: string } }
-) {
+    request: NextRequest, context: unknown) {
+    const { params } = context as { params: { id: string } };
     try {
         const supabase = await createClient()
-        const profile = await getCurrentProfile(supabase)
+        const profile = await getCurrentProfile()
 
         if (!profile) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -65,8 +65,8 @@ export async function PUT(
 
         // Validate required fields
         if (!name || !label || !type) {
-            return NextResponse.json({ 
-                error: 'Name, label, and type are required' 
+            return NextResponse.json({
+                error: 'Name, label, and type are required'
             }, { status: 400 })
         }
 
@@ -82,8 +82,8 @@ export async function PUT(
         }
 
         // Check permissions
-        const canEdit = existingField.organizer_id === profile.id || 
-                       (existingField.is_global && profile.role === 'admin')
+        const canEdit = existingField.organizer_id === profile.id ||
+            (existingField.is_global && profile.role === 'admin')
 
         if (!canEdit) {
             return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
@@ -105,8 +105,8 @@ export async function PUT(
             }
 
             if (duplicate) {
-                return NextResponse.json({ 
-                    error: 'A field with this name already exists' 
+                return NextResponse.json({
+                    error: 'A field with this name already exists'
                 }, { status: 400 })
             }
         }
@@ -142,12 +142,12 @@ export async function PUT(
 }
 
 export async function DELETE(
-    request: NextRequest,
-    { params }: { params: { id: string } }
-) {
+    request: NextRequest
+    , context: unknown) {
+    const { params } = context as { params: { id: string } };
     try {
         const supabase = await createClient()
-        const profile = await getCurrentProfile(supabase)
+        const profile = await getCurrentProfile()
 
         if (!profile) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -171,8 +171,8 @@ export async function DELETE(
         }
 
         // Check permissions
-        const canDelete = existingField.organizer_id === profile.id || 
-                         (existingField.is_global && profile.role === 'admin')
+        const canDelete = existingField.organizer_id === profile.id ||
+            (existingField.is_global && profile.role === 'admin')
 
         if (!canDelete) {
             return NextResponse.json({ error: 'Permission denied' }, { status: 403 })

@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+// ...existing code...
 import { Content } from '@/lib/types/database'
-import { 
-    HiCog6Tooth, 
-    HiEye, 
-    HiPencilSquare, 
+import {
+    HiCog6Tooth,
+    HiEye,
+    HiPencilSquare,
     HiClock,
     HiTrash,
     HiShieldCheck
@@ -39,9 +39,9 @@ export default function CMSPage() {
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
     const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({})
-    const router = useRouter()
+    // ...existing code...
 
-    const fetchContent = async (page = 1, search = searchTerm, published = publishedFilter) => {
+    const fetchContent = useCallback(async (page = 1, search = searchTerm, published = publishedFilter) => {
         try {
             setLoading(true)
             const params = new URLSearchParams({
@@ -68,11 +68,11 @@ export default function CMSPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [pagination.limit, publishedFilter, searchTerm])
 
     useEffect(() => {
         fetchContent()
-    }, [])
+    }, [fetchContent])
 
     // Close dropdown when clicking outside
     useEffect(() => {

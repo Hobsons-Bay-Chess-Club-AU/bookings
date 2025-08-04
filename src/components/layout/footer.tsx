@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Footer() {
     const currentYear = new Date().getFullYear()
@@ -10,10 +11,13 @@ export default function Footer() {
                     {/* About Section */}
                     <div className="col-span-1 md:col-span-2">
                         <div className="flex items-center mb-4">
-                            <img
+                            <Image
                                 src="/chess-logo.svg"
                                 alt="HBCC Logo"
+                                width={32}
+                                height={32}
                                 className="h-8 w-8 mr-3"
+                                priority
                             />
                             <h3 className="text-lg font-bold">Hobsons Bay Chess Club</h3>
                         </div>

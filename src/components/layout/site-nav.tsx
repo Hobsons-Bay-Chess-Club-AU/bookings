@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import LogoutButton from '@/components/auth/logout-button'
@@ -53,7 +54,6 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
             try {
                 console.log('Fetching user data from Supabase...')
                 const { data: { user }, error: userError } = await supabase.auth.getUser()
-                console.error('User data:', user)
                 if (userError) {
                     console.error('Error getting user:', userError)
                 }
@@ -107,7 +107,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
         })
 
         return () => subscription.unsubscribe()
-    }, [supabase.auth])
+    }, [supabase])
 
     // Close dropdown when clicking outside or pressing escape
     useEffect(() => {
@@ -155,10 +155,13 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                         {showTitle && (
                             <div className="flex items-center">
                                 <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
-                                    <img
+                                    <Image
                                         src="/chess-logo.svg"
                                         alt="HBCC Logo"
+                                        width={32}
+                                        height={32}
                                         className="h-8 w-8 mr-3"
+                                        priority
                                     />
                                     <h1 className="text-2xl font-bold text-gray-900">Hobsons Bay Chess Club</h1>
                                 </Link>
@@ -180,10 +183,13 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                     {showTitle && (
                         <div className="flex items-center">
                             <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
-                                <img
+                                <Image
                                     src="/chess-logo.svg"
                                     alt="HBCC Logo"
+                                    width={32}
+                                    height={32}
                                     className="h-8 w-8 mr-3"
+                                    priority
                                 />
                                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Hobsons Bay Chess Club</h1>
                             </Link>
@@ -463,10 +469,13 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                             {/* Header with logo and close button */}
                             <div className="flex justify-between items-center px-4 py-4 border-b border-gray-200">
                                 <div className="flex items-center">
-                                    <img
+                                    <Image
                                         src="/chess-logo.svg"
                                         alt="HBCC Logo"
+                                        width={32}
+                                        height={32}
                                         className="h-8 w-8 mr-3"
+                                        priority
                                     />
                                     <h1 className="text-xl font-bold text-gray-900">Hobsons Bay Chess Club</h1>
                                 </div>

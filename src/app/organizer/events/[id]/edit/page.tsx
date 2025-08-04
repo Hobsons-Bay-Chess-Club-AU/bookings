@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import AdminLayout from '@/components/layout/admin-layout'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
@@ -139,7 +138,7 @@ export default function EditEventPage() {
                     } else {
                         throw new Error('Failed to generate alias')
                     }
-                } catch (error) {
+                } catch (_) {
                     throw new Error('Failed to generate alias for event')
                 }
             }

@@ -95,7 +95,8 @@ function parseFideSearchResults(html: string): PlayerData[] {
                 name: name,
                 std_rating: stdRating,
                 rapid_rating: rapidRating,
-                blitz_rating: blitzRating
+                blitz_rating: blitzRating,
+                quick_rating: null // ACF specific, not applicable for FIDE
             })
         }
     } catch (error) {

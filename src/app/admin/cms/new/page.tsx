@@ -1,10 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import AdminLayout from '@/components/layout/admin-layout'
 import MarkdownEditor from '@/components/ui/markdown-editor'
-import { Content } from '@/lib/types/database'
 
 interface ContentFormData {
     title: string
@@ -38,13 +36,7 @@ export default function ContentFormPage({ params }: ContentFormPageProps) {
     const router = useRouter()
 
     // Load existing content for editing
-    useEffect(() => {
-        if (isEdit && params.id) {
-            fetchContent(params.id)
-        }
-    }, [isEdit, params.id])
-
-    const fetchContent = async (id: string) => {
+    const fetchContent = useCallback(async (id: string) => {
         try {
             const response = await fetch(`/api/admin/content/${id}`)
             const data = await response.json()
@@ -68,7 +60,13 @@ export default function ContentFormPage({ params }: ContentFormPageProps) {
         } finally {
             setLoading(false)
         }
-    }
+    }, [router])
+
+    useEffect(() => {
+        if (isEdit && params.id) {
+            fetchContent(params.id)
+        }
+    }, [isEdit, params.id, fetchContent])
 
     const generateSlug = (title: string) => {
         return title

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import TurndownService from 'turndown'
-import AdminLayout from '@/components/layout/admin-layout'
+// ...existing code...
 
 // Simple Rich Text Editor component
 function SimpleRichTextEditor({ value, onChange, placeholder }: {
@@ -203,14 +203,14 @@ function HtmlToMarkdownConverter() {
 </ol>
 
 <blockquote>
-    <p>"Chess is the gymnasium of the mind." - <em>Blaise Pascal</em></p>
+    <p>&quot;Chess is the gymnasium of the mind.&quot; - <em>Blaise Pascal</em></p>
 </blockquote>
 
 <p>For more information, visit our <a href="https://example.com">website</a> or contact us at <code>info@hbcc.org</code>.</p>
 
 <hr>
 
-<p><mark>Important:</mark> Registration closes 2 days before the event. <u>Don't miss out!</u></p>`
+<p><mark>Important:</mark> Registration closes 2 days before the event. <u>Don&apos;t miss out!</u></p>`
 
         setHtmlContent(sampleHtml)
     }
@@ -234,7 +234,7 @@ function HtmlToMarkdownConverter() {
                 <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
                     <li>Paste or type rich content in the visual editor below</li>
                     <li>You can paste directly from Word, Google Docs, or other rich text sources</li>
-                    <li>Click "Convert to Markdown" to see the result</li>
+                    <li>Click &quot;Convert to Markdown&quot; to see the result</li>
                     <li>Copy the Markdown output to use in your event descriptions</li>
                     <li>Use the sample content to see how different elements convert</li>
                 </ol>

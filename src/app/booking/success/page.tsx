@@ -52,7 +52,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                             Booking Not Found
                         </h2>
                         <p className="mt-2 text-sm text-gray-800">
-                            We couldn't find your booking. Please check your email for confirmation.
+                            We couldn&apos;t find your booking. Please check your email for confirmation.
                         </p>
                     </div>
                     <Link
@@ -190,15 +190,15 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                                     <AddToCalendar event={calendarEvent} />
                                 </div>
                                 <p className="text-sm text-purple-800">
-                                    Don't miss your event! Add it to your calendar to get reminders.
+                                    Don&apos;t miss your event! Add it to your calendar to get reminders.
                                 </p>
                             </div>
 
                             {/* Next Steps */}
                             <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                                <h3 className="font-medium text-blue-900 mb-2">What's Next?</h3>
+                                <h3 className="font-medium text-blue-900 mb-2">What&apos;s Next?</h3>
                                 <ul className="text-sm text-blue-900 space-y-1">
-                                    <li>• You'll receive a confirmation email shortly</li>
+                                    <li>• You&apos;ll receive a confirmation email shortly</li>
                                     <li>• Save this page or take a screenshot for your records</li>
                                     <li>• Arrive at the venue 15 minutes before the event starts</li>
                                     <li>• Bring a valid ID for entry</li>

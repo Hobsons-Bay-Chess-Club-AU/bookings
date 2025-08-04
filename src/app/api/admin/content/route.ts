@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import { Content } from '@/lib/types/database'
 
 // GET /api/admin/content - List all content
 export async function GET(request: NextRequest) {

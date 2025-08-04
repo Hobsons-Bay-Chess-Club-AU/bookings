@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { Event, Participant, Booking, Profile } from '@/lib/types/database'
 
 interface ParticipantWithBooking extends Participant {
@@ -214,7 +213,7 @@ export default function EventParticipantsPageClient({
                         <div className="flex items-center space-x-4">
                             <span className="text-blue-600 mr-2">🔍</span>
                             <span className="text-sm text-blue-800">
-                                Showing {filteredParticipants.length} of {participants.length} participant{filteredParticipants.length !== 1 ? 's' : ''} matching "{searchTerm}"
+                                Showing {filteredParticipants.length} of {participants.length} participant{filteredParticipants.length !== 1 ? 's' : ''} matching &quot;{searchTerm}&quot;
                             </span>
                         </div>
                         <button
@@ -450,8 +449,8 @@ export default function EventParticipantsPageClient({
                                                         key={pageNumber}
                                                         onClick={() => handlePageChange(pageNumber)}
                                                         className={`px-3 py-2 text-sm font-medium rounded-md ${isActive
-                                                                ? 'bg-indigo-600 text-white'
-                                                                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                                                            ? 'bg-indigo-600 text-white'
+                                                            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
                                                             }`}
                                                     >
                                                         {pageNumber}

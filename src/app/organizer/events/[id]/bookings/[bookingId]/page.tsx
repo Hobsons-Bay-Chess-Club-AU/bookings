@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import AdminLayout from '@/components/layout/admin-layout';
 import Link from 'next/link';
 import { Booking, Event, Profile, Participant } from '@/lib/types/database';
 import {
@@ -16,7 +15,6 @@ import {
     HiMapPin,
     HiEnvelope,
     HiPhone,
-    HiBanknotes,
     HiReceiptRefund,
     HiIdentification,
     HiCreditCard,
@@ -401,9 +399,9 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">Status:</span>
                                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${booking.refund_status === 'completed' ? 'bg-green-100 text-green-800' :
-                                            booking.refund_status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                                                booking.refund_status === 'requested' ? 'bg-yellow-100 text-yellow-800' :
-                                                    'bg-red-100 text-red-800'
+                                        booking.refund_status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                                            booking.refund_status === 'requested' ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-red-100 text-red-800'
                                         }`}>
                                         {booking.refund_status}
                                     </span>

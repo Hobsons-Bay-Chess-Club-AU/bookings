@@ -1,16 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-interface RouteContext {
-    params: {
-        id: string
-    }
-}
-
 // GET /api/admin/content/[id] - Get specific content
-export async function GET(request: NextRequest, context: RouteContext) {
+export async function GET(request: NextRequest, context: unknown) {
+    const { params } = context as { params: { id: string } };
     try {
-        const { params } = context
         const supabase = await createClient()
 
         // Check if user is admin
@@ -67,9 +61,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
 }
 
 // PUT /api/admin/content/[id] - Update content
-export async function PUT(request: NextRequest, context: RouteContext) {
+export async function PUT(request: NextRequest, context: unknown) {
+    const { params } = context as { params: { id: string } };
     try {
-        const { params } = context
         const supabase = await createClient()
 
         // Check if user is admin
@@ -136,9 +130,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 }
 
 // DELETE /api/admin/content/[id] - Delete content
-export async function DELETE(request: NextRequest, context: RouteContext) {
+export async function DELETE(request: NextRequest, context: unknown) {
+    const { params } = context as { params: { id: string } };
     try {
-        const { params } = context
         const supabase = await createClient()
 
         // Check if user is admin

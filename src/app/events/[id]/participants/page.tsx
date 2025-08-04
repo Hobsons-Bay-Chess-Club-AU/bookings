@@ -4,6 +4,7 @@ import Link from 'next/link'
 import ParticipantsList from '@/components/events/participants-list'
 import { Event, Booking, Profile } from '@/lib/types/database'
 import { Metadata } from 'next'
+import { BookingWithProfile } from '@/lib/types/ui'
 
 async function getEvent(id: string): Promise<Event | null> {
     const supabase = await createClient()
@@ -20,22 +21,10 @@ async function getEvent(id: string): Promise<Event | null> {
     if (error || !event) {
         return null
     }
-
     return event
 }
 
-interface BookingWithProfile extends Booking {
-    profile: Profile
-    participants?: Array<{
-        id: string
-        first_name: string
-        last_name: string
-        date_of_birth?: string
-        email?: string
-        phone?: string
-        custom_data?: Record<string, any>
-    }>
-}
+
 
 async function getEventParticipants(eventId: string): Promise<BookingWithProfile[]> {
     const supabase = await createClient()

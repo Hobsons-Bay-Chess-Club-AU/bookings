@@ -98,9 +98,9 @@ export default function Step4Review({
                                     // Handle different value types
                                     let displayValue = value
                                     if (typeof value === 'object' && value !== null) {
-                                        if (value.name) {
+                                        if (((value as unknown) as { name: string }).name) {
                                             // For player objects, show the name
-                                            displayValue = value.name
+                                            displayValue = ((value as unknown) as { name: string }).name
                                         } else if (Array.isArray(value)) {
                                             // For arrays, join with commas
                                             displayValue = value.join(', ')
@@ -112,7 +112,7 @@ export default function Step4Review({
 
                                     return (
                                         <div key={field.id} className="text-sm text-gray-600">
-                                            <span className="font-medium">{field.label}:</span> {displayValue}
+                                            <span className="font-medium">{field.label}:</span> {displayValue as string}
                                         </div>
                                     )
                                 })}

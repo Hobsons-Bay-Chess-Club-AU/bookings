@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function SignupPage() {
@@ -13,7 +12,6 @@ export default function SignupPage() {
     const [error, setError] = useState('')
     const [message, setMessage] = useState('')
 
-    const router = useRouter()
     const supabase = createClient()
 
     const handleSignup = async (e: React.FormEvent) => {
@@ -37,7 +35,7 @@ export default function SignupPage() {
                 setError(error.message)
             } else {
                 setMessage('Check your email for the confirmation link!')
-                
+
                 // Send welcome email if user was created successfully
                 if (data.user) {
                     try {
@@ -56,7 +54,7 @@ export default function SignupPage() {
                     }
                 }
             }
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred')
         } finally {
             setLoading(false)
