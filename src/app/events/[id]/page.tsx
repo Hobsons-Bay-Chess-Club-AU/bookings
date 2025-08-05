@@ -9,6 +9,7 @@ import EventBookingSection from '@/components/events/event-booking-section'
 import EventLayout from '@/components/events/event-layout'
 import RefundPolicyDisplay from '@/components/events/refund-policy-display'
 import ChatWidget from '@/components/messaging/chat-widget'
+import EventChatClient from './event-chat-client'
 import { Event, Booking, Profile } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
 import { Metadata } from 'next'
@@ -327,11 +328,13 @@ export default async function EventPage({ params }: EventPageProps) {
                 </EventLayout>
             </div>
 
-            {/* Chat Widget - Always visible on event page */}
-            <ChatWidget 
-                event={event} 
-                organizer={event.organizer} 
-            />
+            {/* Chat Widget - Only visible when not in booking journey */}
+            {event.organizer && (
+                <EventChatClient 
+                    event={event} 
+                    organizer={event.organizer} 
+                />
+            )}
             
             {/* Simple Chat Test */}
             {/* <SimpleChatTest /> */}

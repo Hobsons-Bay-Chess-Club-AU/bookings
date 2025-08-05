@@ -52,8 +52,8 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
     useEffect(() => {
         const getUser = async () => {
             try {
-                console.log('Fetching user data from Supabase...')
-                const { data: { user }, error: userError } = await supabase.auth.getUser()
+                const s = await supabase.auth.getSession();
+                const { data: { user }, error: userError } = await supabase.auth.getUser(s.data.session?.access_token)
                 if (userError) {
                     console.error('Error getting user:', userError)
                 }

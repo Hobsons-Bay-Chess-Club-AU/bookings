@@ -10,6 +10,7 @@ import RefundPolicyDisplay from '@/components/events/refund-policy-display'
 import RefundRequestButton from '@/components/dashboard/refund-request-button'
 import ContactOrganizerButton from '@/components/messaging/contact-organizer-button'
 import ChatWidget from '@/components/messaging/chat-widget'
+import BookingDetailsClient from './booking-details-client'
 
 async function getBooking(bookingId: string, userId: string): Promise<(Booking & { event: Event }) | null> {
     const supabase = await createClient()
@@ -462,9 +463,9 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                 </div>
             </div>
 
-            {/* Chat Widget - Always visible on booking page */}
+            {/* Chat Widget - Only visible when not in booking journey */}
             {booking.event.organizer && (
-                <ChatWidget 
+                <BookingDetailsClient 
                     event={booking.event}
                     organizer={booking.event.organizer}
                     bookingId={booking.id}

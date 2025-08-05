@@ -8,9 +8,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
     try {
-        const { bookingId, eventId, quantity, amount, eventTitle, optInMarketing } = await request.json()
+        const requestBody = await request.json()
+        const { bookingId, eventId, quantity, amount, eventTitle, optInMarketing } = requestBody
 
         if (!bookingId || !eventId || !quantity || !amount || !eventTitle) {
+            console.log('❌ [create-checkout-session] Missing required fields:', {
+                hasBookingId: !!bookingId,
+                hasEventId: !!eventId,
+                hasQuantity: !!quantity,
+                hasAmount: !!amount,
+                hasEventTitle: !!eventTitle
+            })
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
@@ -24,13 +32,18 @@ export async function POST(request: NextRequest) {
             .from('bookings')
             .select(`
                 *,
-                user:profiles(email, full_name)
+                user:profiles!bookings_user_id_fkey(email, full_name)
             `)
             .eq('id', bookingId)
             .eq('status', 'pending')
             .single()
 
         if (bookingError || !booking) {
+            console.log('❌ [create-checkout-session] Invalid booking:', {
+                bookingId,
+                error: bookingError?.message,
+                bookingExists: !!booking
+            })
             return NextResponse.json(
                 { error: 'Invalid booking' },
                 { status: 400 }
@@ -61,7 +74,7 @@ export async function POST(request: NextRequest) {
                         })
                 }
             } catch (error) {
-                console.error('Error handling mailing list opt-in:', error)
+                console.error('❌ [create-checkout-session] Error handling mailing list opt-in:', error)
                 // Don't fail the checkout if mailing list fails
             }
         }
@@ -74,15 +87,34 @@ export async function POST(request: NextRequest) {
             .single()
 
         if (eventError || !event) {
+            console.log('❌ [create-checkout-session] Event not found:', {
+                eventId,
+                error: eventError?.message,
+                eventExists: !!event
+            })
             return NextResponse.json({ error: 'Event not found' }, { status: 400 })
         }
+        
         if (event.status !== 'published' || event.status === 'entry_closed') {
+            console.log('❌ [create-checkout-session] Event not open for booking:', {
+                eventId,
+                status: event.status
+            })
             return NextResponse.json({ error: 'This event is not open for booking.' }, { status: 400 })
         }
         if (event.max_attendees != null && event.current_attendees >= event.max_attendees) {
+            console.log('❌ [create-checkout-session] Event is sold out:', {
+                eventId,
+                max: event.max_attendees,
+                current: event.current_attendees
+            })
             return NextResponse.json({ error: 'This event is sold out.' }, { status: 400 })
         }
         if (event.entry_close_date && new Date(event.entry_close_date) < new Date()) {
+            console.log('❌ [create-checkout-session] Entry close date has passed:', {
+                eventId,
+                entryCloseDate: event.entry_close_date
+            })
             return NextResponse.json({ error: 'Entries for this event are now closed (entry close date has passed).' }, { status: 400 })
         }
 
@@ -123,7 +155,6 @@ export async function POST(request: NextRequest) {
         }
 
         const session = await stripe.checkout.sessions.create(sessionConfig)
-        console.log('Initial session created:', session.id, 'payment_intent:', session.payment_intent)
 
         // Try to get payment intent from initial session first
         let paymentIntentId = session.payment_intent as string | null
@@ -134,11 +165,6 @@ export async function POST(request: NextRequest) {
                 const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
                     expand: ['payment_intent']
                 })
-                console.log('Retrieved full session:', {
-                    id: fullSession.id,
-                    payment_intent: fullSession.payment_intent,
-                    payment_status: fullSession.payment_status
-                })
 
                 if (fullSession.payment_intent && typeof fullSession.payment_intent !== 'string') {
                     paymentIntentId = fullSession.payment_intent.id
@@ -146,7 +172,7 @@ export async function POST(request: NextRequest) {
                     paymentIntentId = fullSession.payment_intent
                 }
             } catch (retrieveError) {
-                console.error('Error retrieving full session:', retrieveError)
+                console.error('❌ [create-checkout-session] Error retrieving full session:', retrieveError)
             }
         }
 
@@ -155,9 +181,6 @@ export async function POST(request: NextRequest) {
 
         if (paymentIntentId) {
             updateData.stripe_payment_intent_id = paymentIntentId
-            console.log('Will store payment intent ID:', paymentIntentId)
-        } else {
-            console.log('No payment intent ID available yet - will be updated via webhooks')
         }
 
         const { error: updateError } = await supabase
@@ -166,21 +189,19 @@ export async function POST(request: NextRequest) {
             .eq('id', bookingId)
 
         if (updateError) {
-            console.error('Error updating booking with session info:', updateError)
-        } else {
-            console.log('Successfully updated booking with:', updateData)
+            console.error('❌ [create-checkout-session] Error updating booking with Stripe data:', updateError)
+            return NextResponse.json(
+                { error: 'Failed to update booking with payment information' },
+                { status: 500 }
+            )
         }
 
-        console.log('Final checkout session result:', {
+        return NextResponse.json({
             sessionId: session.id,
-            paymentIntentId: paymentIntentId,
-            bookingId,
-            hasPaymentIntent: !!paymentIntentId
+            url: session.url
         })
-
-        return NextResponse.json({ sessionId: session.id })
     } catch (error) {
-        console.error('Error creating checkout session:', error)
+        console.error('❌ [create-checkout-session] Unexpected error:', error)
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

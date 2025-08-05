@@ -8,6 +8,7 @@ import Step1Pricing from './booking-steps/step-1-pricing'
 import Step2Contact from './booking-steps/step-2-contact'
 import Step3Participants from './booking-steps/step-3-participants'
 import Step4Review from './booking-steps/step-4-review'
+import { useBookingJourney } from '@/contexts/BookingJourneyContext'
 
 interface BookingFormProps {
     event: Event
@@ -45,6 +46,9 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
     const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
     const supabase = createClient()
+    
+    // Use booking journey context
+    const { setIsInBookingJourney, setBookingStep } = useBookingJourney()
 
     const totalAmount = selectedPricing ? selectedPricing.price * quantity : (event.price * quantity)
     const maxQuantity = event.max_attendees
@@ -110,6 +114,12 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
     useEffect(() => {
         onStepChange?.(step)
     }, [step, onStepChange])
+
+    // Update booking journey context when step changes
+    useEffect(() => {
+        setIsInBookingJourney(step > 1)
+        setBookingStep(step)
+    }, [step, setIsInBookingJourney, setBookingStep])
 
     // Auto-select pricing when available pricing changes
     useEffect(() => {

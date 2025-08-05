@@ -123,7 +123,8 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
     useEffect(() => {
         const getUser = async () => {
             try {
-                const { data: { user }, error: userError } = await supabase.auth.getUser()
+                const s = await supabase.auth.getSession();
+                const { data: { user }, error: userError } = await supabase.auth.getUser(s.data.session?.access_token)
 
                 if (userError) {
                     console.error('Error getting user:', userError)
