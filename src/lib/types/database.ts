@@ -82,6 +82,11 @@ export interface EventSettings {
     allow_participant_contact?: boolean
 }
 
+export interface LocationSettings {
+    map_url?: string
+    direction_url?: string
+}
+
 export interface Profile {
     id: string
     email: string
@@ -192,6 +197,7 @@ export interface Event {
     timeline?: EventTimeline
     is_promoted?: boolean
     settings?: EventSettings
+    location_settings?: LocationSettings
     created_at: string
     updated_at: string
     organizer?: Profile

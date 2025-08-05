@@ -25,7 +25,11 @@ export default function EditEventPage() {
         organizer_email: '',
         organizer_phone: '',
         status: 'draft' as 'draft' | 'published',
-        is_promoted: false
+        is_promoted: false,
+        location_settings: {
+            map_url: '',
+            direction_url: ''
+        }
     })
     const [formFields, setFormFields] = useState<FormField[]>([])
     const [refundTimeline, setRefundTimeline] = useState<RefundTimelineItem[]>([])
@@ -85,7 +89,8 @@ export default function EditEventPage() {
                     organizer_email: eventData.organizer_email || '',
                     organizer_phone: eventData.organizer_phone || '',
                     status: eventData.status,
-                    is_promoted: eventData.is_promoted || false
+                    is_promoted: eventData.is_promoted || false,
+                    location_settings: eventData.location_settings || { map_url: '', direction_url: '' }
                 })
 
                 // Set form fields
@@ -112,6 +117,7 @@ export default function EditEventPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        console.log('🔄 Starting event update...')
         setLoading(true)
         setError('')
         setSuccess('')
@@ -120,14 +126,18 @@ export default function EditEventPage() {
         try {
             // Validate form before submission
             if (!validateForm()) {
+                console.log('❌ Form validation failed')
                 setError('Please fix the errors below before saving')
                 setLoading(false)
                 return
             }
 
+            console.log('✅ Form validation passed')
+
             // Handle alias for published events
             let alias: string | null = event?.alias || null
             if (formData.status === 'published' && !event?.alias) {
+                console.log('🔄 Generating alias for published event...')
                 try {
                     const response = await fetch('/api/events/generate-alias', {
                         method: 'POST',
@@ -139,10 +149,11 @@ export default function EditEventPage() {
                     if (response.ok) {
                         const data = await response.json()
                         alias = data.alias
+                        console.log('✅ Alias generated:', alias)
                     } else {
                         throw new Error('Failed to generate alias')
                     }
-                } catch (_) {
+                } catch {
                     throw new Error('Failed to generate alias for event')
                 }
             }
@@ -152,6 +163,26 @@ export default function EditEventPage() {
             if (enableRefunds && refundTimeline.length > 0) {
                 timeline.refund = refundTimeline
             }
+
+            // Clean location_settings - remove empty strings and properly encode URLs
+            const cleanedLocationSettings = {
+                map_url: formData.location_settings.map_url?.trim() ? encodeURI(formData.location_settings.map_url.trim()) : null,
+                direction_url: formData.location_settings.direction_url?.trim() ? encodeURI(formData.location_settings.direction_url.trim()) : null
+            }
+            
+            // Only include location_settings if at least one field has a value
+            const finalLocationSettings = (cleanedLocationSettings.map_url || cleanedLocationSettings.direction_url) 
+                ? cleanedLocationSettings 
+                : {}
+
+            console.log('🔄 Updating event in database...', {
+                eventId,
+                locationSettings: finalLocationSettings,
+                locationSettingsType: typeof finalLocationSettings,
+                locationSettingsStringified: JSON.stringify(finalLocationSettings),
+                originalMapUrl: formData.location_settings.map_url,
+                encodedMapUrl: cleanedLocationSettings.map_url
+            })
 
             // Update event
             const { error: eventError } = await supabase
@@ -174,14 +205,18 @@ export default function EditEventPage() {
                     custom_form_fields: formFields,
                     timeline: Object.keys(timeline).length > 0 ? timeline : null,
                     is_promoted: formData.is_promoted,
+                    location_settings: finalLocationSettings,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', eventId)
 
+            console.log('🔄 Event updated successfully!', { eventError })
             if (eventError) {
+                console.error('❌ Database update error:', eventError)
                 throw new Error(eventError.message)
             }
 
+            console.log('✅ Event updated successfully!')
             setSuccess('Event updated successfully!')
             setError('')
             
@@ -190,10 +225,11 @@ export default function EditEventPage() {
                 router.push('/organizer')
             }, 1500)
         } catch (err) {
+            console.error('❌ Event update error:', err)
             const errorMessage = err instanceof Error ? err.message : 'An error occurred while updating the event'
             setError(errorMessage)
-            console.error('Event update error:', err)
         } finally {
+            console.log('🔄 Setting loading to false')
             setLoading(false)
         }
     }
@@ -480,6 +516,72 @@ export default function EditEventPage() {
                                     {fieldErrors.location}
                                 </p>
                             )}
+                        </div>
+
+                        {/* Location Settings */}
+                        <div className="md:col-span-2 pt-6 border-t border-gray-200">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">
+                                Location Settings
+                            </h3>
+                            <p className="text-sm text-gray-600 mb-4">
+                                Add embedded map and directions to help attendees find your event location.
+                            </p>
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <label htmlFor="map_url" className="block text-sm font-medium text-gray-700">
+                                Embedded Map URL
+                            </label>
+                            <input
+                                type="url"
+                                id="map_url"
+                                name="map_url"
+                                value={formData.location_settings.map_url}
+                                onChange={(e) => {
+                                    let value = e.target.value.trim();
+                                    // If user pasted an iframe, extract the src attribute
+                                    const iframeMatch = value.match(/<iframe[^>]*src=["']([^"']+)["']/i);
+                                    if (iframeMatch) {
+                                        value = iframeMatch[1];
+                                    }
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        location_settings: {
+                                            ...prev.location_settings,
+                                            map_url: value
+                                        }
+                                    }));
+                                }}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                placeholder="https://www.google.com/maps/embed?pb=... or paste the &lt;iframe&gt; code here"
+                            />
+                            <p className="mt-1 text-sm text-gray-500">
+                                Paste the embed URL from Google Maps, or the full &lt;iframe&gt; code. The URL will be extracted automatically.
+                            </p>
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <label htmlFor="direction_url" className="block text-sm font-medium text-gray-700">
+                                Directions URL
+                            </label>
+                            <input
+                                type="url"
+                                id="direction_url"
+                                name="direction_url"
+                                value={formData.location_settings.direction_url || ''}
+                                onChange={(e) => setFormData(prev => ({
+                                    ...prev,
+                                    location_settings: {
+                                        ...prev.location_settings,
+                                        direction_url: e.target.value
+                                    }
+                                }))}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                placeholder="https://maps.google.com/directions?daddr=..."
+                            />
+                            <p className="mt-1 text-sm text-gray-500">
+                                Link to directions (optional). This will be shown as a &quot;Get Directions&quot; button.
+                            </p>
                         </div>
 
                         <div>

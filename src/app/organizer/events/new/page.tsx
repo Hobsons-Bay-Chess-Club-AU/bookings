@@ -24,7 +24,11 @@ export default function NewEventPage() {
         organizer_email: '',
         organizer_phone: '',
         status: 'draft' as 'draft' | 'published',
-        is_promoted: false
+        is_promoted: false,
+        location_settings: {
+            map_url: '',
+            direction_url: ''
+        }
     })
     const [formFields, setFormFields] = useState<FormField[]>([])
     const [loading, setLoading] = useState(false)
@@ -149,7 +153,7 @@ export default function NewEventPage() {
                     } else {
                         throw new Error('Failed to generate alias')
                     }
-                } catch (_) {
+                } catch {
                     throw new Error('Failed to generate alias for event')
                 }
             }
@@ -174,7 +178,8 @@ export default function NewEventPage() {
                     alias: alias,
                     organizer_id: user.id,
                     custom_form_fields: formFields,
-                    is_promoted: formData.is_promoted
+                    is_promoted: formData.is_promoted,
+                    location_settings: formData.location_settings
                 })
                 .select()
                 .single()
@@ -379,6 +384,72 @@ export default function NewEventPage() {
                                     {fieldErrors.location}
                                 </p>
                             )}
+                        </div>
+
+                        {/* Location Settings */}
+                        <div className="md:col-span-2 pt-6 border-t border-gray-200">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">
+                                Location Settings
+                            </h3>
+                            <p className="text-sm text-gray-600 mb-4">
+                                Add embedded map and directions to help attendees find your event location.
+                            </p>
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <label htmlFor="map_url" className="block text-sm font-medium text-gray-700">
+                                Embedded Map URL
+                            </label>
+                            <input
+                                type="url"
+                                id="map_url"
+                                name="map_url"
+                                value={formData.location_settings.map_url}
+                                onChange={(e) => {
+                                    let value = e.target.value.trim();
+                                    // If user pasted an iframe, extract the src attribute
+                                    const iframeMatch = value.match(/<iframe[^>]*src=["']([^"']+)["']/i);
+                                    if (iframeMatch) {
+                                        value = iframeMatch[1];
+                                    }
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        location_settings: {
+                                            ...prev.location_settings,
+                                            map_url: value
+                                        }
+                                    }));
+                                }}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                placeholder="https://www.google.com/maps/embed?pb=... or paste the &lt;iframe&gt; code here"
+                            />
+                            <p className="mt-1 text-sm text-gray-500">
+                                Paste the embed URL from Google Maps, or the full &lt;iframe&gt; code. The URL will be extracted automatically.
+                            </p>
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <label htmlFor="direction_url" className="block text-sm font-medium text-gray-700">
+                                Directions URL
+                            </label>
+                            <input
+                                type="url"
+                                id="direction_url"
+                                name="direction_url"
+                                value={formData.location_settings.direction_url || ''}
+                                onChange={(e) => setFormData(prev => ({
+                                    ...prev,
+                                    location_settings: {
+                                        ...prev.location_settings,
+                                        direction_url: e.target.value
+                                    }
+                                }))}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                placeholder="https://maps.google.com/directions?daddr=..."
+                            />
+                            <p className="mt-1 text-sm text-gray-500">
+                                Link to directions (optional). This will be shown as a &quot;Get Directions&quot; button.
+                            </p>
                         </div>
 
                         <div>

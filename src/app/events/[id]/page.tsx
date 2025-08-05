@@ -8,6 +8,7 @@ import EventQRCode from '@/components/events/event-qr-code'
 import EventBookingSection from '@/components/events/event-booking-section'
 import EventLayout from '@/components/events/event-layout'
 import RefundPolicyDisplay from '@/components/events/refund-policy-display'
+import EventLocationMap from '@/components/events/event-location-map'
 import ChatWidget from '@/components/messaging/chat-widget'
 import EventChatClient from './event-chat-client'
 import { Event, Booking, Profile } from '@/lib/types/database'
@@ -302,6 +303,14 @@ export default async function EventPage({ params }: EventPageProps) {
                                     />
                                 </div>
                             )}
+
+                            {/* Location Map */}
+                            <div className="border-t pt-6 mt-6">
+                                <EventLocationMap 
+                                    location={event.location} 
+                                    locationSettings={event.location_settings}
+                                />
+                            </div>
 
                             {event.timeline?.refund && (
                                 <RefundPolicyDisplay

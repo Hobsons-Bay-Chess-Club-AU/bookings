@@ -117,7 +117,7 @@ export default function SocialShare({ event }: SocialShareProps) {
             {/* Copy Link Section */}
             <div className="border-t pt-4">
                 <p className="text-sm text-gray-600 mb-2">Or copy the link:</p>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 text-gray-900">
                     <input
                         type="text"
                         value={eventUrl}
