@@ -40,6 +40,7 @@ export default function EditEventPage() {
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
     const [initialLoading, setInitialLoading] = useState(true)
     const [event, setEvent] = useState<Event | null>(null)
+    const [cloning, setCloning] = useState(false)
 
     const router = useRouter()
     const params = useParams()
@@ -231,6 +232,44 @@ export default function EditEventPage() {
         } finally {
             console.log('🔄 Setting loading to false')
             setLoading(false)
+        }
+    }
+
+    const handleCloneEvent = async () => {
+        if (!event) return
+
+        setCloning(true)
+        setError('')
+        setSuccess('')
+
+        try {
+            const response = await fetch('/api/events/clone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ eventId: event.id }),
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to clone event')
+            }
+
+            setSuccess('Event cloned successfully! Redirecting to edit page...')
+            
+            // Redirect to the new event's edit page after a short delay
+            setTimeout(() => {
+                router.push(`/organizer/events/${data.eventId}/edit`)
+            }, 1500)
+
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'An error occurred while cloning the event'
+            setError(errorMessage)
+            console.error('Event clone error:', err)
+        } finally {
+            setCloning(false)
         }
     }
 
@@ -811,12 +850,22 @@ export default function EditEventPage() {
                                 Cancel
                             </Link>
                             {event && (
-                                <Link
-                                    href={`/organizer/events/${event.id}/bookings`}
-                                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                >
-                                    View Bookings
-                                </Link>
+                                <>
+                                    <Link
+                                        href={`/organizer/events/${event.id}/bookings`}
+                                        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    >
+                                        View Bookings
+                                    </Link>
+                                    <button
+                                        type="button"
+                                        onClick={handleCloneEvent}
+                                        disabled={cloning}
+                                        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {cloning ? 'Cloning...' : 'Clone Event'}
+                                    </button>
+                                </>
                             )}
                         </div>
                         <button

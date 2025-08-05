@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Conversation, Message, Profile } from '@/lib/types/database'
-import { HiChatBubbleLeftRight, HiUser, HiCalendarDays, HiMapPin, HiPaperAirplane } from 'react-icons/hi2'
+import { HiChatBubbleLeftRight, HiUser, HiCalendarDays, HiPaperAirplane } from 'react-icons/hi2'
 import LoadingSpinner from '@/components/ui/loading-spinner'
 import Link from 'next/link'
 

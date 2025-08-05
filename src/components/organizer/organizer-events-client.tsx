@@ -18,7 +18,8 @@ import {
     HiPencilSquare,
     HiCog8Tooth,
     HiLink,
-    HiEnvelope
+    HiEnvelope,
+    HiDocumentDuplicate
 } from 'react-icons/hi2'
 
 export interface EventWithBookings extends Event {
@@ -44,6 +45,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
     const [emailLoading, setEmailLoading] = useState(false)
     const [emailError, setEmailError] = useState('')
     const [emailSuccess, setEmailSuccess] = useState('')
+    const [cloningEventId, setCloningEventId] = useState<string | null>(null)
 
     const handleOpenSettings = (event: Event) => {
         setSelectedEvent(event)
@@ -98,6 +100,36 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
             setEmailError(err instanceof Error ? err.message : 'An unexpected error occurred')
         } finally {
             setEmailLoading(false)
+        }
+    }
+
+    const handleCloneEvent = async (eventId: string) => {
+        setCloningEventId(eventId)
+        setOpenDropdownId(null) // Close dropdown
+
+        try {
+            const response = await fetch('/api/events/clone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ eventId }),
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to clone event')
+            }
+
+            // Redirect to the new event's edit page
+            window.location.href = `/organizer/events/${data.eventId}/edit`
+
+        } catch (err) {
+            console.error('Event clone error:', err)
+            alert(err instanceof Error ? err.message : 'An error occurred while cloning the event')
+        } finally {
+            setCloningEventId(null)
         }
     }
 
@@ -380,6 +412,14 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                         >
                                                             <HiPencilSquare className="mr-2 h-4 w-4" /> Edit Event
                                                         </Link>
+                                                        <button
+                                                            onClick={() => handleCloneEvent(event.id)}
+                                                            disabled={cloningEventId === event.id}
+                                                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        >
+                                                            <HiDocumentDuplicate className="mr-2 h-4 w-4" />
+                                                            {cloningEventId === event.id ? 'Cloning...' : 'Clone Event'}
+                                                        </button>
                                                     </div>
                                                 </div>
                                             )}
