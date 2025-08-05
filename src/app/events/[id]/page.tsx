@@ -42,7 +42,7 @@ async function getEventParticipants(eventId: string): Promise<BookingWithProfile
         .from('bookings')
         .select(`
             *,
-            profile:profiles(*),
+            profile:profiles!bookings_user_id_fkey(*),
             participants(*)
         `)
         .eq('event_id', eventId)
