@@ -45,7 +45,7 @@ export async function GET(
             .select(`
                 *,
                 event:events!bookings_event_id_fkey(*),
-                user:profiles(*),
+                user:profiles!bookings_user_id_fkey(*),
                 participants(*)
             `)
             .eq('id', bookingId)

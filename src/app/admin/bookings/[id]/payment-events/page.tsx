@@ -156,10 +156,10 @@ export default function PaymentEventsPage() {
                     booking_id,
                     status,
                     total_amount,
-                    events (
+                    events!bookings_event_id_fkey (
                         title
                     ),
-                    profiles (
+                    profiles!bookings_user_id_fkey (
                         full_name,
                         email
                     )
@@ -193,7 +193,7 @@ export default function PaymentEventsPage() {
         if (!authLoading && currentUser && profile && bookingId) {
             fetchBookingAndEvents()
         }
-    }, [authLoading, currentUser, profile, bookingId, fetchBookingAndEvents, supabase])
+    }, [authLoading, currentUser, profile, bookingId, fetchBookingAndEvents])
 
 
     const showToast = (message: string, type: 'success' | 'error') => {
@@ -220,13 +220,6 @@ export default function PaymentEventsPage() {
             setLoadingEvent(false)
         }
     }
-
-    // Fetch booking and events when dependencies change
-    useEffect(() => {
-        if (!authLoading && currentUser && profile && bookingId) {
-            fetchBookingAndEvents()
-        }
-    }, [authLoading, currentUser, profile, bookingId, fetchBookingAndEvents, supabase])
 
     const getEventTypeColor = (eventType: string) => {
         if (eventType.includes('succeeded') || eventType.includes('completed')) {
@@ -255,7 +248,187 @@ export default function PaymentEventsPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Component JSX would go here */}
+            {/* Header */}
+            <div className="bg-white shadow">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center py-6">
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900">Payment Events</h1>
+                            <p className="text-sm text-gray-600">
+                                {booking ? `Booking: ${booking.booking_id}` : 'Loading...'}
+                            </p>
+                        </div>
+                        <Link
+                            href="/admin/bookings"
+                            className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
+                        >
+                            ← Back to Bookings
+                        </Link>
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {authLoading ? (
+                    <div className="text-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+                        <p className="mt-2 text-gray-600">Loading...</p>
+                    </div>
+                ) : error ? (
+                    <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <h3 className="text-sm font-medium text-red-800">Error</h3>
+                                <p className="mt-1 text-sm text-red-700">{error}</p>
+                            </div>
+                        </div>
+                    </div>
+                ) : loading ? (
+                    <div className="text-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+                        <p className="mt-2 text-gray-600">Loading payment events...</p>
+                    </div>
+                ) : (
+                    <div className="space-y-6">
+                        {/* Booking Summary */}
+                        {booking && (
+                            <div className="bg-white shadow rounded-lg p-6">
+                                <h2 className="text-lg font-semibold text-gray-900 mb-4">Booking Summary</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-500">Booking ID</p>
+                                        <p className="text-sm text-gray-900">{booking.booking_id}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-500">Status</p>
+                                        <p className="text-sm text-gray-900">{booking.status}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-500">Total Amount</p>
+                                        <p className="text-sm text-gray-900">AUD ${booking.total_amount.toFixed(2)}</p>
+                                    </div>
+                                    {booking.events && (
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-500">Event</p>
+                                            <p className="text-sm text-gray-900">{booking.events.title}</p>
+                                        </div>
+                                    )}
+                                    {booking.profiles && (
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-500">Customer</p>
+                                            <p className="text-sm text-gray-900">
+                                                {booking.profiles.full_name || booking.profiles.email}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Payment Events List */}
+                        <div className="bg-white shadow rounded-lg">
+                            <div className="px-6 py-4 border-b border-gray-200">
+                                <h2 className="text-lg font-semibold text-gray-900">Payment Events</h2>
+                                <p className="text-sm text-gray-600 mt-1">
+                                    {paymentEvents.length} event{paymentEvents.length !== 1 ? 's' : ''} found
+                                </p>
+                            </div>
+                            <div className="overflow-hidden">
+                                {paymentEvents.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <h3 className="mt-2 text-sm font-medium text-gray-900">No payment events</h3>
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            No payment events have been recorded for this booking.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <ul className="divide-y divide-gray-200">
+                                        {paymentEvents.map((event) => (
+                                            <li key={event.id} className="px-6 py-4 hover:bg-gray-50">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center space-x-4">
+                                                        <div className="flex-shrink-0">
+                                                            <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                                                                <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-medium text-gray-900">
+                                                                {event.stripe_event_type}
+                                                            </p>
+                                                            <p className="text-sm text-gray-500">
+                                                                {new Date(event.created_at).toLocaleString()}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center space-x-2">
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEventTypeColor(event.stripe_event_type)}`}>
+                                                            {event.stripe_event_type}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => fetchStripeEvent(event.stripe_event_id)}
+                                                            disabled={loadingEvent}
+                                                            className="bg-indigo-600 text-white px-3 py-1 rounded-md text-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        >
+                                                            {loadingEvent ? 'Loading...' : 'View Details'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Stripe Event Modal */}
+            {showEventModal && selectedEvent && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                    <div className="relative mx-auto p-5 border w-full h-full shadow-lg bg-white flex flex-col">
+                        <div className="flex justify-between items-center mb-4 flex-shrink-0">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                Stripe Event: {selectedEvent.type}
+                            </h3>
+                            <div className="flex space-x-2">
+                                <button onClick={copyToClipboard} className="bg-gray-600 text-white px-3 py-1 rounded-md text-sm hover:bg-gray-700">Copy JSON</button>
+                                <button onClick={closeModal} className="bg-red-600 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700">Close</button>
+                            </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto">
+                            <JsonView
+                                value={selectedEvent}
+                                style={{ backgroundColor: '#f8f9fa' }}
+                                displayDataTypes={false}
+                                displayObjectSize={false}
+                                enableClipboard={false}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Toast Notification */}
+            {toast && (
+                <div className={`fixed bottom-4 right-4 z-50 p-4 rounded-md shadow-lg ${
+                    toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                }`}>
+                    {toast.message}
+                </div>
+            )}
         </div>
     )
 }

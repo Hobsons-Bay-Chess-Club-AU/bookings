@@ -28,7 +28,7 @@ export async function GET(
             )
         }
 
-        const { eventId } = params
+        const { eventId } = await params
 
         if (!eventId) {
             return NextResponse.json(

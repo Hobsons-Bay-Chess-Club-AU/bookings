@@ -245,6 +245,43 @@ export interface BookingAudit {
     performer?: Profile
 }
 
+export interface Message {
+    id: string
+    conversation_id: string
+    sender_id: string
+    recipient_id: string
+    subject?: string
+    content: string
+    is_read: boolean
+    is_organizer_reply: boolean
+    booking_id?: string
+    event_id?: string
+    created_at: string
+    updated_at: string
+    sender?: Profile
+    recipient?: Profile
+    booking?: Booking
+    event?: Event
+}
+
+export interface Conversation {
+    id: string
+    user_id: string
+    organizer_id: string
+    event_id?: string
+    booking_id?: string
+    subject?: string
+    last_message_at: string
+    created_at: string
+    updated_at: string
+    user?: Profile
+    organizer?: Profile
+    event?: Event
+    booking?: Booking
+    messages?: Message[]
+    unread_count?: number
+}
+
 export interface Database {
     public: {
         Tables: {
@@ -262,6 +299,16 @@ export interface Database {
                 Row: Booking
                 Insert: Omit<Booking, 'id' | 'created_at' | 'updated_at' | 'booking_date'>
                 Update: Partial<Omit<Booking, 'id' | 'created_at' | 'updated_at' | 'booking_date'>>
+            }
+            messages: {
+                Row: Message
+                Insert: Omit<Message, 'id' | 'created_at' | 'updated_at'>
+                Update: Partial<Omit<Message, 'id' | 'created_at' | 'updated_at'>>
+            }
+            conversations: {
+                Row: Conversation
+                Insert: Omit<Conversation, 'id' | 'created_at' | 'updated_at' | 'last_message_at'>
+                Update: Partial<Omit<Conversation, 'id' | 'created_at' | 'updated_at' | 'last_message_at'>>
             }
         }
     }

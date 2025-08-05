@@ -8,6 +8,8 @@ import { CalendarEvent } from '@/lib/utils/calendar'
 import MarkdownContent from '@/components/ui/html-content'
 import RefundPolicyDisplay from '@/components/events/refund-policy-display'
 import RefundRequestButton from '@/components/dashboard/refund-request-button'
+import ContactOrganizerButton from '@/components/messaging/contact-organizer-button'
+import ChatWidget from '@/components/messaging/chat-widget'
 
 async function getBooking(bookingId: string, userId: string): Promise<(Booking & { event: Event }) | null> {
     const supabase = await createClient()
@@ -19,7 +21,7 @@ async function getBooking(bookingId: string, userId: string): Promise<(Booking &
         .from('bookings')
         .select(`
       *,
-              event:events!bookings_event_id_fkey(*, timeline)
+      event:events!bookings_event_id_fkey(*, timeline, organizer:profiles(id, full_name, email, avatar_url))
     `)
         .eq('user_id', userId) // Ensure user can only view their own bookings
 
@@ -438,18 +440,36 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                             )}
 
                             {/* Action Buttons */}
-                            <div className="mt-8">
+                            <div className="mt-8 space-y-3">
                                 <Link
                                     href="/dashboard"
                                     className="w-full bg-indigo-600 border border-transparent rounded-md py-2 px-4 flex items-center justify-center text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                 >
                                     ← Back to My Bookings
                                 </Link>
+                                
+                                {/* Contact Organizer Button */}
+                                {booking.event.organizer && (
+                                    <ContactOrganizerButton 
+                                        event={booking.event}
+                                        organizer={booking.event.organizer}
+                                        bookingId={booking.id}
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Chat Widget - Always visible on booking page */}
+            {booking.event.organizer && (
+                <ChatWidget 
+                    event={booking.event}
+                    organizer={booking.event.organizer}
+                    bookingId={booking.id}
+                />
+            )}
         </div>
     )
 }

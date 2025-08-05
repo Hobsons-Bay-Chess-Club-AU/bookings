@@ -8,6 +8,7 @@ import EventQRCode from '@/components/events/event-qr-code'
 import EventBookingSection from '@/components/events/event-booking-section'
 import EventLayout from '@/components/events/event-layout'
 import RefundPolicyDisplay from '@/components/events/refund-policy-display'
+import ChatWidget from '@/components/messaging/chat-widget'
 import { Event, Booking, Profile } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
 import { Metadata } from 'next'
@@ -22,7 +23,7 @@ async function getEvent(id: string): Promise<Event | null> {
         .from('events')
         .select(`
       *,
-      organizer:profiles(full_name, email)
+      organizer:profiles(id, full_name, email, avatar_url)
     `)
         .eq('id', id)
         .single()
@@ -325,6 +326,15 @@ export default async function EventPage({ params }: EventPageProps) {
                     </div>
                 </EventLayout>
             </div>
+
+            {/* Chat Widget - Always visible on event page */}
+            <ChatWidget 
+                event={event} 
+                organizer={event.organizer} 
+            />
+            
+            {/* Simple Chat Test */}
+            {/* <SimpleChatTest /> */}
         </div>
     )
 }
