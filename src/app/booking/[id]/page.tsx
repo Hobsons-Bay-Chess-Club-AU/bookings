@@ -10,7 +10,7 @@ import RefundPolicyDisplay from '@/components/events/refund-policy-display'
 import RefundRequestButton from '@/components/dashboard/refund-request-button'
 import ContactOrganizerButton from '@/components/messaging/contact-organizer-button'
 import ChatWidget from '@/components/messaging/chat-widget'
-import BookingDetailsClient from './booking-details-client'
+import EventLocationMap from '@/components/events/event-location-map'
 
 async function getBooking(bookingId: string, userId: string): Promise<(Booking & { event: Event }) | null> {
     const supabase = await createClient()
@@ -253,6 +253,14 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                             </span>
                                         </div>
                                     </div>
+
+                                    {/* Location Map */}
+                                    <div className="mt-6">
+                                        <EventLocationMap 
+                                            location={booking.event.location} 
+                                            locationSettings={booking.event.location_settings}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -465,7 +473,7 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
 
             {/* Chat Widget - Only visible when not in booking journey */}
             {booking.event.organizer && (
-                <BookingDetailsClient 
+                <ChatWidget 
                     event={booking.event}
                     organizer={booking.event.organizer}
                     bookingId={booking.id}

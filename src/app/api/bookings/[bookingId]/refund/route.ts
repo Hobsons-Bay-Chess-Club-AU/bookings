@@ -27,7 +27,7 @@ export async function POST(
             .from('bookings')
             .select(`
                 *,
-                event:events(
+                event:events!bookings_event_id_fkey(
                     id,
                     title,
                     start_date,
