@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import RefundRequestButton from './refund-request-button'
 import { Booking, Event } from '@/lib/types/database'
@@ -25,7 +25,27 @@ interface DashboardClientProps {
 export default function DashboardClient({ bookings }: DashboardClientProps) {
     const [activeFilter, setActiveFilter] = useState<FilterStatus>('all')
 
-    const getStatusColor = (status: string) => {
+    // Memoize expensive calculations
+    const bookingStats = useMemo(() => {
+        const confirmed = bookings.filter(b => b.status === 'confirmed' || b.status === 'verified').length
+        const pending = bookings.filter(b => b.status === 'pending').length
+        const cancelled = bookings.filter(b => b.status === 'cancelled').length
+        const totalSpent = bookings
+            .filter(b => b.status === 'confirmed' || b.status === 'verified')
+            .reduce((sum, b) => sum + b.total_amount, 0)
+
+        return { confirmed, pending, cancelled, totalSpent }
+    }, [bookings])
+
+    const filteredBookings = useMemo(() => {
+        return bookings.filter(booking => {
+            if (activeFilter === 'all') return true
+            if (activeFilter === 'confirmed') return booking.status === 'confirmed' || booking.status === 'verified'
+            return booking.status === activeFilter
+        })
+    }, [bookings, activeFilter])
+
+    const getStatusColor = useCallback((status: string) => {
         switch (status) {
             case 'confirmed':
             case 'verified':
@@ -39,9 +59,9 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
             default:
                 return 'bg-gray-100 text-gray-800'
         }
-    }
+    }, [])
 
-    const getStatusIcon = (status: string) => {
+    const getStatusIcon = useCallback((status: string) => {
         switch (status) {
             case 'confirmed':
             case 'verified':
@@ -55,9 +75,9 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
             default:
                 return <div className="h-4 w-4 text-gray-400">?</div>
         }
-    }
+    }, [])
 
-    const getRefundStatusDisplay = (booking: Booking & { event: Event }) => {
+    const getRefundStatusDisplay = useCallback((booking: Booking & { event: Event }) => {
         if (!booking.refund_status || booking.refund_status === 'none') {
             return null
         }
@@ -87,19 +107,13 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                 )}
             </div>
         )
-    }
+    }, [])
 
-    const filteredBookings = bookings.filter(booking => {
-        if (activeFilter === 'all') return true
-        if (activeFilter === 'confirmed') return booking.status === 'confirmed' || booking.status === 'verified'
-        return booking.status === activeFilter
-    })
-
-    const getStatCardClass = (filterType: FilterStatus) => {
+    const getStatCardClass = useCallback((filterType: FilterStatus) => {
         const baseClass = "bg-white overflow-hidden shadow rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md"
         const activeClass = "ring-2 ring-indigo-500 bg-indigo-50"
         return activeFilter === filterType ? `${baseClass} ${activeClass}` : baseClass
-    }
+    }, [activeFilter])
 
     return (
         <>
@@ -143,7 +157,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                         Confirmed
                                     </dt>
                                     <dd className="text-lg font-medium text-gray-900">
-                                        {bookings.filter(b => b.status === 'confirmed' || b.status === 'verified').length}
+                                        {bookingStats.confirmed}
                                     </dd>
                                 </dl>
                             </div>
@@ -166,7 +180,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                         Pending
                                     </dt>
                                     <dd className="text-lg font-medium text-gray-900">
-                                        {bookings.filter(b => b.status === 'pending').length}
+                                        {bookingStats.pending}
                                     </dd>
                                 </dl>
                             </div>
@@ -189,7 +203,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                         Cancelled
                                     </dt>
                                     <dd className="text-lg font-medium text-gray-900">
-                                        {bookings.filter(b => b.status === 'cancelled').length}
+                                        {bookingStats.cancelled}
                                     </dd>
                                 </dl>
                             </div>
@@ -209,10 +223,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                         Total Spent
                                     </dt>
                                     <dd className="text-lg font-medium text-gray-900">
-                                        ${bookings
-                                            .filter(b => b.status === 'confirmed' || b.status === 'verified')
-                                            .reduce((sum, b) => sum + b.total_amount, 0)
-                                            .toFixed(2)}
+                                        ${bookingStats.totalSpent.toFixed(2)}
                                     </dd>
                                 </dl>
                             </div>

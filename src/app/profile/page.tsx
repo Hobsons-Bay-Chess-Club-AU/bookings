@@ -4,11 +4,13 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Profile } from '@/lib/types/database'
+import LoadingSpinner from '@/components/ui/loading-spinner'
 
 export default function ProfilePage() {
     const [profile, setProfile] = useState<Profile | null>(null)
     const [loading, setLoading] = useState(true)
     const [updating, setUpdating] = useState(false)
+    const [navigating, setNavigating] = useState(false)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
     const [formData, setFormData] = useState({
@@ -93,13 +95,15 @@ export default function ProfilePage() {
         setFormData(prev => ({ ...prev, [name]: value }))
     }
 
+    const handleCancel = () => {
+        setNavigating(true)
+        router.push('/dashboard')
+    }
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading profile...</p>
-                </div>
+                <LoadingSpinner size="lg" text="Loading profile..." />
             </div>
         )
     }
@@ -235,10 +239,18 @@ export default function ProfilePage() {
                         <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                             <button
                                 type="button"
-                                onClick={() => router.push('/dashboard')}
-                                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                onClick={handleCancel}
+                                disabled={navigating}
+                                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                             >
-                                Cancel
+                                {navigating ? (
+                                    <>
+                                        <LoadingSpinner size="sm" className="mr-2" />
+                                        Redirecting...
+                                    </>
+                                ) : (
+                                    'Cancel'
+                                )}
                             </button>
                             <button
                                 type="submit"

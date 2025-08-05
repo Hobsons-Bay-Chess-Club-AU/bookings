@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Booking } from '@/lib/types/database'
+import LoadingSpinner from '@/components/ui/loading-spinner'
 
 interface RefundRequestButtonProps {
     booking: Booking
@@ -122,9 +123,17 @@ export default function RefundRequestButton({ booking, onRefundRequested }: Refu
         <>
             <button
                 onClick={() => setShowModal(true)}
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                disabled={loading}
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                Request Refund
+                {loading ? (
+                    <>
+                        <LoadingSpinner size="sm" className="mr-2" />
+                        Processing...
+                    </>
+                ) : (
+                    'Request Refund'
+                )}
             </button>
 
             {/* Modal */}
@@ -232,9 +241,16 @@ export default function RefundRequestButton({ booking, onRefundRequested }: Refu
                                 <button
                                     onClick={handleRefundRequest}
                                     disabled={loading || !acknowledged}
-                                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                                 >
-                                    {loading ? 'Processing...' : 'Request Refund'}
+                                    {loading ? (
+                                        <>
+                                            <LoadingSpinner size="sm" className="mr-2" />
+                                            Processing...
+                                        </>
+                                    ) : (
+                                        'Request Refund'
+                                    )}
                                 </button>
                             </div>
                         </div>
