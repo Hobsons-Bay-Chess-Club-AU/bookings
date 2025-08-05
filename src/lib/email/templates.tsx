@@ -205,7 +205,7 @@ export const WelcomeEmail: React.FC<WelcomeEmailProps> = ({
 
       <div style={{ textAlign: 'center', marginTop: '30px' }}>
         <a
-          href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard`}
+          href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard`}
           style={{
             backgroundColor: '#4299e1',
             color: 'white',

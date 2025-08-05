@@ -368,7 +368,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                                     <span className="text-xs font-mono text-indigo-600">
                                                                         /e/{event.alias}
                                                                     </span>
-                                                                    <CopyButton text={`localhost:3000/e/${event.alias}`} />
+                                                                    <CopyButton text={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/e/${event.alias}`} />
                                                                 </div>
                                                             </div>
                                                         )}

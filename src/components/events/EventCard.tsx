@@ -145,8 +145,8 @@ export default function EventCard({ event }: EventCardProps) {
           {event.alias && (
             <div className="flex items-center justify-center space-x-2 text-xs text-gray-500">
               <span>🔗</span>
-              <span className="font-mono">localhost:3000/e/{event.alias}</span>
-              <CopyButton text={`localhost:3000/e/${event.alias}`} />
+              <span className="font-mono">{process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/e/{event.alias}</span>
+              <CopyButton text={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/e/${event.alias}`} />
             </div>
           )}
         </div>

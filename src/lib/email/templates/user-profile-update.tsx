@@ -135,7 +135,7 @@ export default function UserProfileUpdateEmail({
                 {/* Action Buttons */}
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
                     <a 
-                        href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard`}
+                        href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard`}
                         style={{
                             display: 'inline-block',
                             backgroundColor: '#3b82f6',
@@ -151,7 +151,7 @@ export default function UserProfileUpdateEmail({
                     </a>
                     {newRole === 'organizer' && (
                         <a 
-                            href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/organizer`}
+                            href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/organizer`}
                             style={{
                                 display: 'inline-block',
                                 backgroundColor: '#059669',

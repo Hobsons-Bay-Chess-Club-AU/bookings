@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Generate reset URL
-        const resetUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/reset-password`
+        const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/reset-password`
 
         // Send password reset email
         const emailResult = await sendPasswordResetEmail(

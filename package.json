@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "stripe": "stripe listen --forward-to localhost:3000/api/webhooks/stripe"
+    "stripe": "stripe listen --forward-to ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}/api/webhooks/stripe"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",

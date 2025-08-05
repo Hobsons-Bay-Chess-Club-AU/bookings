@@ -144,7 +144,7 @@ export default function BookingTransferNotificationEmail({
                 {/* Action Buttons */}
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
                     <a 
-                        href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard`}
+                        href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard`}
                         style={{
                             display: 'inline-block',
                             backgroundColor: '#3b82f6',
@@ -159,7 +159,7 @@ export default function BookingTransferNotificationEmail({
                         View My Bookings
                     </a>
                     <a 
-                        href={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/events/${toEventTitle.toLowerCase().replace(/\s+/g, '-')}`}
+                        href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/events/${toEventTitle.toLowerCase().replace(/\s+/g, '-')}`}
                         style={{
                             display: 'inline-block',
                             backgroundColor: '#059669',

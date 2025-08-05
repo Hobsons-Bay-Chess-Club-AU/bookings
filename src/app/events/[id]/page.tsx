@@ -80,8 +80,8 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
         : `Join us for ${event.title} at ${event.location} on ${new Date(event.start_date).toLocaleDateString()}`
 
     const eventUrl = event.alias
-        ? `${process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com'}/e/${event.alias}`
-        : `${process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com'}/events/${event.id}`
+        ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://your-domain.com'}/e/${event.alias}`
+        : `${process.env.NEXT_PUBLIC_APP_URL || 'https://your-domain.com'}/events/${event.id}`
 
     const startDate = new Date(event.start_date).toISOString()
     const endDate = new Date(event.end_date).toISOString()
@@ -107,7 +107,7 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
             address: false,
             telephone: false,
         },
-        metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com'),
+        metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://your-domain.com'),
         alternates: {
             canonical: eventUrl,
         },
