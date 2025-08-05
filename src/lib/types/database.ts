@@ -10,6 +10,7 @@ export type FormFieldType = 'text' | 'email' | 'phone' | 'number' | 'date' | 'se
 export type TimelineType = 'refund'
 export type RefundValueType = 'percentage' | 'fixed'
 export type MailingListStatus = 'subscribed' | 'unsubscribed'
+export type BookingAuditAction = 'transfer' | 'refund' | 'status_change' | 'modification'
 
 // Mailing List types
 export interface MailingList {
@@ -214,10 +215,34 @@ export interface Booking {
     stripe_payment_intent_id?: string
     stripe_session_id?: string
     booking_date: string
+    transferred_from_event_id?: string
+    transferred_at?: string
+    transferred_by?: string
     created_at: string
     updated_at: string
     event?: Event
     user?: Profile
+}
+
+export interface BookingAudit {
+    id: string
+    booking_id: string
+    event_id: string
+    action: BookingAuditAction
+    from_event_id?: string
+    to_event_id?: string
+    from_status?: string
+    to_status?: string
+    reason?: string
+    notes?: string
+    performed_by: string
+    performed_at: string
+    created_at: string
+    booking?: Booking
+    event?: Event
+    from_event?: Event
+    to_event?: Event
+    performer?: Profile
 }
 
 export interface Database {

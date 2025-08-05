@@ -1,6 +1,8 @@
 import { sendEmail } from './service'
 import UserProfileUpdateEmail from './templates/user-profile-update'
-import { renderToString } from 'react-dom/server'
+import BookingTransferNotificationEmail from './templates/booking-transfer-notification'
+import { render } from '@react-email/render'
+import React from 'react'
 
 interface UserProfileUpdateData {
     userId: string
@@ -30,8 +32,8 @@ export async function sendUserProfileUpdateNotification(data: UserProfileUpdateD
         }
 
         // Render the email template to HTML
-        const emailHtml = renderToString(
-            UserProfileUpdateEmail({
+        const emailHtml = await render(
+            React.createElement(UserProfileUpdateEmail, {
                 userName: data.userName,
                 oldRole: data.oldRole,
                 newRole: data.newRole,
@@ -66,8 +68,8 @@ export async function sendRoleChangeNotification(data: UserProfileUpdateData) {
         }
 
         // Render the email template to HTML
-        const emailHtml = renderToString(
-            UserProfileUpdateEmail({
+        const emailHtml = await render(
+            React.createElement(UserProfileUpdateEmail, {
                 userName: data.userName,
                 oldRole: data.oldRole,
                 newRole: data.newRole,
@@ -91,5 +93,60 @@ export async function sendRoleChangeNotification(data: UserProfileUpdateData) {
     } catch (error) {
         console.error('Failed to send role change notification:', error)
         // Don't throw the error to avoid breaking the main update flow
+    }
+}
+
+interface BookingTransferNotificationData {
+    userName: string
+    userEmail: string
+    bookingId: string
+    quantity: number
+    totalAmount: number
+    fromEventTitle: string
+    fromEventDate: string
+    fromEventLocation: string
+    toEventTitle: string
+    toEventDate: string
+    toEventLocation: string
+    transferReason: string
+    transferNotes?: string
+    adminName: string
+    transferredAt: string
+}
+
+export async function sendBookingTransferNotification(data: BookingTransferNotificationData) {
+    try {
+        // Render the email template to HTML
+        const emailHtml = await render(
+            React.createElement(BookingTransferNotificationEmail, {
+                userName: data.userName,
+                userEmail: data.userEmail,
+                bookingId: data.bookingId,
+                quantity: data.quantity,
+                totalAmount: data.totalAmount,
+                fromEventTitle: data.fromEventTitle,
+                fromEventDate: data.fromEventDate,
+                fromEventLocation: data.fromEventLocation,
+                toEventTitle: data.toEventTitle,
+                toEventDate: data.toEventDate,
+                toEventLocation: data.toEventLocation,
+                transferReason: data.transferReason,
+                transferNotes: data.transferNotes,
+                adminName: data.adminName,
+                transferredAt: data.transferredAt
+            })
+        )
+
+        // Send the email
+        await sendEmail({
+            to: data.userEmail,
+            subject: `Booking Transfer Confirmation - ${data.toEventTitle}`,
+            html: emailHtml
+        })
+
+        console.log(`Booking transfer notification sent to ${data.userEmail}`)
+    } catch (error) {
+        console.error('Failed to send booking transfer notification:', error)
+        // Don't throw the error to avoid breaking the main transfer flow
     }
 } 

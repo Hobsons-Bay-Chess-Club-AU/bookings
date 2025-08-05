@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 
         const results = await Promise.allSettled(emailPromises)
         
-        const successful = results.filter((result: PromiseSettledResult<any>) => 
+        const successful = results.filter((result: PromiseSettledResult<{ success: boolean; email: string; error?: unknown }>) => 
             result.status === 'fulfilled' && result.value.success
         ).length
         

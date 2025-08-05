@@ -19,7 +19,8 @@ export async function GET(request: NextRequest, context: unknown) {
       .select(`
         *,
         event:events(title, price),
-        user:profiles(email, full_name)
+        user:profiles!bookings_user_id_fkey(email, full_name),
+        transferred_by_user:profiles!bookings_transferred_by_fkey(email, full_name)
       `)
       .eq('id', id)
       .single()

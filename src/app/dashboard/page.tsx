@@ -12,7 +12,7 @@ async function getUserBookings(userId: string): Promise<(Booking & { event: Even
         .from('bookings')
         .select(`
       *,
-      event:events(*, timeline)
+      event:events!bookings_event_id_fkey(*, timeline)
     `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false })

@@ -13,7 +13,7 @@ async function getBookingFromSession(sessionId: string): Promise<(Booking & { ev
         .from('bookings')
         .select(`
       *,
-      event:events(*)
+              event:events!bookings_event_id_fkey(*)
     `)
         .eq('stripe_session_id', sessionId)
         .single()
@@ -53,7 +53,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
             .from('bookings')
             .select(`
                 *,
-                event:events(*)
+                event:events!bookings_event_id_fkey(*)
             `)
             .eq('id', booking_id)
             .single()

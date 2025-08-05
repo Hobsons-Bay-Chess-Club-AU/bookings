@@ -19,7 +19,8 @@ import {
     HiIdentification,
     HiCreditCard,
     HiDocumentText,
-    HiInformationCircle
+    HiInformationCircle,
+    HiArrowRight
 } from 'react-icons/hi2';
 
 interface BookingWithDetails extends Booking {
@@ -434,6 +435,32 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                         <div className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
                                             {booking.refund_reason}
                                         </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Transfer Information */}
+                    {booking.transferred_from_event_id && (
+                        <div className="bg-white shadow rounded-lg p-6">
+                            <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                                <HiArrowRight className="h-5 w-5 mr-2" />
+                                Transfer Information
+                            </h2>
+                            <div className="space-y-3">
+                                <div className="flex items-center">
+                                    <span className="text-blue-600 mr-2">🔄</span>
+                                    <span className="text-gray-900">This booking was transferred from another event</span>
+                                </div>
+                                {booking.transferred_at && (
+                                    <div className="text-xs text-gray-500">
+                                        Transferred on: {new Date(booking.transferred_at).toLocaleDateString()}
+                                    </div>
+                                )}
+                                {booking.transferred_by && (
+                                    <div className="text-xs text-gray-500">
+                                        Transferred by: {booking.transferred_by}
                                     </div>
                                 )}
                             </div>

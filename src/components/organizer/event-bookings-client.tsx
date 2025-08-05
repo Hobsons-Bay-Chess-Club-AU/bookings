@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Event } from '@/lib/types/database'
-import { FiSettings, FiEye, FiCreditCard, FiMail, FiPhone, FiUser } from 'react-icons/fi'
+import { FiSettings, FiEye, FiCreditCard, FiMail, FiPhone, FiUser, FiArrowRight } from 'react-icons/fi'
 import { BookingWithProfile } from '@/lib/types/ui'
+import BookingTransferModal from '@/components/events/booking-transfer-modal'
 
 type FilterStatus = 'all' | 'confirmed' | 'pending' | 'cancelled' | 'refunded'
 
@@ -22,10 +23,16 @@ interface PaymentModalState {
     booking: BookingWithProfile | null
 }
 
+interface TransferModalState {
+    isOpen: boolean
+    booking: BookingWithProfile | null
+}
+
 export default function EventBookingsClient({ event, bookings }: EventBookingsClientProps) {
     const [activeFilter, setActiveFilter] = useState<FilterStatus>('all')
     const [openMenus, setOpenMenus] = useState<BookingMenuState>({})
     const [paymentModal, setPaymentModal] = useState<PaymentModalState>({ isOpen: false, booking: null })
+    const [transferModal, setTransferModal] = useState<TransferModalState>({ isOpen: false, booking: null })
     const [searchTerm, setSearchTerm] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -162,6 +169,51 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
 
     const closePaymentModal = () => {
         setPaymentModal({ isOpen: false, booking: null })
+    }
+
+    const openTransferModal = (booking: BookingWithProfile) => {
+        setTransferModal({ isOpen: true, booking })
+        setOpenMenus({})
+    }
+
+    const closeTransferModal = () => {
+        setTransferModal({ isOpen: false, booking: null })
+    }
+
+    const handleTransfer = async (targetEventId: string, reason: string, notes: string) => {
+        if (!transferModal.booking) return
+
+        console.log('Transfer request data:', {
+            bookingId: transferModal.booking.id,
+            targetEventId,
+            reason,
+            notes
+        })
+
+        try {
+            const response = await fetch('/api/admin/bookings/transfer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    bookingId: transferModal.booking.id,
+                    targetEventId,
+                    reason,
+                    notes
+                })
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Failed to transfer booking')
+            }
+
+            // Refresh the page to show updated data
+            window.location.reload()
+        } catch (error) {
+            throw error
+        }
     }
 
     const formatRefundDate = (dateString?: string) => {
@@ -514,7 +566,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                 </div>
                                             </div>
 
-                                            {/* Booking ID and Refund Info */}
+                                            {/* Booking ID and Transfer/Refund Info */}
                                             <div className="flex items-center justify-between text-sm">
                                                 <div className="flex items-center space-x-4">
                                                     <div className="flex items-center">
@@ -523,6 +575,17 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                             {booking.booking_id || booking.id.slice(0, 8)}
                                                         </span>
                                                     </div>
+                                                    {booking.transferred_from_event_id && (
+                                                        <div className="text-blue-600">
+                                                            <span className="mr-1">🔄</span>
+                                                            Transferred
+                                                            {booking.transferred_at && (
+                                                                <span className="text-gray-500 ml-2">
+                                                                    on {new Date(booking.transferred_at).toLocaleDateString()}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                     {booking.refund_amount && (
                                                         <div className="text-purple-600">
                                                             <span className="mr-1">💰</span>
@@ -564,6 +627,13 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                     >
                                                         <FiCreditCard className="mr-2 w-4 h-4" />
                                                         Payment Info
+                                                    </button>
+                                                    <button
+                                                        onClick={() => openTransferModal(booking)}
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-blue-700 hover:bg-blue-50"
+                                                    >
+                                                        <FiArrowRight className="mr-2 w-4 h-4" />
+                                                        Transfer Booking
                                                     </button>
                                                     {booking.status === 'pending' && (
                                                         <button
@@ -674,6 +744,20 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                         </div>
                     )}
                 </div>
+            )}
+
+            {/* Transfer Modal */}
+            {transferModal.isOpen && transferModal.booking && (
+                <BookingTransferModal
+                    isOpen={transferModal.isOpen}
+                    onClose={closeTransferModal}
+                    onTransfer={handleTransfer}
+                    bookingId={transferModal.booking.id}
+                    currentEventId={event.id}
+                    currentEventTitle={event.title}
+                    userEmail={transferModal.booking.profile.email}
+                    quantity={transferModal.booking.quantity}
+                />
             )}
         </>
     )

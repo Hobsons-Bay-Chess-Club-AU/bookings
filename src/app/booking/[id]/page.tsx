@@ -19,7 +19,7 @@ async function getBooking(bookingId: string, userId: string): Promise<(Booking &
         .from('bookings')
         .select(`
       *,
-      event:events(*, timeline)
+              event:events!bookings_event_id_fkey(*, timeline)
     `)
         .eq('user_id', userId) // Ensure user can only view their own bookings
 
