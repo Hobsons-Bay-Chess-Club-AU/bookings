@@ -10,9 +10,9 @@ import LoadingSpinner from '@/components/ui/loading-spinner'
 // Loading component for dashboard
 function DashboardLoading() {
     return (
-        <div className="bg-gray-50">
+        <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
             {/* Page Header */}
-            <div className="bg-white shadow">
+            <div className="bg-white dark:bg-gray-800 shadow">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 </div>
             </div>
@@ -65,9 +65,9 @@ async function DashboardContent({ profile }: { profile: Profile }) {
     const bookings = await getUserBookings(profile.id)
 
     return (
-        <div className="bg-gray-50">
+        <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
             {/* Page Header */}
-            <div className="bg-white shadow">
+            <div className="bg-white dark:bg-gray-800 shadow">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 </div>
             </div>

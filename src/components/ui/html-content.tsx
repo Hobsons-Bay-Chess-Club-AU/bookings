@@ -56,10 +56,10 @@ export default function MarkdownContent({
           .replace(/<ol>/g, '<ol class="list-decimal ml-6 mb-4">')
           .replace(/<li>/g, '<li class="mb-1">')
           // Ensure blockquotes have proper styling
-          .replace(/<blockquote>/g, '<blockquote class="border-l-4 border-gray-300 pl-4 py-2 my-4 italic bg-gray-50">')
+          .replace(/<blockquote>/g, '<blockquote class="border-l-4 border-gray-300 dark:border-gray-600 pl-4 py-2 my-4 italic bg-gray-50 dark:bg-gray-800">')
           // Ensure code blocks have proper styling
-          .replace(/<pre>/g, '<pre class="bg-gray-100 p-4 rounded-md my-4 overflow-x-auto">')
-          .replace(/<code>/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm">')
+          .replace(/<pre>/g, '<pre class="bg-gray-100 dark:bg-gray-800 p-4 rounded-md my-4 overflow-x-auto">')
+          .replace(/<code>/g, '<code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm">')
 
         // Import DOMPurify dynamically for client-side only
         const { default: DOMPurify } = await import('dompurify')
@@ -96,10 +96,10 @@ export default function MarkdownContent({
 
   if (isLoading) {
     return (
-      <Component className={`prose prose-sm max-w-none ${className}`}>
+      <Component className={`prose prose-sm dark:prose-invert max-w-none ${className}`}>
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
         </div>
       </Component>
     )
@@ -107,7 +107,7 @@ export default function MarkdownContent({
 
   return (
     <Component
-      className={`prose prose-sm max-w-none markdown-content ${className}`}
+      className={`prose prose-sm dark:prose-invert max-w-none markdown-content ${className}`}
       dangerouslySetInnerHTML={{ __html: sanitizedContent }}
       style={{
         // Ensure proper line spacing and paragraph breaks

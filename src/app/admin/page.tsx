@@ -253,77 +253,77 @@ export default async function AdminDashboard() {
     const stats = await getDashboardStats()
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-                    <p className="text-gray-600 mt-2">System overview and key metrics</p>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Admin Dashboard</h1>
+                    <p className="text-gray-600 dark:text-gray-400 mt-2">System overview and key metrics</p>
                 </div>
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     {/* Total Users */}
-                    <div className="bg-white rounded-lg shadow p-6">
+                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
                                 <HiUsers className="h-8 w-8 text-blue-600" />
                             </div>
                             <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-500">Total Users</p>
-                                <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Users</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.totalUsers}</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Total Events */}
-                    <div className="bg-white rounded-lg shadow p-6">
+                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
                                 <HiCalendarDays className="h-8 w-8 text-green-600" />
                             </div>
                             <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-500">Total Events</p>
-                                <p className="text-2xl font-bold text-gray-900">{stats.totalEvents}</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Events</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.totalEvents}</p>
                                 <div className="flex items-center mt-1">
-                                    <span className="text-xs text-green-600">{stats.publishedEvents} published</span>
-                                    <span className="text-xs text-gray-500 ml-2">•</span>
-                                    <span className="text-xs text-gray-500 ml-2">{stats.draftEvents} drafts</span>
+                                    <span className="text-xs text-green-600 dark:text-green-400">{stats.publishedEvents} published</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">•</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">{stats.draftEvents} drafts</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Total Bookings */}
-                    <div className="bg-white rounded-lg shadow p-6">
+                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
                                 <HiTicket className="h-8 w-8 text-purple-600" />
                             </div>
                             <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-500">Total Bookings</p>
-                                <p className="text-2xl font-bold text-gray-900">{stats.totalBookings}</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Bookings</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.totalBookings}</p>
                                 <div className="flex items-center mt-1">
-                                    <span className="text-xs text-green-600">{stats.confirmedBookings} confirmed</span>
-                                    <span className="text-xs text-yellow-600 ml-2">•</span>
-                                    <span className="text-xs text-yellow-600 ml-2">{stats.pendingBookings} pending</span>
+                                    <span className="text-xs text-green-600 dark:text-green-400">{stats.confirmedBookings} confirmed</span>
+                                    <span className="text-xs text-yellow-600 dark:text-yellow-400 ml-2">•</span>
+                                    <span className="text-xs text-yellow-600 dark:text-yellow-400 ml-2">{stats.pendingBookings} pending</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Total Revenue */}
-                    <div className="bg-white rounded-lg shadow p-6">
+                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
                                 <HiCurrencyDollar className="h-8 w-8 text-green-600" />
                             </div>
                             <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-500">Total Revenue</p>
-                                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Revenue</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(stats.totalRevenue)}</p>
                                 <div className="flex items-center mt-1">
-                                    <HiArrowTrendingUp className="h-4 w-4 text-green-600" />
-                                    <span className="text-xs text-green-600 ml-1">From confirmed bookings</span>
+                                    <HiArrowTrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                    <span className="text-xs text-green-600 dark:text-green-400 ml-1">From confirmed bookings</span>
                                 </div>
                             </div>
                         </div>
@@ -333,31 +333,31 @@ export default async function AdminDashboard() {
                 {/* Recent Activity */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Recent Bookings */}
-                    <div className="bg-white rounded-lg shadow">
-                        <div className="px-6 py-4 border-b border-gray-200">
+                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-medium text-gray-900">Recent Bookings</h3>
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Recent Bookings</h3>
                                 <Link
                                     href="/admin/bookings"
-                                    className="text-sm text-indigo-600 hover:text-indigo-500"
+                                    className="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
                                 >
                                     View all →
                                 </Link>
                             </div>
                         </div>
-                        <div className="divide-y divide-gray-200">
+                        <div className="divide-y divide-gray-200 dark:divide-gray-700">
                             {stats.recentBookings.length > 0 ? (
                                 stats.recentBookings.map((booking) => (
                                     <div key={booking.id} className="px-6 py-4">
                                         <div className="flex items-center justify-between">
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-gray-900 truncate">
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                                                     {booking.event?.title}
                                                 </p>
-                                                <p className="text-sm text-gray-500">
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">
                                                     {booking.user?.full_name || booking.user?.email} • {formatCurrency(booking.total_amount)}
                                                 </p>
-                                                <p className="text-xs text-gray-400">
+                                                <p className="text-xs text-gray-400 dark:text-gray-500">
                                                     {formatDate(booking.booking_date)}
                                                 </p>
                                             </div>
@@ -370,7 +370,7 @@ export default async function AdminDashboard() {
                                     </div>
                                 ))
                             ) : (
-                                <div className="px-6 py-4 text-center text-gray-500">
+                                <div className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                     No recent bookings
                                 </div>
                             )}
@@ -378,31 +378,31 @@ export default async function AdminDashboard() {
                     </div>
 
                     {/* Recent Events */}
-                    <div className="bg-white rounded-lg shadow">
-                        <div className="px-6 py-4 border-b border-gray-200">
+                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-medium text-gray-900">Recent Events</h3>
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Recent Events</h3>
                                 <Link
                                     href="/admin/events"
-                                    className="text-sm text-indigo-600 hover:text-indigo-500"
+                                    className="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
                                 >
                                     View all →
                                 </Link>
                             </div>
                         </div>
-                        <div className="divide-y divide-gray-200">
+                        <div className="divide-y divide-gray-200 dark:divide-gray-700">
                             {stats.recentEvents.length > 0 ? (
                                 stats.recentEvents.map((event) => (
                                     <div key={event.id} className="px-6 py-4">
                                         <div className="flex items-center justify-between">
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-gray-900 truncate">
+                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                                                     {event.title}
                                                 </p>
-                                                <p className="text-sm text-gray-500">
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">
                                                     {event.organizer?.full_name} • {formatDate(event.start_date)}
                                                 </p>
-                                                <p className="text-xs text-gray-400">
+                                                <p className="text-xs text-gray-400 dark:text-gray-500">
                                                     {event.current_attendees} / {event.max_attendees || '∞'} attendees
                                                 </p>
                                             </div>
@@ -415,7 +415,7 @@ export default async function AdminDashboard() {
                                     </div>
                                 ))
                             ) : (
-                                <div className="px-6 py-4 text-center text-gray-500">
+                                <div className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                     No recent events
                                 </div>
                             )}
@@ -424,40 +424,40 @@ export default async function AdminDashboard() {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="mt-8 bg-white rounded-lg shadow">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
+                <div className="mt-8 bg-white dark:bg-gray-800 shadow rounded-lg">
+                    <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Quick Actions</h3>
                     </div>
                     <div className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <Link
                                 href="/admin/users"
-                                className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                className="flex items-center p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                             >
                                 <HiUsers className="h-6 w-6 text-blue-600 mr-3" />
                                 <div>
-                                    <p className="font-medium text-gray-900">Manage Users</p>
-                                    <p className="text-sm text-gray-500">View and manage user accounts</p>
+                                    <p className="font-medium text-gray-900 dark:text-gray-100">Manage Users</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">View and manage user accounts</p>
                                 </div>
                             </Link>
                             <Link
                                 href="/admin/bookings"
-                                className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                className="flex items-center p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                             >
                                 <HiTicket className="h-6 w-6 text-purple-600 mr-3" />
                                 <div>
-                                    <p className="font-medium text-gray-900">View Bookings</p>
-                                    <p className="text-sm text-gray-500">Monitor all booking activity</p>
+                                    <p className="font-medium text-gray-900 dark:text-gray-100">View Bookings</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Monitor all booking activity</p>
                                 </div>
                             </Link>
                             <Link
                                 href="/admin/events"
-                                className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                className="flex items-center p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                             >
                                 <HiCalendarDays className="h-6 w-6 text-green-600 mr-3" />
                                 <div>
-                                    <p className="font-medium text-gray-900">Manage Events</p>
-                                    <p className="text-sm text-gray-500">Overview of all events</p>
+                                    <p className="font-medium text-gray-900 dark:text-gray-100">Manage Events</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Overview of all events</p>
                                 </div>
                             </Link>
                         </div>

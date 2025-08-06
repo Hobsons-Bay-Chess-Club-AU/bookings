@@ -14,38 +14,38 @@ export default function EventLocationMap({ location, locationSettings }: EventLo
 
     if (!hasMapUrl && !hasDirectionUrl) {
         return (
-            <div className="bg-gray-50 rounded-lg p-6">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center space-x-2 mb-4">
-                    <HiMapPin className="h-5 w-5 text-gray-400" />
-                    <h3 className="text-lg font-medium text-gray-900">Location</h3>
+                    <HiMapPin className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Location</h3>
                 </div>
-                <p className="text-gray-600">{location}</p>
+                <p className="text-gray-600 dark:text-gray-400">{location}</p>
             </div>
         )
     }
 
     return (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                        <HiMapPin className="h-5 w-5 text-gray-400" />
-                        <h3 className="text-lg font-medium text-gray-900">Location</h3>
+                        <HiMapPin className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Location</h3>
                     </div>
                     {hasDirectionUrl && (
                         <a
                             href={locationSettings.direction_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition-colors"
+                            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
                         >
                             <HiArrowTopRightOnSquare className="h-4 w-4 mr-1" />
                             Get Directions
                         </a>
                     )}
                 </div>
-                <p className="text-gray-600 mt-1">{location}</p>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">{location}</p>
             </div>
 
             {/* Embedded Map */}

@@ -186,28 +186,28 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
 
     const getPricingTypeColor = (type: PricingType) => {
         switch (type) {
-            case 'early_bird': return 'bg-green-100 text-green-800'
-            case 'regular': return 'bg-blue-100 text-blue-800'
-            case 'late_bird': return 'bg-orange-100 text-orange-800'
-            case 'special': return 'bg-purple-100 text-purple-800'
-            default: return 'bg-gray-100 text-gray-800'
+            case 'early_bird': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+            case 'regular': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+            case 'late_bird': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300'
+            case 'special': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
+            default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
         }
     }
 
     const getMembershipTypeColor = (type: MembershipType) => {
         switch (type) {
-            case 'member': return 'bg-yellow-100 text-yellow-800'
-            case 'non_member': return 'bg-red-100 text-red-800'
-            case 'all': return 'bg-gray-100 text-gray-800'
-            default: return 'bg-gray-100 text-gray-800'
+            case 'member': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+            case 'non_member': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+            case 'all': return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+            default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
         }
     }
 
     return (
-        <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                         Pricing Tiers ({pricing.length})
                     </h2>
                     <button
@@ -221,21 +221,21 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
             </div>
 
             {error && (
-                <div className="mx-6 mt-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+                <div className="mx-6 mt-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded">
                     {error}
                 </div>
             )}
 
             {/* Add/Edit Form */}
             {isAdding && (
-                <div className="p-6 border-b border-gray-200 bg-gray-50 text-gray-900">
-                    <h3 className="text-lg font-medium  mb-4">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                    <h3 className="text-lg font-medium mb-4">
                         {editingId ? 'Edit Pricing Tier' : 'Add New Pricing Tier'}
                     </h3>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Name *
                                 </label>
                                 <input
@@ -243,12 +243,12 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                     required
                                     value={formData.name}
                                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                     placeholder="e.g., Early Bird, Member Special"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Price (AUD) *
                                 </label>
                                 <input
@@ -258,34 +258,34 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                     required
                                     value={formData.price}
                                     onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                     placeholder="0.00"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Description
                             </label>
                             <textarea
                                 rows={2}
                                 value={formData.description}
                                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                 placeholder="Optional description of this pricing tier"
                             />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Pricing Type
                                 </label>
                                 <select
                                     value={formData.pricing_type}
                                     onChange={(e) => setFormData(prev => ({ ...prev, pricing_type: e.target.value as PricingType }))}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                 >
                                     <option value="early_bird">Early Bird</option>
                                     <option value="regular">Regular</option>
@@ -294,13 +294,13 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Membership
                                 </label>
                                 <select
                                     value={formData.membership_type}
                                     onChange={(e) => setFormData(prev => ({ ...prev, membership_type: e.target.value as MembershipType }))}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                 >
                                     <option value="all">All Users</option>
                                     <option value="member">Members Only</option>
@@ -308,7 +308,7 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Max Tickets
                                 </label>
                                 <input
@@ -316,7 +316,7 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                     min="1"
                                     value={formData.max_tickets}
                                     onChange={(e) => setFormData(prev => ({ ...prev, max_tickets: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                     placeholder="Optional limit"
                                 />
                             </div>
@@ -324,7 +324,7 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Start Date & Time *
                                 </label>
                                 <input
@@ -332,16 +332,16 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                     required
                                     value={formData.start_date}
                                     onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                 />
                                 {!editingId && event && (
-                                    <p className="mt-1 text-xs text-gray-500">
+                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                         Auto-filled with event start date
                                     </p>
                                 )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     End Date & Time *
                                 </label>
                                 <input
@@ -349,10 +349,10 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                     required
                                     value={formData.end_date}
                                     onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                 />
                                 {!editingId && event && (
-                                    <p className="mt-1 text-xs text-gray-500">
+                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                         Auto-filled with event end date
                                     </p>
                                 )}
@@ -370,7 +370,7 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                             <button
                                 type="button"
                                 onClick={resetForm}
-                                className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md text-sm font-medium"
+                                className="bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-md text-sm font-medium"
                             >
                                 Cancel
                             </button>
@@ -380,14 +380,14 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
             )}
 
             {/* Pricing List */}
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
                 {pricing.length === 0 ? (
                     <div className="text-center py-12">
                         <span className="text-4xl mb-4 block">💰</span>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                             No pricing tiers yet
                         </h3>
-                        <p className="text-gray-800 mb-6">
+                        <p className="text-gray-800 dark:text-gray-300 mb-6">
                             Add pricing tiers to enable dynamic pricing for your event.
                         </p>
                         <button
@@ -403,7 +403,7 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                             <div className="flex items-center justify-between">
                                 <div className="flex-1">
                                     <div className="flex items-center space-x-3 mb-2">
-                                        <h3 className="text-lg font-medium text-gray-900">
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                             {pricingItem.name}
                                         </h3>
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPricingTypeColor(pricingItem.pricing_type)}`}>
@@ -414,39 +414,39 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                                 pricingItem.membership_type === 'member' ? 'Members' : 'Non-Members'}
                                         </span>
                                         {!pricingItem.is_active && (
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
                                                 Inactive
                                             </span>
                                         )}
                                     </div>
 
                                     {pricingItem.description && (
-                                        <p className="text-sm text-gray-800 mb-3">
+                                        <p className="text-sm text-gray-800 dark:text-gray-300 mb-3">
                                             {pricingItem.description}
                                         </p>
                                     )}
 
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                         <div>
-                                            <span className="text-gray-800 font-medium">Price:</span>
-                                            <div className="font-semibold text-lg text-gray-900">AUD ${pricingItem.price.toFixed(2)}</div>
+                                            <span className="text-gray-800 dark:text-gray-300 font-medium">Price:</span>
+                                            <div className="font-semibold text-lg text-gray-900 dark:text-gray-100">AUD ${pricingItem.price.toFixed(2)}</div>
                                         </div>
                                         <div>
-                                            <span className="text-gray-800 font-medium">Valid:</span>
-                                            <div className="font-medium text-gray-900">
+                                            <span className="text-gray-800 dark:text-gray-300 font-medium">Valid:</span>
+                                            <div className="font-medium text-gray-900 dark:text-gray-100">
                                                 {new Date(pricingItem.start_date).toLocaleDateString()} - {new Date(pricingItem.end_date).toLocaleDateString()}
                                             </div>
                                         </div>
                                         <div>
-                                            <span className="text-gray-800 font-medium">Tickets Sold:</span>
-                                            <div className="font-medium text-gray-900">
+                                            <span className="text-gray-800 dark:text-gray-300 font-medium">Tickets Sold:</span>
+                                            <div className="font-medium text-gray-900 dark:text-gray-100">
                                                 {pricingItem.tickets_sold}
                                                 {pricingItem.max_tickets && ` / ${pricingItem.max_tickets}`}
                                             </div>
                                         </div>
                                         <div>
-                                            <span className="text-gray-800 font-medium">Status:</span>
-                                            <div className={`font-medium ${pricingItem.is_active ? 'text-green-700' : 'text-gray-700'}`}>
+                                            <span className="text-gray-800 dark:text-gray-300 font-medium">Status:</span>
+                                            <div className={`font-medium ${pricingItem.is_active ? 'text-green-700 dark:text-green-400' : 'text-gray-700 dark:text-gray-400'}`}>
                                                 {pricingItem.is_active ? 'Active' : 'Inactive'}
                                             </div>
                                         </div>
@@ -456,14 +456,14 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                 <div className="ml-6 flex flex-col space-y-2">
                                     <button
                                         onClick={() => handleEdit(pricingItem)}
-                                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                        className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                                         disabled={loading}
                                     >
                                         Edit
                                     </button>
                                     <button
                                         onClick={() => handleClone(pricingItem)}
-                                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                        className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                                         disabled={loading}
                                         title="Clone this pricing tier for quick editing"
                                     >

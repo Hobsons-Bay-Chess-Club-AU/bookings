@@ -65,36 +65,18 @@ export default function EventSettingsModal({ event, isOpen, onClose, onUpdate }:
                     })
                     
                     fields.push({
-                        id: `${fieldPrefix}_std_rating`,
-                        label: `${customField.label} - Standard Rating`,
-                        description: `${fieldType} player standard rating`,
+                        id: `${fieldPrefix}_rating`,
+                        label: `${customField.label} - Rating`,
+                        description: `${fieldType} player rating only`,
                         category: `${fieldType} Player Fields`
                     })
                     
-                    if (customField.type === 'fide_id') {
-                        // FIDE has rapid and blitz ratings
-                        fields.push({
-                            id: `${fieldPrefix}_rapid_rating`,
-                            label: `${customField.label} - Rapid Rating`,
-                            description: `${fieldType} player rapid rating`,
-                            category: `${fieldType} Player Fields`
-                        })
-                        
-                        fields.push({
-                            id: `${fieldPrefix}_blitz_rating`,
-                            label: `${customField.label} - Blitz Rating`,
-                            description: `${fieldType} player blitz rating`,
-                            category: `${fieldType} Player Fields`
-                        })
-                    } else if (customField.type === 'acf_id') {
-                        // ACF has quick rating instead of rapid/blitz
-                        fields.push({
-                            id: `${fieldPrefix}_quick_rating`,
-                            label: `${customField.label} - Quick Rating`,
-                            description: `${fieldType} player quick rating`,
-                            category: `${fieldType} Player Fields`
-                        })
-                    }
+                    fields.push({
+                        id: `${fieldPrefix}_title`,
+                        label: `${customField.label} - Title`,
+                        description: `${fieldType} player title only`,
+                        category: `${fieldType} Player Fields`
+                    })
                 } else {
                     // Regular custom field
                     fields.push({
@@ -157,22 +139,22 @@ export default function EventSettingsModal({ event, isOpen, onClose, onUpdate }:
     if (!isOpen) return null
 
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-gray-600 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-75 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-11/12 max-w-4xl shadow-lg rounded-md bg-white dark:bg-gray-800">
                 <div className="mt-3">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-6">
                         <div>
-                            <h3 className="text-lg font-medium text-gray-900">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                 Event Settings
                             </h3>
-                            <p className="text-sm text-gray-500 mt-1">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                 Configure how your event information is displayed to the public
                             </p>
                         </div>
                         <button
                             onClick={onClose}
-                            className="text-gray-400 hover:text-gray-600"
+                            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
                         >
                             ✕
                         </button>
@@ -180,7 +162,7 @@ export default function EventSettingsModal({ event, isOpen, onClose, onUpdate }:
 
                     <div className="space-y-8">
                         {/* Public Participant Display */}
-                        <div className="bg-gray-50 p-6 rounded-lg">
+                        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
                             <div className="flex items-start space-x-3">
                                 <div className="flex-shrink-0">
                                     <input
@@ -191,14 +173,14 @@ export default function EventSettingsModal({ event, isOpen, onClose, onUpdate }:
                                             ...prev,
                                             show_participants_public: e.target.checked
                                         }))}
-                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
                                     />
                                 </div>
                                 <div className="flex-1">
-                                    <label htmlFor="show_participants_public" className="text-sm font-medium text-gray-900">
+                                    <label htmlFor="show_participants_public" className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                         Show Participants Publicly
                                     </label>
-                                    <p className="text-sm text-gray-500 mt-1">
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                         Display a list of confirmed participants on your event&apos;s public page.
                                         This can help build excitement and show the caliber of participants.
                                     </p>
@@ -207,14 +189,14 @@ export default function EventSettingsModal({ event, isOpen, onClose, onUpdate }:
 
                             {/* Participant Display Fields */}
                             {settings.show_participants_public && (
-                                <div className="mt-6 pl-7">
-                                    <h4 className="text-sm font-medium text-gray-900 mb-4">
-                                        Select Information to Display
+                                <div className="mt-6">
+                                    <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">
+                                        Fields to Display for Each Participant
                                     </h4>
-                                    <div className="space-y-6">
+                                    <div className="space-y-4">
                                         {Object.entries(fieldsByCategory).map(([category, fields]) => (
                                             <div key={category}>
-                                                <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                                                <h5 className="text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
                                                     {category}
                                                 </h5>
                                                 <div className="space-y-3 pl-2">
@@ -225,13 +207,13 @@ export default function EventSettingsModal({ event, isOpen, onClose, onUpdate }:
                                                                 type="checkbox"
                                                                 checked={settings.participant_display_fields.includes(field.id)}
                                                                 onChange={() => handleFieldToggle(field.id)}
-                                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
                                                             />
                                                             <div className="flex-1">
-                                                                <label htmlFor={`field-${field.id}`} className="text-sm font-medium text-gray-700">
+                                                                <label htmlFor={`field-${field.id}`} className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                                                     {field.label}
                                                                 </label>
-                                                                <p className="text-xs text-gray-500">{field.description}</p>
+                                                                <p className="text-xs text-gray-500 dark:text-gray-400">{field.description}</p>
                                                             </div>
                                                         </div>
                                                     ))}
@@ -239,96 +221,71 @@ export default function EventSettingsModal({ event, isOpen, onClose, onUpdate }:
                                             </div>
                                         ))}
                                     </div>
-
-                                    {settings.participant_display_fields.length === 0 && (
-                                        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                                            <p className="text-sm text-yellow-700">
-                                                ⚠️ Please select at least one field to display. Otherwise, participants won&apos;t be shown.
-                                            </p>
-                                        </div>
-                                    )}
                                 </div>
                             )}
                         </div>
 
-                        {/* Additional Settings */}
-                        <div className="space-y-4">
-                            <h4 className="text-lg font-medium text-gray-900">Additional Display Options</h4>
-
-                            {/* Show Attendance Count */}
+                        {/* Attendance Count Display */}
+                        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
                             <div className="flex items-start space-x-3">
-                                <input
-                                    id="show_attendance_count"
-                                    type="checkbox"
-                                    checked={settings.show_attendance_count}
-                                    onChange={(e) => setSettings(prev => ({
-                                        ...prev,
-                                        show_attendance_count: e.target.checked
-                                    }))}
-                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                />
+                                <div className="flex-shrink-0">
+                                    <input
+                                        id="show_attendance_count"
+                                        type="checkbox"
+                                        checked={settings.show_attendance_count}
+                                        onChange={(e) => setSettings(prev => ({
+                                            ...prev,
+                                            show_attendance_count: e.target.checked
+                                        }))}
+                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
+                                    />
+                                </div>
                                 <div className="flex-1">
-                                    <label htmlFor="show_attendance_count" className="text-sm font-medium text-gray-900">
+                                    <label htmlFor="show_attendance_count" className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                         Show Attendance Count
                                     </label>
-                                    <p className="text-sm text-gray-500">
-                                        Display the number of confirmed participants on the event page
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Allow Participant Contact */}
-                            <div className="flex items-start space-x-3">
-                                <input
-                                    id="allow_participant_contact"
-                                    type="checkbox"
-                                    checked={settings.allow_participant_contact}
-                                    onChange={(e) => setSettings(prev => ({
-                                        ...prev,
-                                        allow_participant_contact: e.target.checked
-                                    }))}
-                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                />
-                                <div className="flex-1">
-                                    <label htmlFor="allow_participant_contact" className="text-sm font-medium text-gray-900">
-                                        Allow Participant Contact
-                                    </label>
-                                    <p className="text-sm text-gray-500">
-                                        Show a contact button for participants (requires organizer contact information)
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                        Display the total number of confirmed participants on your event&apos;s public page.
+                                        This can help create urgency and show event popularity.
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Privacy Notice */}
-                        <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-                            <div className="flex">
+                        {/* Participant Contact */}
+                        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
+                            <div className="flex items-start space-x-3">
                                 <div className="flex-shrink-0">
-                                    <span className="text-blue-400">ℹ️</span>
+                                    <input
+                                        id="allow_participant_contact"
+                                        type="checkbox"
+                                        checked={settings.allow_participant_contact}
+                                        onChange={(e) => setSettings(prev => ({
+                                            ...prev,
+                                            allow_participant_contact: e.target.checked
+                                        }))}
+                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
+                                    />
                                 </div>
-                                <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-blue-800">
-                                        Privacy Notice
-                                    </h3>
-                                    <div className="mt-2 text-sm text-blue-700">
-                                        <p>
-                                            Only information from confirmed participants will be displayed.
-                                            Sensitive information like email addresses and phone numbers are never shown publicly.
-                                            Participants can contact you if they don&apos;t want their information displayed.
-                                        </p>
-                                    </div>
+                                <div className="flex-1">
+                                    <label htmlFor="allow_participant_contact" className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        Allow Participant Contact
+                                    </label>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                        Allow participants to contact each other through the event page.
+                                        This can facilitate networking and coordination between participants.
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Footer */}
-                    <div className="flex items-center justify-end mt-8 pt-6 border-t border-gray-200">
+                    <div className="flex items-center justify-end mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                         <div className="flex space-x-3">
                             <button
                                 onClick={onClose}
                                 disabled={loading}
-                                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
                             >
                                 Cancel
                             </button>

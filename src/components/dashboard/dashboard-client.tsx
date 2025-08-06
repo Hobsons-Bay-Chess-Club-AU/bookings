@@ -49,15 +49,15 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
         switch (status) {
             case 'confirmed':
             case 'verified':
-                return 'bg-green-100 text-green-800'
+                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
             case 'pending':
-                return 'bg-yellow-100 text-yellow-800'
+                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
             case 'cancelled':
-                return 'bg-red-100 text-red-800'
+                return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
             case 'refunded':
-                return 'bg-gray-100 text-gray-800'
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
             default:
-                return 'bg-gray-100 text-gray-800'
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
         }
     }, [])
 
@@ -110,8 +110,8 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
     }, [])
 
     const getStatCardClass = useCallback((filterType: FilterStatus) => {
-        const baseClass = "bg-white overflow-hidden shadow rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md"
-        const activeClass = "ring-2 ring-indigo-500 bg-indigo-50"
+        const baseClass = "bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md"
+        const activeClass = "ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
         return activeFilter === filterType ? `${baseClass} ${activeClass}` : baseClass
     }, [activeFilter])
 
@@ -130,10 +130,10 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                    <dt className="text-sm font-medium text-gray-500 truncate dark:text-gray-200">
                                         Total Bookings
                                     </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
+                                    <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                         {bookings.length}
                                     </dd>
                                 </dl>
@@ -153,10 +153,10 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                    <dt className="text-sm font-medium text-gray-500 truncate dark:text-gray-100">
                                         Confirmed
                                     </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
+                                    <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                         {bookingStats.confirmed}
                                     </dd>
                                 </dl>
@@ -176,10 +176,10 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                    <dt className="text-sm font-medium text-gray-500 truncate dark:text-gray-100">
                                         Pending
                                     </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
+                                    <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                         {bookingStats.pending}
                                     </dd>
                                 </dl>
@@ -199,10 +199,10 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                    <dt className="text-sm font-medium text-gray-500 truncate dark:text-gray-100">
                                         Cancelled
                                     </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
+                                    <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                         {bookingStats.cancelled}
                                     </dd>
                                 </dl>
@@ -211,7 +211,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                     </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-white overflow-hidden shadow rounded-lg dark:bg-gray-700">
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
@@ -219,10 +219,10 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                    <dt className="text-sm font-medium text-gray-500 truncate dark:text-gray-100">
                                         Total Spent
                                     </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
+                                    <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                         ${bookingStats.totalSpent.toFixed(2)}
                                     </dd>
                                 </dl>
@@ -234,17 +234,17 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
 
             {/* Filter Indicator */}
             {activeFilter !== 'all' && (
-                <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                            <HiMagnifyingGlass className="h-4 w-4 text-blue-600 mr-2" />
-                            <span className="text-sm text-blue-800">
+                            <HiMagnifyingGlass className="h-4 w-4 text-blue-600 dark:text-blue-300 mr-2" />
+                            <span className="text-sm text-blue-800 dark:text-blue-200">
                                 Showing {filteredBookings.length} {activeFilter} booking{filteredBookings.length !== 1 ? 's' : ''}
                             </span>
                         </div>
                         <button
                             onClick={() => setActiveFilter('all')}
-                            className="text-sm text-blue-600 hover:text-blue-800 underline"
+                            className="text-sm text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 underline"
                         >
                             Show all bookings
                         </button>
@@ -253,18 +253,18 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
             )}
 
             {/* Bookings List */}
-            <div className="bg-white shadow rounded-lg">
-                <div className="px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">My Bookings</h2>
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">My Bookings</h2>
                 </div>
 
                 {filteredBookings.length === 0 ? (
                     <div className="text-center py-12">
-                        <HiTicket className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        <HiTicket className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                             {activeFilter === 'all' ? 'No bookings yet' : `No ${activeFilter} bookings`}
                         </h3>
-                        <p className="text-gray-500 mb-6">
+                        <p className="text-gray-500 dark:text-gray-400 mb-6">
                             {activeFilter === 'all'
                                 ? 'Start by browsing our amazing events and book your first ticket!'
                                 : `You don't have any ${activeFilter} bookings at the moment.`
@@ -287,9 +287,9 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                         )}
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-200">
+                    <div className="divide-y divide-gray-200 dark:divide-gray-700">
                         {filteredBookings.map((booking) => (
-                            <div key={booking.id} className="p-4 md:p-6">
+                            <div key={booking.id} className="p-4 md:p-6 dark:text-gray-100">
                                 {/* Mobile Card Layout */}
                                 <div className="md:hidden space-y-3">
                                     <div className="flex items-start justify-between">
@@ -307,7 +307,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2 text-sm text-gray-600">
+                                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-100">
                                         <div className="flex items-center">
                                             <HiCalendarDays className="h-4 w-4 mr-2 text-gray-400" />
                                             <span>{new Date(booking.event.start_date).toLocaleDateString('en-US', {
@@ -323,12 +323,12 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                             })}</span>
                                         </div>
                                         <div className="flex items-center">
-                                            <HiMapPin className="h-4 w-4 mr-2 text-gray-400" />
+                                            <HiMapPin className="h-4 w-4 mr-2 text-gray-400 dark:text-white-900" />
                                             <span>{booking.event.location}</span>
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center">
-                                                <HiTicket className="h-4 w-4 mr-2 text-gray-400" />
+                                                <HiTicket className="h-4 w-4 mr-2 text-gray-400 dark:text-gray-100" />
                                                 <span>{booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}</span>
                                             </div>
                                             <div className="flex items-center">
@@ -340,7 +340,7 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                             <span className="text-sm text-gray-500">
                                                 Booked: {new Date(booking.booking_date).toLocaleDateString()}
                                             </span>
-                                            <span className="text-lg font-bold text-gray-900">
+                                            <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
                                                 AUD ${booking.total_amount.toFixed(2)}
                                             </span>
                                         </div>
@@ -360,22 +360,22 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                 </div>
 
                                 {/* Desktop Table Layout */}
-                                <div className="hidden md:block">
+                                <div className="hidden md:block dark:text-gray-100">
                                     <div className="flex items-center justify-between">
                                         <div className="flex-1 grid grid-cols-6 gap-4 items-center">
-                                            <div className="col-span-2">
+                                            <div className="col-span-2 dark:text-gray-100">
                                                 <Link
                                                     href={`/events/${booking.event.id}`}
                                                     className="text-lg font-medium text-indigo-600 hover:text-indigo-800"
                                                 >
                                                     {booking.event.title}
                                                 </Link>
-                                                <div className="text-sm text-gray-500 mt-1">
+                                                <div className="text-sm text-gray-500 mt-1 dark:text-gray-100">
                                                     {booking.event.location}
                                                 </div>
                                             </div>
 
-                                            <div className="text-sm text-gray-600">
+                                            <div className="text-sm text-gray-600 dark:text-gray-100">
                                                 <div>{new Date(booking.event.start_date).toLocaleDateString('en-US', {
                                                     month: 'short',
                                                     day: 'numeric',
@@ -389,15 +389,15 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                                 </div>
                                             </div>
 
-                                            <div className="text-sm text-gray-600">
+                                            <div className="text-sm text-gray-600 dark:text-gray-100">
                                                 <div>{booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}</div>
                                                 <div className="font-mono text-xs text-gray-500">
                                                     ID: {booking.booking_id || booking.id.slice(0, 8)}
                                                 </div>
                                             </div>
 
-                                            <div className="text-sm text-gray-600">
-                                                <div className="font-medium text-gray-900">AUD ${booking.total_amount.toFixed(2)}</div>
+                                            <div className="text-sm text-gray-600 dark:text-gray-100">
+                                                <div className="font-medium text-gray-900 dark:text-gray-100">AUD ${booking.total_amount.toFixed(2)}</div>
                                                 <div className="text-xs text-gray-500">
                                                     Booked: {new Date(booking.booking_date).toLocaleDateString()}
                                                 </div>

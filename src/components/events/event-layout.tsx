@@ -29,8 +29,8 @@ export default function EventLayout({ event, profile, children }: EventLayoutPro
                     ? 'lg:col-span-7' // 7/12 width when booking active
                     : 'lg:col-span-5' // 5/12 width by default
                 }`}>
-                <div className="bg-white shadow rounded-lg p-6 sticky top-8">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6 text-center">
+                <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 sticky top-8">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">
                         Book Your Spot
                     </h2>
                     <BookingForm

@@ -68,7 +68,7 @@ export default function AdminLayout({
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50">
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
                 <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="flex justify-center items-center min-h-96">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
@@ -83,7 +83,7 @@ export default function AdminLayout({
     }
 
     return (
-        <div className={`min-h-screen bg-gray-50 ${className} text-gray-900`}>
+        <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 ${className} text-gray-900 dark:text-gray-100`}>
             <AdminNav />
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {children}

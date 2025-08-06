@@ -93,8 +93,8 @@ export default function SocialShare({ event }: SocialShareProps) {
     ]
 
     return (
-        <div className="bg-white shadow rounded-lg p-6 mt-8">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-8">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
                 Share this event
             </h3>
 
@@ -115,20 +115,20 @@ export default function SocialShare({ event }: SocialShareProps) {
             </div>
 
             {/* Copy Link Section */}
-            <div className="border-t pt-4">
-                <p className="text-sm text-gray-600 mb-2">Or copy the link:</p>
-                <div className="flex items-center space-x-2 text-gray-900">
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Or copy the link:</p>
+                <div className="flex items-center space-x-2 text-gray-900 dark:text-gray-100">
                     <input
                         type="text"
                         value={eventUrl}
                         readOnly
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:text-gray-100"
                     />
                     <button
                         onClick={copyToClipboard}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${copied
-                                ? 'bg-green-600 text-white'
-                                : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                ? 'bg-green-600 dark:bg-green-700 text-white'
+                                : 'bg-indigo-600 dark:bg-indigo-700 text-white hover:bg-indigo-700 dark:hover:bg-indigo-800'
                             }`}
                     >
                         {copied ? (

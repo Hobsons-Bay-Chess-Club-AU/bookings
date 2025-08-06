@@ -100,10 +100,12 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
 
             if (discountsError) {
                 console.error('Error fetching discounts:', discountsError)
+                setDiscounts([])
             } else {
-                setDiscounts(discountsData || [])
+                setDiscounts((discountsData as EventDiscount[]) || [])
             }
         } catch (err) {
+            console.error('Error fetching data:', err)
             setError(err instanceof Error ? err.message : 'An error occurred')
         } finally {
             setLoading(false)
@@ -120,30 +122,35 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
         setFormError('')
 
         try {
+            const discountData = {
+                event_id: eventId,
+                name: formData.name,
+                description: formData.description,
+                discount_type: formData.discount_type,
+                value_type: formData.value_type,
+                value: formData.value,
+                code: formData.code,
+                start_date: formData.start_date,
+                end_date: formData.end_date,
+                is_active: formData.is_active,
+                max_uses: formData.max_uses,
+                min_quantity: formData.min_quantity,
+                max_quantity: formData.max_quantity
+            }
+
             if (editingDiscount) {
                 // Update existing discount
-                const { error: discountError } = await supabase
+                const { error: updateError } = await supabase
                     .from('event_discounts')
-                    .update({
-                        name: formData.name,
-                        description: formData.description,
-                        discount_type: formData.discount_type,
-                        value_type: formData.value_type,
-                        value: formData.value,
-                        code: formData.code,
-                        start_date: formData.start_date || null,
-                        end_date: formData.end_date || null,
-                        is_active: formData.is_active,
-                        max_uses: formData.max_uses || null,
-                        min_quantity: formData.min_quantity || null,
-                        max_quantity: formData.max_quantity || null
-                    })
+                    .update(discountData)
                     .eq('id', editingDiscount.id)
 
-                if (discountError) throw discountError
+                if (updateError) {
+                    throw new Error(updateError.message)
+                }
 
-                // Update rules
-                if (formData.discount_type === 'participant_based') {
+                // Update rules if they exist
+                if (formData.rules.length > 0) {
                     // Delete existing rules
                     await supabase
                         .from('participant_discount_rules')
@@ -151,20 +158,22 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
                         .eq('discount_id', editingDiscount.id)
 
                     // Insert new rules
-                    if (formData.rules.length > 0) {
-                        const { error: rulesError } = await supabase
-                            .from('participant_discount_rules')
-                            .insert(formData.rules.map(rule => ({
-                                ...rule,
-                                discount_id: editingDiscount.id
-                            })))
+                    const rulesToInsert = formData.rules.map(rule => ({
+                        ...rule,
+                        discount_id: editingDiscount.id
+                    }))
 
-                        if (rulesError) throw rulesError
+                    const { error: rulesError } = await supabase
+                        .from('participant_discount_rules')
+                        .insert(rulesToInsert)
+
+                    if (rulesError) {
+                        console.error('Error updating rules:', rulesError)
                     }
                 }
 
-                // Update seat rules
-                if (formData.discount_type === 'seat_based') {
+                // Update seat rules if they exist
+                if (formData.seat_rules.length > 0) {
                     // Delete existing seat rules
                     await supabase
                         .from('seat_discount_rules')
@@ -172,78 +181,83 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
                         .eq('discount_id', editingDiscount.id)
 
                     // Insert new seat rules
-                    if (formData.seat_rules.length > 0) {
-                        const { error: seatRulesError } = await supabase
-                            .from('seat_discount_rules')
-                            .insert(formData.seat_rules.map(rule => ({
-                                ...rule,
-                                discount_id: editingDiscount.id
-                            })))
+                    const seatRulesToInsert = formData.seat_rules.map(rule => ({
+                        ...rule,
+                        discount_id: editingDiscount.id
+                    }))
 
-                        if (seatRulesError) throw seatRulesError
+                    const { error: seatRulesError } = await supabase
+                        .from('seat_discount_rules')
+                        .insert(seatRulesToInsert)
+
+                    if (seatRulesError) {
+                        console.error('Error updating seat rules:', seatRulesError)
                     }
                 }
             } else {
                 // Create new discount
-                const { data: newDiscount, error: discountError } = await supabase
+                const { data: newDiscount, error: createError } = await supabase
                     .from('event_discounts')
-                    .insert({
-                        event_id: eventId,
-                        name: formData.name,
-                        description: formData.description,
-                        discount_type: formData.discount_type,
-                        value_type: formData.value_type,
-                        value: formData.value,
-                        code: formData.code,
-                        start_date: formData.start_date || null,
-                        end_date: formData.end_date || null,
-                        is_active: formData.is_active,
-                        max_uses: formData.max_uses || null,
-                        min_quantity: formData.min_quantity || null,
-                        max_quantity: formData.max_quantity || null
-                    })
+                    .insert(discountData)
                     .select()
                     .single()
 
-                if (discountError) throw discountError
-
-                // Insert rules
-                if (formData.discount_type === 'participant_based' && formData.rules.length > 0) {
-                    const { error: rulesError } = await supabase
-                        .from('participant_discount_rules')
-                        .insert(formData.rules.map(rule => ({
-                            ...rule,
-                            discount_id: newDiscount.id
-                        })))
-
-                    if (rulesError) throw rulesError
+                if (createError) {
+                    throw new Error(createError.message)
                 }
 
-                // Insert seat rules
-                if (formData.discount_type === 'seat_based' && formData.seat_rules.length > 0) {
+                // Insert rules if they exist
+                if (formData.rules.length > 0) {
+                    const rulesToInsert = formData.rules.map(rule => ({
+                        ...rule,
+                        discount_id: newDiscount.id
+                    }))
+
+                    const { error: rulesError } = await supabase
+                        .from('participant_discount_rules')
+                        .insert(rulesToInsert)
+
+                    if (rulesError) {
+                        console.error('Error creating rules:', rulesError)
+                    }
+                }
+
+                // Insert seat rules if they exist
+                if (formData.seat_rules.length > 0) {
+                    const seatRulesToInsert = formData.seat_rules.map(rule => ({
+                        ...rule,
+                        discount_id: newDiscount.id
+                    }))
+
                     const { error: seatRulesError } = await supabase
                         .from('seat_discount_rules')
-                        .insert(formData.seat_rules.map(rule => ({
-                            ...rule,
-                            discount_id: newDiscount.id
-                        })))
+                        .insert(seatRulesToInsert)
 
-                    if (seatRulesError) throw seatRulesError
+                    if (seatRulesError) {
+                        console.error('Error creating seat rules:', seatRulesError)
+                    }
                 }
             }
 
+            // Refresh data
             await fetchEventAndDiscounts()
+            
+            // Reset form and close modal
             resetForm()
             setShowForm(false)
+            setEditingDiscount(null)
         } catch (err) {
-            setFormError(err instanceof Error ? err.message : 'An error occurred')
+            console.error('Error saving discount:', err)
+            setFormError(err instanceof Error ? err.message : 'An error occurred while saving the discount')
         } finally {
             setFormLoading(false)
         }
     }
 
     const handleDelete = async (discountId: string) => {
-        if (!confirm('Are you sure you want to delete this discount?')) return
+        if (!confirm('Are you sure you want to delete this discount?')) {
+            return
+        }
 
         try {
             const { error } = await supabase
@@ -251,37 +265,39 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
                 .delete()
                 .eq('id', discountId)
 
-            if (error) throw error
+            if (error) {
+                throw new Error(error.message)
+            }
 
             await fetchEventAndDiscounts()
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An error occurred')
+            console.error('Error deleting discount:', err)
+            alert(err instanceof Error ? err.message : 'An error occurred while deleting the discount')
         }
     }
 
     const handleEdit = (discount: EventDiscount) => {
-        setEditingDiscount(discount)
         setFormData({
             name: discount.name,
             description: discount.description || '',
-            discount_type: discount.discount_type as 'code' | 'participant_based' | 'seat_based',
-            value_type: discount.value_type as 'percentage' | 'fixed',
+            discount_type: discount.discount_type,
+            value_type: discount.value_type,
             value: discount.value,
             code: discount.code || '',
-            start_date: discount.start_date ? discount.start_date.slice(0, 16) : '',
-            end_date: discount.end_date ? discount.end_date.slice(0, 16) : '',
+            start_date: discount.start_date,
+            end_date: discount.end_date,
             is_active: discount.is_active,
-            max_uses: discount.max_uses || 0,
-            min_quantity: discount.min_quantity || 1,
-            max_quantity: discount.max_quantity || 0,
+            max_uses: discount.max_uses,
+            min_quantity: discount.min_quantity,
+            max_quantity: discount.max_quantity,
             rules: discount.rules || [],
             seat_rules: discount.seat_rules || []
         })
+        setEditingDiscount(discount)
         setShowForm(true)
     }
 
     const resetForm = () => {
-        setEditingDiscount(null)
         setFormData({
             name: '',
             description: '',
@@ -299,17 +315,20 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
             seat_rules: []
         })
         setFormError('')
+        setEditingDiscount(null)
     }
 
     const addRule = () => {
         setFormData(prev => ({
             ...prev,
             rules: [...prev.rules, {
-                rule_type: 'previous_event',
-                field_name: 'first_name,last_name',
-                field_value: 'any',
-                operator: 'equals'
-            } as ParticipantDiscountRule]
+                id: `temp-${Date.now()}`,
+                discount_id: '',
+                previous_event_id: '',
+                min_participants: 1,
+                max_participants: 0,
+                discount_percentage: 0
+            }]
         }))
     }
 
@@ -333,11 +352,11 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
         setFormData(prev => ({
             ...prev,
             seat_rules: [...prev.seat_rules, {
-                min_seats: 2,
-                max_seats: undefined,
-                discount_amount: 10,
-                discount_percentage: undefined
-            } as SeatDiscountRule]
+                id: `temp-${Date.now()}`,
+                discount_id: '',
+                seat_number: '',
+                discount_percentage: 0
+            }]
         }))
     }
 
@@ -359,48 +378,23 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 py-8">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="animate-pulse">
-                        <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-                        <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
-                        <div className="space-y-4">
-                            <div className="h-20 bg-gray-200 rounded"></div>
-                            <div className="h-20 bg-gray-200 rounded"></div>
-                            <div className="h-20 bg-gray-200 rounded"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
-    if (error) {
-        return (
-            <div className="min-h-screen bg-gray-50 py-8">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                        <div className="flex">
-                            <div className="flex-shrink-0">
-                                <HiX className="h-5 w-5 text-red-400" />
-                            </div>
-                            <div className="ml-3">
-                                <h3 className="text-sm font-medium text-red-800">Error</h3>
-                                <div className="mt-2 text-sm text-red-700">{error}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
-    if (!event) {
-        return (
-            <div className="min-h-screen bg-gray-50 py-8">
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center">
-                        <h1 className="text-2xl font-bold text-gray-900">Event not found</h1>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                        <p className="mt-4 text-gray-600 dark:text-gray-400">Loading discounts...</p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    if (error || !event) {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center">
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Event not found</h1>
                     </div>
                 </div>
             </div>
@@ -408,19 +402,19 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Event Discounts</h1>
-                    <p className="mt-2 text-gray-600">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Event Discounts</h1>
+                    <p className="mt-2 text-gray-600 dark:text-gray-400">
                         Manage discounts for &quot;{event.title}&quot;
                     </p>
                 </div>
 
-                <div className="bg-white shadow rounded-lg">
-                    <div className="px-6 py-4 border-b border-gray-200">
+                <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+                    <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-lg font-medium text-gray-900">Discounts</h2>
+                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">Discounts</h2>
                             <button
                                 onClick={() => {
                                     resetForm()
@@ -437,9 +431,9 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
                     <div className="p-6">
                         {discounts.length === 0 ? (
                             <div className="text-center py-12">
-                                <HiInformationCircle className="mx-auto h-12 w-12 text-gray-400" />
-                                <h3 className="mt-2 text-sm font-medium text-gray-900">No discounts</h3>
-                                <p className="mt-1 text-sm text-gray-500">
+                                <HiInformationCircle className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+                                <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No discounts</h3>
+                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                     Get started by creating your first discount.
                                 </p>
                                 <div className="mt-6">
@@ -458,14 +452,14 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
                         ) : (
                             <div className="space-y-4">
                                 {discounts.map((discount) => (
-                                    <div key={discount.id} className="border border-gray-200 rounded-lg p-4">
+                                    <div key={discount.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                                         <div className="flex justify-between items-start">
                                             <div className="flex-1">
-                                                <h3 className="text-lg font-medium text-gray-900">{discount.name}</h3>
+                                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{discount.name}</h3>
                                                 {discount.description && (
-                                                    <p className="mt-1 text-sm text-gray-600">{discount.description}</p>
+                                                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{discount.description}</p>
                                                 )}
-                                                <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500">
+                                                <div className="mt-2 flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                                                     <span>Type: {discount.discount_type === 'code' ? 'Code' : discount.discount_type === 'participant_based' ? 'Participant-Based' : 'Seat-Based'}</span>
                                                     <span>Value: {discount.value}{discount.value_type === 'percentage' ? '%' : '$'}</span>
                                                     <span>Status: {discount.is_active ? 'Active' : 'Inactive'}</span>
@@ -474,14 +468,14 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
                                             <div className="flex space-x-2">
                                                 <button
                                                     onClick={() => handleEdit(discount)}
-                                                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                                    className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                                                 >
                                                     <HiPencil className="h-4 w-4 mr-1" />
                                                     Edit
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(discount.id)}
-                                                    className="inline-flex items-center px-3 py-2 border border-red-300 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50"
+                                                    className="inline-flex items-center px-3 py-2 border border-red-300 dark:border-red-600 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 dark:text-red-400 bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                                                 >
                                                     <HiTrash className="h-4 w-4 mr-1" />
                                                     Delete
@@ -496,34 +490,34 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
                 </div>
 
                 {showForm && (
-                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                        <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+                    <div className="fixed inset-0 bg-gray-600 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-75 overflow-y-auto h-full w-full z-50">
+                        <div className="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white dark:bg-gray-800">
                             <div className="mt-3">
-                                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
                                     {editingDiscount ? 'Edit Discount' : 'Add New Discount'}
                                 </h3>
                                 
                                 {formError && (
-                                    <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
-                                        <div className="text-sm text-red-700">{formError}</div>
+                                    <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+                                        <div className="text-sm text-red-700 dark:text-red-300">{formError}</div>
                                     </div>
                                 )}
 
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Name</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
                                             <input
                                                 type="text"
                                                 required
                                                 value={formData.name}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Discount Type</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Discount Type</label>
                                             <select
                                                 value={formData.discount_type}
                                                 onChange={(e) => setFormData(prev => ({ 
@@ -532,7 +526,7 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
                                                     rules: e.target.value === 'participant_based' ? prev.rules : [],
                                                     seat_rules: e.target.value === 'seat_based' ? prev.seat_rules : []
                                                 }))}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                             >
                                                 <option value="code">Code</option>
                                                 <option value="participant_based">Participant-Based</option>
@@ -541,11 +535,11 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Value Type</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Value Type</label>
                                             <select
                                                 value={formData.value_type}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, value_type: e.target.value as 'percentage' | 'fixed' }))}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                             >
                                                 <option value="percentage">Percentage</option>
                                                 <option value="fixed">Fixed Amount</option>
@@ -553,386 +547,257 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Value</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Value</label>
                                             <input
                                                 type="number"
                                                 step="0.01"
                                                 required
                                                 value={formData.value}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, value: parseFloat(e.target.value) || 0 }))}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                             />
                                         </div>
 
                                         {formData.discount_type === 'code' && (
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700">Discount Code</label>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Discount Code</label>
                                                 <input
                                                     type="text"
                                                     value={formData.code}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
-                                                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                                 />
                                             </div>
                                         )}
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
                                             <input
                                                 type="datetime-local"
                                                 value={formData.start_date}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">End Date</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
                                             <input
                                                 type="datetime-local"
                                                 value={formData.end_date}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Min Quantity</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Min Quantity</label>
                                             <input
                                                 type="number"
                                                 min="1"
                                                 value={formData.min_quantity}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, min_quantity: parseInt(e.target.value) || 1 }))}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Max Quantity</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Max Quantity</label>
                                             <input
                                                 type="number"
                                                 min="0"
                                                 value={formData.max_quantity}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, max_quantity: parseInt(e.target.value) || 0 }))}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700">Max Uses</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Max Uses</label>
                                             <input
                                                 type="number"
                                                 min="0"
                                                 value={formData.max_uses}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, max_uses: parseInt(e.target.value) || 0 }))}
-                                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                             />
                                         </div>
 
-                                        <div className="flex items-center">
-                                            <input
-                                                type="checkbox"
-                                                checked={formData.is_active}
-                                                onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
-                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                                            <textarea
+                                                value={formData.description}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                                                rows={3}
+                                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                             />
-                                            <label className="ml-2 block text-sm text-gray-900">Active</label>
+                                        </div>
+
+                                        <div className="md:col-span-2">
+                                            <div className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    id="is_active"
+                                                    checked={formData.is_active}
+                                                    onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+                                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
+                                                />
+                                                <label htmlFor="is_active" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                                                    Active
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Description</label>
-                                        <textarea
-                                            value={formData.description}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                            rows={3}
-                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        />
-                                    </div>
-
+                                    {/* Participant-Based Rules */}
                                     {formData.discount_type === 'participant_based' && (
-                                        <div className="border-t pt-6">
-                                            <h4 className="text-lg font-medium text-gray-900 mb-4">Participant Rules</h4>
-                                            
-                                            <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
-                                                <div className="flex">
-                                                    <HiInformationCircle className="h-5 w-5 text-blue-400 mt-0.5" />
-                                                    <div className="ml-3">
-                                                        <h5 className="text-sm font-medium text-blue-800">How to create a Participant-Based discount:</h5>
-                                                        <ol className="mt-2 text-sm text-blue-700 list-decimal list-inside space-y-1">
-                                                            <li>Click &quot;Add Rule&quot; below</li>
-                                                            <li>Select &quot;Previous Event&quot; as the rule type</li>
-                                                            <li>Choose which event to check for previous participation</li>
-                                                            <li>Select which participant fields to match (name, email, DOB)</li>
-                                                            <li>Choose the participation status requirement</li>
-                                                        </ol>
+                                        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                                            <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Participant-Based Rules</h4>
+                                            <div className="space-y-4">
+                                                {formData.rules.map((rule, index) => (
+                                                    <div key={rule.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                            <div>
+                                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Previous Event</label>
+                                                                <select
+                                                                    value={rule.previous_event_id}
+                                                                    onChange={(e) => updateRule(index, 'previous_event_id', e.target.value)}
+                                                                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                                >
+                                                                    <option value="">Select an event</option>
+                                                                    {availableEvents.map(event => (
+                                                                        <option key={event.id} value={event.id}>
+                                                                            {event.title}
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Min Participants</label>
+                                                                <input
+                                                                    type="number"
+                                                                    min="1"
+                                                                    value={rule.min_participants}
+                                                                    onChange={(e) => updateRule(index, 'min_participants', parseInt(e.target.value) || 1)}
+                                                                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Max Participants</label>
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    value={rule.max_participants}
+                                                                    onChange={(e) => updateRule(index, 'max_participants', parseInt(e.target.value) || 0)}
+                                                                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Discount Percentage</label>
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    max="100"
+                                                                    step="0.01"
+                                                                    value={rule.discount_percentage}
+                                                                    onChange={(e) => updateRule(index, 'discount_percentage', parseFloat(e.target.value) || 0)}
+                                                                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                                />
+                                                            </div>
+                                                            <div className="md:col-span-2 flex items-end">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeRule(index)}
+                                                                    className="inline-flex items-center px-3 py-2 border border-red-300 dark:border-red-600 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 dark:text-red-400 bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                                >
+                                                                    <HiTrash className="h-4 w-4 mr-1" />
+                                                                    Remove Rule
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                ))}
+                                                <button
+                                                    type="button"
+                                                    onClick={addRule}
+                                                    className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                                >
+                                                    <HiPlus className="h-4 w-4 mr-2" />
+                                                    Add Rule
+                                                </button>
                                             </div>
-
-                                            {availableEvents.length === 0 ? (
-                                                <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
-                                                    <div className="flex">
-                                                        <HiInformationCircle className="h-5 w-5 text-yellow-400 mt-0.5" />
-                                                        <div className="ml-3">
-                                                            <p className="text-sm text-yellow-800">
-                                                                No previous events found. You need to have other events to create participant-based discounts.
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="mb-4">
-                                                    <p className="text-sm text-gray-600 mb-2">
-                                                        Available events for previous participation check: <strong>{availableEvents.length}</strong>
-                                                    </p>
-                                                </div>
-                                            )}
-
-                                            {formData.rules.map((rule, index) => (
-                                                <div key={index} className="border border-gray-200 rounded-lg p-4 mb-4">
-                                                    <div className="flex justify-between items-start mb-4">
-                                                        <h5 className="text-sm font-medium text-gray-900">Rule {index + 1}</h5>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeRule(index)}
-                                                            className="text-red-600 hover:text-red-800"
-                                                        >
-                                                            <HiTrash className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <div>
-                                                            <label className="block text-sm font-medium text-gray-700">Rule Type</label>
-                                                            <select
-                                                                value={rule.rule_type}
-                                                                onChange={(e) => updateRule(index, 'rule_type', e.target.value)}
-                                                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                            >
-                                                                <option value="previous_event">Previous Event</option>
-                                                                <option value="custom">Custom Field</option>
-                                                            </select>
-                                                        </div>
-
-                                                        {rule.rule_type === 'previous_event' && (
-                                                            <>
-                                                                <div>
-                                                                    <label className="block text-sm font-medium text-gray-700">Related Event</label>
-                                                                    <select
-                                                                        value={rule.related_event_id || ''}
-                                                                        onChange={(e) => updateRule(index, 'related_event_id', e.target.value)}
-                                                                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                                    >
-                                                                        <option value="">Select an event</option>
-                                                                        {availableEvents.map((event) => (
-                                                                            <option key={event.id} value={event.id}>
-                                                                                {event.title} ({new Date(event.start_date).toLocaleDateString()})
-                                                                            </option>
-                                                                        ))}
-                                                                    </select>
-                                                                </div>
-
-                                                                <div>
-                                                                    <label className="block text-sm font-medium text-gray-700">Match Fields</label>
-                                                                    <div className="mt-2 space-y-2">
-                                                                        {['first_name', 'last_name', 'email', 'date_of_birth'].map((field) => (
-                                                                            <label key={field} className="flex items-center">
-                                                                                <input
-                                                                                    type="checkbox"
-                                                                                    checked={rule.field_name?.includes(field) || false}
-                                                                                    onChange={(e) => {
-                                                                                        const currentFields = rule.field_name?.split(',').filter(f => f.trim() !== '') || []
-                                                                                        const newFields = e.target.checked
-                                                                                            ? [...currentFields, field]
-                                                                                            : currentFields.filter(f => f !== field)
-                                                                                        updateRule(index, 'field_name', newFields.join(','))
-                                                                                    }}
-                                                                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                                                                />
-                                                                                <span className="ml-2 text-sm text-gray-900 capitalize">{field.replace('_', ' ')}</span>
-                                                                            </label>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-
-                                                                <div>
-                                                                    <label className="block text-sm font-medium text-gray-700">Participation Status</label>
-                                                                    <select
-                                                                        value={rule.field_value || 'any'}
-                                                                        onChange={(e) => updateRule(index, 'field_value', e.target.value)}
-                                                                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                                    >
-                                                                        <option value="any">Any status</option>
-                                                                        <option value="confirmed">Confirmed only</option>
-                                                                        <option value="verified">Verified only</option>
-                                                                    </select>
-                                                                </div>
-                                                            </>
-                                                        )}
-
-                                                        {rule.rule_type === 'custom' && (
-                                                            <>
-                                                                <div>
-                                                                    <label className="block text-sm font-medium text-gray-700">Field Name</label>
-                                                                    <input
-                                                                        type="text"
-                                                                        value={rule.field_name || ''}
-                                                                        onChange={(e) => updateRule(index, 'field_name', e.target.value)}
-                                                                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                                    />
-                                                                </div>
-
-                                                                <div>
-                                                                    <label className="block text-sm font-medium text-gray-700">Operator</label>
-                                                                    <select
-                                                                        value={rule.operator || 'equals'}
-                                                                        onChange={(e) => updateRule(index, 'operator', e.target.value)}
-                                                                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                                    >
-                                                                        <option value="equals">Equals</option>
-                                                                        <option value="contains">Contains</option>
-                                                                        <option value="starts_with">Starts with</option>
-                                                                        <option value="ends_with">Ends with</option>
-                                                                    </select>
-                                                                </div>
-
-                                                                <div>
-                                                                    <label className="block text-sm font-medium text-gray-700">Field Value</label>
-                                                                    <input
-                                                                        type="text"
-                                                                        value={rule.field_value || ''}
-                                                                        onChange={(e) => updateRule(index, 'field_value', e.target.value)}
-                                                                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                                    />
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
-
-                                            <button
-                                                type="button"
-                                                onClick={addRule}
-                                                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                            >
-                                                <HiPlus className="h-4 w-4 mr-2" />
-                                                Add Rule
-                                            </button>
                                         </div>
                                     )}
 
+                                    {/* Seat-Based Rules */}
                                     {formData.discount_type === 'seat_based' && (
-                                        <div className="border-t pt-6">
-                                            <h4 className="text-lg font-medium text-gray-900 mb-4">Seat-Based Rules</h4>
-                                            
-                                            <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
-                                                <div className="flex">
-                                                    <HiInformationCircle className="h-5 w-5 text-blue-400 mt-0.5" />
-                                                    <div className="ml-3">
-                                                        <h5 className="text-sm font-medium text-blue-800">How seat-based discounts work:</h5>
-                                                        <ol className="mt-2 text-sm text-blue-700 list-decimal list-inside space-y-1">
-                                                            <li>Set minimum and maximum seats for each rule</li>
-                                                            <li>Choose between fixed amount or percentage discount</li>
-                                                            <li>For percentage discounts, it applies to the total amount</li>
-                                                            <li>For fixed amounts, it&apos;s a flat discount per booking</li>
-                                                            <li>The system will apply the best matching rule</li>
-                                                        </ol>
+                                        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                                            <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Seat-Based Rules</h4>
+                                            <div className="space-y-4">
+                                                {formData.seat_rules.map((rule, index) => (
+                                                    <div key={rule.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            <div>
+                                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Seat Number</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={rule.seat_number}
+                                                                    onChange={(e) => updateSeatRule(index, 'seat_number', e.target.value)}
+                                                                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Discount Percentage</label>
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    max="100"
+                                                                    step="0.01"
+                                                                    value={rule.discount_percentage}
+                                                                    onChange={(e) => updateSeatRule(index, 'discount_percentage', parseFloat(e.target.value) || 0)}
+                                                                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                                />
+                                                            </div>
+                                                            <div className="md:col-span-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeSeatRule(index)}
+                                                                    className="inline-flex items-center px-3 py-2 border border-red-300 dark:border-red-600 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 dark:text-red-400 bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                                >
+                                                                    <HiTrash className="h-4 w-4 mr-1" />
+                                                                    Remove Rule
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                ))}
+                                                <button
+                                                    type="button"
+                                                    onClick={addSeatRule}
+                                                    className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                                >
+                                                    <HiPlus className="h-4 w-4 mr-2" />
+                                                    Add Seat Rule
+                                                </button>
                                             </div>
-
-                                            {formData.seat_rules.map((rule, index) => (
-                                                <div key={index} className="border border-gray-200 rounded-lg p-4 mb-4">
-                                                    <div className="flex justify-between items-start mb-4">
-                                                        <h5 className="text-sm font-medium text-gray-900">Seat Rule {index + 1}</h5>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeSeatRule(index)}
-                                                            className="text-red-600 hover:text-red-800"
-                                                        >
-                                                            <HiTrash className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <div>
-                                                            <label className="block text-sm font-medium text-gray-700">Minimum Seats</label>
-                                                            <input
-                                                                type="number"
-                                                                min="1"
-                                                                value={rule.min_seats}
-                                                                onChange={(e) => updateSeatRule(index, 'min_seats', parseInt(e.target.value) || 1)}
-                                                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                            />
-                                                        </div>
-
-                                                        <div>
-                                                            <label className="block text-sm font-medium text-gray-700">Maximum Seats (optional)</label>
-                                                            <input
-                                                                type="number"
-                                                                min="1"
-                                                                value={rule.max_seats || ''}
-                                                                onChange={(e) => updateSeatRule(index, 'max_seats', e.target.value ? parseInt(e.target.value) : undefined)}
-                                                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                            />
-                                                        </div>
-
-                                                        <div>
-                                                            <label className="block text-sm font-medium text-gray-700">Fixed Discount Amount ($)</label>
-                                                            <input
-                                                                type="number"
-                                                                step="0.01"
-                                                                min="0"
-                                                                value={rule.discount_amount}
-                                                                onChange={(e) => updateSeatRule(index, 'discount_amount', parseFloat(e.target.value) || 0)}
-                                                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                            />
-                                                        </div>
-
-                                                        <div>
-                                                            <label className="block text-sm font-medium text-gray-700">Percentage Discount (%)</label>
-                                                            <input
-                                                                type="number"
-                                                                step="0.01"
-                                                                min="0"
-                                                                max="100"
-                                                                value={rule.discount_percentage || ''}
-                                                                onChange={(e) => updateSeatRule(index, 'discount_percentage', e.target.value ? parseFloat(e.target.value) : undefined)}
-                                                                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-
-                                            <button
-                                                type="button"
-                                                onClick={addSeatRule}
-                                                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                            >
-                                                <HiPlus className="h-4 w-4 mr-2" />
-                                                Add Seat Rule
-                                            </button>
                                         </div>
                                     )}
 
-                                    <div className="flex justify-end space-x-3 pt-6 border-t">
+                                    <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
                                         <button
                                             type="button"
                                             onClick={() => {
-                                                setShowForm(false)
                                                 resetForm()
+                                                setShowForm(false)
                                             }}
-                                            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                                         >
                                             Cancel
                                         </button>
                                         <button
                                             type="submit"
                                             disabled={formLoading}
-                                            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                                            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {formLoading ? 'Saving...' : (editingDiscount ? 'Update Discount' : 'Create Discount')}
                                         </button>

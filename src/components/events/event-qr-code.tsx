@@ -72,10 +72,10 @@ export default function EventQRCode({ event, size = 120, showLabel = true, class
                 </div>
                 {showLabel && (
                     <div className="mt-2 text-center">
-                        <p className="text-xs font-medium text-gray-700">
+                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
                             {isMobile ? 'Tap to expand' : 'Scan to share'}
                         </p>
-                        <p className="text-xs text-gray-500 break-all max-w-xs">
+                        <p className="text-xs text-gray-500 break-all max-w-xs dark:text-gray-300">
                             {event.alias ? `/e/${event.alias}` : `/events/${event.id}`}
                         </p>
                     </div>

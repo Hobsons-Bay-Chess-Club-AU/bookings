@@ -38,7 +38,7 @@ export default async function HomePage() {
   const events = await getPublishedEvents()
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       {/* Hero Section */}
       <div className="bg-indigo-700">
         <div className="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
@@ -56,18 +56,18 @@ export default async function HomePage() {
       {/* Events Section */}
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100 sm:text-4xl">
             Upcoming Events
           </h2>
-          <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
+          <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400 sm:mt-4">
             Browse our selection of upcoming events and secure your spot today.
           </p>
         </div>
 
         {events.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No events available at the moment.</p>
-            <p className="text-gray-400 text-sm mt-2">Check back soon for new events!</p>
+            <p className="text-gray-500 dark:text-gray-400 text-lg">No events available at the moment.</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">Check back soon for new events!</p>
           </div>
         ) : (
           <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">

@@ -141,7 +141,7 @@ export default function CMSPage() {
     }
 
     const getStatusColor = (isPublished: boolean) => {
-        return isPublished ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+        return isPublished ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
     }
 
     const getStatusBadge = (isPublished: boolean) => {
@@ -158,8 +158,8 @@ export default function CMSPage() {
                 {/* Header */}
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Content Management</h1>
-                        <p className="text-gray-600 mt-2">Manage website content, pages, and static content</p>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Content Management</h1>
+                        <p className="text-gray-600 dark:text-gray-400 mt-2">Manage website content, pages, and static content</p>
                     </div>
                     <Link
                         href="/admin/cms/new"
@@ -171,7 +171,7 @@ export default function CMSPage() {
                 </div>
 
                 {/* Search and Filters */}
-                <div className="bg-white shadow rounded-lg p-6">
+                <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
                     <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
                         <div className="flex-1">
                             <input
@@ -179,14 +179,14 @@ export default function CMSPage() {
                                 placeholder="Search content by title, slug, or body..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             />
                         </div>
                         <div className="flex gap-2">
                             <select
                                 value={publishedFilter}
                                 onChange={(e) => handleFilterChange(e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             >
                                 <option value="all">All Status</option>
                                 <option value="true">Published</option>
@@ -203,17 +203,17 @@ export default function CMSPage() {
                 </div>
 
                 {/* Content List */}
-                <div className="bg-white shadow rounded-lg overflow-hidden">
+                <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
                     {loading ? (
                         <div className="p-8 text-center">
                             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                            <p className="mt-2 text-gray-600">Loading content...</p>
+                            <p className="mt-2 text-gray-600 dark:text-gray-400">Loading content...</p>
                         </div>
                     ) : content.length === 0 ? (
                         <div className="p-8 text-center">
                             <div className="text-4xl mb-4">📄</div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">No content found</h3>
-                            <p className="text-gray-600 mb-4">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No content found</h3>
+                            <p className="text-gray-600 dark:text-gray-400 mb-4">
                                 {searchTerm || publishedFilter !== 'all'
                                     ? 'Try adjusting your search criteria.'
                                     : 'Get started by creating your first piece of content.'
@@ -222,7 +222,7 @@ export default function CMSPage() {
                             {!searchTerm && publishedFilter === 'all' && (
                                 <Link
                                     href="/admin/cms/new"
-                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-indigo-100 hover:bg-indigo-200"
+                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30 hover:bg-indigo-200 dark:hover:bg-indigo-900/50"
                                 >
                                     Create Content
                                 </Link>
@@ -231,43 +231,43 @@ export default function CMSPage() {
                     ) : (
                         <>
                             <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
+                                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead className="bg-gray-50 dark:bg-gray-700">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                                 Content
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                                 Status
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                                 Last Updated
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                                 Version
                                             </th>
-                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                                 Actions
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
+                                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                         {content.map((item) => (
-                                            <tr key={item.id} className="hover:bg-gray-50">
+                                            <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center">
                                                         <div className="flex-grow">
-                                                            <div className="text-sm font-medium text-gray-900">
+                                                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                                 {item.title}
                                                                 {item.is_system && (
-                                                                    <HiShieldCheck className="inline ml-2 h-4 w-4 text-blue-600" title="System Content" />
+                                                                    <HiShieldCheck className="inline ml-2 h-4 w-4 text-blue-600 dark:text-blue-400" title="System Content" />
                                                                 )}
                                                             </div>
-                                                            <div className="text-sm text-gray-500">
+                                                            <div className="text-sm text-gray-500 dark:text-gray-400">
                                                                 /{item.slug}
                                                             </div>
                                                             {item.meta_description && (
-                                                                <div className="text-xs text-gray-400 mt-1 line-clamp-2">
+                                                                <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 line-clamp-2">
                                                                     {item.meta_description}
                                                                 </div>
                                                             )}
@@ -278,21 +278,21 @@ export default function CMSPage() {
                                                     {getStatusBadge(item.is_published)}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-900">
+                                                    <div className="text-sm text-gray-900 dark:text-gray-100">
                                                         {formatDate(item.updated_at)}
                                                     </div>
-                                                    <div className="text-xs text-gray-500">
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
                                                         by {item.updated_by_profile?.full_name || 'Unknown'}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className="text-sm text-gray-900">v{item.version}</span>
+                                                    <span className="text-sm text-gray-900 dark:text-gray-100">v{item.version}</span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right">
                                                     <div className="relative">
                                                         <button
                                                             onClick={() => toggleDropdown(item.id)}
-                                                            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                                                            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                                                             title="Content Actions"
                                                         >
                                                             <HiCog6Tooth className="h-5 w-5" />
@@ -302,7 +302,7 @@ export default function CMSPage() {
                                                         {openDropdownId === item.id && (
                                                             <div
                                                                 ref={(el) => { dropdownRefs.current[item.id] = el }}
-                                                                className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50"
+                                                                className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50"
                                                             >
                                                                 <div className="py-1">
                                                                     {item.is_published && (
@@ -310,34 +310,34 @@ export default function CMSPage() {
                                                                             href={`/content/${item.slug}`}
                                                                             target="_blank"
                                                                             rel="noopener noreferrer"
-                                                                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                                            className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                                                                         >
                                                                             <HiEye className="mr-2 h-4 w-4" /> View Published
                                                                         </a>
                                                                     )}
                                                                     <Link
                                                                         href={`/admin/cms/${item.id}/edit`}
-                                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                                                                         onClick={() => setOpenDropdownId(null)}
                                                                     >
                                                                         <HiPencilSquare className="mr-2 h-4 w-4" /> Edit Content
                                                                     </Link>
                                                                     <Link
                                                                         href={`/admin/cms/${item.id}/history`}
-                                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                                                                         onClick={() => setOpenDropdownId(null)}
                                                                     >
                                                                         <HiClock className="mr-2 h-4 w-4" /> Version History
                                                                     </Link>
                                                                     {!item.is_system && (
                                                                         <>
-                                                                            <div className="border-t border-gray-100 my-1"></div>
+                                                                            <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
                                                                             <button
                                                                                 onClick={() => {
                                                                                     setDeleteConfirm(item.id)
                                                                                     setOpenDropdownId(null)
                                                                                 }}
-                                                                                className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left"
+                                                                                className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-left"
                                                                             >
                                                                                 <HiTrash className="mr-2 h-4 w-4" /> Delete Content
                                                                             </button>
@@ -356,26 +356,26 @@ export default function CMSPage() {
 
                             {/* Pagination */}
                             {pagination.totalPages > 1 && (
-                                <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                                <div className="bg-white dark:bg-gray-800 px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
                                     <div className="flex-1 flex justify-between sm:hidden">
                                         <button
                                             onClick={() => handlePageChange(pagination.page - 1)}
                                             disabled={pagination.page <= 1}
-                                            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             Previous
                                         </button>
                                         <button
                                             onClick={() => handlePageChange(pagination.page + 1)}
                                             disabled={pagination.page >= pagination.totalPages}
-                                            className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             Next
                                         </button>
                                     </div>
                                     <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                                         <div>
-                                            <p className="text-sm text-gray-700">
+                                            <p className="text-sm text-gray-700 dark:text-gray-300">
                                                 Showing{' '}
                                                 <span className="font-medium">
                                                     {((pagination.page - 1) * pagination.limit) + 1}
@@ -394,7 +394,7 @@ export default function CMSPage() {
                                                 <button
                                                     onClick={() => handlePageChange(pagination.page - 1)}
                                                     disabled={pagination.page <= 1}
-                                                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     Previous
                                                 </button>
@@ -403,8 +403,8 @@ export default function CMSPage() {
                                                         key={pageNum}
                                                         onClick={() => handlePageChange(pageNum)}
                                                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${pageNum === pagination.page
-                                                            ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
-                                                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                            ? 'z-10 bg-indigo-50 dark:bg-indigo-900/30 border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                                            : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600'
                                                             }`}
                                                     >
                                                         {pageNum}
@@ -413,7 +413,7 @@ export default function CMSPage() {
                                                 <button
                                                     onClick={() => handlePageChange(pagination.page + 1)}
                                                     disabled={pagination.page >= pagination.totalPages}
-                                                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     Next
                                                 </button>
@@ -429,22 +429,22 @@ export default function CMSPage() {
 
             {/* Delete Confirmation Modal */}
             {deleteConfirm && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                    <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div className="fixed inset-0 bg-gray-600 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-75 overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
                         <div className="mt-3 text-center">
-                            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                                <span className="text-red-600 text-xl">⚠️</span>
+                            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30">
+                                <span className="text-red-600 dark:text-red-400 text-xl">⚠️</span>
                             </div>
-                            <h3 className="text-lg font-medium text-gray-900 mt-2">Delete Content</h3>
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mt-2">Delete Content</h3>
                             <div className="mt-2 px-7 py-3">
-                                <p className="text-sm text-gray-500">
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
                                     Are you sure you want to delete this content? This action cannot be undone.
                                 </p>
                             </div>
                             <div className="flex gap-4 mt-4">
                                 <button
                                     onClick={() => setDeleteConfirm(null)}
-                                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 text-base font-medium rounded-md shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                                    className="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-base font-medium rounded-md shadow-sm hover:bg-gray-400 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-300"
                                 >
                                     Cancel
                                 </button>

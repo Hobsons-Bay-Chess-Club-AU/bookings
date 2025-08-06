@@ -16,7 +16,7 @@ export default function LoadingSpinner({ size = 'md', text, className = '' }: Lo
             <div className="flex flex-col items-center">
                 <div className={`animate-spin rounded-full border-b-2 border-indigo-600 ${sizeClasses[size]}`}></div>
                 {text && (
-                    <p className="mt-2 text-sm text-gray-600">{text}</p>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{text}</p>
                 )}
             </div>
         </div>

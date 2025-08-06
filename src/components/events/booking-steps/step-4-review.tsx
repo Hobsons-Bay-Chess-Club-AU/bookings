@@ -68,35 +68,35 @@ export default function Step4Review({
     return (
         <div className="space-y-6">
             <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Review Your Booking</h3>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Review Your Booking</h3>
 
                 {/* Event Info */}
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                    <h4 className="font-medium text-gray-900 mb-2">Event Details</h4>
-                    <p className="text-gray-700">{event.title}</p>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Event Details</h4>
+                    <p className="text-gray-700 dark:text-gray-300">{event.title}</p>
                     {event.start_date && (
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                             {new Date(event.start_date).toLocaleDateString()} at {new Date(event.start_date).toLocaleTimeString()}
                         </p>
                     )}
                 </div>
 
                 {/* Pricing Info */}
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                    <h4 className="font-medium text-gray-900 mb-2">Pricing</h4>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Pricing</h4>
                     <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                            <span className="text-gray-700">
+                            <span className="text-gray-700 dark:text-gray-300">
                                 {selectedPricing?.name} × {quantity}
                             </span>
-                            <span className="text-gray-700">
+                            <span className="text-gray-700 dark:text-gray-300">
                                 ${baseAmount.toFixed(2)}
                             </span>
                         </div>
                         
                         {/* Discount Information */}
                         {discountLoading && (
-                            <div className="flex justify-between items-center text-sm text-gray-600">
+                            <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
                                 <span>Calculating discounts...</span>
                                 <span>Please wait</span>
                             </div>
@@ -106,22 +106,22 @@ export default function Step4Review({
                             <>
                                 {discountInfo.appliedDiscounts.map((appliedDiscount, index) => (
                                     <div key={index} className="flex justify-between items-center text-sm">
-                                        <span className="text-green-600">
+                                        <span className="text-green-600 dark:text-green-300">
                                             {appliedDiscount.discount.name}
                                             {appliedDiscount.type === 'participant_based' && 
                                                 ` (${appliedDiscount.eligibleParticipants} eligible)`}
                                             {appliedDiscount.discount.rules && appliedDiscount.discount.rules.some((rule) => rule.rule_type === 'previous_event') && 
                                                 ` (Previous event discount)`}
                                         </span>
-                                        <span className="text-green-600 font-medium">
+                                        <span className="text-green-600 dark:text-green-300 font-medium">
                                             -${appliedDiscount.amount.toFixed(2)}
                                         </span>
                                     </div>
                                 ))}
-                                <div className="border-t border-gray-200 pt-2 mt-2">
+                                <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-gray-700 font-medium">Total Discount</span>
-                                        <span className="text-green-600 font-medium">
+                                        <span className="text-gray-700 dark:text-gray-300 font-medium">Total Discount</span>
+                                        <span className="text-green-600 dark:text-green-300 font-medium">
                                             -${discountInfo.totalDiscount.toFixed(2)}
                                         </span>
                                     </div>
@@ -129,10 +129,10 @@ export default function Step4Review({
                             </>
                         )}
                         
-                        <div className="border-t border-gray-200 pt-2 mt-2">
+                        <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-900 font-medium">Total Amount</span>
-                                <span className={`font-bold text-lg ${isFreeEvent ? 'text-green-600' : 'text-gray-900'}`}>
+                                <span className="text-gray-900 dark:text-gray-100 font-medium">Total Amount</span>
+                                <span className={`font-bold text-lg ${isFreeEvent ? 'text-green-600 dark:text-green-300' : 'text-gray-900 dark:text-gray-100'}`}>
                                     {isFreeEvent ? 'Free' : `$${totalAmount.toFixed(2)}`}
                                 </span>
                             </div>
@@ -141,24 +141,27 @@ export default function Step4Review({
                 </div>
 
                 {/* Contact Info */}
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                    <h4 className="font-medium text-gray-900 mb-2">Contact Information</h4>
-                    <p className="text-gray-700">{contactInfo.first_name} {contactInfo.last_name}</p>
-                    <p className="text-gray-600">{contactInfo.email}</p>
-                    {contactInfo.phone && <p className="text-gray-600">{contactInfo.phone}</p>}
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Contact Information</h4>
+                    <p className="text-gray-700 dark:text-gray-300">{contactInfo.first_name} {contactInfo.last_name}</p>
+                    <p className="text-gray-600 dark:text-gray-400">{contactInfo.email}</p>
+                    {contactInfo.phone && <p className="text-gray-600 dark:text-gray-400">{contactInfo.phone}</p>}
                 </div>
 
                 {/* Participants */}
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                    <h4 className="font-medium text-gray-900 mb-2">Participants ({quantity})</h4>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Participants ({quantity})</h4>
                     <div className="space-y-3">
                         {participants.map((participant, index) => (
-                            <div key={index} className="border-b border-gray-200 pb-2 last:border-b-0">
-                                <p className="text-gray-700 font-medium">
+                            <div key={index} className="border-b border-gray-200 dark:border-gray-700 pb-2 last:border-b-0">
+                                <p className="text-gray-700 dark:text-gray-300 font-medium">
                                     {index + 1}. {participant.first_name} {participant.last_name}
                                 </p>
                                 {participant.email && (
-                                    <p className="text-sm text-gray-600">{participant.email}</p>
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm">{participant.email}</p>
+                                )}
+                                {participant.date_of_birth && (
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm">DOB: {participant.date_of_birth}</p>
                                 )}
 
                                 {/* Custom fields */}
@@ -182,7 +185,7 @@ export default function Step4Review({
                                     }
 
                                     return (
-                                        <div key={field.id} className="text-sm text-gray-600">
+                                        <div key={field.id} className="text-sm text-gray-600 dark:text-gray-400">
                                             <span className="font-medium">{field.label}:</span> {displayValue as string}
                                         </div>
                                     )
@@ -193,7 +196,7 @@ export default function Step4Review({
                 </div>
 
                 {/* Terms and Marketing */}
-                <div className="border-t pt-6">
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                     <div className="space-y-4">
                         <div className="flex items-start">
                             <input
@@ -201,18 +204,18 @@ export default function Step4Review({
                                 id="terms"
                                 checked={agreedToTerms}
                                 onChange={(e) => setAgreedToTerms(e.target.checked)}
-                                className="mt-1 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                className="mt-1 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 dark:bg-gray-800 dark:checked:bg-indigo-600"
                             />
-                            <label htmlFor="terms" className="ml-3 text-sm text-gray-700">
+                            <label htmlFor="terms" className="ml-3 text-sm text-gray-700 dark:text-gray-200">
                                 I agree to the{' '}
-                                <a href="/content/terms-of-use" target="_blank" className="text-indigo-600 hover:text-indigo-500">
+                                <a href="/content/terms-of-use" target="_blank" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
                                     Terms and Conditions
                                 </a>{' '}
                                 and{' '}
-                                <a href="/content/privacy-policy" target="_blank" className="text-indigo-600 hover:text-indigo-500">
+                                <a href="/content/privacy-policy" target="_blank" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
                                     Privacy Policy
                                 </a>
-                                <span className="text-red-500 ml-1">*</span>
+                                <span className="text-red-500 dark:text-red-400 ml-1">*</span>
                             </label>
                         </div>
 
@@ -222,24 +225,24 @@ export default function Step4Review({
                                 id="marketing"
                                 checked={optInMarketing}
                                 onChange={(e) => setOptInMarketing(e.target.checked)}
-                                className="mt-1 h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                className="mt-1 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 dark:bg-gray-800 dark:checked:bg-indigo-600"
                             />
-                            <label htmlFor="marketing" className="ml-3 text-sm text-gray-700">
+                            <label htmlFor="marketing" className="ml-3 text-sm text-gray-700 dark:text-gray-200">
                                 I would like to receive marketing emails about future events and updates
                             </label>
                         </div>
                     </div>
 
                     {error && (
-                        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                            <p className="text-sm text-red-600">{error}</p>
+                        <div className="mt-4 p-3 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-md">
+                            <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
                         </div>
                     )}
 
                     {/* Payment Warning for Paid Events */}
                     {!isFreeEvent && (
-                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                            <p className="text-sm text-blue-700">
+                        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md">
+                            <p className="text-sm text-blue-700 dark:text-blue-200">
                                 <strong>Next Step:</strong> You will be redirected to our secure payment portal. 
                                 We do not capture or store any payment details on our system.
                             </p>

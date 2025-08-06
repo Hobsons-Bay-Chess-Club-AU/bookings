@@ -12,10 +12,17 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Dark mode styles */
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+}
+
+/* System preference fallback */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not(.light) {
+    --background: #0f172a;
+    --foreground: #f8fafc;
   }
 }
 
@@ -88,6 +95,11 @@ body {
   color: #6b7280;
 }
 
+.dark .markdown-content blockquote {
+  border-left-color: #4b5563;
+  color: #9ca3af;
+}
+
 .markdown-content code {
   background-color: #f3f4f6;
   padding: 0.125rem 0.25rem;
@@ -95,13 +107,20 @@ body {
   font-size: 0.875em;
 }
 
+.dark .markdown-content code {
+  background-color: #374151;
+  color: #f3f4f6;
+}
+
 .markdown-content pre {
   background-color: #f3f4f6;
   padding: 1rem;
-  border-radius: 0.5rem;
-  overflow-x: auto;
-  margin: 1rem 0;
 }
+
+.dark .markdown-content pre {
+  background-color: #374151;
+}
+  
 
 .markdown-content pre code {
   background-color: transparent;

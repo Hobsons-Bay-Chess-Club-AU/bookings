@@ -26,8 +26,8 @@ export default function CopyButton({ text, className = '', children }: CopyButto
       onClick={handleCopy}
       className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded border transition-colors ${
         copied
-          ? 'bg-green-100 text-green-800 border-green-300'
-          : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+          ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-300 dark:border-green-700'
+          : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700'
       } ${className}`}
       title={copied ? 'Copied!' : 'Copy to clipboard'}
     >

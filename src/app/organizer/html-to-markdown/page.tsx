@@ -18,57 +18,57 @@ function SimpleRichTextEditor({ value, onChange, placeholder }: {
 
     if (!isClient) {
         return (
-            <div className="border border-gray-300 rounded-md h-96 flex items-center justify-center">
-                <div className="text-gray-500">Loading editor...</div>
+            <div className="border border-gray-300 dark:border-gray-600 rounded-md h-96 flex items-center justify-center">
+                <div className="text-gray-500 dark:text-gray-400">Loading editor...</div>
             </div>
         )
     }
 
     return (
-        <div className="border border-gray-300 rounded-md text-gray-900">
+        <div className="border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-100">
             {/* Toolbar */}
-            <div className="border-b border-gray-200 bg-gray-50 px-3 py-2">
+            <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 px-3 py-2">
                 <div className="flex flex-wrap gap-1">
                     <button
                         type="button"
-                        className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+                        className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
                         onClick={() => document.execCommand('bold')}
                     >
                         <strong>B</strong>
                     </button>
                     <button
                         type="button"
-                        className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+                        className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
                         onClick={() => document.execCommand('italic')}
                     >
                         <em>I</em>
                     </button>
                     <button
                         type="button"
-                        className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+                        className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
                         onClick={() => document.execCommand('underline')}
                     >
                         <u>U</u>
                     </button>
-                    <div className="border-l border-gray-300 mx-1"></div>
+                    <div className="border-l border-gray-300 dark:border-gray-600 mx-1"></div>
                     <button
                         type="button"
-                        className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+                        className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
                         onClick={() => document.execCommand('insertUnorderedList')}
                     >
                         • List
                     </button>
                     <button
                         type="button"
-                        className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+                        className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
                         onClick={() => document.execCommand('insertOrderedList')}
                     >
                         1. List
                     </button>
-                    <div className="border-l border-gray-300 mx-1"></div>
+                    <div className="border-l border-gray-300 dark:border-gray-600 mx-1"></div>
                     <button
                         type="button"
-                        className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+                        className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
                         onClick={() => {
                             const url = prompt('Enter URL:')
                             if (url) {
@@ -84,7 +84,7 @@ function SimpleRichTextEditor({ value, onChange, placeholder }: {
             {/* Editor */}
             <div
                 contentEditable
-                className="p-4 min-h-96 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none"
+                className="p-4 min-h-96 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 dark:empty:before:text-gray-500 empty:before:pointer-events-none bg-white dark:bg-gray-800"
                 style={{ minHeight: '400px' }}
                 dangerouslySetInnerHTML={{ __html: value }}
                 onInput={(e) => {
@@ -220,7 +220,7 @@ function HtmlToMarkdownConverter() {
             <div className="space-y-6">
                 <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-                    <p className="mt-2 text-sm text-gray-500">Loading editor...</p>
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading editor...</p>
                 </div>
             </div>
         )
@@ -229,9 +229,9 @@ function HtmlToMarkdownConverter() {
     return (
         <div className="space-y-6">
             {/* Instructions */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-blue-900 mb-2">How to Use This Tool</h3>
-                <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <h3 className="text-lg font-medium text-blue-900 dark:text-blue-100 mb-2">How to Use This Tool</h3>
+                <ol className="text-sm text-blue-800 dark:text-blue-300 space-y-1 list-decimal list-inside">
                     <li>Paste or type rich content in the visual editor below</li>
                     <li>You can paste directly from Word, Google Docs, or other rich text sources</li>
                     <li>Click &quot;Convert to Markdown&quot; to see the result</li>
@@ -270,11 +270,11 @@ function HtmlToMarkdownConverter() {
                 {/* Rich Text Editor */}
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-medium text-gray-900">Rich Text Editor</h3>
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Rich Text Editor</h3>
                         <button
                             onClick={() => copyToClipboard(htmlContent)}
                             disabled={!htmlContent.trim()}
-                            className="text-sm text-indigo-600 hover:text-indigo-800 disabled:text-gray-400 disabled:cursor-not-allowed"
+                            className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 disabled:text-gray-400 dark:disabled:text-gray-500 disabled:cursor-not-allowed"
                         >
                             Copy HTML
                         </button>
@@ -286,19 +286,19 @@ function HtmlToMarkdownConverter() {
                             placeholder="Start typing or paste rich content here..."
                         />
                     </div>
-                    <p className="text-xs text-gray-500 mt-12">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-12">
                         Tip: You can paste directly from Word, Google Docs, or other rich text sources
                     </p>
                 </div>
 
                 {/* Markdown Output */}
-                <div className="space-y-2 text-gray-900">
+                <div className="space-y-2 text-gray-900 dark:text-gray-100">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-medium text-gray-900">Markdown Output</h3>
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Markdown Output</h3>
                         <button
                             onClick={() => copyToClipboard(markdownOutput)}
                             disabled={!markdownOutput.trim()}
-                            className="text-sm text-indigo-600 hover:text-indigo-800 disabled:text-gray-400 disabled:cursor-not-allowed"
+                            className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 disabled:text-gray-400 dark:disabled:text-gray-500 disabled:cursor-not-allowed"
                         >
                             Copy Markdown
                         </button>
@@ -307,17 +307,17 @@ function HtmlToMarkdownConverter() {
                         value={markdownOutput}
                         readOnly
                         placeholder="Converted Markdown will appear here..."
-                        className="w-full h-96 p-4 border border-gray-300 rounded-md font-mono text-sm bg-gray-50 resize-none"
+                        className="w-full h-96 p-4 border border-gray-300 dark:border-gray-600 rounded-md font-mono text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none"
                     />
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                         Characters: {markdownOutput.length}
                     </p>
                 </div>
             </div>
 
             {/* Raw HTML View (Expandable) */}
-            <details className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-gray-900">
-                <summary className="text-lg font-medium text-gray-900 cursor-pointer hover:text-gray-700">
+            <details className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4 text-gray-900 dark:text-gray-100">
+                <summary className="text-lg font-medium text-gray-900 dark:text-gray-100 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
                     View Raw HTML (Advanced)
                 </summary>
                 <div className="mt-4">
@@ -325,45 +325,45 @@ function HtmlToMarkdownConverter() {
                         value={htmlContent}
                         onChange={(e) => setHtmlContent(e.target.value)}
                         placeholder="Raw HTML content..."
-                        className="w-full h-32 p-3 border border-gray-300 rounded-md font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-vertical"
+                        className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-md font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-vertical bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     />
-                    <p className="text-xs text-gray-500 mt-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                         You can also edit the raw HTML directly here
                     </p>
                 </div>
             </details>
 
             {/* Markdown Reference */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-gray-900">
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Common Markdown Syntax</h3>
+            <div className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4 text-gray-900 dark:text-gray-100">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Common Markdown Syntax</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
-                        <h4 className="font-semibold text-gray-800 mb-2">Headers</h4>
-                        <code className="block bg-white p-2 rounded border">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Headers</h4>
+                        <code className="block bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100">
                             # H1<br />
                             ## H2<br />
                             ### H3
                         </code>
                     </div>
                     <div>
-                        <h4 className="font-semibold text-gray-800 mb-2">Text Formatting</h4>
-                        <code className="block bg-white p-2 rounded border">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Text Formatting</h4>
+                        <code className="block bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100">
                             **bold**<br />
                             *italic*<br />
                             ~~strikethrough~~
                         </code>
                     </div>
                     <div>
-                        <h4 className="font-semibold text-gray-800 mb-2">Lists</h4>
-                        <code className="block bg-white p-2 rounded border">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Lists</h4>
+                        <code className="block bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100">
                             - Bullet point<br />
                             1. Numbered item<br />
                             2. Another item
                         </code>
                     </div>
                     <div>
-                        <h4 className="font-semibold text-gray-800 mb-2">Links & Images</h4>
-                        <code className="block bg-white p-2 rounded border">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Links & Images</h4>
+                        <code className="block bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100">
                             [Link text](URL)<br />
                             ![Alt text](image-url)
                         </code>
@@ -379,14 +379,14 @@ export default function HtmlToMarkdownPage() {
         <>
             {/* Page Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">HTML to Markdown Converter</h1>
-                <p className="text-gray-600 mt-2">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">HTML to Markdown Converter</h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-2">
                     Convert rich text content to Markdown format for your event descriptions
                 </p>
             </div>
 
             {/* Main Content */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
                 <HtmlToMarkdownConverter />
             </div>
         </>

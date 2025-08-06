@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Profile } from '@/lib/types/database'
 import LoadingSpinner from '@/components/ui/loading-spinner'
+import ThemeSelector from '@/components/ui/theme-selector'
+import ThemePreview from '@/components/ui/theme-preview'
 
 export default function ProfilePage() {
     const [profile, setProfile] = useState<Profile | null>(null)
@@ -102,7 +104,7 @@ export default function ProfilePage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <LoadingSpinner size="lg" text="Loading profile..." />
             </div>
         )
@@ -110,10 +112,10 @@ export default function ProfilePage() {
 
     if (!profile) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Profile not found</h2>
-                    <p className="text-gray-600 mb-6">Unable to load your profile information.</p>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Profile not found</h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">Unable to load your profile information.</p>
                     <button
                         onClick={() => router.push('/dashboard')}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md"
@@ -126,36 +128,36 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="bg-gray-50 text-gray-900">
+        <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
             {/* Page Header */}
-            <div className="bg-white shadow">
+            <div className="bg-white dark:bg-gray-800 shadow">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 </div>
             </div>
 
             <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                <div className="bg-white shadow rounded-lg">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h2 className="text-xl font-semibold text-gray-900">Account Information</h2>
+                <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+                    <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Account Information</h2>
                     </div>
 
                     <form onSubmit={handleSubmit} className="p-6 space-y-6">
                         {error && (
-                            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+                            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded">
                                 {error}
                             </div>
                         )}
 
                         {success && (
-                            <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded">
+                            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 px-4 py-3 rounded">
                                 {success}
                             </div>
                         )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Email Address
                                 </label>
                                 <input
@@ -163,13 +165,13 @@ export default function ProfilePage() {
                                     id="email"
                                     value={profile.email}
                                     disabled
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500 sm:text-sm"
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 sm:text-sm"
                                 />
-                                <p className="mt-1 text-sm text-gray-500">Email cannot be changed</p>
+                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Email cannot be changed</p>
                             </div>
 
                             <div>
-                                <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                                <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Role
                                 </label>
                                 <input
@@ -177,12 +179,12 @@ export default function ProfilePage() {
                                     id="role"
                                     value={profile.role}
                                     disabled
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500 sm:text-sm capitalize"
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 sm:text-sm capitalize"
                                 />
                             </div>
 
                             <div className="md:col-span-2">
-                                <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">
+                                <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Full Name
                                 </label>
                                 <input
@@ -191,13 +193,13 @@ export default function ProfilePage() {
                                     name="full_name"
                                     value={formData.full_name}
                                     onChange={handleChange}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                     placeholder="Enter your full name"
                                 />
                             </div>
 
                             <div className="md:col-span-2">
-                                <label htmlFor="avatar_url" className="block text-sm font-medium text-gray-700">
+                                <label htmlFor="avatar_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Avatar URL
                                 </label>
                                 <input
@@ -206,42 +208,50 @@ export default function ProfilePage() {
                                     name="avatar_url"
                                     value={formData.avatar_url}
                                     onChange={handleChange}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                     placeholder="https://example.com/avatar.jpg"
                                 />
                             </div>
                         </div>
 
                         <div className="border-t pt-6">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">Account Statistics</h3>
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Account Statistics</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="bg-gray-50 p-4 rounded-lg">
-                                    <p className="text-sm text-gray-600">Member since</p>
-                                    <p className="text-lg font-semibold text-gray-900">
+                                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Member since</p>
+                                    <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                         {new Date(profile.created_at).toLocaleDateString()}
                                     </p>
                                 </div>
-                                <div className="bg-gray-50 p-4 rounded-lg">
-                                    <p className="text-sm text-gray-600">Last updated</p>
-                                    <p className="text-lg font-semibold text-gray-900">
+                                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Last updated</p>
+                                    <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                         {new Date(profile.updated_at).toLocaleDateString()}
                                     </p>
                                 </div>
-                                <div className="bg-gray-50 p-4 rounded-lg">
-                                    <p className="text-sm text-gray-600">Account ID</p>
-                                    <p className="text-sm font-mono text-gray-900">
+                                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Account ID</p>
+                                    <p className="text-sm font-mono text-gray-900 dark:text-gray-100">
                                         {profile.id.slice(0, 8)}...
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                        <div className="border-t pt-6">
+                            <ThemeSelector />
+                        </div>
+
+                        <div className="border-t pt-6">
+                            <ThemePreview />
+                        </div>
+
+                        <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
                             <button
                                 type="button"
                                 onClick={handleCancel}
                                 disabled={navigating}
-                                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                             >
                                 {navigating ? (
                                     <>

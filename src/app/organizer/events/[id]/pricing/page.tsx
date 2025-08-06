@@ -68,10 +68,10 @@ export default function EventPricingPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading event pricing...</p>
+                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading event pricing...</p>
                 </div>
             </div>
         )
@@ -79,12 +79,12 @@ export default function EventPricingPage() {
 
     if (error || !event) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-900">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                         {error || 'Event not found'}
                     </h2>
-                    <p className="text-gray-600 mt-2">
+                    <p className="text-gray-600 dark:text-gray-400 mt-2">
                         {error || 'The event you\'re looking for doesn\'t exist or you don\'t have permission to view it.'}
                     </p>
                 </div>

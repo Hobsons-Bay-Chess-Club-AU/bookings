@@ -72,11 +72,11 @@ export default function ResetPasswordPage() {
 
     if (!isValidSession && !error) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-md w-full space-y-8">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-                        <p className="mt-2 text-sm text-gray-600">Verifying reset link...</p>
+                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Verifying reset link...</p>
                     </div>
                 </div>
             </div>
@@ -84,20 +84,20 @@ export default function ResetPasswordPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8">
                 <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-100">
                         Set new password
                     </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
+                    <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
                         Enter your new password below.
                     </p>
                 </div>
 
                 {success ? (
                     <div className="mt-8 space-y-6">
-                        <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded">
+                        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 px-4 py-3 rounded">
                             <p className="text-sm">
                                 Your password has been successfully reset! You will be redirected to your dashboard shortly.
                             </p>
@@ -105,7 +105,7 @@ export default function ResetPasswordPage() {
                         <div className="text-center">
                             <Link
                                 href="/dashboard"
-                                className="font-medium text-indigo-600 hover:text-indigo-500"
+                                className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
                             >
                                 Go to dashboard now
                             </Link>
@@ -114,7 +114,7 @@ export default function ResetPasswordPage() {
                 ) : (
                     <form className="mt-8 space-y-6" onSubmit={handleResetPassword}>
                         {error && (
-                            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+                            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded">
                                 {error}
                             </div>
                         )}
@@ -130,7 +130,7 @@ export default function ResetPasswordPage() {
                                     type="password"
                                     autoComplete="new-password"
                                     required
-                                    className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                    className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                     placeholder="New password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -146,7 +146,7 @@ export default function ResetPasswordPage() {
                                     type="password"
                                     autoComplete="new-password"
                                     required
-                                    className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                    className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                     placeholder="Confirm new password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -167,7 +167,7 @@ export default function ResetPasswordPage() {
                         <div className="text-center">
                             <Link
                                 href="/auth/login"
-                                className="font-medium text-indigo-600 hover:text-indigo-500"
+                                className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
                             >
                                 ← Back to sign in
                             </Link>

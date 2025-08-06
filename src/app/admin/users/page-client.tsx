@@ -77,10 +77,10 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
 
     const getRoleBadge = (role: UserRole) => {
         const colors = {
-            user: 'bg-gray-100 text-gray-800',
-            organizer: 'bg-blue-100 text-blue-800',
-            admin: 'bg-red-100 text-red-800',
-            customer_support: 'bg-purple-100 text-purple-800'
+            user: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200',
+            organizer: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
+            admin: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+            customer_support: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
         }
 
         return (
@@ -94,7 +94,7 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
     const getStatusBadge = (active: boolean, emailConfirmed?: boolean) => {
         if (!active) {
             return (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                     <HiXCircle className="h-4 w-4 mr-1" />
                     Inactive
                 </span>
@@ -103,7 +103,7 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
 
         if (emailConfirmed === false) {
             return (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
                     <HiXMark className="h-4 w-4 mr-1" />
                     Unverified
                 </span>
@@ -111,7 +111,7 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
         }
 
         return (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                 <HiCheckCircle className="h-4 w-4 mr-1" />
                 Active
             </span>
@@ -237,26 +237,26 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-                <p className="mt-2 text-gray-600">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">User Management</h1>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
                     Manage user accounts, roles, and permissions
                 </p>
             </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <HiUsers className="h-6 w-6 text-gray-400" />
+                                <HiUsers className="h-6 w-6 text-gray-400 dark:text-gray-500" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                                         Total Users
                                     </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
+                                    <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                         {stats.total}
                                     </dd>
                                 </dl>
@@ -265,7 +265,7 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
                     </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
@@ -273,10 +273,10 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                                         Active Users
                                     </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
+                                    <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                         {stats.active}
                                     </dd>
                                 </dl>
@@ -285,7 +285,7 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
                     </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
@@ -293,10 +293,10 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                                         Organizers
                                     </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
+                                    <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                         {stats.byRole.organizer}
                                     </dd>
                                 </dl>
@@ -305,7 +305,7 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
                     </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
@@ -313,10 +313,10 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
-                                    <dt className="text-sm font-medium text-gray-500 truncate">
+                                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                                         Admins
                                     </dt>
-                                    <dd className="text-lg font-medium text-gray-900">
+                                    <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                         {stats.byRole.admin}
                                     </dd>
                                 </dl>
@@ -327,34 +327,34 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
             </div>
 
             {/* Filters */}
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Search Users
                         </label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <HiMagnifyingGlass className="h-5 w-5 text-gray-400" />
+                                <HiMagnifyingGlass className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                             </div>
                             <input
                                 type="text"
                                 placeholder="Search by email or name..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:placeholder-gray-400 dark:focus:placeholder-gray-500 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Filter by Role
                         </label>
                         <select
                             value={roleFilter}
                             onChange={(e) => setRoleFilter(e.target.value as UserRole | 'all')}
-                            className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            className="block w-full py-2 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         >
                             <option value="all">All Roles</option>
                             <option value="user">Users</option>
@@ -365,13 +365,13 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Filter by Status
                         </label>
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
-                            className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            className="block w-full py-2 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         >
                             <option value="all">All Statuses</option>
                             <option value="active">Active</option>
@@ -382,45 +382,45 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
             </div>
 
             {/* Users Table */}
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                         Users ({filteredUsers.length})
                     </h3>
                 </div>
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead className="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     User
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     Role
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     Status
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     Joined
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     Last Sign In
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             {filteredUsers.map((user) => (
-                                <tr key={user.id} className="hover:bg-gray-50">
+                                <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div>
-                                            <div className="text-sm font-medium text-gray-900">
+                                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                 {user.full_name || 'No name'}
                                             </div>
-                                            <div className="text-sm text-gray-500">
+                                            <div className="text-sm text-gray-500 dark:text-gray-400">
                                                 {user.email}
                                             </div>
                                         </div>
@@ -431,10 +431,10 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         {getStatusBadge(user.active, user.email_confirmed)}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                         {new Date(user.created_at).toLocaleDateString()}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                         {user.last_sign_in
                                             ? new Date(user.last_sign_in).toLocaleDateString()
                                             : 'Never'
@@ -443,12 +443,12 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <button 
                                             onClick={() => handleEditUser(user)}
-                                            className="text-indigo-600 hover:text-indigo-900 mr-4"
+                                            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-4"
                                             title="Edit user"
                                         >
                                             <HiPencilSquare className="h-4 w-4" />
                                         </button>
-                                        <button className="text-indigo-600 hover:text-indigo-900" title="Reset password">
+                                        <button className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300" title="Reset password">
                                             <HiKey className="h-4 w-4" />
                                         </button>
                                     </td>
@@ -460,59 +460,59 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
 
                 {filteredUsers.length === 0 && (
                     <div className="text-center py-8">
-                        <p className="text-gray-500">No users found matching your criteria</p>
+                        <p className="text-gray-500 dark:text-gray-400">No users found matching your criteria</p>
                     </div>
                 )}
             </div>
 
             {/* Edit User Modal */}
             {showEditModal && editingUser && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                    <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div className="fixed inset-0 bg-gray-600 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-75 overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
                         <div className="mt-3">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">Edit User</h3>
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Edit User</h3>
                             
                             {editError && (
-                                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                                    <p className="text-sm text-red-600">{editError}</p>
+                                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                                    <p className="text-sm text-red-600 dark:text-red-400">{editError}</p>
                                 </div>
                             )}
 
                             {editSuccess && (
-                                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-                                    <p className="text-sm text-green-600">{editSuccess}</p>
+                                <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+                                    <p className="text-sm text-green-600 dark:text-green-400">{editSuccess}</p>
                                 </div>
                             )}
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
                                     <input
                                         type="text"
                                         value={editForm.full_name}
                                         onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                         placeholder="Enter full name"
                                     />
                                 </div>
                                 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                                     <input
                                         type="email"
                                         value={editForm.email}
                                         onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                         placeholder="Enter email address"
                                     />
                                 </div>
                                 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Role</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
                                     <select
                                         value={editForm.role}
                                         onChange={(e) => setEditForm({ ...editForm, role: e.target.value as UserRole })}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                     >
                                         <option value="user">User</option>
                                         <option value="organizer">Organizer</option>
@@ -531,7 +531,7 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
                                     </button>
                                     <button
                                         onClick={handleCloseEditModal}
-                                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+                                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
                                     >
                                         Cancel
                                     </button>

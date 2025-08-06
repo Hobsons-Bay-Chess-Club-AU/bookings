@@ -363,10 +363,10 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
     return (
         <div className="space-y-6">
             {/* Form Fields List */}
-            <div className="bg-white border border-gray-200 rounded-lg">
-                <div className="px-6 py-4 border-b border-gray-200">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-medium text-gray-900">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                             Participant Form Fields ({fields.length})
                         </h3>
                         <div className="flex items-center space-x-3">
@@ -391,10 +391,10 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                 {fields.length === 0 ? (
                     <div className="text-center py-12">
                         <span className="text-4xl mb-4 block">📝</span>
-                        <h4 className="text-lg font-medium text-gray-900 mb-2">
+                        <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                             No custom fields yet
                         </h4>
-                        <p className="text-gray-600 mb-6">
+                        <p className="text-gray-600 dark:text-gray-400 mb-6">
                             Add custom fields to collect additional participant information.
                         </p>
                         <div className="flex items-center justify-center space-x-3">
@@ -415,27 +415,27 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                         </div>
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-200">
+                    <div className="divide-y divide-gray-200 dark:divide-gray-700">
                         {fields.map((field, index) => (
                             <div key={field.id} className="p-6">
                                 <div className="flex items-center justify-between">
                                     <div className="flex-1">
                                         <div className="flex items-center space-x-3 mb-2">
-                                            <h4 className="font-medium text-gray-900">{field.label}</h4>
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <h4 className="font-medium text-gray-900 dark:text-gray-100">{field.label}</h4>
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                                                 {fieldTypes.find(t => t.value === field.type)?.label}
                                             </span>
                                             {field.required && (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                                                     Required
                                                 </span>
                                             )}
                                         </div>
                                         {field.description && (
-                                            <p className="text-sm text-gray-600 mb-2">{field.description}</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{field.description}</p>
                                         )}
-                                        <div className="text-xs text-gray-500">
-                                            Field name: <code className="bg-gray-100 px-1 rounded">{field.name}</code>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            Field name: <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">{field.name}</code>
                                         </div>
                                     </div>
 
@@ -444,7 +444,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                             type="button"
                                             onClick={() => handleMoveField(field.id || '', 'up')}
                                             disabled={index === 0}
-                                            className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                                            className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 disabled:opacity-50"
                                         >
                                             ↑
                                         </button>
@@ -452,14 +452,14 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                             type="button"
                                             onClick={() => handleMoveField(field.id || '', 'down')}
                                             disabled={index === fields.length - 1}
-                                            className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                                            className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 disabled:opacity-50"
                                         >
                                             ↓
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => handleEditField(field)}
-                                            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                            className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                                         >
                                             Edit
                                         </button>
@@ -480,11 +480,11 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
 
             {/* Field Editor Modal */}
             {editingField && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                    <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+                <div className="fixed inset-0 bg-gray-600 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-75 overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-11/12 max-w-2xl shadow-lg rounded-md bg-white dark:bg-gray-800">
                         <div className="mt-3">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-medium text-gray-900">
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                     {isAdding ? 'Add Field' : 'Edit Field'}
                                 </h3>
                                 <button
@@ -493,7 +493,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         setEditingField(null)
                                         setIsAdding(false)
                                     }}
-                                    className="text-gray-400 hover:text-gray-600"
+                                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
                                 >
                                     ✕
                                 </button>
@@ -503,54 +503,54 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                 {/* Basic Info */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Label *
                                         </label>
                                         <input
                                             type="text"
                                             value={editingField.label}
                                             onChange={(e) => updateEditingField({ label: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                             placeholder="e.g., Emergency Contact"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Field Name *
                                         </label>
                                         <input
                                             type="text"
                                             value={editingField.name}
                                             onChange={(e) => updateEditingField({ name: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                             placeholder="emergency_contact"
                                         />
-                                        <p className="text-xs text-gray-500 mt-1">Used for data storage (no spaces)</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Used for data storage (no spaces)</p>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         Description
                                     </label>
                                     <input
                                         type="text"
                                         value={editingField.description}
                                         onChange={(e) => updateEditingField({ description: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                         placeholder="Help text for participants"
                                     />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Field Type
                                         </label>
                                         <select
                                             value={editingField.type}
                                             onChange={(e) => updateEditingField({ type: e.target.value as FormFieldType })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                         >
                                             {fieldTypes.map(type => (
                                                 <option key={type.value} value={type.value}>
@@ -560,14 +560,14 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Placeholder
                                         </label>
                                         <input
                                             type="text"
                                             value={editingField.placeholder}
                                             onChange={(e) => updateEditingField({ placeholder: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                             placeholder="Placeholder text"
                                         />
                                     </div>
@@ -579,9 +579,9 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         id="required"
                                         checked={editingField.required}
                                         onChange={(e) => updateEditingField({ required: e.target.checked })}
-                                        className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                        className="h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500"
                                     />
-                                    <label htmlFor="required" className="ml-2 text-sm text-gray-700">
+                                    <label htmlFor="required" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                                         Required field
                                     </label>
                                 </div>
@@ -590,7 +590,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                 {(editingField.type === 'select' || editingField.type === 'multiselect') && (
                                     <div>
                                         <div className="flex items-center justify-between mb-2">
-                                            <label className="block text-sm font-medium text-gray-700">
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                                 Options
                                             </label>
                                             <div className="flex items-center space-x-2">
@@ -599,9 +599,9 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                                     id="advancedOptions"
                                                     checked={useAdvancedOptions}
                                                     onChange={toggleAdvancedOptions}
-                                                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                                    className="h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500"
                                                 />
-                                                <label htmlFor="advancedOptions" className="text-xs text-gray-600">
+                                                <label htmlFor="advancedOptions" className="text-xs text-gray-600 dark:text-gray-400">
                                                     Advanced (separate value & label)
                                                 </label>
                                             </div>
@@ -616,14 +616,14 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                                                 type="text"
                                                                 value={typeof option === 'object' && 'value' in option ? (option as OptionObject).value : String(option)}
                                                                 onChange={(e) => updateOption(index, e.target.value, 'value')}
-                                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                                                 placeholder="Value (stored)"
                                                             />
                                                             <input
                                                                 type="text"
                                                                 value={typeof option === 'object' && 'label' in option ? (option as OptionObject).label : String(option)}
                                                                 onChange={(e) => updateOption(index, e.target.value, 'label')}
-                                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                                                 placeholder="Label (displayed)"
                                                             />
                                                         </>
@@ -634,14 +634,14 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                                                 (option as OptionObject).label || (option as OptionObject).value || '' :
                                                                 String(option))}
                                                             onChange={(e) => updateOption(index, e.target.value)}
-                                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                                             placeholder={`Option ${index + 1}`}
                                                         />
                                                     )}
                                                     <button
                                                         type="button"
                                                         onClick={() => removeOption(index)}
-                                                        className="text-red-600 hover:text-red-800 px-2 py-1"
+                                                        className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 px-2 py-1"
                                                     >
                                                         Remove
                                                     </button>
@@ -650,14 +650,14 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                             <button
                                                 type="button"
                                                 onClick={addOption}
-                                                className="text-indigo-600 hover:text-indigo-800 text-sm"
+                                                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm"
                                             >
                                                 + Add Option
                                             </button>
                                         </div>
 
                                         {useAdvancedOptions && (
-                                            <p className="text-xs text-gray-500 mt-2">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                                                 Advanced mode: Value is stored in database, Label is shown to users
                                             </p>
                                         )}
@@ -666,11 +666,11 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
 
                                 {/* Validation */}
                                 {(editingField.type === 'text' || editingField.type === 'textarea') && (
-                                    <div className="border-t pt-4">
-                                        <h4 className="text-sm font-medium text-gray-700 mb-2">Validation</h4>
+                                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Validation</h4>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-xs text-gray-600 mb-1">Min Length</label>
+                                                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Min Length</label>
                                                 <input
                                                     type="number"
                                                     value={(editingField.validation?.minLength || '') as string}
@@ -680,11 +680,11 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                                             minLength: e.target.value ? parseInt(e.target.value) : undefined
                                                         } as unknown as FormFieldValidation
                                                     })}
-                                                    className="w-full px-3 py-1 border border-gray-300 rounded text-sm"
+                                                    className="w-full px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-gray-600 mb-1">Max Length</label>
+                                                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Max Length</label>
                                                 <input
                                                     type="number"
                                                     value={(editingField.validation?.maxLength || '') as string}
@@ -694,7 +694,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                                             maxLength: e.target.value ? parseInt(e.target.value) : undefined
                                                         } as unknown as FormFieldValidation
                                                     })}
-                                                    className="w-full px-3 py-1 border border-gray-300 rounded text-sm"
+                                                    className="w-full px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                                 />
                                             </div>
                                         </div>
@@ -704,20 +704,20 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
 
                             {/* Save to Library Option */}
                             {isAdding && (
-                                <div className="border-t pt-4 mt-4">
+                                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
                                     <div className="flex items-center">
                                         <input
                                             type="checkbox"
                                             id="saveToLibrary"
                                             checked={saveToLibrary}
                                             onChange={(e) => setSaveToLibrary(e.target.checked)}
-                                            className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                            className="h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500"
                                         />
-                                        <label htmlFor="saveToLibrary" className="ml-2 text-sm text-gray-700">
+                                        <label htmlFor="saveToLibrary" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                                             Save this field to my library for future use
                                         </label>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-1 ml-6">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
                                         Saved fields can be reused across multiple events
                                     </p>
                                 </div>
@@ -738,7 +738,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         setIsAdding(false)
                                         setSaveToLibrary(false)
                                     }}
-                                    className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md text-sm font-medium"
+                                    className="bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-md text-sm font-medium"
                                 >
                                     Cancel
                                 </button>
@@ -750,15 +750,15 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
 
             {/* Library Selection Modal */}
             {showLibrary && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                    <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+                <div className="fixed inset-0 bg-gray-600 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-75 overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-11/12 max-w-4xl shadow-lg rounded-md bg-white dark:bg-gray-800">
                         <div className="mt-3">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-medium text-gray-900">Add Field from Library</h3>
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Add Field from Library</h3>
                                 <button
                                     type="button"
                                     onClick={() => setShowLibrary(false)}
-                                    className="text-gray-400 hover:text-gray-600"
+                                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
                                 >
                                     ✕
                                 </button>
@@ -772,14 +772,14 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         placeholder="Search fields..."
                                         value={librarySearch}
                                         onChange={(e) => setLibrarySearch(e.target.value)}
-                                        className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                        className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 dark:focus:placeholder-gray-500 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                                     />
                                 </div>
                                 <div>
                                     <select
                                         value={libraryFilter}
                                         onChange={(e) => setLibraryFilter(e.target.value as FormFieldType | 'all')}
-                                        className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                        className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                                     >
                                         <option value="all">All Types</option>
                                         {fieldTypes.map(type => (
@@ -794,13 +794,13 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                 {libraryLoading ? (
                                     <div className="text-center py-8">
                                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-                                        <p className="mt-2 text-sm text-gray-500">Loading fields...</p>
+                                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading fields...</p>
                                     </div>
                                 ) : customFields.length === 0 ? (
                                     <div className="text-center py-8">
                                         <span className="text-4xl mb-4 block">📝</span>
-                                        <h4 className="text-lg font-medium text-gray-900 mb-2">No fields found</h4>
-                                        <p className="text-gray-600">
+                                        <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No fields found</h4>
+                                        <p className="text-gray-600 dark:text-gray-400">
                                             {librarySearch || libraryFilter !== 'all'
                                                 ? 'Try adjusting your search or filter criteria.'
                                                 : 'Create some custom fields first to use them here.'
@@ -812,32 +812,32 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         {customFields.map((customField) => (
                                             <div
                                                 key={customField.id}
-                                                className="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 cursor-pointer transition-colors"
+                                                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-indigo-300 dark:hover:border-indigo-500 cursor-pointer transition-colors"
                                                 onClick={() => handleUseLibraryField(customField)}
                                             >
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex-1">
                                                         <div className="flex items-center space-x-3 mb-2">
-                                                            <h5 className="font-medium text-gray-900">{customField.label}</h5>
-                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                            <h5 className="font-medium text-gray-900 dark:text-gray-100">{customField.label}</h5>
+                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                                                                 {fieldTypes.find(t => t.value === customField.type)?.label}
                                                             </span>
                                                             {customField.required && (
-                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                                                                     Required
                                                                 </span>
                                                             )}
                                                             {customField.is_global && (
-                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                                                                     Global
                                                                 </span>
                                                             )}
                                                         </div>
                                                         {customField.description && (
-                                                            <p className="text-sm text-gray-600 mb-2">{customField.description}</p>
+                                                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{customField.description}</p>
                                                         )}
-                                                        <div className="flex items-center space-x-4 text-xs text-gray-500">
-                                                            <span>Field name: <code className="bg-gray-100 px-1 rounded">{customField.name}</code></span>
+                                                        <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
+                                                            <span>Field name: <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">{customField.name}</code></span>
                                                             <span>Used {customField.usage_count} times</span>
                                                         </div>
                                                     </div>
@@ -856,11 +856,11 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                 )}
                             </div>
 
-                            <div className="flex items-center justify-end mt-6 pt-6 border-t border-gray-200">
+                            <div className="flex items-center justify-end mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                                 <button
                                     type="button"
                                     onClick={() => setShowLibrary(false)}
-                                    className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md text-sm font-medium"
+                                    className="bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-md text-sm font-medium"
                                 >
                                     Cancel
                                 </button>

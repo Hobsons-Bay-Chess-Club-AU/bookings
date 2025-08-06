@@ -34,8 +34,8 @@ export default async function MailingListPage() {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Mailing List Management</h1>
-                <p className="text-gray-600 mt-2">Manage your email subscribers and send marketing emails</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Mailing List Management</h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-2">Manage your email subscribers and send marketing emails</p>
             </div>
 
             <MailingListClient 

@@ -43,10 +43,10 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
             : "block px-3 py-3 rounded-md text-base font-medium transition-colors relative"
 
         if (isActive) {
-            return `${baseClasses} text-indigo-600 cursor-default after:content-[''] after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:bg-indigo-600`
+            return `${baseClasses} text-indigo-600 dark:text-indigo-400 cursor-default after:content-[''] after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:bg-indigo-600 dark:after:bg-indigo-400`
         }
 
-        return `${baseClasses} text-gray-700 hover:text-gray-900 ${isDesktop ? 'hover:bg-gray-50' : 'hover:bg-gray-50'}`
+        return `${baseClasses} text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 ${isDesktop ? 'hover:bg-gray-50 dark:hover:bg-gray-800' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`
     }
 
     useEffect(() => {
@@ -102,54 +102,46 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
             } else {
                 setProfile(null)
             }
-
-            setLoading(false)
         })
 
         return () => subscription.unsubscribe()
-    }, [supabase])
+    }, [supabase.auth])
 
-    // Close dropdown when clicking outside or pressing escape
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            // Handle profile dropdown
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setProfileDropdownOpen(false)
             }
-
-            // Handle mobile menu - close if clicking on backdrop
-            if (mobileMenuOpen && mobileMenuRef.current) {
-                const backdrop = event.target as HTMLElement
-                if (backdrop.classList.contains('bg-black') && backdrop.classList.contains('bg-opacity-25')) {
-                    setMobileMenuOpen(false)
-                }
+            if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node) && 
+                mobileMenuButtonRef.current && !mobileMenuButtonRef.current.contains(event.target as Node)) {
+                setMobileMenuOpen(false)
             }
         }
 
         const handleEscapeKey = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                setMobileMenuOpen(false)
                 setProfileDropdownOpen(false)
+                setMobileMenuOpen(false)
             }
         }
 
         document.addEventListener('mousedown', handleClickOutside)
         document.addEventListener('keydown', handleEscapeKey)
+
         return () => {
             document.removeEventListener('mousedown', handleClickOutside)
             document.removeEventListener('keydown', handleEscapeKey)
         }
-    }, [mobileMenuOpen])
+    }, [])
 
     const handleNavigate = (href: string) => {
         setProfileDropdownOpen(false)
-        setMobileMenuOpen(false)
         router.push(href)
     }
 
     if (loading) {
         return (
-            <header className={`bg-white shadow ${className}`}>
+            <header className={`bg-white dark:bg-gray-800 shadow ${className}`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center py-6">
                         {showTitle && (
@@ -163,12 +155,12 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                         className="h-8 w-8 mr-3"
                                         priority
                                     />
-                                    <h1 className="text-2xl font-bold text-gray-900">Hobsons Bay Chess Club</h1>
+                                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hobsons Bay Chess Club</h1>
                                 </Link>
                             </div>
                         )}
                         <nav className="flex items-center space-x-4">
-                            <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+                            <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-20 rounded"></div>
                         </nav>
                     </div>
                 </div>
@@ -177,7 +169,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
     }
 
     return (
-        <header className={`bg-white shadow ${className}`}>
+        <header className={`bg-white dark:bg-gray-800 shadow ${className}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center py-6">
                     {showTitle && (
@@ -191,7 +183,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                     className="h-8 w-8 mr-3"
                                     priority
                                 />
-                                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Hobsons Bay Chess Club</h1>
+                                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Hobsons Bay Chess Club</h1>
                             </Link>
                         </div>
                     )}
@@ -230,7 +222,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                 <div className="relative" ref={dropdownRef}>
                                     <button
                                         onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                                        className="flex items-center text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                                        className="flex items-center text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                                     >
                                         <span>{profile?.full_name || user?.email || 'Profile'}</span>
                                         <svg
@@ -244,9 +236,9 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                     </button>
 
                                     {profileDropdownOpen && (
-                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                                        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700">
                                             {isActivePath('/profile') ? (
-                                                <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 bg-indigo-50 cursor-default">
+                                                <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 cursor-default">
                                                     <span className="flex items-center">
                                                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -257,7 +249,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                             ) : (
                                                 <button
                                                     onClick={() => handleNavigate('/profile')}
-                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                                 >
                                                     <span className="flex items-center">
                                                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,13 +263,13 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                             {/* Admin/Organizer Menu Items */}
                                             {(profile?.role === 'admin' || profile?.role === 'organizer') && (
                                                 <>
-                                                    <div className="border-t border-gray-100 my-1"></div>
-                                                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                    <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                                                         Management
                                                     </div>
 
                                                     {isActivePath('/organizer') ? (
-                                                        <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 bg-indigo-50 cursor-default">
+                                                        <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 cursor-default">
                                                             <span className="flex items-center">
                                                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -288,7 +280,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                                     ) : (
                                                         <button
                                                             onClick={() => handleNavigate('/organizer')}
-                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                                         >
                                                             <span className="flex items-center">
                                                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -300,7 +292,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                                     )}
 
                                                     {isActivePath('/organizer/custom-fields') ? (
-                                                        <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 bg-indigo-50 cursor-default">
+                                                        <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 cursor-default">
                                                             <span className="flex items-center">
                                                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -311,7 +303,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                                     ) : (
                                                         <button
                                                             onClick={() => handleNavigate('/organizer/custom-fields')}
-                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                                         >
                                                             <span className="flex items-center">
                                                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -323,7 +315,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                                     )}
 
                                                     {isActivePath('/organizer/html-to-markdown') ? (
-                                                        <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 bg-indigo-50 cursor-default">
+                                                        <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 cursor-default">
                                                             <span className="flex items-center">
                                                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -334,7 +326,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                                     ) : (
                                                         <button
                                                             onClick={() => handleNavigate('/organizer/html-to-markdown')}
-                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                                         >
                                                             <span className="flex items-center">
                                                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -350,13 +342,13 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                             {/* Admin Only Menu Items */}
                                             {profile?.role === 'admin' && (
                                                 <>
-                                                    <div className="border-t border-gray-100 my-1"></div>
-                                                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                    <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                                                         Administration
                                                     </div>
 
                                                     {isActivePath('/admin/users') ? (
-                                                        <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 bg-indigo-50 cursor-default">
+                                                        <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 cursor-default">
                                                             <span className="flex items-center">
                                                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
@@ -367,7 +359,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                                     ) : (
                                                         <button
                                                             onClick={() => handleNavigate('/admin/users')}
-                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                                         >
                                                             <span className="flex items-center">
                                                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -380,9 +372,9 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                                 </>
                                             )}
 
-                                            <div className="border-t border-gray-100 my-1"></div>
+                                            <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
                                             <div className="px-4 py-2">
-                                                <LogoutButton className="w-full text-left text-sm text-red-600 hover:text-red-800 transition-colors">
+                                                <LogoutButton className="w-full text-left text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors">
                                                     <span className="flex items-center">
                                                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -430,7 +422,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                         <button
                             ref={mobileMenuButtonRef}
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                            className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
                             aria-expanded={mobileMenuOpen}
                         >
                             <span className="sr-only">Open main menu</span>
@@ -465,9 +457,9 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                         <div className="fixed inset-0 bg-black bg-opacity-25" aria-hidden="true"></div>
 
                         {/* Menu panel */}
-                        <div className="relative bg-white shadow-lg">
+                        <div className="relative bg-white dark:bg-gray-800 shadow-lg">
                             {/* Header with logo and close button */}
-                            <div className="flex justify-between items-center px-4 py-4 border-b border-gray-200">
+                            <div className="flex justify-between items-center px-4 py-4 border-b border-gray-200 dark:border-gray-700">
                                 <div className="flex items-center">
                                     <Image
                                         src="/chess-logo.svg"
@@ -477,11 +469,11 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                         className="h-8 w-8 mr-3"
                                         priority
                                     />
-                                    <h1 className="text-xl font-bold text-gray-900">Hobsons Bay Chess Club</h1>
+                                    <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Hobsons Bay Chess Club</h1>
                                 </div>
                                 <button
                                     onClick={() => setMobileMenuOpen(false)}
-                                    className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                                    className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                                 >
                                     <span className="sr-only">Close menu</span>
                                     <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -539,8 +531,8 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                         {/* Admin/Organizer Menu Items */}
                                         {(profile?.role === 'admin' || profile?.role === 'organizer') && (
                                             <>
-                                                <div className="border-t border-gray-200 my-3"></div>
-                                                <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                <div className="border-t border-gray-200 dark:border-gray-700 my-3"></div>
+                                                <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                                                     Management
                                                 </div>
 
@@ -591,8 +583,8 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                         {/* Admin Only Menu Items */}
                                         {profile?.role === 'admin' && (
                                             <>
-                                                <div className="border-t border-gray-200 my-3"></div>
-                                                <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                <div className="border-t border-gray-200 dark:border-gray-700 my-3"></div>
+                                                <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                                                     Administration
                                                 </div>
 
@@ -612,9 +604,9 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                             </>
                                         )}
 
-                                        <div className="border-t border-gray-200 my-3"></div>
+                                        <div className="border-t border-gray-200 dark:border-gray-700 my-3"></div>
                                         <div className="px-3 py-2">
-                                            <LogoutButton className="block w-full text-left text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-3 rounded-md text-base font-medium transition-colors">
+                                            <LogoutButton className="block w-full text-left text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-3 rounded-md text-base font-medium transition-colors">
                                                 Sign out
                                             </LogoutButton>
                                         </div>

@@ -16,18 +16,18 @@ export default function EventPricingPageClient({
         <div>
             {/* Page Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Event Pricing</h1>
-                <p className="text-gray-600 mt-2">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Event Pricing</h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-2">
                     Manage pricing tiers for <span className="font-medium">{event.title}</span>
                 </p>
             </div>
 
             {/* Event Info */}
-            <div className="bg-white shadow rounded-lg mb-8 p-6">
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg mb-8 p-6 border border-gray-200 dark:border-gray-700">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <h2 className="text-lg font-medium text-gray-900 mb-4">Event Details</h2>
-                        <div className="space-y-2 text-sm text-gray-600">
+                        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Event Details</h2>
+                        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                             <div className="flex items-center">
                                 <span className="mr-2">📅</span>
                                 <span>
@@ -67,19 +67,19 @@ export default function EventPricingPageClient({
                         </div>
                     </div>
                     <div>
-                        <h2 className="text-lg font-medium text-gray-900 mb-4">Pricing Overview</h2>
-                        <div className="space-y-2 text-sm text-gray-600">
+                        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Pricing Overview</h2>
+                        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                             <div className="flex justify-between">
                                 <span>Active Pricing Tiers:</span>
-                                <span className="font-medium text-gray-900">{pricing.filter(p => p.is_active).length}</span>
+                                <span className="font-medium text-gray-900 dark:text-gray-100">{pricing.filter(p => p.is_active).length}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span>Total Pricing Tiers:</span>
-                                <span className="font-medium text-gray-900">{pricing.length}</span>
+                                <span className="font-medium text-gray-900 dark:text-gray-100">{pricing.length}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span>Price Range:</span>
-                                <span className="font-medium text-gray-900">
+                                <span className="font-medium text-gray-900 dark:text-gray-100">
                                     {pricing.length > 0
                                         ? `AUD $${Math.min(...pricing.map(p => p.price)).toFixed(2)} - AUD $${Math.max(...pricing.map(p => p.price)).toFixed(2)}`
                                         : 'No pricing set'

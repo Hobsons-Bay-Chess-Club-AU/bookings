@@ -78,15 +78,15 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
         switch (status) {
             case 'confirmed':
             case 'verified':
-                return 'bg-green-100 text-green-800'
+                return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
             case 'pending':
-                return 'bg-yellow-100 text-yellow-800'
+                return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
             case 'cancelled':
-                return 'bg-red-100 text-red-800'
+                return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
             case 'refunded':
-                return 'bg-gray-100 text-gray-800'
+                return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
             default:
-                return 'bg-gray-100 text-gray-800'
+                return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
         }
     }
 
@@ -115,31 +115,31 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
         .order('created_at', { ascending: true })
 
     return (
-        <div className="bg-gray-50">
+        <div className="bg-gray-50 dark:bg-gray-900">
             {/* Breadcrumb */}
-            <div className="bg-white border-b">
+            <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="py-4">
                         <nav className="flex" aria-label="Breadcrumb">
                             <ol className="flex items-center space-x-4">
                                 <li>
-                                    <Link href="/dashboard" className="text-gray-400 hover:text-gray-500">
+                                    <Link href="/dashboard" className="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400">
                                         <span className="sr-only">Dashboard</span>
                                         🏠
                                     </Link>
                                 </li>
                                 <li>
                                     <div className="flex items-center">
-                                        <span className="text-gray-400 mx-2">/</span>
-                                        <Link href="/dashboard" className="text-gray-500 hover:text-gray-700">
+                                        <span className="text-gray-400 dark:text-gray-500 mx-2">/</span>
+                                        <Link href="/dashboard" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
                                             My Bookings
                                         </Link>
                                     </div>
                                 </li>
                                 <li>
                                     <div className="flex items-center">
-                                        <span className="text-gray-400 mx-2">/</span>
-                                        <span className="text-gray-900 font-medium truncate max-w-xs">
+                                        <span className="text-gray-400 dark:text-gray-500 mx-2">/</span>
+                                        <span className="text-gray-900 dark:text-gray-100 font-medium truncate max-w-xs">
                                             {booking.booking_id || booking.id.slice(0, 8)}
                                         </span>
                                     </div>
@@ -152,15 +152,15 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
 
             <div className="py-4 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto">
-                    <div className="bg-white shadow rounded-lg overflow-hidden">
+                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
                         {/* Header */}
-                        <div className="bg-indigo-50 px-6 py-6">
+                        <div className="bg-indigo-50 dark:bg-indigo-900/20 px-6 py-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                                         Booking Details
                                     </h1>
-                                    <p className="text-lg text-gray-800">
+                                    <p className="text-lg text-gray-800 dark:text-gray-200">
                                         View your booking information and event details
                                     </p>
                                 </div>
@@ -175,25 +175,25 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                                 {/* Event Details */}
                                 <div className="lg:col-span-3">
-                                    <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                                         Event Details
                                     </h2>
                                     <div className="space-y-3">
                                         <div>
                                             <Link
                                                 href={`/events/${booking.event.id}`}
-                                                className="text-lg font-medium text-indigo-600 hover:text-indigo-800"
+                                                className="text-lg font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
                                             >
                                                 {booking.event.title}
                                             </Link>
                                             {booking.event.description && (
                                                 <MarkdownContent
                                                     content={booking.event.description}
-                                                    className="text-sm text-gray-800 mt-1"
+                                                    className="text-sm text-gray-800 dark:text-gray-200 mt-1"
                                                 />
                                             )}
                                         </div>
-                                        <div className="flex items-center text-sm text-gray-800">
+                                        <div className="flex items-center text-sm text-gray-800 dark:text-gray-200">
                                             <span className="mr-2">📅</span>
                                             <span>
                                                 {new Date(booking.event.start_date).toLocaleDateString('en-US', {
@@ -204,7 +204,7 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                                 })}
                                             </span>
                                         </div>
-                                        <div className="flex items-center text-sm text-gray-800">
+                                        <div className="flex items-center text-sm text-gray-800 dark:text-gray-200">
                                             <span className="mr-2">🕒</span>
                                             <span>
                                                 {new Date(booking.event.start_date).toLocaleTimeString([], {
@@ -216,7 +216,7 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                                 })}
                                             </span>
                                         </div>
-                                        <div className="flex items-center text-sm text-gray-800">
+                                        <div className="flex items-center text-sm text-gray-800 dark:text-gray-200">
                                             <span className="mr-2">📍</span>
                                             <span>{booking.event.location}</span>
                                         </div>
@@ -225,34 +225,34 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
 
                                 {/* Booking Summary */}
                                 <div className="lg:col-span-1">
-                                    <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                                         Booking Summary
                                     </h2>
-                                    <div className="space-y-3 text-gray-800">
+                                    <div className="space-y-3 text-gray-800 dark:text-gray-200">
                                         <div className="flex justify-between">
-                                            <span className="text-gray-800">Booking ID:</span>
+                                            <span className="text-gray-800 dark:text-gray-200">Booking ID:</span>
                                             <span className="font-mono text-sm font-bold">{booking.booking_id || booking.id.slice(0, 8)}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-gray-800">Tickets:</span>
+                                            <span className="text-gray-800 dark:text-gray-200">Tickets:</span>
                                             <span>{booking.quantity}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-gray-800">Price per ticket:</span>
+                                            <span className="text-gray-800 dark:text-gray-200">Price per ticket:</span>
                                             <span>AUD ${(booking.total_amount / booking.quantity).toFixed(2)}</span>
                                         </div>
                                         
                                         {/* Discount Information */}
                                         {booking.discount_applications && booking.discount_applications.length > 0 && (
                                             <>
-                                                <div className="border-t pt-3">
+                                                <div className="border-t dark:border-gray-700 pt-3">
                                                     <div className="flex justify-between">
-                                                        <span className="text-gray-800">Subtotal:</span>
+                                                        <span className="text-gray-800 dark:text-gray-200">Subtotal:</span>
                                                         <span>AUD ${booking.total_amount.toFixed(2)}</span>
                                                     </div>
                                                     
                                                     {booking.discount_applications.map((discountApp, index) => (
-                                                        <div key={index} className="flex justify-between text-green-600">
+                                                        <div key={index} className="flex justify-between text-green-600 dark:text-green-400">
                                                             <span className="text-sm">
                                                                 {discountApp.discount?.name || 'Discount'}
                                                                 {discountApp.discount?.discount_type === 'participant_based' && 
@@ -265,8 +265,8 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                                         </div>
                                                     ))}
                                                     
-                                                    <div className="border-t pt-2 mt-2">
-                                                        <div className="flex justify-between font-semibold text-gray-800">
+                                                    <div className="border-t dark:border-gray-700 pt-2 mt-2">
+                                                        <div className="flex justify-between font-semibold text-gray-800 dark:text-gray-200">
                                                             <span>Total Paid:</span>
                                                             <span>AUD ${booking.total_amount.toFixed(2)}</span>
                                                         </div>
@@ -277,8 +277,8 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                         
                                         {/* No discounts applied */}
                                         {(!booking.discount_applications || booking.discount_applications.length === 0) && (
-                                            <div className="border-t pt-3">
-                                                <div className="flex justify-between font-semibold text-gray-800">
+                                            <div className="border-t dark:border-gray-700 pt-3">
+                                                <div className="flex justify-between font-semibold text-gray-800 dark:text-gray-200">
                                                     <span>Total Paid:</span>
                                                     <span>AUD ${booking.total_amount.toFixed(2)}</span>
                                                 </div>
@@ -286,7 +286,7 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                         )}
                                         
                                         <div className="flex justify-between">
-                                            <span className="text-gray-800">Booking Date:</span>
+                                            <span className="text-gray-800 dark:text-gray-200">Booking Date:</span>
                                             <span className="text-sm">
                                                 {new Date(booking.booking_date || booking.created_at).toLocaleDateString()} at {new Date(booking.booking_date || booking.created_at).toLocaleTimeString([], {
                                                     hour: '2-digit',
@@ -309,19 +309,19 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                             {/* Refund Information - Only show if refund policy exists */}
                             {booking.event.timeline?.refund && booking.event.timeline.refund.length > 0 && (
                                 <div className="mt-10">
-                                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Refund Information</h2>
-                                    <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Refund Information</h2>
+                                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
                                         {/* Refund Status */}
                                         <div className="mb-6">
-                                            <h3 className="font-medium text-gray-900 mb-3">Current Refund Status</h3>
+                                            <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">Current Refund Status</h3>
                                             <div className="space-y-2">
                                                 <div className="flex justify-between text-sm">
-                                                    <span className="text-gray-600">Status:</span>
-                                                    <span className={`font-medium ${booking.refund_status === 'none' ? 'text-gray-800' :
-                                                        booking.refund_status === 'requested' ? 'text-yellow-600' :
-                                                            booking.refund_status === 'processing' ? 'text-blue-600' :
-                                                                booking.refund_status === 'completed' ? 'text-green-600' :
-                                                                    'text-red-600'
+                                                    <span className="text-gray-600 dark:text-gray-400">Status:</span>
+                                                    <span className={`font-medium ${booking.refund_status === 'none' ? 'text-gray-800 dark:text-gray-200' :
+                                                        booking.refund_status === 'requested' ? 'text-yellow-600 dark:text-yellow-400' :
+                                                            booking.refund_status === 'processing' ? 'text-blue-600 dark:text-blue-400' :
+                                                                booking.refund_status === 'completed' ? 'text-green-600 dark:text-green-400' :
+                                                                    'text-red-600 dark:text-red-400'
                                                         }`}>
                                                         {booking.refund_status === 'none' ? 'No refund requested' :
                                                             booking.refund_status === 'requested' ? 'Refund requested' :
@@ -332,16 +332,16 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                                 </div>
                                                 {booking.refund_amount && (
                                                     <div className="flex justify-between text-sm">
-                                                        <span className="text-gray-600">Refund Amount:</span>
-                                                        <span className="font-medium text-gray-800">
+                                                        <span className="text-gray-600 dark:text-gray-400">Refund Amount:</span>
+                                                        <span className="font-medium text-gray-800 dark:text-gray-200">
                                                             AUD ${booking.refund_amount.toFixed(2)}
                                                         </span>
                                                     </div>
                                                 )}
                                                 {booking.refund_requested_at && (
                                                     <div className="flex justify-between text-sm">
-                                                        <span className="text-gray-600">Requested At:</span>
-                                                        <span className="text-gray-800">
+                                                        <span className="text-gray-600 dark:text-gray-400">Requested At:</span>
+                                                        <span className="text-gray-800 dark:text-gray-200">
                                                             {new Date(booking.refund_requested_at).toLocaleDateString()} at {new Date(booking.refund_requested_at).toLocaleTimeString([], {
                                                                 hour: '2-digit',
                                                                 minute: '2-digit'
@@ -361,7 +361,7 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                         </div>
 
                                         {/* Refund Request Button */}
-                                        <div className="pt-4 border-t border-gray-200">
+                                        <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
                                             <RefundRequestButton booking={booking} />
                                         </div>
                                     </div>
@@ -371,14 +371,14 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                             {/* Participant Information */}
                             {participants && participants.length > 0 && (
                                 <div className="mt-10">
-                                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Participant Information</h2>
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Participant Information</h2>
                                     <div className="space-y-6">
                                         {participants.map((p, idx) => (
-                                            <div key={p.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                            <div key={p.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
                                                 <div className="flex items-center mb-2">
-                                                    <span className="font-semibold text-gray-800 mr-2">Participant {idx + 1}</span>
+                                                    <span className="font-semibold text-gray-800 dark:text-gray-200 mr-2">Participant {idx + 1}</span>
                                                 </div>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800 dark:text-gray-200">
                                                     <div><span className="font-medium">First Name:</span> {p.first_name}</div>
                                                     <div><span className="font-medium">Last Name:</span> {p.last_name}</div>
                                                     {p.date_of_birth && <div><span className="font-medium">Date of Birth:</span> {p.date_of_birth}</div>}
@@ -424,7 +424,7 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                                                                 href={`https://ratings.fide.com/profile/${value.id}`}
                                                                                 target="_blank"
                                                                                 rel="noopener noreferrer"
-                                                                                className="text-blue-600 hover:text-blue-800 underline"
+                                                                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
                                                                             >
                                                                                 {value.id}
                                                                             </a>
@@ -455,12 +455,12 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
 
                             {/* Calendar Integration */}
                             {(booking.status === 'confirmed' || booking.status === 'verified') && (
-                                <div className="mt-8 p-4 bg-purple-50 rounded-lg">
+                                <div className="mt-8 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                                     <div className="flex items-center justify-between mb-4">
-                                        <h3 className="font-medium text-purple-900">Add to Your Calendar</h3>
+                                        <h3 className="font-medium text-purple-900 dark:text-purple-100">Add to Your Calendar</h3>
                                         <AddToCalendar event={calendarEvent} />
                                     </div>
-                                    <p className="text-sm text-purple-800">
+                                    <p className="text-sm text-purple-800 dark:text-purple-200">
                                         Don&apos;t miss your event! Add it to your calendar to get reminders.
                                     </p>
                                 </div>
@@ -468,9 +468,9 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
 
                             {/* Event Guidelines */}
                             {(booking.status === 'confirmed' || booking.status === 'verified') && (
-                                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                                    <h3 className="font-medium text-blue-900 mb-2">Event Guidelines</h3>
-                                    <ul className="text-sm text-blue-900 space-y-1">
+                                <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                    <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Event Guidelines</h3>
+                                    <ul className="text-sm text-blue-900 dark:text-blue-200 space-y-1">
                                         <li>• Arrive at the venue 15 minutes before the event starts</li>
                                         <li>• Bring a valid ID for entry verification</li>
                                         <li>• Keep this booking information handy for reference</li>
@@ -481,9 +481,9 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
 
                             {/* Pending Payment Notice */}
                             {booking.status === 'pending' && (
-                                <div className="mt-8 p-4 bg-yellow-50 rounded-lg">
-                                    <h3 className="font-medium text-yellow-900 mb-2">Payment Pending</h3>
-                                    <p className="text-sm text-yellow-900">
+                                <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                                    <h3 className="font-medium text-yellow-900 dark:text-yellow-100 mb-2">Payment Pending</h3>
+                                    <p className="text-sm text-yellow-900 dark:text-yellow-200">
                                         Your booking is pending payment confirmation. If you&apos;ve already paid,
                                         the status will update automatically once payment is processed.
                                     </p>

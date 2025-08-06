@@ -73,15 +73,15 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
         switch (status) {
             case 'confirmed':
             case 'verified':
-                return 'bg-green-100 text-green-800';
+                return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
             case 'pending':
-                return 'bg-yellow-100 text-yellow-800';
+                return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300';
             case 'cancelled':
-                return 'bg-red-100 text-red-800';
+                return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
             case 'refunded':
-                return 'bg-gray-100 text-gray-800';
+                return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300';
             default:
-                return 'bg-gray-100 text-gray-800';
+                return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300';
         }
     };
 
@@ -139,9 +139,9 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
     if (error || !booking) {
         return (
             <div className="text-center py-12">
-                <HiXCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
-                <h2 className="text-xl font-medium text-gray-900 mb-2">Error Loading Booking</h2>
-                <p className="text-gray-600 mb-4">{error || 'Booking not found'}</p>
+                <HiXCircle className="h-16 w-16 text-red-400 dark:text-red-500 mx-auto mb-4" />
+                <h2 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-2">Error Loading Booking</h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">{error || 'Booking not found'}</p>
                 <Link
                     href={`/organizer/events/${eventId}/bookings`}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
@@ -160,14 +160,14 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                 <div className="flex items-center space-x-4">
                     <Link
                         href={`/organizer/events/${eventId}/bookings`}
-                        className="inline-flex items-center text-gray-600 hover:text-gray-900"
+                        className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                     >
                         <HiArrowLeft className="h-5 w-5 mr-2" />
                         Back to Event Bookings
                     </Link>
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Booking Details</h1>
-                        <p className="text-gray-600 mt-1">
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Booking Details</h1>
+                        <p className="text-gray-600 dark:text-gray-400 mt-1">
                             Booking ID: {booking.booking_id || booking.id.slice(0, 8)}
                         </p>
                     </div>
@@ -185,20 +185,20 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                 {/* Left Column - Booking Information */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Event Details */}
-                    <div className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                             <HiCalendarDays className="h-5 w-5 mr-2" />
                             Event Information
                         </h2>
                         <div className="space-y-4">
                             <div>
-                                <h3 className="text-xl font-semibold text-gray-900">{booking.event.title}</h3>
+                                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{booking.event.title}</h3>
                                 {booking.event.description && (
-                                    <p className="text-gray-600 mt-2 text-sm line-clamp-3">{booking.event.description}</p>
+                                    <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm line-clamp-3">{booking.event.description}</p>
                                 )}
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="flex items-center text-sm text-gray-600">
+                                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                     <HiCalendarDays className="h-4 w-4 mr-2" />
                                     <div>
                                         <div className="font-medium">
@@ -209,7 +209,7 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                                 day: 'numeric'
                                             })}
                                         </div>
-                                        <div className="text-xs text-gray-500">
+                                        <div className="text-xs text-gray-500 dark:text-gray-500">
                                             {new Date(booking.event.start_date).toLocaleTimeString([], {
                                                 hour: '2-digit',
                                                 minute: '2-digit'
@@ -220,7 +220,7 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center text-sm text-gray-600">
+                                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                     <HiMapPin className="h-4 w-4 mr-2" />
                                     <span>{booking.event.location}</span>
                                 </div>
@@ -229,42 +229,42 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                     </div>
 
                     {/* Customer Details */}
-                    <div className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                             <HiUser className="h-5 w-5 mr-2" />
                             Customer Information
                         </h2>
                         <div className="space-y-3">
                             <div className="flex items-center">
-                                <HiUser className="h-4 w-4 text-gray-400 mr-3" />
+                                <HiUser className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-3" />
                                 <div>
-                                    <div className="font-medium text-gray-900">
+                                    <div className="font-medium text-gray-900 dark:text-gray-100">
                                         {booking.user.full_name || 'No name provided'}
                                     </div>
-                                    <div className="text-sm text-gray-500">Customer</div>
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">Customer</div>
                                 </div>
                             </div>
                             <div className="flex items-center">
-                                <HiEnvelope className="h-4 w-4 text-gray-400 mr-3" />
+                                <HiEnvelope className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-3" />
                                 <div>
-                                    <div className="text-gray-900">{booking.user.email}</div>
-                                    <div className="text-sm text-gray-500">Email</div>
+                                    <div className="text-gray-900 dark:text-gray-100">{booking.user.email}</div>
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">Email</div>
                                 </div>
                             </div>
                             {booking.user.phone && (
                                 <div className="flex items-center">
-                                    <HiPhone className="h-4 w-4 text-gray-400 mr-3" />
+                                    <HiPhone className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-3" />
                                     <div>
-                                        <div className="text-gray-900">{booking.user.phone}</div>
-                                        <div className="text-sm text-gray-500">Phone</div>
+                                        <div className="text-gray-900 dark:text-gray-100">{booking.user.phone}</div>
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">Phone</div>
                                     </div>
                                 </div>
                             )}
                             <div className="flex items-center">
-                                <HiIdentification className="h-4 w-4 text-gray-400 mr-3" />
+                                <HiIdentification className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-3" />
                                 <div>
-                                    <div className="text-gray-900 capitalize">{booking.user.role}</div>
-                                    <div className="text-sm text-gray-500">User Role</div>
+                                    <div className="text-gray-900 dark:text-gray-100 capitalize">{booking.user.role}</div>
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">User Role</div>
                                 </div>
                             </div>
                         </div>
@@ -272,28 +272,28 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
 
                     {/* Participants */}
                     {booking.participants && booking.participants.length > 0 && (
-                        <div className="bg-white shadow rounded-lg p-6">
-                            <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                                 <HiUsers className="h-5 w-5 mr-2" />
                                 Participants ({booking.participants.length})
                             </h2>
                             <div className="space-y-4">
                                 {booking.participants.map((participant, index) => (
-                                    <div key={participant.id || index} className="border border-gray-200 rounded-lg p-4">
+                                    <div key={participant.id || index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                                             <div>
-                                                <div className="font-medium text-gray-900">
+                                                <div className="font-medium text-gray-900 dark:text-gray-100">
                                                     {participant.first_name} {participant.last_name}
                                                 </div>
                                                 {participant.email && (
-                                                    <div className="text-sm text-gray-600 flex items-center mt-1">
+                                                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center mt-1">
                                                         <HiEnvelope className="h-3 w-3 mr-1" />
                                                         {participant.email}
                                                     </div>
                                                 )}
                                                 {participant.phone && (
-                                                    <div className="text-sm text-gray-600 flex items-center mt-1">
+                                                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center mt-1">
                                                         <HiPhone className="h-3 w-3 mr-1" />
                                                         {participant.phone}
                                                     </div>
@@ -301,12 +301,12 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                             </div>
                                             <div>
                                                 {participant.date_of_birth && (
-                                                    <div className="text-sm text-gray-600">
+                                                    <div className="text-sm text-gray-600 dark:text-gray-400">
                                                         <span className="font-medium">DOB:</span> {participant.date_of_birth}
                                                     </div>
                                                 )}
                                                 {participant.custom_data && Object.keys(participant.custom_data).length > 0 && (
-                                                    <div className="text-sm text-gray-600 mt-2">
+                                                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                                                         <span className="font-medium">Additional Info:</span>
                                                         <div className="mt-1">
                                                             {Object.entries(participant.custom_data).map(([key, value]) => (
@@ -329,32 +329,32 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                 {/* Right Column - Booking Summary & Actions */}
                 <div className="space-y-6">
                     {/* Booking Summary */}
-                    <div className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                             <HiTicket className="h-5 w-5 mr-2" />
                             Booking Summary
                         </h2>
                         <div className="space-y-4">
                             <div className="flex justify-between">
-                                <span className="text-gray-600">Quantity:</span>
-                                <span className="font-medium">{booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}</span>
+                                <span className="text-gray-600 dark:text-gray-400">Quantity:</span>
+                                <span className="font-medium text-gray-900 dark:text-gray-100">{booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-gray-600">Unit Price:</span>
-                                <span className="font-medium">${booking.event.price.toFixed(2)}</span>
+                                <span className="text-gray-600 dark:text-gray-400">Unit Price:</span>
+                                <span className="font-medium text-gray-900 dark:text-gray-100">${booking.event.price.toFixed(2)}</span>
                             </div>
                             
                             {/* Discount Information */}
                             {booking.discount_applications && booking.discount_applications.length > 0 && (
                                 <>
-                                    <div className="border-t pt-3">
+                                    <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600">Subtotal:</span>
-                                            <span className="font-medium">${(booking.event.price * booking.quantity).toFixed(2)}</span>
+                                            <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                                            <span className="font-medium text-gray-900 dark:text-gray-100">${(booking.event.price * booking.quantity).toFixed(2)}</span>
                                         </div>
                                         
                                         {booking.discount_applications.map((discountApp, index) => (
-                                            <div key={index} className="flex justify-between text-green-600">
+                                            <div key={index} className="flex justify-between text-green-600 dark:text-green-400">
                                                 <span className="text-sm">
                                                     {discountApp.discount?.name || 'Discount'}
                                                     {discountApp.discount?.discount_type === 'participant_based' && 
@@ -367,10 +367,10 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                             </div>
                                         ))}
                                         
-                                        <div className="border-t pt-2 mt-2">
+                                        <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
                                             <div className="flex justify-between">
-                                                <span className="text-lg font-medium text-gray-900">Total Amount:</span>
-                                                <span className="text-lg font-bold text-gray-900">${booking.total_amount.toFixed(2)}</span>
+                                                <span className="text-lg font-medium text-gray-900 dark:text-gray-100">Total Amount:</span>
+                                                <span className="text-lg font-bold text-gray-900 dark:text-gray-100">${booking.total_amount.toFixed(2)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -379,15 +379,15 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                             
                             {/* No discounts applied */}
                             {(!booking.discount_applications || booking.discount_applications.length === 0) && (
-                                <div className="border-t pt-2">
+                                <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
                                     <div className="flex justify-between">
-                                        <span className="text-lg font-medium text-gray-900">Total Amount:</span>
-                                        <span className="text-lg font-bold text-gray-900">${booking.total_amount.toFixed(2)}</span>
+                                        <span className="text-lg font-medium text-gray-900 dark:text-gray-100">Total Amount:</span>
+                                        <span className="text-lg font-bold text-gray-900 dark:text-gray-100">${booking.total_amount.toFixed(2)}</span>
                                     </div>
                                 </div>
                             )}
                             
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
                                 Booked on {new Date(booking.created_at).toLocaleDateString('en-US', {
                                     year: 'numeric',
                                     month: 'long',
@@ -400,29 +400,29 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                     </div>
 
                     {/* Payment Information */}
-                    <div className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                             <HiCreditCard className="h-5 w-5 mr-2" />
                             Payment Information
                         </h2>
                         <div className="space-y-3">
                             {booking.stripe_payment_intent_id && (
                                 <div>
-                                    <div className="text-sm text-gray-600">Payment Intent ID:</div>
-                                    <div className="font-mono text-xs text-gray-900 bg-gray-50 p-2 rounded">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">Payment Intent ID:</div>
+                                    <div className="font-mono text-xs text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-2 rounded">
                                         {booking.stripe_payment_intent_id}
                                     </div>
                                 </div>
                             )}
                             {booking.stripe_session_id && (
                                 <div>
-                                    <div className="text-sm text-gray-600">Session ID:</div>
-                                    <div className="font-mono text-xs text-gray-900 bg-gray-50 p-2 rounded overflow-x-hidden">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">Session ID:</div>
+                                    <div className="font-mono text-xs text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-2 rounded overflow-x-hidden">
                                         {booking.stripe_session_id}
                                     </div>
                                 </div>
                             )}
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
                                 Payment processed on {new Date(booking.booking_date).toLocaleDateString()}
                             </div>
                         </div>
@@ -430,48 +430,48 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
 
                     {/* Refund Information */}
                     {booking.refund_status !== 'none' && (
-                        <div className="bg-white shadow rounded-lg p-6">
-                            <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                                 <HiReceiptRefund className="h-5 w-5 mr-2" />
                                 Refund Information
                             </h2>
                             <div className="space-y-3">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">Status:</span>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${booking.refund_status === 'completed' ? 'bg-green-100 text-green-800' :
-                                        booking.refund_status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                                            booking.refund_status === 'requested' ? 'bg-yellow-100 text-yellow-800' :
-                                                'bg-red-100 text-red-800'
+                                    <span className="text-gray-600 dark:text-gray-400">Status:</span>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${booking.refund_status === 'completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
+                                        booking.refund_status === 'processing' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' :
+                                            booking.refund_status === 'requested' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' :
+                                                'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                                         }`}>
                                         {booking.refund_status}
                                     </span>
                                 </div>
                                 {booking.refund_amount && (
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600">Refund Amount:</span>
-                                        <span className="font-medium">${booking.refund_amount.toFixed(2)}</span>
+                                        <span className="text-gray-600 dark:text-gray-400">Refund Amount:</span>
+                                        <span className="font-medium text-gray-900 dark:text-gray-100">${booking.refund_amount.toFixed(2)}</span>
                                     </div>
                                 )}
                                 {booking.refund_percentage && (
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600">Refund Percentage:</span>
-                                        <span className="font-medium">{booking.refund_percentage}%</span>
+                                        <span className="text-gray-600 dark:text-gray-400">Refund Percentage:</span>
+                                        <span className="font-medium text-gray-900 dark:text-gray-100">{booking.refund_percentage}%</span>
                                     </div>
                                 )}
                                 {booking.refund_requested_at && (
-                                    <div className="text-xs text-gray-500">
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
                                         Requested: {new Date(booking.refund_requested_at).toLocaleDateString()}
                                     </div>
                                 )}
                                 {booking.refund_processed_at && (
-                                    <div className="text-xs text-gray-500">
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
                                         Processed: {new Date(booking.refund_processed_at).toLocaleDateString()}
                                     </div>
                                 )}
                                 {booking.refund_reason && (
                                     <div>
-                                        <div className="text-sm text-gray-600">Reason:</div>
-                                        <div className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                                        <div className="text-sm text-gray-600 dark:text-gray-400">Reason:</div>
+                                        <div className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-2 rounded">
                                             {booking.refund_reason}
                                         </div>
                                     </div>
@@ -482,23 +482,23 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
 
                     {/* Transfer Information */}
                     {booking.transferred_from_event_id && (
-                        <div className="bg-white shadow rounded-lg p-6">
-                            <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                                 <HiArrowRight className="h-5 w-5 mr-2" />
                                 Transfer Information
                             </h2>
                             <div className="space-y-3">
                                 <div className="flex items-center">
-                                    <span className="text-blue-600 mr-2">🔄</span>
-                                    <span className="text-gray-900">This booking was transferred from another event</span>
+                                    <span className="text-blue-600 dark:text-blue-400 mr-2">🔄</span>
+                                    <span className="text-gray-900 dark:text-gray-100">This booking was transferred from another event</span>
                                 </div>
                                 {booking.transferred_at && (
-                                    <div className="text-xs text-gray-500">
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
                                         Transferred on: {new Date(booking.transferred_at).toLocaleDateString()}
                                     </div>
                                 )}
                                 {booking.transferred_by && (
-                                    <div className="text-xs text-gray-500">
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
                                         Transferred by: {booking.transferred_by}
                                     </div>
                                 )}
@@ -507,8 +507,8 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                     )}
 
                     {/* Organizer Actions */}
-                    <div className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                             <HiDocumentText className="h-5 w-5 mr-2" />
                             Organizer Actions
                         </h2>
@@ -526,7 +526,7 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                     <button
                                         onClick={() => updateBookingStatus('cancelled')}
                                         disabled={actionLoading}
-                                        className="w-full flex items-center justify-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                        className="w-full flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
                                     >
                                         <HiXCircle className="h-4 w-4 mr-2" />
                                         Cancel Booking
@@ -546,14 +546,14 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                     <button
                                         onClick={() => updateBookingStatus('cancelled')}
                                         disabled={actionLoading}
-                                        className="w-full flex items-center justify-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                        className="w-full flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
                                     >
                                         <HiXCircle className="h-4 w-4 mr-2" />
                                         Cancel Booking
                                     </button>
                                 </>
                             )}
-                            <div className="text-xs text-gray-500 flex items-center">
+                            <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
                                 <HiInformationCircle className="h-3 w-3 mr-1" />
                                 Status changes will be logged and may trigger notifications.
                             </div>

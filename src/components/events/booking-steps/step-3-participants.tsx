@@ -102,19 +102,19 @@ export default function Step3Participants({
     return (
         <div className="space-y-6">
             {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+                <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-600 dark:text-red-300 px-4 py-3 rounded">
                     {error}
                 </div>
             )}
 
             {/* Progress Indicator */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="text-sm font-medium text-blue-800">
+                        <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
                             Participant Information
                         </h3>
-                        <p className="text-sm text-blue-700 mt-1">
+                        <p className="text-sm text-blue-700 dark:text-blue-100 mt-1">
                             Participant {currentParticipantIndex + 1} of {quantity}
                         </p>
                     </div>
@@ -126,7 +126,7 @@ export default function Step3Participants({
                                     ? 'bg-green-500' // Completed
                                     : index === currentParticipantIndex
                                         ? 'bg-blue-500' // Current
-                                        : 'bg-gray-300' // Pending
+                                        : 'bg-gray-300 dark:bg-gray-700' // Pending
                                     }`}
                             />
                         ))}
@@ -135,16 +135,16 @@ export default function Step3Participants({
             </div>
 
             {/* Participant Form */}
-            <div className="border border-gray-200 rounded-lg p-6">
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-white dark:bg-gray-800">
                 <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-medium text-gray-900">
+                    <h3 className="text-xl font-medium text-gray-900 dark:text-gray-100">
                         Participant {currentParticipantIndex + 1}
                     </h3>
                     {userId && (
                         <button
                             type="button"
                             onClick={() => setShowSearchPopup(true)}
-                            className="flex items-center space-x-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-800 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border border-indigo-200 hover:border-indigo-300"
+                            className="flex items-center space-x-2 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-800 text-indigo-700 dark:text-indigo-200 hover:text-indigo-800 dark:hover:text-indigo-100 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 border border-indigo-200 dark:border-indigo-700 hover:border-indigo-300 dark:hover:border-indigo-500"
                             title="Search recent participants"
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,62 +158,50 @@ export default function Step3Participants({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Fixed Fields */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            First Name <span className="text-red-500">*</span>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            First Name *
                         </label>
                         <input
                             type="text"
                             value={currentParticipant.first_name || ''}
                             onChange={(e) => handleParticipantChange('first_name', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Last Name <span className="text-red-500">*</span>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            Last Name *
                         </label>
                         <input
                             type="text"
                             value={currentParticipant.last_name || ''}
                             onChange={(e) => handleParticipantChange('last_name', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Email <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="email"
-                            value={currentParticipant.email || ''}
-                            onChange={(e) => handleParticipantChange('email', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Phone
-                        </label>
-                        <input
-                            type="tel"
-                            value={currentParticipant.phone || ''}
-                            onChange={(e) => handleParticipantChange('phone', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Date of Birth <span className="text-red-500">*</span>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            Date of Birth *
                         </label>
                         <input
                             type="date"
                             value={currentParticipant.date_of_birth || ''}
                             onChange={(e) => handleParticipantChange('date_of_birth', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                             required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            Email
+                        </label>
+                        <input
+                            type="email"
+                            value={currentParticipant.email || ''}
+                            onChange={(e) => handleParticipantChange('email', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                         />
                     </div>
 
@@ -230,21 +218,21 @@ export default function Step3Participants({
             </div>
 
             {/* Navigation Buttons */}
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 mt-8">
                 <button
                     type="button"
                     onClick={handlePrevious}
-                    className="flex-1 bg-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-400"
+                    className="flex-1 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-3 px-4 rounded-lg font-medium hover:bg-gray-400 dark:hover:bg-gray-600"
                 >
-                    {isFirstParticipant ? 'Back to Contact Information' : 'Previous Participant'}
+                    {isFirstParticipant ? 'Back to Contact' : 'Previous Participant'}
                 </button>
                 <button
                     type="button"
                     onClick={handleNext}
                     disabled={loading || !isCurrentParticipantValid()}
-                    className="flex-1 bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {loading ? 'Processing...' : isLastParticipant ? 'Complete Booking' : 'Next Participant'}
+                    {isLastParticipant ? (loading ? 'Processing...' : 'Continue to Review') : 'Next Participant'}
                 </button>
             </div>
 

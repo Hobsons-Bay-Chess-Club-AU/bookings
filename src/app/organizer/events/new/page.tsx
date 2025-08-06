@@ -226,28 +226,28 @@ export default function NewEventPage() {
     }
 
     const getFieldClasses = (fieldName: string) => {
-        const baseClasses = "mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 sm:text-sm"
+        const baseClasses = "mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
         const hasError = fieldErrors[fieldName]
         
         if (hasError) {
-            return `${baseClasses} border-red-300 focus:ring-red-500 focus:border-red-500`
+            return `${baseClasses} border-red-300 dark:border-red-500 focus:ring-red-500 focus:border-red-500`
         }
         
-        return `${baseClasses} border-gray-300 focus:ring-indigo-500 focus:border-indigo-500`
+        return `${baseClasses} border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500`
     }
 
     return (
         <>
             {/* Page Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Create New Event</h1>
-                <p className="text-gray-600 mt-2">Set up your event details and registration form</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Create New Event</h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-2">Set up your event details and registration form</p>
             </div>
 
-            <div className="bg-white shadow rounded-lg">
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                     {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded flex items-start">
+                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded flex items-start">
                             <HiExclamationTriangle className="h-5 w-5 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
                             <div>
                                 <p className="font-medium">Error</p>
@@ -257,7 +257,7 @@ export default function NewEventPage() {
                     )}
 
                     {success && (
-                        <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded flex items-start">
+                        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 px-4 py-3 rounded flex items-start">
                             <HiCheckCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
                             <div>
                                 <p className="font-medium">Success</p>
@@ -268,7 +268,7 @@ export default function NewEventPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="md:col-span-2">
-                            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Event Title <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -282,7 +282,7 @@ export default function NewEventPage() {
                                 placeholder="Enter event title"
                             />
                             {fieldErrors.title && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.title}
                                 </p>
@@ -290,7 +290,7 @@ export default function NewEventPage() {
                         </div>
 
                         <div className="md:col-span-2">
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Description (Markdown)
                             </label>
                             <MarkdownEditor
@@ -301,7 +301,7 @@ export default function NewEventPage() {
                         </div>
 
                         <div>
-                            <label htmlFor="start_date" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Start Date & Time <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -314,7 +314,7 @@ export default function NewEventPage() {
                                 className={getFieldClasses('start_date')}
                             />
                             {fieldErrors.start_date && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.start_date}
                                 </p>
@@ -322,7 +322,7 @@ export default function NewEventPage() {
                         </div>
 
                         <div>
-                            <label htmlFor="end_date" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 End Date & Time <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -335,7 +335,7 @@ export default function NewEventPage() {
                                 className={getFieldClasses('end_date')}
                             />
                             {fieldErrors.end_date && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.end_date}
                                 </p>
@@ -343,7 +343,7 @@ export default function NewEventPage() {
                         </div>
 
                         <div>
-                            <label htmlFor="entry_close_date" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="entry_close_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Entry Close Date & Time
                             </label>
                             <input
@@ -356,16 +356,16 @@ export default function NewEventPage() {
                                 placeholder="Leave empty for no entry close date"
                             />
                             {fieldErrors.entry_close_date && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.entry_close_date}
                                 </p>
                             )}
-                            <p className="mt-1 text-sm text-gray-500">If set, entries will close automatically after this date/time.</p>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">If set, entries will close automatically after this date/time.</p>
                         </div>
 
                         <div className="md:col-span-2">
-                            <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Location <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -379,7 +379,7 @@ export default function NewEventPage() {
                                 placeholder="Event location or venue"
                             />
                             {fieldErrors.location && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.location}
                                 </p>
@@ -387,17 +387,17 @@ export default function NewEventPage() {
                         </div>
 
                         {/* Location Settings */}
-                        <div className="md:col-span-2 pt-6 border-t border-gray-200">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">
+                        <div className="md:col-span-2 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
                                 Location Settings
                             </h3>
-                            <p className="text-sm text-gray-600 mb-4">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                                 Add embedded map and directions to help attendees find your event location.
                             </p>
                         </div>
 
                         <div className="md:col-span-2">
-                            <label htmlFor="map_url" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="map_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Embedded Map URL
                             </label>
                             <input
@@ -420,16 +420,16 @@ export default function NewEventPage() {
                                         }
                                     }));
                                 }}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 placeholder="https://www.google.com/maps/embed?pb=... or paste the &lt;iframe&gt; code here"
                             />
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Paste the embed URL from Google Maps, or the full &lt;iframe&gt; code. The URL will be extracted automatically.
                             </p>
                         </div>
 
                         <div className="md:col-span-2">
-                            <label htmlFor="direction_url" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="direction_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Directions URL
                             </label>
                             <input
@@ -444,16 +444,16 @@ export default function NewEventPage() {
                                         direction_url: e.target.value
                                     }
                                 }))}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 placeholder="https://maps.google.com/directions?daddr=..."
                             />
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Link to directions (optional). This will be shown as a &quot;Get Directions&quot; button.
                             </p>
                         </div>
 
                         <div>
-                            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Ticket Price (AUD)
                             </label>
                             <input
@@ -468,16 +468,16 @@ export default function NewEventPage() {
                                 placeholder="0.00"
                             />
                             {fieldErrors.price && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.price}
                                 </p>
                             )}
-                            <p className="mt-1 text-sm text-gray-500">Leave empty or set to 0 for free events</p>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Leave empty or set to 0 for free events</p>
                         </div>
 
                         <div>
-                            <label htmlFor="max_attendees" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="max_attendees" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Maximum Attendees
                             </label>
                             <input
@@ -491,7 +491,7 @@ export default function NewEventPage() {
                                 placeholder="Leave empty for unlimited"
                             />
                             {fieldErrors.max_attendees && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.max_attendees}
                                 </p>
@@ -499,7 +499,7 @@ export default function NewEventPage() {
                         </div>
 
                         <div className="md:col-span-2">
-                            <label htmlFor="image_url" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="image_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Event Image URL
                             </label>
                             <input
@@ -508,23 +508,23 @@ export default function NewEventPage() {
                                 name="image_url"
                                 value={formData.image_url}
                                 onChange={handleChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 placeholder="https://example.com/image.jpg"
                             />
                         </div>
 
                         {/* Organizer Contact Information */}
-                        <div className="md:col-span-2 pt-6 border-t border-gray-200">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">
+                        <div className="md:col-span-2 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
                                 Organizer Contact Information
                             </h3>
-                            <p className="text-sm text-gray-600 mb-4">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                                 Contact details for this specific event. Leave empty to use your profile information.
                             </p>
                         </div>
 
                         <div>
-                            <label htmlFor="organizer_name" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="organizer_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Organizer Name
                             </label>
                             <input
@@ -533,13 +533,13 @@ export default function NewEventPage() {
                                 name="organizer_name"
                                 value={formData.organizer_name}
                                 onChange={handleChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 placeholder="Leave empty to use profile name"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="organizer_email" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="organizer_email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Organizer Email
                             </label>
                             <input
@@ -552,7 +552,7 @@ export default function NewEventPage() {
                                 placeholder="Leave empty to use profile email"
                             />
                             {fieldErrors.organizer_email && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.organizer_email}
                                 </p>
@@ -560,7 +560,7 @@ export default function NewEventPage() {
                         </div>
 
                         <div>
-                            <label htmlFor="organizer_phone" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="organizer_phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Organizer Phone
                             </label>
                             <input
@@ -573,7 +573,7 @@ export default function NewEventPage() {
                                 placeholder="Leave empty to use profile phone"
                             />
                             {fieldErrors.organizer_phone && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.organizer_phone}
                                 </p>
@@ -581,7 +581,7 @@ export default function NewEventPage() {
                         </div>
 
                         <div>
-                            <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Status
                             </label>
                             <select
@@ -589,12 +589,12 @@ export default function NewEventPage() {
                                 name="status"
                                 value={formData.status}
                                 onChange={handleChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             >
                                 <option value="draft">Draft</option>
                                 <option value="published">Published</option>
                             </select>
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Only published events are visible to users
                             </p>
                         </div>
@@ -607,24 +607,24 @@ export default function NewEventPage() {
                                     name="is_promoted"
                                     checked={formData.is_promoted}
                                     onChange={handleChange}
-                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
                                 />
-                                <label htmlFor="is_promoted" className="ml-2 block text-sm font-medium text-gray-700">
+                                <label htmlFor="is_promoted" className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Promote on Landing Page
                                 </label>
                             </div>
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Promoted events appear first on the landing page
                             </p>
                         </div>
                     </div>
 
                     {/* Participant Form Fields */}
-                    <div className="mt-8 pt-6 border-t border-gray-200">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
                             Participant Information Form
                         </h3>
-                        <p className="text-sm text-gray-600 mb-6">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
                             Define what information you want to collect from each participant during booking.
                         </p>
                         <FormBuilder
@@ -633,10 +633,10 @@ export default function NewEventPage() {
                         />
                     </div>
 
-                    <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                    <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
                         <Link
                             href="/organizer"
-                            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
                             Cancel
                         </Link>

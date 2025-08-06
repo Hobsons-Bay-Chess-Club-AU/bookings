@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import CookieConsentWrapper from "@/components/ui/cookie-consent-wrapper";
 import ConditionalLayout from "@/components/layout/conditional-nav";
 import { BookingJourneyProvider } from '@/contexts/BookingJourneyContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,13 +32,15 @@ export default function RootLayout({
         cz-shortcut-listen="true"
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <CookieConsentWrapper>
-            <BookingJourneyProvider>
-              <ConditionalLayout>
-                {children}
-              </ConditionalLayout>
-            </BookingJourneyProvider>
-        </CookieConsentWrapper>
+        <ThemeProvider>
+          <CookieConsentWrapper>
+              <BookingJourneyProvider>
+                <ConditionalLayout>
+                  {children}
+                </ConditionalLayout>
+              </BookingJourneyProvider>
+          </CookieConsentWrapper>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -171,37 +171,37 @@ export default function CustomFieldsPage() {
                 <div className="flex justify-center items-center min-h-96">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                        <p className="mt-2 text-sm text-gray-500">Loading custom fields...</p>
+                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading custom fields...</p>
                     </div>
                 </div>
             ) : (
                 <>
                     {/* Page Header */}
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900">Custom Field Library</h1>
-                        <p className="text-gray-600 mt-2">Manage reusable form fields for your events</p>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Custom Field Library</h1>
+                        <p className="text-gray-600 dark:text-gray-400 mt-2">Manage reusable form fields for your events</p>
                     </div>
 
                     {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-6">
+                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded mb-6">
                             {error}
                         </div>
                     )}
 
                     {/* Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                        <div className="bg-white overflow-hidden shadow rounded-lg">
+                        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                             <div className="p-5">
                                 <div className="flex items-center">
                                     <div className="flex-shrink-0">
-                                        <HiDocumentText className="h-8 w-8 text-gray-400" />
+                                        <HiDocumentText className="h-8 w-8 text-gray-400 dark:text-gray-500" />
                                     </div>
                                     <div className="ml-5 w-0 flex-1">
                                         <dl>
-                                            <dt className="text-sm font-medium text-gray-500 truncate">
+                                            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                                                 Total Fields
                                             </dt>
-                                            <dd className="text-lg font-medium text-gray-900">
+                                            <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                                 {customFields.length}
                                             </dd>
                                         </dl>
@@ -210,18 +210,18 @@ export default function CustomFieldsPage() {
                             </div>
                         </div>
 
-                        <div className="bg-white overflow-hidden shadow rounded-lg">
+                        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                             <div className="p-5">
                                 <div className="flex items-center">
                                     <div className="flex-shrink-0">
-                                        <HiUser className="h-8 w-8 text-gray-400" />
+                                        <HiUser className="h-8 w-8 text-gray-400 dark:text-gray-500" />
                                     </div>
                                     <div className="ml-5 w-0 flex-1">
                                         <dl>
-                                            <dt className="text-sm font-medium text-gray-500 truncate">
+                                            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                                                 My Fields
                                             </dt>
-                                            <dd className="text-lg font-medium text-gray-900">
+                                            <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                                 {customFields.filter(f => !f.is_global).length}
                                             </dd>
                                         </dl>
@@ -230,18 +230,18 @@ export default function CustomFieldsPage() {
                             </div>
                         </div>
 
-                        <div className="bg-white overflow-hidden shadow rounded-lg">
+                        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                             <div className="p-5">
                                 <div className="flex items-center">
                                     <div className="flex-shrink-0">
-                                        <HiGlobeAlt className="h-8 w-8 text-gray-400" />
+                                        <HiGlobeAlt className="h-8 w-8 text-gray-400 dark:text-gray-500" />
                                     </div>
                                     <div className="ml-5 w-0 flex-1">
                                         <dl>
-                                            <dt className="text-sm font-medium text-gray-500 truncate">
+                                            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                                                 Global Fields
                                             </dt>
-                                            <dd className="text-lg font-medium text-gray-900">
+                                            <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                                 {customFields.filter(f => f.is_global).length}
                                             </dd>
                                         </dl>
@@ -250,18 +250,18 @@ export default function CustomFieldsPage() {
                             </div>
                         </div>
 
-                        <div className="bg-white overflow-hidden shadow rounded-lg">
+                        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                             <div className="p-5">
                                 <div className="flex items-center">
                                     <div className="flex-shrink-0">
-                                        <HiStar className="h-8 w-8 text-gray-400" />
+                                        <HiStar className="h-8 w-8 text-gray-400 dark:text-gray-500" />
                                     </div>
                                     <div className="ml-5 w-0 flex-1">
                                         <dl>
-                                            <dt className="text-sm font-medium text-gray-500 truncate">
+                                            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
                                                 Most Used
                                             </dt>
-                                            <dd className="text-lg font-medium text-gray-900">
+                                            <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                                 {Math.max(...customFields.map(f => f.usage_count), 0)}
                                             </dd>
                                         </dl>
@@ -272,10 +272,10 @@ export default function CustomFieldsPage() {
                     </div>
 
                     {/* Controls */}
-                    <div className="bg-white shadow rounded-lg mb-6">
-                        <div className="px-6 py-4 border-b border-gray-200">
+                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-medium text-gray-900">Field Library</h2>
+                                <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">Field Library</h2>
                                 <button
                                     onClick={() => setIsCreating(true)}
                                     className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
@@ -293,14 +293,14 @@ export default function CustomFieldsPage() {
                                         placeholder="Search fields..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                        className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 dark:focus:placeholder-gray-500 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                                     />
                                 </div>
                                 <div>
                                     <select
                                         value={filterType}
                                         onChange={(e) => setFilterType(e.target.value as FormFieldType | 'all')}
-                                        className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                        className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                                     >
                                         {fieldTypes.map(type => (
                                             <option key={type.value} value={type.value}>{type.label}</option>
@@ -313,9 +313,9 @@ export default function CustomFieldsPage() {
                                         id="showPopular"
                                         checked={showPopular}
                                         onChange={(e) => setShowPopular(e.target.checked)}
-                                        className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                        className="h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500"
                                     />
-                                    <label htmlFor="showPopular" className="ml-2 text-sm text-gray-700">
+                                    <label htmlFor="showPopular" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                                         Show most popular first
                                     </label>
                                 </div>
@@ -325,13 +325,13 @@ export default function CustomFieldsPage() {
 
                     {/* Fields List */}
                     {filteredFields.length === 0 ? (
-                        <div className="bg-white shadow rounded-lg">
+                        <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
                             <div className="text-center py-12">
-                                <HiDocumentText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                                <h4 className="text-lg font-medium text-gray-900 mb-2">
+                                <HiDocumentText className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                                <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                                     {customFields.length === 0 ? 'No custom fields yet' : 'No fields match your search'}
                                 </h4>
-                                <p className="text-gray-600 mb-6">
+                                <p className="text-gray-600 dark:text-gray-400 mb-6">
                                     {customFields.length === 0
                                         ? 'Create reusable form fields that you can use across multiple events.'
                                         : 'Try adjusting your search criteria or filters.'
@@ -348,33 +348,33 @@ export default function CustomFieldsPage() {
                             </div>
                         </div>
                     ) : (
-                        <div className="bg-white shadow rounded-lg overflow-hidden">
-                            <div className="divide-y divide-gray-200">
+                        <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+                            <div className="divide-y divide-gray-200 dark:divide-gray-700">
                                 {filteredFields.map((field) => (
                                     <div key={field.id} className="p-6">
                                         <div className="flex items-center justify-between">
                                             <div className="flex-1">
                                                 <div className="flex items-center space-x-3 mb-2">
-                                                    <h4 className="font-medium text-gray-900">{field.label}</h4>
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                    <h4 className="font-medium text-gray-900 dark:text-gray-100">{field.label}</h4>
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                                                         {fieldTypes.find(t => t.value === field.type)?.label}
                                                     </span>
                                                     {field.required && (
-                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
                                                             Required
                                                         </span>
                                                     )}
                                                     {field.is_global && (
-                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                                                             Global
                                                         </span>
                                                     )}
                                                 </div>
                                                 {field.description && (
-                                                    <p className="text-sm text-gray-600 mb-2">{field.description}</p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{field.description}</p>
                                                 )}
-                                                <div className="flex items-center space-x-4 text-xs text-gray-500">
-                                                    <span>Field name: <code className="bg-gray-100 px-1 rounded">{field.name}</code></span>
+                                                <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
+                                                    <span>Field name: <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">{field.name}</code></span>
                                                     <span>Used {field.usage_count} times</span>
                                                     <span>Created {new Date(field.created_at).toLocaleDateString()}</span>
                                                 </div>
@@ -383,7 +383,7 @@ export default function CustomFieldsPage() {
                                             <div className="ml-6 flex items-center space-x-2">
                                                 <button
                                                     onClick={() => setEditingField(field)}
-                                                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                                    className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                                                 >
                                                     Edit
                                                 </button>
@@ -405,14 +405,14 @@ export default function CustomFieldsPage() {
 
                     {/* Create Field Modal */}
                     {isCreating && (
-                        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                            <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+                        <div className="fixed inset-0 bg-gray-600 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-75 overflow-y-auto h-full w-full z-50">
+                            <div className="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-11/12 max-w-4xl shadow-lg rounded-md bg-white dark:bg-gray-800">
                                 <div className="mt-3">
                                     <div className="flex items-center justify-between mb-4">
-                                        <h3 className="text-lg font-medium text-gray-900">Create New Custom Field</h3>
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Create New Custom Field</h3>
                                         <button
                                             onClick={() => setIsCreating(false)}
-                                            className="text-gray-400 hover:text-gray-600"
+                                            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
                                         >
                                             ✕
                                         </button>
@@ -423,10 +423,10 @@ export default function CustomFieldsPage() {
                                         onChange={handleCreateField}
                                     />
 
-                                    <div className="flex items-center justify-end mt-6 pt-6 border-t border-gray-200">
+                                    <div className="flex items-center justify-end mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                                         <button
                                             onClick={() => setIsCreating(false)}
-                                            className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md text-sm font-medium"
+                                            className="bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-md text-sm font-medium"
                                         >
                                             Cancel
                                         </button>
@@ -438,14 +438,14 @@ export default function CustomFieldsPage() {
 
                     {/* Edit Field Modal */}
                     {editingField && (
-                        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-                            <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+                        <div className="fixed inset-0 bg-gray-600 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-75 overflow-y-auto h-full w-full z-50">
+                            <div className="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-11/12 max-w-4xl shadow-lg rounded-md bg-white dark:bg-gray-800">
                                 <div className="mt-3">
                                     <div className="flex items-center justify-between mb-4">
-                                        <h3 className="text-lg font-medium text-gray-900">Edit Custom Field</h3>
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Edit Custom Field</h3>
                                         <button
                                             onClick={() => setEditingField(null)}
-                                            className="text-gray-400 hover:text-gray-600"
+                                            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
                                         >
                                             ✕
                                         </button>
@@ -456,10 +456,10 @@ export default function CustomFieldsPage() {
                                         onChange={handleUpdateField}
                                     />
 
-                                    <div className="flex items-center justify-end mt-6 pt-6 border-t border-gray-200">
+                                    <div className="flex items-center justify-end mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                                         <button
                                             onClick={() => setEditingField(null)}
-                                            className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md text-sm font-medium"
+                                            className="bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-md text-sm font-medium"
                                         >
                                             Cancel
                                         </button>

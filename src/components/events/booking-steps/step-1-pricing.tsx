@@ -33,15 +33,15 @@ export default function Step1Pricing({
     return (
         <form onSubmit={(e) => { e.preventDefault(); onContinue(); }} className="space-y-6">
             {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+                <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-600 dark:text-red-300 px-4 py-3 rounded">
                     {error}
                 </div>
             )}
 
             {/* Pricing Options */}
             {availablePricing.length > 1 && (
-                <div className='text-gray-900'>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                <div className='text-gray-900 dark:text-gray-100'>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
                         Select Pricing Option
                     </label>
                     <div className="space-y-3">
@@ -49,8 +49,8 @@ export default function Step1Pricing({
                             <div
                                 key={pricing.id}
                                 className={`relative rounded-lg border p-4 cursor-pointer ${selectedPricing?.id === pricing.id
-                                    ? 'border-indigo-600 ring-2 ring-indigo-600 bg-indigo-50'
-                                    : 'border-gray-300 hover:border-gray-400'
+                                    ? 'border-indigo-600 ring-2 ring-indigo-600 bg-indigo-50 dark:bg-indigo-900/20'
+                                    : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-gray-800'
                                     }`}
                                 onClick={() => setSelectedPricing(pricing)}
                             >
@@ -61,15 +61,15 @@ export default function Step1Pricing({
                                             name="pricing-option"
                                             checked={selectedPricing?.id === pricing.id}
                                             onChange={() => setSelectedPricing(pricing)}
-                                            className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                                            className="h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-700 focus:ring-indigo-500 dark:bg-gray-800 dark:checked:bg-indigo-600"
                                         />
                                         <div className="ml-3">
                                             <div className="flex items-center space-x-2">
-                                                <span className="font-medium text-gray-900">{pricing.name}</span>
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${pricing.pricing_type === 'early_bird' ? 'bg-green-100 text-green-800' :
-                                                    pricing.pricing_type === 'regular' ? 'bg-blue-100 text-blue-800' :
-                                                        pricing.pricing_type === 'late_bird' ? 'bg-orange-100 text-orange-800' :
-                                                            'bg-purple-100 text-purple-800'
+                                                <span className="font-medium text-gray-900 dark:text-gray-100">{pricing.name}</span>
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${pricing.pricing_type === 'early_bird' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                                                    pricing.pricing_type === 'regular' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
+                                                        pricing.pricing_type === 'late_bird' ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' :
+                                                            'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
                                                     }`}>
                                                     {pricing.pricing_type === 'early_bird' ? 'Early Bird' :
                                                         pricing.pricing_type === 'regular' ? 'Regular' :
@@ -77,12 +77,12 @@ export default function Step1Pricing({
                                                                 'Special'}
                                                 </span>
                                             </div>
-                                            <p className="text-sm text-gray-500 mt-1">{pricing.description}</p>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{pricing.description}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-2xl font-bold text-gray-900">${pricing.price}</div>
-                                        <div className="text-sm text-gray-500">
+                                        <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">${pricing.price}</div>
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">
                                             {pricing.available_tickets} tickets left
                                         </div>
                                     </div>
@@ -95,13 +95,13 @@ export default function Step1Pricing({
 
             {/* Single Pricing Option */}
             {availablePricing.length === 1 && (
-                <div className='text-gray-900'>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                <div className='text-gray-900 dark:text-gray-100'>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
                         Pricing Option
                     </label>
                     <div className="space-y-3">
                         <div
-                            className="relative rounded-lg border p-4 border-indigo-600 ring-2 ring-indigo-600 bg-indigo-50"
+                            className="relative rounded-lg border p-4 border-indigo-600 ring-2 ring-indigo-600 bg-indigo-50 dark:bg-indigo-900/20"
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center">
@@ -110,15 +110,15 @@ export default function Step1Pricing({
                                         name="pricing-option"
                                         checked={true}
                                         readOnly
-                                        className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                                        className="h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-700 focus:ring-indigo-500 dark:bg-gray-800 dark:checked:bg-indigo-600"
                                     />
                                     <div className="ml-3">
                                         <div className="flex items-center space-x-2">
-                                            <span className="font-medium text-gray-900">{availablePricing[0].name}</span>
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${availablePricing[0].pricing_type === 'early_bird' ? 'bg-green-100 text-green-800' :
-                                                availablePricing[0].pricing_type === 'regular' ? 'bg-blue-100 text-blue-800' :
-                                                    availablePricing[0].pricing_type === 'late_bird' ? 'bg-orange-100 text-orange-800' :
-                                                        'bg-purple-100 text-purple-800'
+                                            <span className="font-medium text-gray-900 dark:text-gray-100">{availablePricing[0].name}</span>
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${availablePricing[0].pricing_type === 'early_bird' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                                                availablePricing[0].pricing_type === 'regular' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
+                                                    availablePricing[0].pricing_type === 'late_bird' ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' :
+                                                        'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
                                                 }`}>
                                                 {availablePricing[0].pricing_type === 'early_bird' ? 'Early Bird' :
                                                     availablePricing[0].pricing_type === 'regular' ? 'Regular' :
@@ -126,14 +126,14 @@ export default function Step1Pricing({
                                                             'Special'}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-gray-500 mt-1">{availablePricing[0].description}</p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{availablePricing[0].description}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className={`text-2xl font-bold ${availablePricing[0].price === 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                                    <div className={`text-2xl font-bold ${availablePricing[0].price === 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-gray-100'}`}>
                                         {availablePricing[0].price === 0 ? 'Free' : `$${availablePricing[0].price}`}
                                     </div>
-                                    <div className="text-sm text-gray-500">
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">
                                         {availablePricing[0].available_tickets} tickets left
                                     </div>
                                 </div>
@@ -145,71 +145,59 @@ export default function Step1Pricing({
 
             {/* Quantity Selection */}
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
                     Number of Tickets
                 </label>
                 <div className="flex items-center space-x-4">
                     <button
                         type="button"
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50"
+                        className="w-10 h-10 rounded-full border border-gray-300 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                         -
                     </button>
-                    <span className="text-lg font-medium text-gray-900 min-w-[3rem] text-center">{quantity}</span>
+                    <span className="text-lg font-medium text-gray-900 dark:text-gray-100 min-w-[3rem] text-center">{quantity}</span>
                     <button
                         type="button"
                         onClick={() => setQuantity(Math.min(maxQuantity, quantity + 1))}
                         disabled={quantity >= maxQuantity}
-                        className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-10 h-10 rounded-full border border-gray-300 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         +
                     </button>
                 </div>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                     Maximum {maxQuantity} tickets per booking
                 </p>
             </div>
 
-            {/* Total */}
-            <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex justify-between items-center">
-                    <span className="text-lg font-medium text-gray-900">
-                        {hasDiscounts ? 'Estimated Total' : 'Total Amount'}
-                    </span>
-                    <span className="text-2xl font-bold text-gray-900">${totalAmount.toFixed(2)}</span>
-                </div>
-                
-                {/* Discount Hint */}
-                {hasDiscounts && (
-                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                        <div className="flex items-start">
-                            <div className="flex-shrink-0">
-                                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                            <div className="ml-3">
-                                <h3 className="text-sm font-medium text-blue-800">
-                                    Discounts Available
-                                </h3>
-                                <div className="mt-1 text-sm text-blue-800">
-                                    <p>Your final amount will be recalculated after you provide participant information in the next steps.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+            {/* Total Amount */}
+            <div className="flex items-center justify-between mt-6">
+                <span className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                    {hasDiscounts ? 'Estimated Total' : 'Total Amount'}
+                </span>
+                <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">${totalAmount.toFixed(2)}</span>
             </div>
 
+            {/* Discount Hint */}
+            {hasDiscounts && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-200 px-4 py-3 rounded mt-2">
+                    <span>
+                        This event has discounts available. The final amount will be recalculated before checkout based on your details.
+                    </span>
+                </div>
+            )}
+
             {/* Continue Button */}
-            <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                {loading ? 'Processing...' : 'Start booking'}
-            </button>
+            <div className="flex space-x-4 mt-8">
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {loading ? 'Loading...' : 'Continue'}
+                </button>
+            </div>
         </form>
     )
 } 

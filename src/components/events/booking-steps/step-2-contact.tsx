@@ -45,21 +45,21 @@ export default function Step2Contact({
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+                <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-600 dark:text-red-300 px-4 py-3 rounded">
                     {error}
                 </div>
             )}
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
                 <div className="flex">
                     <div className="flex-shrink-0">
-                        <span className="text-blue-400">ℹ️</span>
+                        <span className="text-blue-400 dark:text-blue-200">ℹ️</span>
                     </div>
                     <div className="ml-3">
-                        <h3 className="text-sm font-medium text-blue-800">
+                        <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
                             Contact Information
                         </h3>
-                        <div className="mt-2 text-sm text-blue-700">
+                        <div className="mt-2 text-sm text-blue-700 dark:text-blue-100">
                             <p>Please provide your contact information for this booking.</p>
                         </div>
                     </div>
@@ -68,50 +68,50 @@ export default function Step2Contact({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                         First Name *
                     </label>
                     <input
                         type="text"
                         value={contactInfo.first_name}
                         onChange={(e) => handleInputChange('first_name', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                         required
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                         Last Name *
                     </label>
                     <input
                         type="text"
                         value={contactInfo.last_name}
                         onChange={(e) => handleInputChange('last_name', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                         required
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                         Email *
                     </label>
                     <input
                         type="email"
                         value={contactInfo.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                         required
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                         Phone
                     </label>
                     <input
                         type="tel"
                         value={contactInfo.phone}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                     />
                 </div>
             </div>
@@ -120,14 +120,14 @@ export default function Step2Contact({
                 <button
                     type="button"
                     onClick={onBack}
-                    className="flex-1 bg-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-400"
+                    className="flex-1 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-3 px-4 rounded-lg font-medium hover:bg-gray-400 dark:hover:bg-gray-600"
                 >
                     Back to Pricing
                 </button>
                 <button
                     type="submit"
                     disabled={loading || !isFormValid()}
-                    className="flex-1 bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {loading ? 'Processing...' : 'Participant Information'}
                 </button>

@@ -215,7 +215,7 @@ export default function ChatWidget({ event, organizer, bookingId, onClose }: Cha
             {/* Chat Window */}
             {isOpen && (
                 <div 
-                    className="bg-white rounded-lg shadow-xl border border-gray-200 w-80 h-96 flex flex-col relative"
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 w-80 h-96 flex flex-col relative"
                     style={{ zIndex: 10000 }}
                 >
                     {/* Header */}
@@ -265,7 +265,7 @@ export default function ChatWidget({ event, organizer, bookingId, onClose }: Cha
                                         <LoadingSpinner size="sm" />
                                     </div>
                                 ) : messages.length === 0 ? (
-                                    <div className="text-center text-gray-500 text-sm">
+                                    <div className="text-center text-gray-500 dark:text-gray-400 text-sm">
                                         {profile ? 'No messages yet. Start the conversation!' : 'Please log in to start chatting'}
                                     </div>
                                 ) : (
@@ -278,14 +278,14 @@ export default function ChatWidget({ event, organizer, bookingId, onClose }: Cha
                                                 className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
                                                     message.sender_id === profile?.id
                                                         ? 'bg-indigo-600 text-white'
-                                                        : 'bg-gray-200 text-gray-900'
+                                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
                                                 }`}
                                             >
                                                 <p>{message.content}</p>
                                                 <p className={`text-xs mt-1 ${
                                                     message.sender_id === profile?.id
                                                         ? 'text-indigo-100'
-                                                        : 'text-gray-500'
+                                                        : 'text-gray-500 dark:text-gray-400'
                                                 }`}>
                                                     {new Date(message.created_at).toLocaleTimeString([], {
                                                         hour: '2-digit',
@@ -301,20 +301,20 @@ export default function ChatWidget({ event, organizer, bookingId, onClose }: Cha
 
                             {/* Error Message */}
                             {error && (
-                                <div className="px-4 py-2 bg-red-100 text-red-700 text-sm">
+                                <div className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-sm">
                                     {error}
                                 </div>
                             )}
 
                             {/* Message Input */}
-                            <div className="p-4 border-t relative" style={{ zIndex: 10001 }}>
+                            <div className="p-4 border-t border-gray-200 dark:border-gray-700 relative" style={{ zIndex: 10001 }}>
                                 {profileLoading ? (
                                     <div className="text-center">
                                         <LoadingSpinner size="sm" text="Loading..." />
                                     </div>
                                 ) : !profile ? (
                                     <div className="text-center">
-                                        <p className="text-gray-600 mb-4">Please log in to chat with the organizer</p>
+                                        <p className="text-gray-600 dark:text-gray-400 mb-4">Please log in to chat with the organizer</p>
                                         <button
                                             type="button"
                                             onClick={handleLogin}
@@ -334,7 +334,7 @@ export default function ChatWidget({ event, organizer, bookingId, onClose }: Cha
                                                 }}
                                                 onKeyPress={handleKeyPress}
                                                 placeholder="Type your message..."
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900"
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400"
                                                 disabled={sending}
                                             />
                                         </div>

@@ -181,7 +181,7 @@ export default async function EventPage({ params }: EventPageProps) {
     const isEventPast = new Date(event.start_date) < new Date()
 
     return (
-        <div className="bg-gray-50">
+        <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
             {/* Structured Data for SEO */}
             <EventStructuredData event={event} />
 
@@ -203,23 +203,23 @@ export default async function EventPage({ params }: EventPageProps) {
                             </div>
                         )}
 
-                        <div className="bg-white shadow rounded-lg p-6">
+                        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
                             <div className="mb-6">
-                                <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                                     {event.title}
                                 </h1>
 
-                                <div className="flex items-center text-sm text-gray-500 mb-4">
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200">
                                         {event.status}
                                     </span>
                                     {isEventPast && (
-                                        <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                                             Past Event
                                         </span>
                                     )}
                                     {isEventFull && (
-                                        <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
                                             Sold Out
                                         </span>
                                     )}
@@ -228,9 +228,9 @@ export default async function EventPage({ params }: EventPageProps) {
                                 <div className="flex justify-between items-start">
                                     <div className="space-y-4 flex-1 mr-6">
                                         <div className="flex items-center">
-                                            <HiCalendarDays className="h-5 w-5 text-gray-400 mr-3" />
+                                            <HiCalendarDays className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
                                             <div>
-                                                <p className="font-medium text-gray-900">
+                                                <p className="font-medium text-gray-900 dark:text-gray-100">
                                                     {new Date(event.start_date).toLocaleDateString('en-US', {
                                                         weekday: 'long',
                                                         year: 'numeric',
@@ -238,7 +238,7 @@ export default async function EventPage({ params }: EventPageProps) {
                                                         day: 'numeric'
                                                     })}
                                                 </p>
-                                                <p className="text-sm text-gray-500">
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">
                                                     {new Date(event.start_date).toLocaleTimeString([], {
                                                         hour: '2-digit',
                                                         minute: '2-digit'
@@ -251,14 +251,14 @@ export default async function EventPage({ params }: EventPageProps) {
                                         </div>
 
                                         <div className="flex items-center">
-                                            <HiMapPin className="h-5 w-5 text-gray-400 mr-3" />
-                                            <p className="text-gray-900">{event.location}</p>
+                                            <HiMapPin className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
+                                            <p className="text-gray-900 dark:text-gray-100">{event.location}</p>
                                         </div>
 
                                         <div className="flex items-center">
-                                            <HiUsers className="h-5 w-5 text-gray-400 mr-3" />
+                                            <HiUsers className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
                                             <div className="flex items-center space-x-2">
-                                                <p className="text-gray-900">
+                                                <p className="text-gray-900 dark:text-gray-100">
                                                     {event.max_attendees ?
                                                         `${event.current_attendees} / ${event.max_attendees} attendees` :
                                                         `${event.current_attendees} attendees`
@@ -267,7 +267,7 @@ export default async function EventPage({ params }: EventPageProps) {
                                                 {event.settings?.show_participants_public && participants.length > 0 && (
                                                     <Link
                                                         href={`/events/${event.id}/participants`}
-                                                        className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
+                                                        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm font-medium"
                                                     >
                                                         View List →
                                                     </Link>
@@ -276,8 +276,8 @@ export default async function EventPage({ params }: EventPageProps) {
                                         </div>
 
                                         <div className="flex items-center">
-                                            <HiCurrencyDollar className="h-5 w-5 text-gray-400 mr-3" />
-                                            <p className="text-2xl font-bold text-gray-900">
+                                            <HiCurrencyDollar className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
+                                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                                                 {event.price === 0 ? 'Free' : `AUD $${event.price.toFixed(2)}`}
                                             </p>
                                         </div>
@@ -296,16 +296,16 @@ export default async function EventPage({ params }: EventPageProps) {
                             </div>
 
                             {event.description && (
-                                <div className="border-t pt-6">
+                                <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                                     <MarkdownContent
                                         content={event.description}
-                                        className="text-gray-700"
+                                        className="text-gray-700 dark:text-gray-300"
                                     />
                                 </div>
                             )}
 
                             {/* Location Map */}
-                            <div className="border-t pt-6 mt-6">
+                            <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
                                 <EventLocationMap 
                                     location={event.location} 
                                     locationSettings={event.location_settings}
@@ -320,11 +320,11 @@ export default async function EventPage({ params }: EventPageProps) {
                             )}
 
                             {event.organizer && (
-                                <div className="border-t pt-6 mt-6">
-                                    <h3 className="text-lg font-medium text-gray-900 mb-3">
+                                <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
+                                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">
                                         Organizer
                                     </h3>
-                                    <p className="text-gray-700">
+                                    <p className="text-gray-700 dark:text-gray-300">
                                         {event.organizer.full_name || event.organizer.email}
                                     </p>
                                 </div>
