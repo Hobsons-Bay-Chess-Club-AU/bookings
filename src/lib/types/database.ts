@@ -11,6 +11,8 @@ export type TimelineType = 'refund'
 export type RefundValueType = 'percentage' | 'fixed'
 export type MailingListStatus = 'subscribed' | 'unsubscribed'
 export type BookingAuditAction = 'transfer' | 'refund' | 'status_change' | 'modification'
+export type DiscountType = 'code' | 'participant_based' | 'seat_based'
+export type DiscountValueType = 'percentage' | 'fixed'
 
 // Mailing List types
 export interface MailingList {
@@ -85,6 +87,8 @@ export interface EventSettings {
 export interface LocationSettings {
     map_url?: string
     direction_url?: string
+    details?: string
+    url?: string
 }
 
 export interface Profile {
@@ -288,6 +292,62 @@ export interface Conversation {
     unread_count?: number
 }
 
+// Discount-related interfaces
+export interface ParticipantDiscountRule {
+    id: string
+    discount_id: string
+    rule_type: string // 'name_match', 'dob_match', 'previous_event', 'custom'
+    field_name?: string
+    field_value?: string
+    operator?: string // 'equals', 'contains', 'starts_with', 'ends_with'
+    related_event_id?: string
+    created_at: string
+}
+
+export interface SeatDiscountRule {
+    id: string
+    discount_id: string
+    min_seats: number
+    max_seats?: number
+    discount_amount: number
+    discount_percentage?: number
+    created_at: string
+}
+
+export interface EventDiscount {
+    id: string
+    event_id: string
+    name: string
+    description?: string
+    discount_type: DiscountType
+    value_type: DiscountValueType
+    value: number
+    code?: string
+    start_date?: string
+    end_date?: string
+    is_active: boolean
+    max_uses?: number
+    current_uses: number
+    min_quantity: number
+    max_quantity?: number
+    created_at: string
+    updated_at: string
+    rules?: ParticipantDiscountRule[]
+    seat_rules?: SeatDiscountRule[]
+}
+
+export interface DiscountApplication {
+    id: string
+    booking_id: string
+    discount_id: string
+    applied_value: number
+    original_amount: number
+    final_amount: number
+    applied_at: string
+    created_at: string
+    discount?: EventDiscount
+}
+
 export interface Database {
     public: {
         Tables: {
@@ -315,6 +375,26 @@ export interface Database {
                 Row: Conversation
                 Insert: Omit<Conversation, 'id' | 'created_at' | 'updated_at' | 'last_message_at'>
                 Update: Partial<Omit<Conversation, 'id' | 'created_at' | 'updated_at' | 'last_message_at'>>
+            }
+            event_discounts: {
+                Row: EventDiscount
+                Insert: Omit<EventDiscount, 'id' | 'created_at' | 'updated_at' | 'current_uses'>
+                Update: Partial<Omit<EventDiscount, 'id' | 'created_at' | 'updated_at' | 'current_uses'>>
+            }
+            participant_discount_rules: {
+                Row: ParticipantDiscountRule
+                Insert: Omit<ParticipantDiscountRule, 'id' | 'created_at'>
+                Update: Partial<Omit<ParticipantDiscountRule, 'id' | 'created_at'>>
+            }
+            seat_discount_rules: {
+                Row: SeatDiscountRule
+                Insert: Omit<SeatDiscountRule, 'id' | 'created_at'>
+                Update: Partial<Omit<SeatDiscountRule, 'id' | 'created_at'>>
+            }
+            discount_applications: {
+                Row: DiscountApplication
+                Insert: Omit<DiscountApplication, 'id' | 'created_at' | 'applied_at'>
+                Update: Partial<Omit<DiscountApplication, 'id' | 'created_at' | 'applied_at'>>
             }
         }
     }

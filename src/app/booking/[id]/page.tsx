@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/utils/auth'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Booking, Event } from '@/lib/types/database'
+import { Booking, Event, DiscountApplication } from '@/lib/types/database'
 import AddToCalendar from '@/components/calendar/add-to-calendar'
 import { CalendarEvent } from '@/lib/utils/calendar'
 import MarkdownContent from '@/components/ui/html-content'
@@ -12,7 +12,7 @@ import ContactOrganizerButton from '@/components/messaging/contact-organizer-but
 import ChatWidget from '@/components/messaging/chat-widget'
 import EventLocationMap from '@/components/events/event-location-map'
 
-async function getBooking(bookingId: string, userId: string): Promise<(Booking & { event: Event }) | null> {
+async function getBooking(bookingId: string, userId: string): Promise<(Booking & { event: Event; discount_applications?: DiscountApplication[] }) | null> {
     const supabase = await createClient()
 
     // Check if the bookingId is a UUID (36 characters) or short booking ID (7 characters)
@@ -21,9 +21,13 @@ async function getBooking(bookingId: string, userId: string): Promise<(Booking &
     let query = supabase
         .from('bookings')
         .select(`
-      *,
-      event:events!bookings_event_id_fkey(*, timeline, organizer:profiles(id, full_name, email, avatar_url))
-    `)
+            *,
+            event:events!bookings_event_id_fkey(*, timeline, organizer:profiles(id, full_name, email, avatar_url)),
+            discount_applications(
+                *,
+                discount:event_discounts(*)
+            )
+        `)
         .eq('user_id', userId) // Ensure user can only view their own bookings
 
     if (isUUID) {
@@ -40,7 +44,7 @@ async function getBooking(bookingId: string, userId: string): Promise<(Booking &
         return null
     }
 
-    return booking as Booking & { event: Event }
+    return booking as Booking & { event: Event; discount_applications?: DiscountApplication[] }
 }
 
 interface BookingDetailsPageProps {
@@ -235,14 +239,52 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-800">Price per ticket:</span>
-                                            <span>AUD ${booking.event.price.toFixed(2)}</span>
+                                            <span>AUD ${(booking.total_amount / booking.quantity).toFixed(2)}</span>
                                         </div>
-                                        <div className="border-t pt-3">
-                                            <div className="flex justify-between font-semibold text-gray-800">
-                                                <span>Total Paid:</span>
-                                                <span>AUD ${booking.total_amount.toFixed(2)}</span>
+                                        
+                                        {/* Discount Information */}
+                                        {booking.discount_applications && booking.discount_applications.length > 0 && (
+                                            <>
+                                                <div className="border-t pt-3">
+                                                    <div className="flex justify-between">
+                                                        <span className="text-gray-800">Subtotal:</span>
+                                                        <span>AUD ${booking.total_amount.toFixed(2)}</span>
+                                                    </div>
+                                                    
+                                                    {booking.discount_applications.map((discountApp, index) => (
+                                                        <div key={index} className="flex justify-between text-green-600">
+                                                            <span className="text-sm">
+                                                                {discountApp.discount?.name || 'Discount'}
+                                                                {discountApp.discount?.discount_type === 'participant_based' && 
+                                                                    ` (participant-based)`
+                                                                }
+                                                            </span>
+                                                            <span className="text-sm font-medium">
+                                                                -AUD ${discountApp.applied_value.toFixed(2)}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                    
+                                                    <div className="border-t pt-2 mt-2">
+                                                        <div className="flex justify-between font-semibold text-gray-800">
+                                                            <span>Total Paid:</span>
+                                                            <span>AUD ${booking.total_amount.toFixed(2)}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+                                        
+                                        {/* No discounts applied */}
+                                        {(!booking.discount_applications || booking.discount_applications.length === 0) && (
+                                            <div className="border-t pt-3">
+                                                <div className="flex justify-between font-semibold text-gray-800">
+                                                    <span>Total Paid:</span>
+                                                    <span>AUD ${booking.total_amount.toFixed(2)}</span>
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
+                                        
                                         <div className="flex justify-between">
                                             <span className="text-gray-800">Booking Date:</span>
                                             <span className="text-sm">

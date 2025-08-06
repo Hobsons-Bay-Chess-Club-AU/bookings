@@ -7,6 +7,25 @@ interface Step4ReviewProps {
     selectedPricing: EventPricing | null
     quantity: number
     totalAmount: number
+    baseAmount: number
+    discountInfo?: {
+        totalDiscount: number
+        appliedDiscounts: Array<{
+            discount: {
+                id: string
+                name: string
+                rules?: Array<{
+                    rule_type: string
+                    [key: string]: unknown
+                }>
+            }
+            amount: number
+            eligibleParticipants?: number
+            type: string
+        }>
+        finalAmount: number
+    } | null
+    discountLoading?: boolean
     contactInfo: {
         first_name: string
         last_name: string
@@ -30,6 +49,9 @@ export default function Step4Review({
     selectedPricing,
     quantity,
     totalAmount,
+    baseAmount,
+    discountInfo,
+    discountLoading,
     contactInfo,
     participants,
     formFields,
@@ -62,13 +84,59 @@ export default function Step4Review({
                 {/* Pricing Info */}
                 <div className="bg-gray-50 rounded-lg p-4 mb-6">
                     <h4 className="font-medium text-gray-900 mb-2">Pricing</h4>
-                    <div className="flex justify-between items-center">
-                        <span className="text-gray-700">
-                            {selectedPricing?.name} × {quantity}
-                        </span>
-                        <span className={`font-medium ${isFreeEvent ? 'text-green-600' : ''}`}>
-                            {isFreeEvent ? 'Free' : `$${totalAmount.toFixed(2)}`}
-                        </span>
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                            <span className="text-gray-700">
+                                {selectedPricing?.name} × {quantity}
+                            </span>
+                            <span className="text-gray-700">
+                                ${baseAmount.toFixed(2)}
+                            </span>
+                        </div>
+                        
+                        {/* Discount Information */}
+                        {discountLoading && (
+                            <div className="flex justify-between items-center text-sm text-gray-600">
+                                <span>Calculating discounts...</span>
+                                <span>Please wait</span>
+                            </div>
+                        )}
+                        
+                        {discountInfo && discountInfo.totalDiscount > 0 && (
+                            <>
+                                {discountInfo.appliedDiscounts.map((appliedDiscount, index) => (
+                                    <div key={index} className="flex justify-between items-center text-sm">
+                                        <span className="text-green-600">
+                                            {appliedDiscount.discount.name}
+                                            {appliedDiscount.type === 'participant_based' && 
+                                                ` (${appliedDiscount.eligibleParticipants} eligible)`}
+                                            {appliedDiscount.discount.rules && appliedDiscount.discount.rules.some((rule) => rule.rule_type === 'previous_event') && 
+                                                ` (Previous event discount)`}
+                                        </span>
+                                        <span className="text-green-600 font-medium">
+                                            -${appliedDiscount.amount.toFixed(2)}
+                                        </span>
+                                    </div>
+                                ))}
+                                <div className="border-t border-gray-200 pt-2 mt-2">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-700 font-medium">Total Discount</span>
+                                        <span className="text-green-600 font-medium">
+                                            -${discountInfo.totalDiscount.toFixed(2)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                        
+                        <div className="border-t border-gray-200 pt-2 mt-2">
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-900 font-medium">Total Amount</span>
+                                <span className={`font-bold text-lg ${isFreeEvent ? 'text-green-600' : 'text-gray-900'}`}>
+                                    {isFreeEvent ? 'Free' : `$${totalAmount.toFixed(2)}`}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

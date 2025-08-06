@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from 'next/link';
-import { Booking, Event, Profile, Participant } from '@/lib/types/database';
+import { Booking, Event, Profile, Participant, DiscountApplication } from '@/lib/types/database';
 import {
     HiArrowLeft,
     HiTicket,
@@ -27,6 +27,7 @@ interface BookingWithDetails extends Booking {
     event: Event;
     user: Profile;
     participants?: Participant[];
+    discount_applications?: DiscountApplication[];
 }
 
 interface BookingDetailsPageProps {
@@ -342,12 +343,50 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                 <span className="text-gray-600">Unit Price:</span>
                                 <span className="font-medium">${booking.event.price.toFixed(2)}</span>
                             </div>
-                            <div className="border-t pt-2">
-                                <div className="flex justify-between">
-                                    <span className="text-lg font-medium text-gray-900">Total Amount:</span>
-                                    <span className="text-lg font-bold text-gray-900">${booking.total_amount.toFixed(2)}</span>
+                            
+                            {/* Discount Information */}
+                            {booking.discount_applications && booking.discount_applications.length > 0 && (
+                                <>
+                                    <div className="border-t pt-3">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Subtotal:</span>
+                                            <span className="font-medium">${(booking.event.price * booking.quantity).toFixed(2)}</span>
+                                        </div>
+                                        
+                                        {booking.discount_applications.map((discountApp, index) => (
+                                            <div key={index} className="flex justify-between text-green-600">
+                                                <span className="text-sm">
+                                                    {discountApp.discount?.name || 'Discount'}
+                                                    {discountApp.discount?.discount_type === 'participant_based' && 
+                                                        ` (${Math.round(discountApp.applied_value / booking.event.price)} eligible)`
+                                                    }
+                                                </span>
+                                                <span className="text-sm font-medium">
+                                                    -${discountApp.applied_value.toFixed(2)}
+                                                </span>
+                                            </div>
+                                        ))}
+                                        
+                                        <div className="border-t pt-2 mt-2">
+                                            <div className="flex justify-between">
+                                                <span className="text-lg font-medium text-gray-900">Total Amount:</span>
+                                                <span className="text-lg font-bold text-gray-900">${booking.total_amount.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                            
+                            {/* No discounts applied */}
+                            {(!booking.discount_applications || booking.discount_applications.length === 0) && (
+                                <div className="border-t pt-2">
+                                    <div className="flex justify-between">
+                                        <span className="text-lg font-medium text-gray-900">Total Amount:</span>
+                                        <span className="text-lg font-bold text-gray-900">${booking.total_amount.toFixed(2)}</span>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+                            
                             <div className="text-xs text-gray-500">
                                 Booked on {new Date(booking.created_at).toLocaleDateString('en-US', {
                                     year: 'numeric',
@@ -378,7 +417,7 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                             {booking.stripe_session_id && (
                                 <div>
                                     <div className="text-sm text-gray-600">Session ID:</div>
-                                    <div className="font-mono text-xs text-gray-900 bg-gray-50 p-2 rounded">
+                                    <div className="font-mono text-xs text-gray-900 bg-gray-50 p-2 rounded overflow-x-hidden">
                                         {booking.stripe_session_id}
                                     </div>
                                 </div>

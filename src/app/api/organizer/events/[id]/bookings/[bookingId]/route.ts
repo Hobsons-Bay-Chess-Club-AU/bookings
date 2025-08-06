@@ -46,7 +46,11 @@ export async function GET(
                 *,
                 event:events!bookings_event_id_fkey(*),
                 user:profiles!bookings_user_id_fkey(*),
-                participants(*)
+                participants(*),
+                discount_applications(
+                    *,
+                    discount:event_discounts(*)
+                )
             `)
             .eq('id', bookingId)
             .eq('event_id', eventId)

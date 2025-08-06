@@ -92,7 +92,7 @@ export default function EventPricingPageClient({
             </div>
 
             {/* Pricing Manager Component */}
-            <PricingManager eventId={event.id} initialPricing={pricing} />
+            <PricingManager eventId={event.id} initialPricing={pricing} event={event} />
         </div>
     )
 }

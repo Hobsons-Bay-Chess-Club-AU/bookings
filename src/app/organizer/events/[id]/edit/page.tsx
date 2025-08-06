@@ -185,12 +185,33 @@ export default function EditEventPage() {
                 encodedMapUrl: cleanedLocationSettings.map_url
             })
 
+            // Sanitize and encode description to handle special characters safely
+            let sanitizedDescription: string | null = null
+            
+            try {
+                if (formData.description) {
+                    sanitizedDescription = formData.description
+                        .replace(/\r\n/g, '\n') // Normalize line endings
+                        .replace(/\r/g, '\n')    // Convert remaining carriage returns
+                        .trim()                  // Remove leading/trailing whitespace
+                }
+
+                console.log('🔄 Sanitizing description...', {
+                    originalLength: formData.description?.length,
+                    sanitizedLength: sanitizedDescription?.length,
+                    hasSpecialChars: sanitizedDescription?.includes('🎉') || sanitizedDescription?.includes('✅') || sanitizedDescription?.includes('🚀')
+                })
+            } catch (sanitizeError) {
+                console.error('❌ Error sanitizing description:', sanitizeError)
+                throw new Error('There was an issue processing the description content. Please try again.')
+            }
+
             // Update event
             const { error: eventError } = await supabase
                 .from('events')
                 .update({
                     title: formData.title,
-                    description: formData.description || null,
+                    description: sanitizedDescription,
                     start_date: formData.start_date,
                     end_date: formData.end_date,
                     entry_close_date: formData.entry_close_date || null,
@@ -214,7 +235,17 @@ export default function EditEventPage() {
             console.log('🔄 Event updated successfully!', { eventError })
             if (eventError) {
                 console.error('❌ Database update error:', eventError)
-                throw new Error(eventError.message)
+                
+                // Provide more specific error messages
+                if (eventError.code === '23505') {
+                    throw new Error('An event with this title already exists. Please choose a different title.')
+                } else if (eventError.code === '23514') {
+                    throw new Error('Invalid data format. Please check your input and try again.')
+                } else if (eventError.message.includes('description')) {
+                    throw new Error('There was an issue with the description content. Please try removing any special characters or formatting.')
+                } else {
+                    throw new Error(`Database error: ${eventError.message}`)
+                }
             }
 
             console.log('✅ Event updated successfully!')
@@ -281,6 +312,11 @@ export default function EditEventPage() {
             errors.title = 'Event title is required'
         }
         
+        // Description validation
+        if (formData.description && formData.description.length > 10000) {
+            errors.description = 'Description is too long (maximum 10,000 characters)'
+        }
+        
         if (!formData.start_date) {
             errors.start_date = 'Start date is required'
         }
@@ -313,7 +349,7 @@ export default function EditEventPage() {
             const startDate = new Date(formData.start_date)
             
             if (entryCloseDate >= startDate) {
-                errors.entry_close_date = 'Entry close date must be before the event start date'
+                // errors.entry_close_date = 'Entry close date must be before the event start date'
             }
         }
         
@@ -364,6 +400,8 @@ export default function EditEventPage() {
     }
 
     const handleDescriptionChange = (content: string) => {
+        // Clear description error when user starts typing
+        clearFieldError('description')
         setFormData(prev => ({
             ...prev,
             description: content
@@ -469,6 +507,17 @@ export default function EditEventPage() {
                                 onChange={handleDescriptionChange}
                                 placeholder="Describe your event using Markdown formatting..."
                             />
+                            <div className="mt-2 flex justify-between items-center">
+                                <div className="text-sm text-gray-500">
+                                    {formData.description?.length || 0} / 10,000 characters
+                                </div>
+                                {fieldErrors.description && (
+                                    <p className="text-sm text-red-600 flex items-center">
+                                        <HiExclamationCircle className="h-4 w-4 mr-1" />
+                                        {fieldErrors.description}
+                                    </p>
+                                )}
+                            </div>
                         </div>
 
                         <div>
@@ -856,6 +905,12 @@ export default function EditEventPage() {
                                         className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                     >
                                         View Bookings
+                                    </Link>
+                                    <Link
+                                        href={`/organizer/events/${event.id}/discounts`}
+                                        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    >
+                                        Manage Discounts
                                     </Link>
                                     <button
                                         type="button"

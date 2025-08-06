@@ -14,6 +14,7 @@ interface Step1PricingProps {
     onContinue: () => void
     loading: boolean
     error: string
+    hasDiscounts?: boolean
 }
 
 export default function Step1Pricing({
@@ -26,7 +27,8 @@ export default function Step1Pricing({
     totalAmount,
     onContinue,
     loading,
-    error
+    error,
+    hasDiscounts = false
 }: Step1PricingProps) {
     return (
         <form onSubmit={(e) => { e.preventDefault(); onContinue(); }} className="space-y-6">
@@ -172,9 +174,32 @@ export default function Step1Pricing({
             {/* Total */}
             <div className="bg-gray-50 rounded-lg p-4">
                 <div className="flex justify-between items-center">
-                    <span className="text-lg font-medium text-gray-900">Total Amount</span>
+                    <span className="text-lg font-medium text-gray-900">
+                        {hasDiscounts ? 'Estimated Total' : 'Total Amount'}
+                    </span>
                     <span className="text-2xl font-bold text-gray-900">${totalAmount.toFixed(2)}</span>
                 </div>
+                
+                {/* Discount Hint */}
+                {hasDiscounts && (
+                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <div className="flex items-start">
+                            <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <h3 className="text-sm font-medium text-blue-800">
+                                    Discounts Available
+                                </h3>
+                                <div className="mt-1 text-sm text-blue-800">
+                                    <p>Your final amount will be recalculated after you provide participant information in the next steps.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Continue Button */}

@@ -78,7 +78,7 @@ export default function NewEventPage() {
             const startDate = new Date(formData.start_date)
             
             if (entryCloseDate >= startDate) {
-                errors.entry_close_date = 'Entry close date must be before the event start date'
+                // errors.entry_close_date = 'Entry close date must be before the event start date'
             }
         }
         

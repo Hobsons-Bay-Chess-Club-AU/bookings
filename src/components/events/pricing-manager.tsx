@@ -1,16 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { EventPricing, PricingType, MembershipType } from '@/lib/types/database'
+import { EventPricing, PricingType, MembershipType, Event } from '@/lib/types/database'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
 import { createClient } from '@/lib/supabase/client'
+import { HiDocumentDuplicate } from 'react-icons/hi2'
 
 interface PricingManagerProps {
     eventId: string
     initialPricing: EventPricing[]
+    event?: Event
 }
 
-export default function PricingManager({ eventId, initialPricing }: PricingManagerProps) {
+export default function PricingManager({ eventId, initialPricing, event }: PricingManagerProps) {
     const [pricing, setPricing] = useState<EventPricing[]>(initialPricing)
     const [isAdding, setIsAdding] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
@@ -33,14 +35,18 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
     const supabase = createClient()
 
     const resetForm = () => {
+        // Auto-fill start and end dates with event dates when adding new pricing
+        const eventStartDate = event?.start_date ? new Date(event.start_date).toISOString().slice(0, 16) : ''
+        const eventEndDate = event?.end_date ? new Date(event.end_date).toISOString().slice(0, 16) : ''
+        
         setFormData({
             name: '',
             description: '',
             pricing_type: 'regular',
             membership_type: 'all',
             price: '',
-            start_date: '',
-            end_date: '',
+            start_date: eventStartDate,
+            end_date: eventEndDate,
             max_tickets: ''
         })
         setIsAdding(false)
@@ -111,6 +117,21 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
             max_tickets: pricingItem.max_tickets?.toString() || ''
         })
         setEditingId(pricingItem.id)
+        setIsAdding(true)
+    }
+
+    const handleClone = (pricingItem: EventPricing) => {
+        setFormData({
+            name: `${pricingItem.name} (Copy)`,
+            description: pricingItem.description || '',
+            pricing_type: pricingItem.pricing_type,
+            membership_type: pricingItem.membership_type,
+            price: pricingItem.price.toString(),
+            start_date: pricingItem.start_date.slice(0, 16), // Format for datetime-local
+            end_date: pricingItem.end_date.slice(0, 16),
+            max_tickets: pricingItem.max_tickets?.toString() || ''
+        })
+        setEditingId(null) // No editing ID since this is a new item
         setIsAdding(true)
     }
 
@@ -313,6 +334,11 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
                                     onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 />
+                                {!editingId && event && (
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        Auto-filled with event start date
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -325,6 +351,11 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
                                     onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 />
+                                {!editingId && event && (
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        Auto-filled with event end date
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -429,6 +460,15 @@ export default function PricingManager({ eventId, initialPricing }: PricingManag
                                         disabled={loading}
                                     >
                                         Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handleClone(pricingItem)}
+                                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                        disabled={loading}
+                                        title="Clone this pricing tier for quick editing"
+                                    >
+                                        <HiDocumentDuplicate className="h-4 w-4 mr-1" />
+                                        Clone
                                     </button>
                                     <button
                                         onClick={() => handleToggleActive(pricingItem.id, pricingItem.is_active)}

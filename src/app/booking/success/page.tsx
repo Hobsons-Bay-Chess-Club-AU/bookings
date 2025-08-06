@@ -2,19 +2,23 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/utils/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Booking, Event } from '@/lib/types/database'
+import { Booking, Event, DiscountApplication } from '@/lib/types/database'
 import AddToCalendar from '@/components/calendar/add-to-calendar'
 import { CalendarEvent } from '@/lib/utils/calendar'
 
-async function getBookingFromSession(sessionId: string): Promise<(Booking & { event: Event }) | null> {
+async function getBookingFromSession(sessionId: string): Promise<(Booking & { event: Event; discount_applications?: DiscountApplication[] }) | null> {
     const supabase = await createClient()
 
     const { data: booking, error } = await supabase
         .from('bookings')
         .select(`
-      *,
-              event:events!bookings_event_id_fkey(*)
-    `)
+            *,
+            event:events!bookings_event_id_fkey(*),
+            discount_applications(
+                *,
+                discount:event_discounts(*)
+            )
+        `)
         .eq('stripe_session_id', sessionId)
         .single()
 
@@ -22,7 +26,7 @@ async function getBookingFromSession(sessionId: string): Promise<(Booking & { ev
         return null
     }
 
-    return booking as Booking & { event: Event }
+    return booking as Booking & { event: Event; discount_applications?: DiscountApplication[] }
 }
 
 interface SuccessPageProps {
@@ -41,7 +45,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
         redirect('/')
     }
 
-    let booking: (Booking & { event: Event }) | null = null
+    let booking: (Booking & { event: Event; discount_applications?: DiscountApplication[] }) | null = null
 
     if (session_id) {
         // For paid events with Stripe session
@@ -53,13 +57,17 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
             .from('bookings')
             .select(`
                 *,
-                event:events!bookings_event_id_fkey(*)
+                event:events!bookings_event_id_fkey(*),
+                discount_applications(
+                    *,
+                    discount:event_discounts(*)
+                )
             `)
             .eq('id', booking_id)
             .single()
         
         if (!error && data) {
-            booking = data as Booking & { event: Event }
+            booking = data as Booking & { event: Event; discount_applications?: DiscountApplication[] }
         }
     }
 
@@ -188,14 +196,52 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-800">Price per ticket:</span>
-                                            <span>{booking.total_amount === 0 ? 'Free' : `AUD $${booking.event.price.toFixed(2)}`}</span>
+                                            <span>{booking.total_amount === 0 ? 'Free' : `AUD $${(booking.total_amount / booking.quantity).toFixed(2)}`}</span>
                                         </div>
-                                        <div className="border-t pt-3">
-                                            <div className="flex justify-between font-semibold text-gray-800">
-                                                <span>{booking.total_amount === 0 ? 'Total:' : 'Total Paid:'}</span>
-                                                <span>{booking.total_amount === 0 ? 'Free' : `AUD $${booking.total_amount.toFixed(2)}`}</span>
+                                        
+                                        {/* Discount Information */}
+                                        {booking.discount_applications && booking.discount_applications.length > 0 && (
+                                            <>
+                                                <div className="border-t pt-3">
+                                                    <div className="flex justify-between">
+                                                        <span className="text-gray-800">Subtotal:</span>
+                                                        <span>AUD ${booking.total_amount.toFixed(2)}</span>
+                                                    </div>
+                                                    
+                                                    {booking.discount_applications.map((discountApp, index) => (
+                                                        <div key={index} className="flex justify-between text-green-600">
+                                                            <span className="text-sm">
+                                                                {discountApp.discount?.name || 'Discount'}
+                                                                {discountApp.discount?.discount_type === 'participant_based' && 
+                                                                    ` (participant-based)`
+                                                                }
+                                                            </span>
+                                                            <span className="text-sm font-medium">
+                                                                -AUD ${discountApp.applied_value.toFixed(2)}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                    
+                                                    <div className="border-t pt-2 mt-2">
+                                                        <div className="flex justify-between font-semibold text-gray-800">
+                                                            <span>Total Paid:</span>
+                                                            <span>AUD ${booking.total_amount.toFixed(2)}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+                                        
+                                        {/* No discounts applied */}
+                                        {(!booking.discount_applications || booking.discount_applications.length === 0) && (
+                                            <div className="border-t pt-3">
+                                                <div className="flex justify-between font-semibold text-gray-800">
+                                                    <span>{booking.total_amount === 0 ? 'Total:' : 'Total Paid:'}</span>
+                                                    <span>{booking.total_amount === 0 ? 'Free' : `AUD $${booking.total_amount.toFixed(2)}`}</span>
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
+                                        
                                         <div className="flex justify-between">
                                             <span className="text-gray-800">Status:</span>
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">

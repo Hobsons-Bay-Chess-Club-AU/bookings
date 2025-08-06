@@ -19,7 +19,8 @@ import {
     HiCog8Tooth,
     HiLink,
     HiEnvelope,
-    HiDocumentDuplicate
+    HiDocumentDuplicate,
+    HiTag
 } from 'react-icons/hi2'
 
 export interface EventWithBookings extends Event {
@@ -291,7 +292,12 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between mb-2">
                                                 <h3 className="text-lg font-medium text-gray-900">
-                                                    {event.title}
+                                                    <Link
+                                                        href={`/organizer/events/${event.id}`}
+                                                        className="hover:text-indigo-600 transition-colors cursor-pointer"
+                                                    >
+                                                        {event.title}
+                                                    </Link>
                                                 </h3>
                                                 <div className="flex items-center space-x-2">
                                                     {event.settings?.show_participants_public && (
@@ -381,6 +387,13 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                             onClick={() => setOpenDropdownId(null)}
                                                         >
                                                             <HiCurrencyDollar className="mr-2 h-4 w-4" /> Manage Pricing
+                                                        </Link>
+                                                        <Link
+                                                            href={`/organizer/events/${event.id}/discounts`}
+                                                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                            onClick={() => setOpenDropdownId(null)}
+                                                        >
+                                                            <HiTag className="mr-2 h-4 w-4" /> Manage Discounts
                                                         </Link>
                                                         <button
                                                             onClick={() => {

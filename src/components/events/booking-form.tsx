@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Event, Profile, EventPricing, Participant, FormField } from '@/lib/types/database'
 import { loadStripe } from '@stripe/stripe-js'
@@ -44,13 +44,33 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
     const [optInMarketing, setOptInMarketing] = useState(false)
     const [shouldRedirect, setShouldRedirect] = useState(false)
     const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const [discountInfo, setDiscountInfo] = useState<{
+        totalDiscount: number
+        appliedDiscounts: Array<{
+            discount: {
+                id: string
+                name: string
+                rules?: Array<{
+                    rule_type: string
+                    [key: string]: unknown
+                }>
+            }
+            amount: number
+            eligibleParticipants?: number
+            type: string
+        }>
+        finalAmount: number
+    } | null>(null)
+    const [discountLoading, setDiscountLoading] = useState(false)
+    const [hasDiscounts, setHasDiscounts] = useState(false)
 
     const supabase = createClient()
     
     // Use booking journey context
     const { setIsInBookingJourney, setBookingStep } = useBookingJourney()
 
-    const totalAmount = selectedPricing ? selectedPricing.price * quantity : (event.price * quantity)
+    const baseAmount = selectedPricing ? selectedPricing.price * quantity : (event.price * quantity)
+    const totalAmount = discountInfo?.finalAmount ?? baseAmount
     const maxQuantity = event.max_attendees
         ? Math.min(10, event.max_attendees - event.current_attendees)
         : 10
@@ -72,7 +92,7 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                 // If no pricing options are available, create a default option using event's base price
                 if (pricing.length === 0) {
                     const defaultPricing: EventPricing = {
-                        id: 'default',
+                        id: 'default', // This is a virtual ID for UI purposes only
                         event_id: event.id,
                         name: event.price === 0 ? 'Free Event' : 'General Admission',
                         description: event.price === 0 ? 'This is a free event' : 'Standard event pricing',
@@ -99,6 +119,15 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                 // Set form fields from event
                 setFormFields(event.custom_form_fields || [])
 
+                // Check if event has discounts
+                const { data: discounts } = await supabase
+                    .from('event_discounts')
+                    .select('id')
+                    .eq('event_id', event.id)
+                    .eq('is_active', true)
+                
+                setHasDiscounts(Boolean(discounts && discounts.length > 0))
+
             } catch (err: unknown) {
                 console.error('Error fetching data:', err)
                 setError((err as Error).message || 'Failed to load event data')
@@ -108,7 +137,7 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
         }
 
         fetchData()
-    }, [event.id, user?.membership_type, event.custom_form_fields])
+    }, [event.id, user?.membership_type, event.custom_form_fields, event.max_attendees, event.price, supabase])
 
     // Notify parent component when step changes
     useEffect(() => {
@@ -126,7 +155,7 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
         if (availablePricing.length > 0 && !selectedPricing) {
             setSelectedPricing(availablePricing[0])
         }
-    }, [availablePricing, selectedPricing])
+    }, [availablePricing, selectedPricing, step])
 
     // Reset redirect state when step changes
     useEffect(() => {
@@ -177,7 +206,9 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                 clearTimeout(redirectTimeoutRef.current)
             }
         }
-    }, [shouldRedirect, currentBookingId, totalAmount, selectedPricing])
+    }, [shouldRedirect, currentBookingId, totalAmount, selectedPricing, step])
+
+
 
     const handleContinueToContact = () => {
         setError('')
@@ -253,12 +284,57 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
         setStep(3)
     }
 
-    const handleContinueToReview = () => {
+    const calculateDiscounts = useCallback(async () => {
+        if (participants.length === 0) {
+            setDiscountInfo(null)
+            return
+        }
+
+        try {
+            setDiscountLoading(true)
+            const response = await fetch(`/api/events/${event.id}/calculate-discounts`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    participants,
+                    baseAmount,
+                    quantity
+                })
+            })
+
+            if (response.ok) {
+                const discountData = await response.json()
+                setDiscountInfo(discountData)
+            } else {
+                console.error('Failed to calculate discounts')
+                setDiscountInfo(null)
+            }
+        } catch (error) {
+            console.error('Error calculating discounts:', error)
+            setDiscountInfo(null)
+        } finally {
+            setDiscountLoading(false)
+        }
+    }, [participants, baseAmount, quantity, event.id])
+
+    // Recalculate discounts when participants or quantity changes
+    useEffect(() => {
+        if (step >= 3 && participants.length > 0) {
+            calculateDiscounts()
+        }
+    }, [participants, quantity, selectedPricing, step, calculateDiscounts])
+
+    const handleContinueToReview = async () => {
         setError('')
 
         if (!validateParticipants()) {
             return
         }
+
+        // Calculate discounts before showing review
+        await calculateDiscounts()
 
         setStep(4)
     }
@@ -356,22 +432,56 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
             })
 
             // Create booking record with pricing information
+            const bookingData: {
+                event_id: string
+                user_id: string
+                quantity: number
+                unit_price: number
+                total_amount: number
+                status: 'confirmed' | 'pending'
+                pricing_id?: string
+            } = {
+                event_id: event.id,
+                user_id: user.id,
+                quantity,
+                unit_price: selectedPricing.price,
+                total_amount: totalAmount,
+                status: isFreeEvent ? 'confirmed' : 'pending'
+            }
+            
+            // Only set pricing_id if it's not a free event and we have a valid UUID pricing ID
+            if (!isFreeEvent && selectedPricing.id && selectedPricing.id !== 'default') {
+                bookingData.pricing_id = selectedPricing.id
+            }
+            
             const { data: booking, error: bookingError } = await supabase
                 .from('bookings')
-                .insert({
-                    event_id: event.id,
-                    user_id: user.id,
-                    pricing_id: isFreeEvent ? null : selectedPricing.id, // Don't set pricing_id for free events
-                    quantity,
-                    unit_price: selectedPricing.price,
-                    total_amount: totalAmount,
-                    status: isFreeEvent ? 'confirmed' : 'pending'
-                })
+                .insert(bookingData)
                 .select()
                 .single()
 
             if (bookingError) {
                 throw new Error(bookingError.message)
+            }
+
+            // Create discount application records if discounts were applied
+            if (discountInfo && discountInfo.appliedDiscounts && discountInfo.appliedDiscounts.length > 0) {
+                for (const appliedDiscount of discountInfo.appliedDiscounts) {
+                    try {
+                        await supabase
+                            .from('discount_applications')
+                            .insert({
+                                booking_id: booking.id,
+                                discount_id: appliedDiscount.discount.id,
+                                applied_value: appliedDiscount.amount,
+                                original_amount: baseAmount,
+                                final_amount: discountInfo.finalAmount
+                            })
+                    } catch (discountError) {
+                        console.error('Error creating discount application record:', discountError)
+                        // Don't fail the booking if discount tracking fails
+                    }
+                }
             }
 
             // Create participants records
@@ -596,6 +706,7 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                     onContinue={handleContinueToContact}
                     loading={loading}
                     error={error}
+                    hasDiscounts={hasDiscounts}
                 />
             )}
 
@@ -633,6 +744,9 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                     selectedPricing={selectedPricing}
                     quantity={quantity}
                     totalAmount={totalAmount}
+                    baseAmount={baseAmount}
+                    discountInfo={discountInfo}
+                    discountLoading={discountLoading}
                     contactInfo={contactInfo}
                     participants={participants}
                     formFields={formFields}
