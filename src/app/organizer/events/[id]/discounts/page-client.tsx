@@ -18,8 +18,15 @@ interface DiscountFormData {
     max_uses: number
     min_quantity: number
     max_quantity: number
-    rules: ParticipantDiscountRule[]
-    seat_rules: SeatDiscountRule[]
+    rules: Array<ParticipantDiscountRule & {
+        previous_event_id?: string
+        min_participants?: number
+        max_participants?: number
+        discount_percentage?: number
+    }>
+    seat_rules: Array<SeatDiscountRule & {
+        seat_number?: string
+    }>
 }
 
 interface EventDiscountsPageClientProps {
@@ -284,12 +291,12 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
             value_type: discount.value_type,
             value: discount.value,
             code: discount.code || '',
-            start_date: discount.start_date,
-            end_date: discount.end_date,
+            start_date: discount.start_date || '',
+            end_date: discount.end_date || '',
             is_active: discount.is_active,
-            max_uses: discount.max_uses,
+            max_uses: discount.max_uses || 0,
             min_quantity: discount.min_quantity,
-            max_quantity: discount.max_quantity,
+            max_quantity: discount.max_quantity || 0,
             rules: discount.rules || [],
             seat_rules: discount.seat_rules || []
         })
@@ -324,15 +331,22 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
             rules: [...prev.rules, {
                 id: `temp-${Date.now()}`,
                 discount_id: '',
-                previous_event_id: '',
-                min_participants: 1,
-                max_participants: 0,
-                discount_percentage: 0
+                rule_type: 'custom',
+                field_name: '',
+                field_value: '',
+                operator: 'equals',
+                related_event_id: '',
+                created_at: new Date().toISOString()
             }]
         }))
     }
 
-    const updateRule = (index: number, field: keyof ParticipantDiscountRule, value: string | number | boolean | undefined) => {
+    const updateRule = (index: number, field: keyof (ParticipantDiscountRule & {
+        previous_event_id?: string
+        min_participants?: number
+        max_participants?: number
+        discount_percentage?: number
+    }), value: string | number | boolean | undefined) => {
         setFormData(prev => ({
             ...prev,
             rules: prev.rules.map((rule, i) => 
@@ -354,13 +368,18 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
             seat_rules: [...prev.seat_rules, {
                 id: `temp-${Date.now()}`,
                 discount_id: '',
-                seat_number: '',
-                discount_percentage: 0
+                min_seats: 1,
+                max_seats: undefined,
+                discount_amount: 0,
+                discount_percentage: 0,
+                created_at: new Date().toISOString()
             }]
         }))
     }
 
-    const updateSeatRule = (index: number, field: keyof SeatDiscountRule, value: string | number | boolean | undefined) => {
+    const updateSeatRule = (index: number, field: keyof (SeatDiscountRule & {
+        seat_number?: string
+    }), value: string | number | boolean | undefined) => {
         setFormData(prev => ({
             ...prev,
             seat_rules: prev.seat_rules.map((rule, i) => 
