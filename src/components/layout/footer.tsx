@@ -9,7 +9,7 @@ export default function Footer() {
             <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     {/* About Section */}
-                    <div className="col-span-1 md:col-span-2">
+                    <div className="col-span-2 md:col-span-2">
                         <div className="flex items-center mb-4">
                             <Image
                                 src="/chess-logo.svg"
@@ -58,7 +58,7 @@ export default function Footer() {
                     </div>
 
                     {/* Legal Links */}
-                    <div>
+                    <div >
                         <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-4">
                             Legal
                         </h4>

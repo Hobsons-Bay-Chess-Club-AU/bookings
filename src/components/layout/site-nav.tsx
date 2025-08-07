@@ -404,7 +404,17 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                     </div>
 
                     {/* Mobile menu button */}
-                    <div className="md:hidden">
+                    <div className="md:hidden flex items-center">
+                        {pathname !== '/search' && (
+                            <button
+                                type="button"
+                                className="mr-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                title="Search events"
+                                onClick={handleSearchOpen}
+                            >
+                                <HiMagnifyingGlass className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+                            </button>
+                        )}
                         <button
                             ref={mobileMenuButtonRef}
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -429,7 +439,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                     }`}>
                         <form
                             ref={searchFormRef}
-                            className={`w-full max-w-2xl mx-auto flex flex-col items-center relative transition-all duration-200 ease-out ${
+                            className={`w-full p-2 max-w-2xl mx-auto flex flex-col items-center relative transition-all duration-200 ease-out ${
                                 searchAnimating 
                                     ? 'opacity-100 scale-100' 
                                     : 'opacity-0 scale-95'
@@ -449,7 +459,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                     value={searchValue}
                                     onChange={e => setSearchValue(e.target.value)}
                                     placeholder="Search events by title or description..."
-                                    className="w-full text-3xl px-8 py-8 rounded-2xl border-0 shadow-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-4 focus:ring-indigo-500 pr-20"
+                                    className="w-full text-xl md:text-3xl px-5 py-5 md:px-8 md:py-8 rounded-2xl border-0 shadow-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-4 focus:ring-indigo-500 pr-20"
                                     style={{ fontWeight: 600 }}
                                 />
                                 <button
