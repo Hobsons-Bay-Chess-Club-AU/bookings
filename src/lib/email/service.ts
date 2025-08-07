@@ -1,5 +1,20 @@
 // Send a generic email
 export async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
+    console.log('📧 [EMAIL SERVICE] Starting generic email send:', {
+        to,
+        subject,
+        htmlLength: html.length,
+        timestamp: new Date().toISOString()
+    })
+
+    // Check environment variables
+    console.log('🔧 [EMAIL SERVICE] Environment check:', {
+        hasResendFromEmail: !!process.env.RESEND_FROM_EMAIL,
+        resendFromEmail: process.env.RESEND_FROM_EMAIL,
+        hasResendApiKey: !!process.env.RESEND_API_KEY,
+        nodeEnv: process.env.NODE_ENV
+    })
+
     try {
         const { data, error } = await resend.emails.send({
             from: process.env.RESEND_FROM_EMAIL || '',
@@ -8,12 +23,30 @@ export async function sendEmail({ to, subject, html }: { to: string; subject: st
             html
         })
         if (error) {
-            console.error('Failed to send email:', error)
+            console.error('❌ [EMAIL SERVICE] Failed to send email:', {
+                error: error.message,
+                errorDetails: error,
+                to,
+                subject,
+                timestamp: new Date().toISOString()
+            })
             return { success: false, error: error.message }
         }
+        console.log('✅ [EMAIL SERVICE] Email sent successfully:', {
+            emailId: data?.id,
+            to,
+            subject,
+            timestamp: new Date().toISOString()
+        })
         return { success: true, data }
     } catch (error) {
-        console.error('Error sending email:', error)
+        console.error('💥 [EMAIL SERVICE] Exception sending email:', {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            errorStack: error instanceof Error ? error.stack : undefined,
+            to,
+            subject,
+            timestamp: new Date().toISOString()
+        })
         return { success: false, error: 'Failed to send email' }
     }
 }
@@ -86,15 +119,67 @@ interface EmailData {
 export async function sendBookingConfirmationEmail(data: EmailData) {
     const { booking, event, user } = data
 
+    console.log('📧 [BOOKING CONFIRMATION] Starting email send:', {
+        bookingId: booking.id,
+        eventId: event.id,
+        eventTitle: event.title,
+        userEmail: user.email,
+        userName: user.full_name,
+        timestamp: new Date().toISOString()
+    })
+
+    // Validate required data
+    if (!user.email) {
+        console.error('❌ [BOOKING CONFIRMATION] Missing user email:', {
+            bookingId: booking.id,
+            userId: user.id,
+            timestamp: new Date().toISOString()
+        })
+        return { success: false, error: 'Missing user email' }
+    }
+
+    if (!event.title) {
+        console.error('❌ [BOOKING CONFIRMATION] Missing event title:', {
+            bookingId: booking.id,
+            eventId: event.id,
+            timestamp: new Date().toISOString()
+        })
+        return { success: false, error: 'Missing event title' }
+    }
+
     // Fetch participants for this booking
     const supabase = await createClient()
-    const { data: participants } = await supabase
+    console.log('🔍 [BOOKING CONFIRMATION] Fetching participants for booking:', {
+        bookingId: booking.id,
+        timestamp: new Date().toISOString()
+    })
+
+    const { data: participants, error: participantsError } = await supabase
         .from('participants')
         .select('*')
         .eq('booking_id', booking.id)
         .order('created_at', { ascending: true })
 
+    if (participantsError) {
+        console.error('❌ [BOOKING CONFIRMATION] Failed to fetch participants:', {
+            bookingId: booking.id,
+            error: participantsError.message,
+            timestamp: new Date().toISOString()
+        })
+    } else {
+        console.log('✅ [BOOKING CONFIRMATION] Participants fetched:', {
+            bookingId: booking.id,
+            participantCount: participants?.length || 0,
+            timestamp: new Date().toISOString()
+        })
+    }
+
     try {
+        console.log('🎨 [BOOKING CONFIRMATION] Rendering email template:', {
+            bookingId: booking.id,
+            timestamp: new Date().toISOString()
+        })
+
         const { html, text } = await renderBookingConfirmationEmail({
             bookingId: booking.booking_id || booking.id,
             eventName: event.title,
@@ -108,6 +193,22 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
             eventDescription: event.description,
             participants: participants || []
         })
+
+        console.log('✅ [BOOKING CONFIRMATION] Email template rendered:', {
+            bookingId: booking.id,
+            htmlLength: html.length,
+            textLength: text.length,
+            timestamp: new Date().toISOString()
+        })
+
+        console.log('📤 [BOOKING CONFIRMATION] Sending email via Resend:', {
+            bookingId: booking.id,
+            from: process.env.RESEND_FROM_EMAIL || "",
+            to: user.email,
+            subject: `Booking Confirmed: ${event.title}`,
+            timestamp: new Date().toISOString()
+        })
+
         const { data: emailData, error } = await resend.emails.send({
             from: process.env.RESEND_FROM_EMAIL || "",
             to: user.email,
@@ -115,13 +216,33 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
             html,
             text
         })
+
         if (error) {
-            console.error('Failed to send booking confirmation email:', error)
+            console.error('❌ [BOOKING CONFIRMATION] Resend API error:', {
+                bookingId: booking.id,
+                error: error.message,
+                errorDetails: error,
+                timestamp: new Date().toISOString()
+            })
             return { success: false, error: error.message }
         }
+
+        console.log('✅ [BOOKING CONFIRMATION] Email sent successfully:', {
+            bookingId: booking.id,
+            emailId: emailData?.id,
+            userEmail: user.email,
+            eventTitle: event.title,
+            timestamp: new Date().toISOString()
+        })
+
         return { success: true, data: emailData }
     } catch (error: unknown) {
-        console.error('Error sending booking confirmation email:', error)
+        console.error('💥 [BOOKING CONFIRMATION] Exception during email send:', {
+            bookingId: booking.id,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            errorStack: error instanceof Error ? error.stack : undefined,
+            timestamp: new Date().toISOString()
+        })
         return { success: false, error: 'Failed to send booking confirmation email' }
     }
 }

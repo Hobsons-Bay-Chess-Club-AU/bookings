@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { HiShieldCheck, HiXMark, HiInformationCircle, HiExclamationTriangle } from 'react-icons/hi2'
+import { HiShieldCheck, HiLockClosed } from 'react-icons/hi2'
 
 export const metadata: Metadata = {
     title: 'Privacy Policy - Hobsons Bay Chess Club',
@@ -69,7 +69,7 @@ export default function PrivacyPolicyPage() {
 
                                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 mb-4">
                                     <h4 className="font-semibold text-red-900 dark:text-red-100 mb-2 flex items-center">
-                                        <HiXMark className="mr-2 text-red-600 dark:text-red-400" />
+                                        <HiLockClosed className="mr-2 text-red-600 dark:text-red-400" />
                                         What We DON&apos;T Use
                                     </h4>
                                     <ul className="text-sm text-red-800 dark:text-red-200 space-y-1">

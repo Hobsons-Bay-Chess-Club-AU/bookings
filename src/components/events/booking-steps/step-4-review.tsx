@@ -303,7 +303,7 @@ export default function Step4Review({
                         <button
                             type="button"
                             onClick={onBack}
-                            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
                             Back
                         </button>

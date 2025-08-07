@@ -133,7 +133,7 @@ export default function InfoPopover({ content, className = '' }: InfoPopoverProp
                 type="button"
                 onClick={handleToggle}
                 onMouseDown={(e) => e.stopPropagation()}
-                className={`inline-flex items-center justify-center w-5 h-5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 transition-all cursor-pointer ${className}`}
+                className={`inline-flex items-center justify-center w-5 h-5 text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:ring-offset-1 dark:focus:ring-offset-gray-800 transition-all cursor-pointer ${className}`}
                 aria-label="More information"
                 title="Click for more information"
             >
@@ -143,7 +143,7 @@ export default function InfoPopover({ content, className = '' }: InfoPopoverProp
             {isOpen && mounted && createPortal(
                 <div
                     ref={popoverRef}
-                    className="fixed z-[99999] max-w-xs p-3 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200"
+                    className="fixed z-[99999] max-w-xs p-3 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200"
                     style={{
                         top: position.top,
                         left: position.left,
@@ -158,12 +158,12 @@ export default function InfoPopover({ content, className = '' }: InfoPopoverProp
                         {showAbove ? (
                             // Arrow pointing down (when popover is above button)
                             <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2">
-                                <div className="w-3 h-3 bg-white border-r border-b border-gray-300 transform rotate-45 shadow-sm"></div>
+                                <div className="w-3 h-3 bg-white dark:bg-gray-800 border-r border-b border-gray-300 dark:border-gray-600 transform rotate-45 shadow-sm"></div>
                             </div>
                         ) : (
                             // Arrow pointing up (when popover is below button)
                             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                                <div className="w-3 h-3 bg-white border-l border-t border-gray-300 transform rotate-45 shadow-sm"></div>
+                                <div className="w-3 h-3 bg-white dark:bg-gray-800 border-l border-t border-gray-300 dark:border-gray-600 transform rotate-45 shadow-sm"></div>
                             </div>
                         )}
                         <div className="pt-1 leading-relaxed whitespace-pre-wrap">

@@ -38,7 +38,7 @@ export default function FileField({
             <input
                 type="file"
                 onChange={handleFileChange}
-                className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${error ? 'border-red-500' : ''
+                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-indigo-50 dark:file:bg-indigo-900/20 file:text-indigo-700 dark:file:text-indigo-300 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/30 ${error ? 'border-red-500 dark:border-red-400' : ''
                     } ${className}`}
                 required={field.required}
                 accept={typeof field.validation?.accept === 'string' ? field.validation.accept : undefined}
@@ -49,7 +49,7 @@ export default function FileField({
                     <Image
                         src={preview}
                         alt="Preview"
-                        className="max-w-32 max-h-32 object-cover rounded border"
+                        className="max-w-32 max-h-32 object-cover rounded border border-gray-300 dark:border-gray-600"
                         width={128}
                         height={128}
                     />
@@ -57,7 +57,7 @@ export default function FileField({
             )}
 
             {value instanceof File && !preview && (
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
                     File selected: {value.name || 'Unknown file'}
                 </div>
             )}

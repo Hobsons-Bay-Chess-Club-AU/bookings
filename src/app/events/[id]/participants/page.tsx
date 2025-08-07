@@ -1,72 +1,39 @@
-import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import ParticipantsList from '@/components/events/participants-list'
 import { Event } from '@/lib/types/database'
 import { Metadata } from 'next'
-import { BookingWithProfile } from '@/lib/types/ui'
+import { HiHome, HiLockClosed, HiCalendar, HiMapPin, HiUsers } from 'react-icons/hi2'
+
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
 async function getEvent(id: string): Promise<Event | null> {
-    const supabase = await createClient()
-
-    const { data: event, error } = await supabase
-        .from('events')
-        .select(`
-      *,
-      organizer:profiles(full_name, email)
-    `)
-        .eq('id', id)
-        .single()
-
-    if (error || !event) {
-        return null
-    }
-    return event
+    const res = await fetch(`${SITE_URL}/api/events/${id}`)
+    if (!res.ok) return null
+    return res.json()
 }
 
-
-
-async function getEventParticipants(eventId: string): Promise<BookingWithProfile[]> {
-    const supabase = await createClient()
-
-    const { data: bookings, error } = await supabase
-        .from('bookings')
-        .select(`
-            *,
-            profile:profiles!bookings_user_id_fkey(*),
-            participants(*)
-        `)
-        .eq('event_id', eventId)
-        .in('status', ['confirmed', 'verified'])
-        .order('created_at', { ascending: false })
-
-    if (error) {
-        console.error('Error fetching participants:', error)
-        return []
-    }
-
-    return (bookings || []) as BookingWithProfile[]
+async function getPublicParticipants(eventId: string) {
+    const res = await fetch(`${SITE_URL}/api/events/${eventId}/public-participants`, { cache: 'no-store' })
+    if (!res.ok) return []
+    return res.json()
 }
 
 interface ParticipantsPageProps {
     params: Promise<{ id: string }>
 }
 
-// Generate metadata for SEO
 export async function generateMetadata({ params }: ParticipantsPageProps): Promise<Metadata> {
     const { id } = await params
     const event = await getEvent(id)
-
     if (!event) {
         return {
             title: 'Event Not Found',
             description: 'The requested event could not be found.'
         }
     }
-
     const title = `${event.title} - Participants | Hobsons Bay Chess Club`
     const description = `View the list of participants for ${event.title} at ${event.location}`
-
     return {
         title,
         description,
@@ -80,41 +47,35 @@ export async function generateMetadata({ params }: ParticipantsPageProps): Promi
 export default async function EventParticipantsPage({ params }: ParticipantsPageProps) {
     const { id } = await params
     const event = await getEvent(id)
-
-    if (!event) {
-        notFound()
-    }
-
-    // Check if participants should be shown publicly
+    if (!event) notFound()
     const shouldShowPublicParticipants = event.settings?.show_participants_public || false
-
     if (!shouldShowPublicParticipants) {
         return (
-            <div className="bg-gray-50">
+            <div className="bg-gray-50 dark:bg-gray-900">
                 {/* Breadcrumb */}
-                <div className="bg-white border-b">
+                <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="py-4">
                             <nav className="flex" aria-label="Breadcrumb">
                                 <ol className="flex items-center space-x-4">
                                     <li>
-                                        <Link href="/" className="text-gray-400 hover:text-gray-500">
+                                        <Link href="/" className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-300">
                                             <span className="sr-only">Home</span>
-                                            🏠
+                                            <HiHome className="h-5 w-5" />
                                         </Link>
                                     </li>
                                     <li>
                                         <div className="flex items-center">
-                                            <span className="text-gray-400 mx-2">/</span>
-                                            <span className="text-gray-500">Events</span>
+                                            <span className="text-gray-400 mx-2 dark:text-gray-500">/</span>
+                                            <span className="text-gray-500 dark:text-gray-400">Events</span>
                                         </div>
                                     </li>
                                     <li>
                                         <div className="flex items-center">
-                                            <span className="text-gray-400 mx-2">/</span>
+                                            <span className="text-gray-400 mx-2 dark:text-gray-500">/</span>
                                             <Link
                                                 href={`/events/${event.id}`}
-                                                className="text-gray-500 hover:text-gray-700 truncate max-w-xs"
+                                                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 truncate max-w-xs"
                                             >
                                                 {event.title}
                                             </Link>
@@ -122,8 +83,8 @@ export default async function EventParticipantsPage({ params }: ParticipantsPage
                                     </li>
                                     <li>
                                         <div className="flex items-center">
-                                            <span className="text-gray-400 mx-2">/</span>
-                                            <span className="text-gray-900 font-medium">Participants</span>
+                                            <span className="text-gray-400 mx-2 dark:text-gray-500">/</span>
+                                            <span className="text-gray-900 dark:text-gray-100 font-medium">Participants</span>
                                         </div>
                                     </li>
                                 </ol>
@@ -131,19 +92,18 @@ export default async function EventParticipantsPage({ params }: ParticipantsPage
                         </div>
                     </div>
                 </div>
-
                 <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                    <div className="bg-white shadow rounded-lg p-8 text-center">
-                        <span className="text-4xl mb-4 block">🔒</span>
-                        <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-8 text-center">
+                        <HiLockClosed className="text-4xl mb-4 mx-auto text-gray-400 dark:text-gray-500" />
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                             Participant List Private
                         </h1>
-                        <p className="text-gray-600 mb-6">
+                        <p className="text-gray-600 dark:text-gray-400 mb-6">
                             The organizer has chosen to keep the participant list private for this event.
                         </p>
                         <Link
                             href={`/events/${event.id}`}
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800"
                         >
                             ← Back to Event
                         </Link>
@@ -152,35 +112,33 @@ export default async function EventParticipantsPage({ params }: ParticipantsPage
             </div>
         )
     }
-
-    const participants = await getEventParticipants(event.id)
-
+    const participants = await getPublicParticipants(event.id)
     return (
-        <div className="bg-gray-50">
+        <div className="bg-gray-50 dark:bg-gray-900">
             {/* Breadcrumb */}
-            <div className="bg-white border-b">
+            <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="py-4">
                         <nav className="flex" aria-label="Breadcrumb">
                             <ol className="flex items-center space-x-4">
                                 <li>
-                                    <Link href="/" className="text-gray-400 hover:text-gray-500">
+                                    <Link href="/" className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-300">
                                         <span className="sr-only">Home</span>
-                                        🏠
+                                        <HiHome className="h-5 w-5" />
                                     </Link>
                                 </li>
                                 <li>
                                     <div className="flex items-center">
-                                        <span className="text-gray-400 mx-2">/</span>
-                                        <span className="text-gray-500">Events</span>
+                                        <span className="text-gray-400 mx-2 dark:text-gray-500">/</span>
+                                        <span className="text-gray-500 dark:text-gray-400">Events</span>
                                     </div>
                                 </li>
                                 <li>
                                     <div className="flex items-center">
-                                        <span className="text-gray-400 mx-2">/</span>
+                                        <span className="text-gray-400 mx-2 dark:text-gray-500">/</span>
                                         <Link
                                             href={`/events/${event.id}`}
-                                            className="text-gray-500 hover:text-gray-700 truncate max-w-xs"
+                                            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 truncate max-w-xs"
                                         >
                                             {event.title}
                                         </Link>
@@ -188,8 +146,8 @@ export default async function EventParticipantsPage({ params }: ParticipantsPage
                                 </li>
                                 <li>
                                     <div className="flex items-center">
-                                        <span className="text-gray-400 mx-2">/</span>
-                                        <span className="text-gray-900 font-medium">Participants</span>
+                                        <span className="text-gray-400 mx-2 dark:text-gray-500">/</span>
+                                        <span className="text-gray-900 dark:text-gray-100 font-medium">Participants</span>
                                     </div>
                                 </li>
                             </ol>
@@ -197,18 +155,17 @@ export default async function EventParticipantsPage({ params }: ParticipantsPage
                     </div>
                 </div>
             </div>
-
             <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
                 {/* Event Header */}
-                <div className="bg-white shadow rounded-lg p-6 mb-6">
+                <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                                 {event.title} - Participants
                             </h1>
-                            <div className="flex items-center space-x-4 text-sm text-gray-600">
+                            <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
                                 <span className="flex items-center">
-                                    <span className="mr-1">📅</span>
+                                    <HiCalendar className="mr-1 h-4 w-4" />
                                     {new Date(event.start_date).toLocaleDateString('en-US', {
                                         weekday: 'long',
                                         year: 'numeric',
@@ -217,11 +174,11 @@ export default async function EventParticipantsPage({ params }: ParticipantsPage
                                     })}
                                 </span>
                                 <span className="flex items-center">
-                                    <span className="mr-1">📍</span>
+                                    <HiMapPin className="mr-1 h-4 w-4" />
                                     {event.location}
                                 </span>
                                 <span className="flex items-center">
-                                    <span className="mr-1">👥</span>
+                                    <HiUsers className="mr-1 h-4 w-4" />
                                     {event.max_attendees ?
                                         `${event.current_attendees} / ${event.max_attendees} attendees` :
                                         `${event.current_attendees} attendees`
@@ -231,13 +188,12 @@ export default async function EventParticipantsPage({ params }: ParticipantsPage
                         </div>
                         <Link
                             href={`/events/${event.id}`}
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
                             ← Back to Event
                         </Link>
                     </div>
                 </div>
-
                 {/* Participants List */}
                 <ParticipantsList
                     event={event}

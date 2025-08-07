@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Event, } from '@/lib/types/database'
 import { BookingWithProfile } from '@/lib/types/ui'
-
+import { HiLockClosed, HiMagnifyingGlass, HiXMark, HiUsers, HiTicket, HiCalendar, HiCurrencyDollar, HiIdentification } from 'react-icons/hi2'
 
 interface ParticipantsListProps {
     event: Event
@@ -36,12 +36,12 @@ export default function ParticipantsList({
     // Don't show anything if public view is disabled
     if (isPublic && !shouldShowPublicParticipants) {
         return (
-            <div className="bg-white shadow rounded-lg p-8 text-center">
-                <span className="text-4xl mb-4 block">🔒</span>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-8 text-center">
+                <HiLockClosed className="text-4xl mb-4 mx-auto text-gray-400 dark:text-gray-500" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                     Participant List Private
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-400">
                     The organizer has chosen to keep the participant list private for this event.
                 </p>
             </div>
@@ -343,20 +343,20 @@ export default function ParticipantsList({
     const totalBookings = confirmedBookings.length
 
     return (
-        <div id="participants-container" className="bg-white shadow rounded-lg">
+        <div id="participants-container" className="bg-white dark:bg-gray-800 shadow rounded-lg">
             {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-semibold text-gray-900">
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                             {isPublic ? 'Event Participants' : 'Participants List'}
                         </h2>
                         <div className="flex items-center justify-between">
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                 {totalParticipants} participant{totalParticipants !== 1 ? 's' : ''} from {totalBookings} booking{totalBookings !== 1 ? 's' : ''}
                             </p>
                             {totalPages > 1 && (
-                                <p className="text-sm text-gray-600 mt-1">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                     Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems}
                                 </p>
                             )}
@@ -367,34 +367,34 @@ export default function ParticipantsList({
                         {/* Search */}
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span className="text-gray-400">🔍</span>
+                                <HiMagnifyingGlass className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                             </div>
                             <input
                                 type="text"
                                 placeholder="Search participants..."
                                 value={searchTerm}
                                 onChange={(e) => handleSearchChange(e.target.value)}
-                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 sm:text-sm text-gray-900 dark:text-gray-100"
                             />
                             {searchTerm && (
                                 <button
                                     onClick={() => handleSearchChange('')}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                                 >
-                                    ✕
+                                    <HiXMark className="h-4 w-4" />
                                 </button>
                             )}
                         </div>
 
                         <div className="flex gap-3">
-                            {/* Items per page - Show for both public and private views on standalone pages */}
+                            {/* Items per page */}
                             <select
                                 value={itemsPerPage}
                                 onChange={(e) => {
                                     setItemsPerPage(Number(e.target.value))
                                     setCurrentPage(1)
                                 }}
-                                className="block pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                                className="block pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 sm:text-sm rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                             >
                                 <option value={10}>10 per page</option>
                                 <option value={25}>25 per page</option>
@@ -406,7 +406,7 @@ export default function ParticipantsList({
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                className="block pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                                className="block pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 sm:text-sm rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                             >
                                 <option value="name">Sort by Name</option>
                                 <option value="date">Sort by Booking Date</option>
@@ -420,11 +420,11 @@ export default function ParticipantsList({
             {/* Participants List */}
             {sortedBookings.length === 0 ? (
                 <div className="text-center py-12">
-                    <span className="text-4xl mb-4 block">👥</span>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    <HiUsers className="text-4xl mb-4 mx-auto text-gray-400 dark:text-gray-500" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                         {searchTerm ? 'No participants found' : 'No participants yet'}
                     </h3>
-                    <p className="text-gray-500">
+                    <p className="text-gray-500 dark:text-gray-400">
                         {searchTerm
                             ? 'Try adjusting your search terms.'
                             : 'Participants will appear here once bookings are confirmed.'
@@ -435,27 +435,27 @@ export default function ParticipantsList({
                 // Public table view with configurable fields
                 <>
                     <div className="overflow-hidden">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead className="bg-gray-50 dark:bg-gray-900">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         #
                                     </th>
                                     {displayFields.map((fieldId) => (
-                                        <th key={fieldId} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th key={fieldId} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             {getFieldLabel(fieldId)}
                                         </th>
                                     ))}
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                 {paginatedBookings.map((booking, index) => (
-                                    <tr key={booking.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <tr key={booking.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                             {startIndex + index + 1}
                                         </td>
                                         {displayFields.map((fieldId) => (
-                                            <td key={fieldId} className="px-6 py-4 text-sm text-gray-900">
+                                            <td key={fieldId} className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                                                 <div className="max-w-xs" title={getFieldValue(booking, fieldId)}>
                                                     {(() => {
                                                         // Special handling for FIDE ID sub-fields (only FIDE gets links, not ACF)
@@ -467,7 +467,7 @@ export default function ParticipantsList({
                                                                         href={`https://ratings.fide.com/profile/${value}`}
                                                                         target="_blank"
                                                                         rel="noopener noreferrer"
-                                                                        className="text-blue-600 hover:text-blue-800 underline"
+                                                                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
                                                                     >
                                                                         {value}
                                                                     </a>
@@ -498,16 +498,16 @@ export default function ParticipantsList({
                 </>
             ) : (
                 // Private detailed card view
-                <div className="divide-y divide-gray-200">
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
                     {paginatedBookings.map((booking, index) => (
-                        <div key={booking.id} className="p-4 sm:p-6 hover:bg-gray-50">
+                        <div key={booking.id} className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-700">
                             {/* Desktop Layout */}
                             <div className="hidden md:flex items-center justify-between">
                                 <div className="flex items-center space-x-4">
                                     {/* Avatar/Initial */}
                                     <div className="flex-shrink-0">
-                                        <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                                            <span className="text-sm font-medium text-indigo-700">
+                                        <div className="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                                            <span className="text-sm font-medium text-indigo-700 dark:text-indigo-200">
                                                 {(booking.profile.full_name || 'U').charAt(0).toUpperCase()}
                                             </span>
                                         </div>
@@ -516,31 +516,31 @@ export default function ParticipantsList({
                                     {/* Participant Info */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center space-x-3">
-                                            <p className="text-lg font-medium text-gray-900 truncate">
+                                            <p className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate">
                                                 {booking.profile.full_name || 'Unknown Participant'}
                                             </p>
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
                                                 Confirmed
                                             </span>
                                         </div>
 
-                                        <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500">
+                                        <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
                                             <span className="flex items-center">
-                                                <span className="mr-1">🎫</span>
+                                                <HiTicket className="mr-1 h-4 w-4" />
                                                 {booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}
                                             </span>
                                             <span className="flex items-center">
-                                                <span className="mr-1">📅</span>
+                                                <HiCalendar className="mr-1 h-4 w-4" />
                                                 Booked {new Date(booking.booking_date || booking.created_at).toLocaleDateString()}
                                             </span>
                                             {showPrivateInfo && (
                                                 <>
                                                     <span className="flex items-center">
-                                                        <span className="mr-1">💰</span>
+                                                        <HiCurrencyDollar className="mr-1 h-4 w-4" />
                                                         AUD ${booking.total_amount.toFixed(2)}
                                                     </span>
                                                     <span className="flex items-center">
-                                                        <span className="mr-1">🆔</span>
+                                                        <HiIdentification className="mr-1 h-4 w-4" />
                                                         <span className="font-mono text-xs">
                                                             {booking.id.slice(0, 8)}
                                                         </span>
@@ -553,7 +553,7 @@ export default function ParticipantsList({
 
                                 {/* Participant Number */}
                                 <div className="flex-shrink-0 text-right">
-                                    <div className="text-2xl font-bold text-gray-400">
+                                    <div className="text-2xl font-bold text-gray-400 dark:text-gray-600">
                                         #{startIndex + index + 1}
                                     </div>
                                 </div>
@@ -564,45 +564,45 @@ export default function ParticipantsList({
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center space-x-3">
                                         <div className="flex-shrink-0">
-                                            <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                                                <span className="text-sm font-medium text-indigo-700">
+                                            <div className="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                                                <span className="text-sm font-medium text-indigo-700 dark:text-indigo-200">
                                                     {(booking.profile.full_name || 'U').charAt(0).toUpperCase()}
                                                 </span>
                                             </div>
                                         </div>
                                         <div>
-                                            <p className="text-lg font-medium text-gray-900">
+                                            <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                                 {booking.profile.full_name || 'Unknown Participant'}
                                             </p>
-                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
+                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 mt-1">
                                                 Confirmed
                                             </span>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-xl font-bold text-gray-400">
+                                        <div className="text-xl font-bold text-gray-400 dark:text-gray-600">
                                             #{startIndex + index + 1}
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="mt-3 space-y-2 text-sm text-gray-600">
+                                <div className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-400">
                                     <div className="flex items-center">
-                                        <span className="mr-2">🎫</span>
+                                        <HiTicket className="mr-2 h-4 w-4" />
                                         <span>{booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}</span>
                                     </div>
                                     <div className="flex items-center">
-                                        <span className="mr-2">📅</span>
+                                        <HiCalendar className="mr-2 h-4 w-4" />
                                         <span>Booked {new Date(booking.booking_date || booking.created_at).toLocaleDateString()}</span>
                                     </div>
                                     {showPrivateInfo && (
                                         <>
                                             <div className="flex items-center">
-                                                <span className="mr-2">💰</span>
+                                                <HiCurrencyDollar className="mr-2 h-4 w-4" />
                                                 <span>AUD ${booking.total_amount.toFixed(2)}</span>
                                             </div>
                                             <div className="flex items-center">
-                                                <span className="mr-2">🆔</span>
+                                                <HiIdentification className="mr-2 h-4 w-4" />
                                                 <span className="font-mono text-xs">{booking.id.slice(0, 8)}</span>
                                             </div>
                                         </>
@@ -616,16 +616,16 @@ export default function ParticipantsList({
 
             {/* Pagination */}
             {totalPages > 1 && (
-                <div className="px-6 py-4 border-t border-gray-200">
+                <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-700">
+                        <div className="text-sm text-gray-700 dark:text-gray-300">
                             Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
                         </div>
                         <div className="flex items-center space-x-2">
                             <button
                                 onClick={() => handlePageChange(currentPage - 1)}
                                 disabled={currentPage === 1}
-                                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Previous
                             </button>
@@ -648,8 +648,8 @@ export default function ParticipantsList({
                                             key={pageNumber}
                                             onClick={() => handlePageChange(pageNumber)}
                                             className={`px-3 py-2 text-sm font-medium rounded-md ${isActive
-                                                ? 'bg-indigo-600 text-white'
-                                                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                                                ? 'bg-indigo-600 text-white dark:bg-indigo-700 dark:text-white'
+                                                : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                                                 }`}
                                         >
                                             {pageNumber}
@@ -660,7 +660,7 @@ export default function ParticipantsList({
                             <button
                                 onClick={() => handlePageChange(currentPage + 1)}
                                 disabled={currentPage === totalPages}
-                                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Next
                             </button>
@@ -671,12 +671,12 @@ export default function ParticipantsList({
 
             {/* Footer with stats */}
             {sortedBookings.length > 0 && (
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
                             Showing {Math.min(paginatedBookings.length, totalItems)} of {totalBookings} confirmed booking{totalBookings !== 1 ? 's' : ''}
                         </div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             Total: {totalParticipants} participant{totalParticipants !== 1 ? 's' : ''}
                         </div>
                     </div>

@@ -86,10 +86,10 @@ export default function DynamicField({
         <div className={`${getContainerClassName()} ${containerClassName}`}>
             {showLabel && (
                 <div className="flex items-center justify-between mb-1">
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         <span className="flex items-center">
                             {field.label}
-                            {field.required && <span className="text-red-500 ml-1">*</span>}
+                            {field.required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
                         </span>
                     </label>
                     {field.description && (
@@ -101,7 +101,7 @@ export default function DynamicField({
             {renderField()}
 
             {error && (
-                <p className="mt-1 text-sm text-red-600">{error}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
             )}
         </div>
     )
