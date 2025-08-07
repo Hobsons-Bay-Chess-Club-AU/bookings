@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Profile } from '@/lib/types/database'
 import Link from 'next/link'
-import ReactJson from 'react-json-view'
+import JsonViewer from '@/components/JsonViewer'
 
 interface PaymentEvent {
     id: string
@@ -54,8 +54,6 @@ export default function PaymentEventsPage() {
     const [loadingEvent, setLoadingEvent] = useState(false)
     const [showEventModal, setShowEventModal] = useState(false)
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-    const [isDarkMode, setIsDarkMode] = useState(false)
-
     const supabase = createClient()
 
     // Modal close handler (must be above useEffect)
@@ -64,27 +62,7 @@ export default function PaymentEventsPage() {
         setSelectedEvent(null)
     }, [])
 
-    // Theme detection
-    useEffect(() => {
-        const checkTheme = () => {
-            if (typeof window !== 'undefined') {
-                const isDark = document.documentElement.classList.contains('dark')
-                setIsDarkMode(isDark)
-            }
-        }
 
-        // Check initial theme
-        checkTheme()
-
-        // Listen for theme changes
-        const observer = new MutationObserver(checkTheme)
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['class']
-        })
-
-        return () => observer.disconnect()
-    }, [])
 
     // Authentication check
     useEffect(() => {
@@ -420,22 +398,7 @@ export default function PaymentEventsPage() {
                             </div>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4">
-                            <div className="bg-gray-50 dark:bg-white-500 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                                <ReactJson
-                                    src={selectedEvent}
-                                    theme={isDarkMode ? "hopscotch" : undefined}
-                                    style={{ 
-                                        backgroundColor: 'transparent',
-                                        fontSize: '14px'
-                                    }}
-                                    displayDataTypes={false}
-                                    displayObjectSize={false}
-                                    enableClipboard={false}
-                                    name={null}
-                                    collapsed={1}
-                                    collapseStringsAfterLength={80}
-                                />
-                            </div>
+                            <JsonViewer data={selectedEvent} />
                         </div>
                     </div>
                 </div>
