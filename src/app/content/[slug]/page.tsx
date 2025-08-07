@@ -40,7 +40,6 @@ async function getContent(slug: string): Promise<Content | null> {
             return null
         }
 
-        console.log('✅ Successfully fetched content:', content.title)
         return content
     } catch (error) {
         console.error('❌ Exception in getContent:', error)
@@ -51,9 +50,7 @@ async function getContent(slug: string): Promise<Content | null> {
 // Generate metadata for SEO
 export async function generateMetadata({ params }: ContentPageProps): Promise<Metadata> {
     const { slug } = await params
-    console.log('🔍 Generating metadata for slug:', slug)
     const content = await getContent(slug)
-    console.log('📄 Content fetched for metadata:', content ? 'SUCCESS' : 'FAILED')
 
     if (!content) {
         return {
@@ -110,9 +107,7 @@ export function generateViewport() {
 
 export default async function ContentPage({ params }: ContentPageProps) {
     const { slug } = await params
-    console.log('🎯 ContentPage rendering for slug:', slug)
     const content = await getContent(slug)
-    console.log('📄 Content fetched for component:', content ? 'SUCCESS' : 'FAILED')
 
     if (!content) {
         console.log('❌ No content found, calling notFound()')
@@ -122,35 +117,33 @@ export default async function ContentPage({ params }: ContentPageProps) {
     // Only show published content to public users
     // Admin users could see unpublished content in admin panel
     if (!content.is_published) {
-        console.log('❌ Content not published, calling notFound()')
         notFound()
     }
 
-    console.log('✅ Rendering content page for:', content.title)
 
     return (
-        <div className="bg-gray-50">
+        <div className="bg-gray-50 dark:bg-gray-900">
             {/* Content */}
-            <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-gray-900">
+            <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-gray-900 dark:text-gray-100">
                 {/* Breadcrumb Navigation */}
                 <nav className="mb-8 text-sm" aria-label="Breadcrumb">
-                    <ol className="flex items-center space-x-2 text-gray-500">
+                    <ol className="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
                         <li>
-                            <Link href="/" className="hover:text-gray-700">Home</Link>
+                            <Link href="/" className="hover:text-gray-700 dark:hover:text-gray-300">Home</Link>
                         </li>
                         <li>
                             <span className="mx-2">/</span>
-                            <span className="text-gray-900">{content.title}</span>
+                            <span className="text-gray-900 dark:text-gray-100">{content.title}</span>
                         </li>
                     </ol>
                 </nav>
 
                 {/* Page Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                    <h1 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100 sm:text-4xl">
                         {content.title}
                     </h1>
-                    <div className="mt-4 text-sm text-gray-500">
+                    <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
                         Last updated: {new Date(content.updated_at).toLocaleDateString('en-AU', {
                             year: 'numeric',
                             month: 'long',
@@ -163,11 +156,11 @@ export default async function ContentPage({ params }: ContentPageProps) {
                 </div>
 
                 {/* Content Body */}
-                <div className="bg-white rounded-lg shadow-sm">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                     <div className="p-8">
                         <MarkdownContent
                             content={content.body}
-                            className="prose prose-lg max-w-none"
+                            className="prose prose-lg dark:prose-invert max-w-none"
                             serverSafe={false}
                         />
                     </div>

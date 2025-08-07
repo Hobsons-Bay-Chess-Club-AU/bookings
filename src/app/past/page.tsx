@@ -1,8 +1,10 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { Event } from '@/lib/types/database'
 import EventCard from '@/components/events/EventCard'
+import Link from 'next/link'
+import { HiCalendarDays } from 'react-icons/hi2'
 
-async function getPublishedEvents(): Promise<Event[]> {
+async function getPastEvents(): Promise<Event[]> {
   try {
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       console.error('Supabase environment variables not configured')
@@ -13,60 +15,51 @@ async function getPublishedEvents(): Promise<Event[]> {
       .from('events')
       .select(`*, organizer:profiles(full_name, email)`)
       .in('status', ['published', 'entry_closed'])
-      .order('is_promoted', { ascending: false })
-      .order('start_date', { ascending: true })
+      .order('end_date', { ascending: false })
     if (error) {
       console.error('Error fetching events:', error)
       return []
     }
-    // Only show events whose end_date is today or in the future
+    // Only show events whose end_date is in the past
     const now = new Date()
     return (events || []).filter(event => {
-      if (!event.end_date) return true
-      return new Date(event.end_date) >= new Date(now.toDateString())
+      if (!event.end_date) return false
+      return new Date(event.end_date) < new Date(now.toDateString())
     })
   } catch (error) {
-    console.error('Error in getPublishedEvents:', error)
+    console.error('Error in getPastEvents:', error)
     return []
   }
 }
 
-export default async function HomePage() {
-  const events = await getPublishedEvents()
+export default async function PastEventsPage() {
+  const events = await getPastEvents()
   return (
     <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      {/* Hero Section */}
-      <div className="bg-indigo-700">
-        <div className="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl font-extrabold text-white sm:text-5xl md:text-6xl">
-              Discover Amazing Events
-            </h1>
-            <p className="mt-3 max-w-md mx-auto text-base text-indigo-200 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-              Find and book tickets for the best events in your area. From concerts to conferences, we&apos;ve got you covered.
-            </p>
-          </div>
-        </div>
-      </div>
-      {/* Events Section */}
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100 sm:text-4xl">
-            Upcoming Events
+            Past Events
           </h2>
           <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400 sm:mt-4">
-            Browse our selection of upcoming events and secure your spot today.
+            Browse our archive of past events. Booking is not available for these events.
           </p>
         </div>
         {events.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400 text-lg">No events available at the moment.</p>
-            <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">Check back soon for new events!</p>
+            <p className="text-gray-500 dark:text-gray-400 text-lg mb-8">No past events found.</p>
+            <Link
+              href="/"
+              className="inline-flex items-center px-8 py-4 text-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-indigo-500"
+            >
+              <HiCalendarDays className="mr-3 h-6 w-6" />
+              View Current Events
+            </Link>
           </div>
         ) : (
           <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {events.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <EventCard key={event.id} event={event} hideBooking />
             ))}
           </div>
         )}

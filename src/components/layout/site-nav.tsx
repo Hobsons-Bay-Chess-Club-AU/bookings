@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Profile } from '@/lib/types/database'
 import LogoutButton from '@/components/auth/logout-button'
@@ -15,7 +15,8 @@ import {
     HiUsers, 
     HiArrowRightOnRectangle, 
     HiBars3, 
-    HiXMark 
+    HiXMark, 
+    HiMagnifyingGlass 
 } from 'react-icons/hi2'
 import type { User } from '@supabase/supabase-js'
 
@@ -29,13 +30,18 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
     const [profile, setProfile] = useState<Profile | null>(null)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [userMenuOpen, setUserMenuOpen] = useState(false)
+    const [searchOpen, setSearchOpen] = useState(false)
+    const [searchValue, setSearchValue] = useState('')
+    const [searchAnimating, setSearchAnimating] = useState(false)
     const pathname = usePathname()
+    const router = useRouter()
     const supabase = createClient()
 
     const mobileMenuRef = useRef<HTMLDivElement>(null)
     const mobileMenuButtonRef = useRef<HTMLButtonElement>(null)
     const userMenuRef = useRef<HTMLDivElement>(null)
     const userMenuButtonRef = useRef<HTMLButtonElement>(null)
+    const searchFormRef = useRef<HTMLFormElement>(null)
 
     const isActivePath = (path: string) => {
         if (path === '/') {
@@ -54,6 +60,15 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                 ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-2 rounded-md text-sm font-medium"
                 : "block w-full text-left px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 cursor-default"
             : baseClasses
+    }
+
+    const handleSearchOpen = () => {
+        setSearchOpen(true)
+        setSearchAnimating(true)
+    }
+    const handleSearchClose = () => {
+        setSearchAnimating(false)
+        setTimeout(() => setSearchOpen(false), 200)
     }
 
     useEffect(() => {
@@ -122,6 +137,26 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
         }
     }, [])
 
+    useEffect(() => {
+        if (!searchOpen) return
+        function handleClickOutside(event: MouseEvent) {
+            if (searchFormRef.current && !searchFormRef.current.contains(event.target as Node)) {
+                handleSearchClose()
+            }
+        }
+        function handleEscapeKey(event: KeyboardEvent) {
+            if (event.key === 'Escape') {
+                handleSearchClose()
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        document.addEventListener('keydown', handleEscapeKey)
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+            document.removeEventListener('keydown', handleEscapeKey)
+        }
+    }, [searchOpen])
+
     const handleNavigate = (href: string) => {
         window.location.href = href
         setUserMenuOpen(false)
@@ -165,22 +200,21 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                     Events
                                 </Link>
                             )}
-
-                            {user && (
-                                <>
-                                    {isActivePath('/dashboard') ? (
-                                        <span className={getNavLinkClasses('/dashboard', true)}>
-                                            Dashboard
-                                        </span>
-                                    ) : (
-                                        <Link
-                                            href="/dashboard"
-                                            className={getNavLinkClasses('/dashboard', true)}
-                                        >
-                                            Dashboard
-                                        </Link>
-                                    )}
-                                </>
+                            <Link
+                                href="/past"
+                                className={getNavLinkClasses('/past', true)}
+                            >
+                                Past Events
+                            </Link>
+                            {pathname !== '/search' && (
+                                <button
+                                    type="button"
+                                    className="ml-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    title="Search events"
+                                    onClick={handleSearchOpen}
+                                >
+                                    <HiMagnifyingGlass className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+                                </button>
                             )}
                         </nav>
 
@@ -385,6 +419,58 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                         </button>
                     </div>
                 </div>
+
+                {/* Search Overlay */}
+                {searchOpen && (
+                    <div className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-200 ease-out ${
+                        searchAnimating 
+                            ? 'bg-black/70 backdrop-blur-sm' 
+                            : 'bg-black/0 backdrop-blur-none'
+                    }`}>
+                        <form
+                            ref={searchFormRef}
+                            className={`w-full max-w-2xl mx-auto flex flex-col items-center relative transition-all duration-200 ease-out ${
+                                searchAnimating 
+                                    ? 'opacity-100 scale-100' 
+                                    : 'opacity-0 scale-95'
+                            }`}
+                            onSubmit={e => {
+                                e.preventDefault()
+                                if (searchValue.trim()) {
+                                    handleSearchClose()
+                                    router.push(`/search?keyword=${encodeURIComponent(searchValue.trim())}`)
+                                }
+                            }}
+                        >
+                            <div className="relative w-full">
+                                <input
+                                    autoFocus
+                                    type="text"
+                                    value={searchValue}
+                                    onChange={e => setSearchValue(e.target.value)}
+                                    placeholder="Search events by title or description..."
+                                    className="w-full text-3xl px-8 py-8 rounded-2xl border-0 shadow-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-4 focus:ring-indigo-500 pr-20"
+                                    style={{ fontWeight: 600 }}
+                                />
+                                <button
+                                    type="submit"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    tabIndex={-1}
+                                    aria-label="Search"
+                                >
+                                    <HiMagnifyingGlass className="h-7 w-7" />
+                                </button>
+                            </div>
+                            <button
+                                type="button"
+                                className="mt-8 text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200 text-lg"
+                                onClick={handleSearchClose}
+                            >
+                                Cancel
+                            </button>
+                        </form>
+                    </div>
+                )}
 
                 {/* Mobile menu */}
                 {mobileMenuOpen && (
