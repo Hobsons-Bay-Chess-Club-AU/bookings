@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Event } from '@/lib/types/database'
 import { FiSettings, FiEye, FiCreditCard, FiMail, FiPhone, FiUser, FiArrowRight } from 'react-icons/fi'
+import { HiCalendarDays, HiClock, HiMapPin } from 'react-icons/hi2'
 import { BookingWithProfile } from '@/lib/types/ui'
 import BookingTransferModal from '@/components/events/booking-transfer-modal'
 
@@ -312,7 +313,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                         <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Event Details</h2>
                         <div className="space-y-2 text-sm">
                             <div className="flex items-center">
-                                <span className="mr-2">📅</span>
+                                <HiCalendarDays className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                                 <span>
                                     {new Date(event.start_date).toLocaleDateString('en-US', {
                                         weekday: 'long',
@@ -323,7 +324,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                 </span>
                             </div>
                             <div className="flex items-center">
-                                <span className="mr-2">🕒</span>
+                                <HiClock className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                                 <span>
                                     {new Date(event.start_date).toLocaleTimeString([], {
                                         hour: '2-digit',
@@ -335,7 +336,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                 </span>
                             </div>
                             <div className="flex items-center">
-                                <span className="mr-2">📍</span>
+                                <HiMapPin className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                                 <span>{event.location}</span>
                             </div>
                             <div className="flex items-center">
@@ -559,7 +560,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                     </div>
                                                 )}
                                                 <div className="flex items-center">
-                                                    <span className="mr-2">📅</span>
+                                                    <HiCalendarDays className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                                                     <span>
                                                         Booked {new Date(booking.booking_date || booking.created_at).toLocaleDateString('en-AU')}
                                                     </span>

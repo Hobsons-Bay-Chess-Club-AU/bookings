@@ -1,0 +1,10 @@
+---
+alwaysApply: true
+---
+- Always use strong typing in `.ts` / `.tsx` files; avoid `any`.
+- For icons in JSX, use `react-icons` instead of emoji.
+- Run lint and fix all warnings/errors after each task.
+- Database migration filenames must include a unique current timestamp.
+- Break large React components into smaller ones:
+  - If reusable across pages → move to shared components folder.
+  - If used only on one page → keep in that page’s folder.

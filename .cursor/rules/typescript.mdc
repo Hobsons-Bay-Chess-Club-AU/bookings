@@ -1,0 +1,11 @@
+---
+globs: *.ts,*.tsx
+---
+# TypeScript Guidelines
+
+- Prefer strong typing everywhere; avoid `any`.
+- Exported/public APIs should be explicitly typed. Internal variables may rely on inference when clear.
+- Avoid unsafe casts; if a cast is required, narrow types first and cast as late as possible.
+- Name functions and variables descriptively; prefer full words over abbreviations.
+- Keep components small; extract reusable parts into shared components, otherwise colocate within the page folder.
+- After edits, fix all ESLint warnings and type errors.

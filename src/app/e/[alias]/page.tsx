@@ -96,35 +96,52 @@ export default function ShortUrlPage({ params }: PageProps) {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
+  const log = (...args: unknown[]) => {
+    // eslint-disable-next-line no-console
+    console.log('[AliasRedirect]', new Date().toISOString(), ...args)
+  }
 
   useEffect(() => {
+    log('effect:start', { visibility: document.visibilityState, online: navigator.onLine })
     const resolveAlias = async () => {
       try {
+        log('resolveAlias:awaiting-params')
         const { alias } = await params
+        log('resolveAlias:params-resolved', { alias })
         
+        const upper = alias.toUpperCase()
+        log('supabase:query:start', { aliasUpper: upper })
         const { data: event, error } = await supabase
           .from('events')
           .select('id')
-          .eq('alias', alias.toUpperCase())
+          .eq('alias', upper)
           .single()
+        log('supabase:query:end', { errorPresent: Boolean(error), hasEvent: Boolean(event) })
 
         if (error || !event) {
+          log('resolveAlias:not-found', { error })
           setError('Event not found')
           setTimeout(() => {
+            log('router:push:home')
             router.push('/')
           }, 2000)
           return
         }
 
         // Redirect to the full event page
-        router.push(`/events/${event.id}`)
-      } catch {
+        const target = `/events/${event.id}`
+        log('router:push:event', { target })
+        router.push(target)
+      } catch (err) {
+        log('resolveAlias:error', { err })
         setError('Failed to load event')
         setTimeout(() => {
+          log('router:push:home-after-error')
           router.push('/')
         }, 2000)
       } finally {
         setLoading(false)
+        log('effect:done', { loading: false })
       }
     }
 

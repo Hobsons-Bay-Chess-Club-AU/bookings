@@ -1,6 +1,7 @@
 'use client'
 
 import PricingManager from '@/components/events/pricing-manager'
+import { HiCalendarDays, HiClock, HiMapPin } from 'react-icons/hi2'
 import { Event, EventPricing } from '@/lib/types/database'
 
 interface EventPricingPageClientProps {
@@ -29,7 +30,7 @@ export default function EventPricingPageClient({
                         <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Event Details</h2>
                         <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                             <div className="flex items-center">
-                                <span className="mr-2">📅</span>
+                                <HiCalendarDays className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                                 <span>
                                     {new Date(event.start_date).toLocaleDateString('en-US', {
                                         weekday: 'long',
@@ -40,7 +41,7 @@ export default function EventPricingPageClient({
                                 </span>
                             </div>
                             <div className="flex items-center">
-                                <span className="mr-2">🕒</span>
+                                <HiClock className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                                 <span>
                                     {new Date(event.start_date).toLocaleTimeString([], {
                                         hour: '2-digit',
@@ -52,7 +53,7 @@ export default function EventPricingPageClient({
                                 </span>
                             </div>
                             <div className="flex items-center">
-                                <span className="mr-2">📍</span>
+                                <HiMapPin className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                                 <span>{event.location}</span>
                             </div>
                             <div className="flex items-center">

@@ -1,0 +1,8 @@
+---
+globs: src/lib/email/**/*.tsx
+---
+# Email Templates
+
+- Avoid React Icons/SVGs; many email clients strip or inconsistently render them.
+- Prefer emoji or plain-text labels; ensure fallback-friendly markup and inline styles.
+- Keep layouts table-free unless required; use inline styles for compatibility.

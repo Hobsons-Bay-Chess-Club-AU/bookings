@@ -1,0 +1,9 @@
+---
+globs: *.tsx
+---
+# Icons Usage
+
+- Replace all inline `<svg>` and ASCII emojis with `react-icons`.
+- Prefer `react-icons/hi2` (Heroicons v2). Use consistent size/color via Tailwind classes.
+- Example: use `HiCalendarDays`, `HiClock`, `HiMapPin` for date/time/location.
+- In email templates, avoid SVG/React Icons; use text labels instead for broad client compatibility.

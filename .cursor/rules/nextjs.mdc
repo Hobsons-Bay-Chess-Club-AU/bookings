@@ -1,0 +1,10 @@
+---
+globs: src/app/**/*.tsx,src/app/**/*.ts
+---
+# Next.js (App Router) Rules
+
+- Use server components by default; add `'use client'` only when necessary (hooks, browser APIs).
+- For Next.js 15, server components receive async `params` and `searchParams` which may be Promises; await these as needed.
+- Use `useRouter`, `usePathname`, and `Link` appropriately; avoid client hooks in server components.
+- Dynamic imports should be used to avoid hydration issues for client-only components.
+- Prefer `generateMetadata` for SEO when needed.

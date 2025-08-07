@@ -1,0 +1,10 @@
+---
+globs: *.tsx
+---
+# UI/UX and Styling
+
+- Use Tailwind CSS classes consistently with `dark:` variants for dark mode.
+- Prefer `react-icons` over inline `<svg>` or ASCII emojis. Use icons from `react-icons/hi2` for consistency.
+- Follow layout conventions: rely on shared layout containers for outer padding; avoid redundant per-page padding.
+- Maintain consistent alignment across admin/organizer pages. Use wrappers like `max-w-7xl mx-auto` where appropriate.
+- Forms and overlays should support keyboard (e.g., ESC to close) and click-outside dismissal when relevant.

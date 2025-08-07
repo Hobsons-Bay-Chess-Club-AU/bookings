@@ -104,9 +104,9 @@ function BookingTransferNotificationEmail({
                         <h4 style={{ margin: '0 0 10px 0', color: '#dc2626', fontSize: '16px' }}>From Event:</h4>
                         <div style={{ color: '#374151' }}>
                             <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{fromEventTitle}</div>
-                            <div style={{ fontSize: '14px', marginBottom: '3px' }}>📅 {formatDate(fromEventDate)}</div>
-                            <div style={{ fontSize: '14px', marginBottom: '3px' }}>🕒 {formatTime(fromEventDate)}</div>
-                            <div style={{ fontSize: '14px' }}>📍 {fromEventLocation}</div>
+                            <div style={{ fontSize: '14px', marginBottom: '3px' }}>Date: {formatDate(fromEventDate)}</div>
+                            <div style={{ fontSize: '14px', marginBottom: '3px' }}>Time: {formatTime(fromEventDate)}</div>
+                            <div style={{ fontSize: '14px' }}>Location: {fromEventLocation}</div>
                         </div>
                     </div>
 
@@ -118,9 +118,9 @@ function BookingTransferNotificationEmail({
                         <h4 style={{ margin: '0 0 10px 0', color: '#16a34a', fontSize: '16px' }}>To Event:</h4>
                         <div style={{ color: '#374151' }}>
                             <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>{toEventTitle}</div>
-                            <div style={{ fontSize: '14px', marginBottom: '3px' }}>📅 {formatDate(toEventDate)}</div>
-                            <div style={{ fontSize: '14px', marginBottom: '3px' }}>🕒 {formatTime(toEventDate)}</div>
-                            <div style={{ fontSize: '14px' }}>📍 {toEventLocation}</div>
+                            <div style={{ fontSize: '14px', marginBottom: '3px' }}>Date: {formatDate(toEventDate)}</div>
+                            <div style={{ fontSize: '14px', marginBottom: '3px' }}>Time: {formatTime(toEventDate)}</div>
+                            <div style={{ fontSize: '14px' }}>Location: {toEventLocation}</div>
                         </div>
                     </div>
                 </div>

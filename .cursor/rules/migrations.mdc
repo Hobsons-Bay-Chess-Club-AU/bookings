@@ -1,0 +1,7 @@
+---
+globs: supabase/migrations/**/*.sql
+---
+# Database Migrations
+
+- Migration filenames must include a unique timestamp. Use current timestamp to avoid collisions.
+- Keep migration statements idempotent where possible; include comments explaining rationale.

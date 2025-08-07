@@ -11,6 +11,7 @@ import RefundRequestButton from '@/components/dashboard/refund-request-button'
 import ContactOrganizerButton from '@/components/messaging/contact-organizer-button'
 import ChatWidget from '@/components/messaging/chat-widget'
 import EventLocationMap from '@/components/events/event-location-map'
+import { HiCalendarDays, HiClock, HiMapPin } from 'react-icons/hi2'
 
 async function getBooking(bookingId: string, userId: string): Promise<(Booking & { event: Event; discount_applications?: DiscountApplication[] }) | null> {
     const supabase = await createClient()
@@ -196,7 +197,7 @@ export default async function BookingDetailsPage({ params, searchParams }: Booki
                                             )}
                                         </div>
                                         <div className="flex items-center text-sm text-gray-800 dark:text-gray-200">
-                                            <span className="mr-2">📅</span>
+                                            <HiCalendarDays className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                                             <span>
                                                 {new Date(booking.event.start_date).toLocaleDateString('en-US', {
                                                     weekday: 'long',
@@ -207,7 +208,7 @@ export default async function BookingDetailsPage({ params, searchParams }: Booki
                                             </span>
                                         </div>
                                         <div className="flex items-center text-sm text-gray-800 dark:text-gray-200">
-                                            <span className="mr-2">🕒</span>
+                                            <HiClock className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                                             <span>
                                                 {new Date(booking.event.start_date).toLocaleTimeString([], {
                                                     hour: '2-digit',
@@ -219,7 +220,7 @@ export default async function BookingDetailsPage({ params, searchParams }: Booki
                                             </span>
                                         </div>
                                         <div className="flex items-center text-sm text-gray-800 dark:text-gray-200">
-                                            <span className="mr-2">📍</span>
+                                            <HiMapPin className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                                             <span>{booking.event.location}</span>
                                         </div>
                                     </div>
