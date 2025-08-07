@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import JsonView from '@uiw/react-json-view'
 
 interface JsonViewerProps {
-    data: any
+    data: unknown
     className?: string
     containerClassName?: string
 }
@@ -100,7 +100,7 @@ export default function JsonViewer({ data, className = '', containerClassName = 
     return (
         <div className={`bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4 ${containerClassName}`}>
             <JsonView
-                value={data}
+                value={data as object}
                 style={(isDarkMode ? darkTheme : lightTheme) as React.CSSProperties}
                 displayDataTypes={false}
                 displayObjectSize={false}
