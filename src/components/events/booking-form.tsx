@@ -9,6 +9,7 @@ import Step2Contact from './booking-steps/step-2-contact'
 import Step3Participants from './booking-steps/step-3-participants'
 import Step4Review from './booking-steps/step-4-review'
 import { useBookingJourney } from '@/contexts/BookingJourneyContext'
+import { HiCheck } from 'react-icons/hi2'
 
 interface BookingFormProps {
     event: Event
@@ -769,9 +770,7 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                             <div className="flex">
                                 <div className="flex-shrink-0">
-                                    <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
+                                    <HiCheck className="h-6 w-6 text-green-600" />
                                 </div>
                                 <div className="ml-3">
                                     <h3 className="text-sm font-medium text-green-800">

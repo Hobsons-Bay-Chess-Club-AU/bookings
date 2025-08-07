@@ -158,97 +158,92 @@ export default async function AdminEventsPage() {
     const events = await getAdminEvents()
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">All Events</h1>
-                            <p className="text-gray-600 mt-2">Overview of all events in the system</p>
-                        </div>
-                        <Link
-                            href="/admin"
-                            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        >
-                            ← Back to Dashboard
-                        </Link>
+        <>
+            {/* Header */}
+            <div className="mb-8">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">All Events</h1>
+                        <p className="text-gray-600 dark:text-gray-300 mt-2">Overview of all events in the system</p>
                     </div>
-                </div>
-
-                {/* Events List */}
-                <div className="bg-white shadow rounded-lg">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h2 className="text-lg font-medium text-gray-900">
-                            Events ({events.length})
-                        </h2>
-                    </div>
-                    <div className="divide-y divide-gray-200">
-                        {events.length > 0 ? (
-                            events.map((event) => (
-                                <div key={event.id} className="px-6 py-4 hover:bg-gray-50">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center space-x-3">
-                                                <h3 className="text-lg font-medium text-gray-900 truncate">
-                                                    {event.title}
-                                                </h3>
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
-                                                    {event.status}
-                                                </span>
-                                            </div>
-                                            
-                                            <div className="mt-2 grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-500">
-                                                <div className="flex items-center">
-                                                    <HiCalendarDays className="h-4 w-4 mr-2" />
-                                                    <span>{formatDate(event.start_date)}</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <HiMapPin className="h-4 w-4 mr-2" />
-                                                    <span className="truncate">{event.location}</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <HiUsers className="h-4 w-4 mr-2" />
-                                                    <span>{event.current_attendees} / {event.max_attendees || '∞'}</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <HiCurrencyDollar className="h-4 w-4 mr-2" />
-                                                    <span>{formatCurrency(event.price)}</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-2 text-sm text-gray-500">
-                                                <span>Organizer: {event.organizer?.full_name || event.organizer?.email}</span>
-                                                <span className="mx-2">•</span>
-                                                <span>Bookings: {event.confirmedBookings} confirmed / {event.totalBookings} total</span>
-                                                <span className="mx-2">•</span>
-                                                <span>Revenue: {formatCurrency(event.revenue)}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="ml-6 flex-shrink-0">
-                                            <Link
-                                                href={`/admin/events/${event.id}`}
-                                                className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
-                                            >
-                                                View Details →
-                                            </Link>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="px-6 py-12 text-center">
-                                <HiCalendarDays className="mx-auto h-12 w-12 text-gray-400" />
-                                <h3 className="mt-2 text-sm font-medium text-gray-900">No events</h3>
-                                <p className="mt-1 text-sm text-gray-500">
-                                    No events have been created yet.
-                                </p>
-                            </div>
-                        )}
-                    </div>
+                    <Link
+                        href="/admin"
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                        ← Back to Dashboard
+                    </Link>
                 </div>
             </div>
-        </div>
+
+            {/* Events List */}
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                        Events ({events.length})
+                    </h2>
+                </div>
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {events.length > 0 ? (
+                        events.map((event) => (
+                            <div key={event.id} className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center space-x-3">
+                                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate">
+                                                {event.title}
+                                            </h3>
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(event.status)} dark:${getStatusColor(event.status).replace('text-', 'text-').replace('bg-', 'bg-').replace('600', '400').replace('100', '900')}`}>
+                                                {event.status}
+                                            </span>
+                                        </div>
+                                        <div className="mt-2 grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-500 dark:text-gray-300">
+                                            <div className="flex items-center">
+                                                <HiCalendarDays className="h-4 w-4 mr-2" />
+                                                <span>{formatDate(event.start_date)}</span>
+                                            </div>
+                                            <div className="flex items-center">
+                                                <HiMapPin className="h-4 w-4 mr-2" />
+                                                <span className="truncate">{event.location}</span>
+                                            </div>
+                                            <div className="flex items-center">
+                                                <HiUsers className="h-4 w-4 mr-2" />
+                                                <span>{event.current_attendees} / {event.max_attendees || '∞'}</span>
+                                            </div>
+                                            <div className="flex items-center">
+                                                <HiCurrencyDollar className="h-4 w-4 mr-2" />
+                                                <span>{formatCurrency(event.price)}</span>
+                                            </div>
+                                        </div>
+                                        <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                            <span>Organizer: {event.organizer?.full_name || event.organizer?.email}</span>
+                                            <span className="mx-2">•</span>
+                                            <span>Bookings: {event.confirmedBookings} confirmed / {event.totalBookings} total</span>
+                                            <span className="mx-2">•</span>
+                                            <span>Revenue: {formatCurrency(event.revenue)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="ml-6 flex-shrink-0">
+                                        <Link
+                                            href={`/admin/events/${event.id}`}
+                                            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm font-medium"
+                                        >
+                                            View Details →
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="px-6 py-12 text-center">
+                            <HiCalendarDays className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" />
+                            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No events</h3>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                No events have been created yet.
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </>
     )
 } 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import AdminBookingsPageClient from './page-client'
+import { HiExclamationCircle } from 'react-icons/hi'
 
 interface Booking {
     id: string
@@ -97,42 +98,38 @@ export default function AdminBookingsPage() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Manage Bookings</h1>
-                        <p className="mt-2 text-gray-600 dark:text-gray-400">
-                            View and manage all event bookings and their payment events
-                        </p>
-                    </div>
-                    
-                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
-                        <div className="flex">
-                            <div className="flex-shrink-0">
-                                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                                </svg>
+            <>
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Manage Bookings</h1>
+                    <p className="mt-2 text-gray-600 dark:text-gray-400">
+                        View and manage all event bookings and their payment events
+                    </p>
+                </div>
+                
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+                    <div className="flex">
+                        <div className="flex-shrink-0">
+                            <HiExclamationCircle className="h-5 w-5 text-red-400" />
+                        </div>
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-red-800 dark:text-red-300">
+                                Error Loading Bookings
+                            </h3>
+                            <div className="mt-2 text-sm text-red-700 dark:text-red-400">
+                                <p>{error}</p>
                             </div>
-                            <div className="ml-3">
-                                <h3 className="text-sm font-medium text-red-800 dark:text-red-300">
-                                    Error Loading Bookings
-                                </h3>
-                                <div className="mt-2 text-sm text-red-700 dark:text-red-400">
-                                    <p>{error}</p>
-                                </div>
-                                <div className="mt-4">
-                                    <button
-                                        onClick={() => window.location.reload()}
-                                        className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                    >
-                                        Try Again
-                                    </button>
-                                </div>
+                            <div className="mt-4">
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                >
+                                    Try Again
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </>
         )
     }
 

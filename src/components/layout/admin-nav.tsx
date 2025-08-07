@@ -1,13 +1,21 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useRouter, usePathname } from 'next/navigation'
-import LogoutButton from '@/components/auth/logout-button'
-import { createClient } from '@/lib/supabase/client'
-import { User } from '@supabase/supabase-js'
-import { Profile } from '@/lib/types/database'
 import Image from 'next/image'
+import { usePathname } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { Profile } from '@/lib/types/database'
+import LogoutButton from '@/components/auth/logout-button'
+import { 
+    HiUser, 
+    HiChatBubbleLeftRight, 
+    HiArrowRightOnRectangle, 
+    HiChevronDown, 
+    HiBars3, 
+    HiXMark 
+} from 'react-icons/hi2'
+import type { User } from '@supabase/supabase-js'
 
 interface AdminNavProps {
     className?: string
@@ -18,181 +26,134 @@ interface BreadcrumbItem {
     href?: string
 }
 
+function getBreadcrumbs(pathname: string): BreadcrumbItem[] {
+    const segments = pathname.split('/').filter(Boolean)
+    const breadcrumbs: BreadcrumbItem[] = []
+    breadcrumbs.push({ label: 'Home', href: '/' })
+    let currentPath = ''
+    segments.forEach((segment, index) => {
+        currentPath += `/${segment}`
+        let label = segment
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ')
+        if (segment === 'admin') label = 'Admin'
+        if (segment === 'organizer') label = 'Organizer'
+        if (segment === 'events') label = 'Events'
+        if (segment === 'bookings') label = 'Bookings'
+        if (segment === 'users') label = 'Users'
+        if (segment === 'custom-fields') label = 'Custom Fields'
+        if (segment === 'html-to-markdown') label = 'HTML to Markdown'
+        if (segment === 'mailing-list') label = 'Mailing List'
+        if (segment === 'messages') label = 'Messages'
+        if (segment === 'pricing') label = 'Pricing'
+        if (segment === 'payment-events') label = 'Payment Events'
+        if (index === segments.length - 1) {
+            breadcrumbs.push({ label })
+        } else {
+            breadcrumbs.push({ label, href: currentPath })
+        }
+    })
+    return breadcrumbs
+}
+
+export function AdminBreadcrumbs() {
+    const pathname = usePathname()
+    const breadcrumbs = getBreadcrumbs(pathname)
+    return (
+        <nav className="flex items-center space-x-2 text-sm mb-6" aria-label="Breadcrumb">
+            {breadcrumbs.map((breadcrumb, index) => (
+                <div key={index} className="flex items-center">
+                    {index > 0 && (
+                        <svg className="h-4 w-4 text-gray-400 dark:text-gray-500 mx-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
+                    )}
+                    {breadcrumb.href ? (
+                        <Link
+                            href={breadcrumb.href}
+                            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                        >
+                            {breadcrumb.label}
+                        </Link>
+                    ) : (
+                        <span className="font-medium text-gray-900 dark:text-gray-100">
+                            {breadcrumb.label}
+                        </span>
+                    )}
+                </div>
+            ))}
+        </nav>
+    )
+}
+
 export default function AdminNav({ className = '' }: AdminNavProps) {
     const [user, setUser] = useState<User | null>(null)
     const [profile, setProfile] = useState<Profile | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-    const dropdownRef = useRef<HTMLDivElement>(null)
-    const mobileMenuRef = useRef<HTMLDivElement>(null)
-    const router = useRouter()
+    const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
     const pathname = usePathname()
     const supabase = createClient()
+    const mobileMenuRef = useRef<HTMLDivElement>(null)
+    const profileDropdownRef = useRef<HTMLDivElement>(null)
 
-    // Generate breadcrumbs based on current path
-    const getBreadcrumbs = (): BreadcrumbItem[] => {
-        const segments = pathname.split('/').filter(Boolean)
-        const breadcrumbs: BreadcrumbItem[] = [
-            { label: 'Events', href: '/' }
-        ]
-
-        if (segments[0] === 'admin') {
-            breadcrumbs.push({ label: 'Administration' })
-
-            if (segments[1] === 'users') {
-                breadcrumbs.push({ label: 'Manage Users' })
-            } else if (segments[1] === 'bookings') {
-                breadcrumbs.push({ label: 'Manage Bookings', href: '/admin/bookings' })
-                if (segments[2] && segments[3] === 'payment-events') {
-                    breadcrumbs.push({ label: 'Payment Events' })
-                } else if (segments[2]) {
-                    breadcrumbs.push({ label: 'Booking Details' })
-                }
-            } else if (segments[1] === 'cms') {
-                breadcrumbs.push({ label: 'Content Management', href: '/admin/cms' })
-                if (segments[2] === 'new') {
-                    breadcrumbs.push({ label: 'Create Content' })
-                } else if (segments[2] && segments[3] === 'edit') {
-                    breadcrumbs.push({ label: 'Edit Content' })
-                } else if (segments[2] && segments[3] === 'history') {
-                    breadcrumbs.push({ label: 'Version History' })
-                } else if (segments[2]) {
-                    breadcrumbs.push({ label: 'View Content' })
-                }
-            } else if (segments[1] === 'create-test-data') {
-                breadcrumbs.push({ label: 'Create Test Data' })
-            } else if (segments[1] === 'email-test') {
-                breadcrumbs.push({ label: 'Email Test' })
-            } else if (segments[1] === 'test-password-reset') {
-                breadcrumbs.push({ label: 'Test Password Reset' })
-            }
-        } else if (segments[0] === 'organizer') {
-            breadcrumbs.push({ label: 'Management' })
-
-            if (segments[1] === 'events') {
-                breadcrumbs.push({ label: 'Events', href: '/organizer' })
-
-                if (segments[2] === 'new') {
-                    breadcrumbs.push({ label: 'Create Event' })
-                } else if (segments[2] && segments[3] === 'edit') {
-                    breadcrumbs.push({ label: 'Edit Event' })
-                } else if (segments[2] && segments[3] === 'bookings') {
-                    breadcrumbs.push({ label: 'Bookings' })
-                } else if (segments[2] && segments[3] === 'participants') {
-                    breadcrumbs.push({ label: 'Participants' })
-                } else if (segments[2] && segments[3] === 'pricing') {
-                    breadcrumbs.push({ label: 'Pricing' })
-                }
-            } else if (segments[1] === 'custom-fields') {
-                breadcrumbs.push({ label: 'Custom Fields' })
-            } else if (segments[1] === 'html-to-markdown') {
-                breadcrumbs.push({ label: 'HTML to Markdown' })
-            } else if (segments[1] === 'mailing-list') {
-                breadcrumbs.push({ label: 'Mailing List' })
-            } else if (segments.length === 1) {
-                breadcrumbs.push({ label: 'Manage Events' })
-            }
-        }
-
-        return breadcrumbs
-    }
-
-    // Helper function to check if a path is active
-    const isActivePath = (path: string) => {
-        if (path === '/') {
-            return pathname === '/' || pathname === '/events' || pathname.startsWith('/e/')
-        }
-        return pathname === path || pathname.startsWith(path + '/')
-    }
-
-    // Helper function to get nav link classes
     const getNavLinkClasses = (path: string, isDesktop = true) => {
-        const isActive = isActivePath(path)
         const baseClasses = isDesktop
-            ? "px-3 py-2 rounded-md text-sm font-medium transition-colors relative"
-            : "block px-3 py-3 rounded-md text-base font-medium transition-colors relative"
-
-        if (isActive) {
-            return `${baseClasses} text-indigo-600 dark:text-indigo-400 cursor-default after:content-[''] after:absolute after:bottom-0 after:left-3 after:right-3 after:h-0.5 after:bg-indigo-600 dark:after:bg-indigo-400`
-        }
-
-        return `${baseClasses} text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 ${isDesktop ? 'hover:bg-gray-50 dark:hover:bg-gray-800' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`
+            ? "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            : "block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        
+        return isActivePath(path)
+            ? isDesktop
+                ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-2 rounded-md text-sm font-medium"
+                : "block w-full text-left px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 cursor-default"
+            : baseClasses
     }
 
     useEffect(() => {
         const getUser = async () => {
             try {
-                const s = await supabase.auth.getSession();
-                const { data: { user }, error: userError } = await supabase.auth.getUser(s.data.session?.access_token)
-
-                if (userError) {
-                    console.error('Error getting user:', userError)
-                }
-
+                const { data: { user } } = await supabase.auth.getUser()
                 setUser(user)
 
                 if (user) {
-                    // Fetch user profile to get role information
-                    const { data: profileData, error: profileError } = await supabase
+                    const { data: profileData } = await supabase
                         .from('profiles')
                         .select('*')
                         .eq('id', user.id)
                         .single()
-
-                    if (profileError) {
-                        console.error('Error getting profile:', profileError)
-                    }
-
-                    setProfile(profileData as import('@/lib/types/database').Profile)
+                    setProfile(profileData)
                 }
             } catch (error) {
-                console.error('Error in getUser:', error)
-            } finally {
-                setLoading(false)
+                console.error('Error fetching user:', error)
             }
         }
 
         getUser()
 
-        // Set up auth state change listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             setUser(session?.user ?? null)
-
             if (session?.user) {
                 const { data: profileData } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('id', session.user.id)
                     .single()
-
                 setProfile(profileData)
             } else {
                 setProfile(null)
             }
-
-            setLoading(false)
         })
 
-        return () => {
-            subscription.unsubscribe()
-        }
+        return () => subscription.unsubscribe()
     }, [supabase])
 
-    // Close dropdown when clicking outside or pressing escape
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            // Handle profile dropdown
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setProfileDropdownOpen(false)
+            if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+                setMobileMenuOpen(false)
             }
-
-            // Handle mobile menu - close if clicking on backdrop
-            if (mobileMenuOpen && mobileMenuRef.current) {
-                const backdrop = event.target as HTMLElement
-                if (backdrop.classList.contains('bg-black') && backdrop.classList.contains('bg-opacity-25')) {
-                    setMobileMenuOpen(false)
-                }
+            if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+                setProfileDropdownOpen(false)
             }
         }
 
@@ -205,529 +166,291 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
 
         document.addEventListener('mousedown', handleClickOutside)
         document.addEventListener('keydown', handleEscapeKey)
+
         return () => {
             document.removeEventListener('mousedown', handleClickOutside)
             document.removeEventListener('keydown', handleEscapeKey)
         }
-    }, [mobileMenuOpen])
+    }, [])
 
     const handleNavigate = (href: string) => {
+        window.location.href = href
         setProfileDropdownOpen(false)
-        setMobileMenuOpen(false)
-        router.push(href)
     }
 
-    const breadcrumbs = getBreadcrumbs()
-
-    if (loading) {
-        return (
-            <header className={`bg-white dark:bg-gray-800 shadow ${className}`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-6">
-                        <div className="flex items-center">
-                            <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
-                                <Image
-                                    src="/chess-logo.svg"
-                                    alt="HBCC Logo"
-                                    className="h-8 w-8 mr-3"
-                                    width={32}
-                                    height={32}
-                                    priority
-                                />
-                                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hobsons Bay Chess Club</h1>
-                            </Link>
-                        </div>
-                        <nav className="flex items-center space-x-4">
-                            <div className="animate-pulse bg-gray-200 dark:bg-gray-600 h-8 w-20 rounded"></div>
-                        </nav>
-                    </div>
-                </div>
-            </header>
-        )
+    const isActivePath = (path: string) => {
+        if (path === '/') {
+            return pathname === '/'
+        }
+        return pathname.startsWith(path)
     }
+
+    // Role-based quick menu
+    const isOrganizer = profile?.role === 'organizer' || profile?.role === 'admin'
+    const isAdmin = profile?.role === 'admin'
 
     return (
-        <>
-            <header className={`bg-white dark:bg-gray-800 shadow ${className}`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-6">
-                        <div className="flex items-center">
-                            <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
+        <nav className={`bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 ${className}`}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between h-16">
+                    {/* Logo and site title */}
+                    <div className="flex items-center">
+                        <Link href="/" className="flex items-center mr-8">
+                            <Image
+                                src="/chess-logo.svg"
+                                alt="HBCC Logo"
+                                width={32}
+                                height={32}
+                                className="h-8 w-8 mr-3"
+                                priority
+                            />
+                            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                                Hobsons Bay Chess Club
+                            </h1>
+                        </Link>
+                    </div>
+
+                    {/* Quick action menu (role-based) */}
+                    <div className="hidden md:flex md:items-center md:space-x-4">
+                        {isOrganizer && (
+                            <>
+                                <Link href="/organizer" className={getNavLinkClasses('/organizer', true)}>
+                                    Manage Events
+                                </Link>
+                                <Link href="/organizer/mailing-list" className={getNavLinkClasses('/organizer/mailing-list', true)}>
+                                    Mailing List
+                                </Link>
+                            </>
+                        )}
+                        {isAdmin && (
+                            <>
+                                <Link href="/admin/bookings" className={getNavLinkClasses('/admin/bookings', true)}>
+                                    Bookings
+                                </Link>
+                                <Link href="/admin/users" className={getNavLinkClasses('/admin/users', true)}>
+                                    Users
+                                </Link>
+                            </>
+                        )}
+                        {/* User dropdown menu only (no horizontal admin/organizer links) */}
+                        {user && (
+                            <div className="relative ml-3" ref={profileDropdownRef}>
+                                <button
+                                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                                    className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                >
+                                    <span className="sr-only">Open user menu</span>
+                                    <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center">
+                                        <span className="text-sm font-medium text-white">
+                                            {profile?.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                                        </span>
+                                    </div>
+                                    <HiChevronDown className="ml-1 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                                </button>
+
+                                {profileDropdownOpen && (
+                                    <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                                        <div className="py-1">
+                                            <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700">
+                                                <div className="font-medium">{profile?.full_name || 'User'}</div>
+                                                <div className="text-gray-500 dark:text-gray-400">{user.email}</div>
+                                            </div>
+                                            {isActivePath('/profile') ? (
+                                                <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 cursor-default">
+                                                    <span className="flex items-center">
+                                                        <HiUser className="w-4 h-4 mr-2" />
+                                                        Profile Settings
+                                                    </span>
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleNavigate('/profile')}
+                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                                >
+                                                    <span className="flex items-center">
+                                                        <HiUser className="w-4 h-4 mr-2" />
+                                                        Profile Settings
+                                                    </span>
+                                                </button>
+                                            )}
+                                            {(profile?.role === 'organizer' || profile?.role === 'admin') && (
+                                                <>
+                                                    {isActivePath('/organizer/messages') ? (
+                                                        <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 cursor-default">
+                                                        <span className="flex items-center">
+                                                            <HiChatBubbleLeftRight className="w-4 h-4 mr-2" />
+                                                            Messages
+                                                        </span>
+                                                    </span>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleNavigate('/organizer/messages')}
+                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                                        >
+                                                            <span className="flex items-center">
+                                                                <HiChatBubbleLeftRight className="w-4 h-4 mr-2" />
+                                                                Messages
+                                                            </span>
+                                                        </button>
+                                                    )}
+                                                </>
+                                            )}
+                                            <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                            <div className="px-4 py-2">
+                                                <LogoutButton className="w-full text-left text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors">
+                                                    <span className="flex items-center">
+                                                        <HiArrowRightOnRectangle className="w-4 h-4 mr-2" />
+                                                        Sign out
+                                                    </span>
+                                                </LogoutButton>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Mobile menu button */}
+                    <div className="md:hidden">
+                        <button
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                            aria-expanded={mobileMenuOpen}
+                        >
+                            <span className="sr-only">Open main menu</span>
+                            {/* Hamburger icon */}
+                            <HiBars3 className={`${mobileMenuOpen ? 'hidden' : 'block'} h-6 w-6`} />
+                            {/* Close icon */}
+                            <HiXMark className={`${mobileMenuOpen ? 'block' : 'hidden'} h-6 w-6`} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Mobile menu */}
+            {mobileMenuOpen && (
+                <div className="fixed inset-x-0 top-0 z-50 md:hidden" ref={mobileMenuRef}>
+                    {/* Backdrop */}
+                    <div className="fixed inset-0 bg-black bg-opacity-25" aria-hidden="true"></div>
+
+                    {/* Menu panel */}
+                    <div className="relative bg-white dark:bg-gray-800 shadow-lg">
+                        {/* Header with logo and close button */}
+                        <div className="flex justify-between items-center px-4 py-4 border-b border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center">
                                 <Image
                                     src="/chess-logo.svg"
-                                    width={32}
-                                    height={32}
                                     alt="HBCC Logo"
                                     className="h-8 w-8 mr-3"
+                                    width={32}
+                                    height={32}
                                 />
-                                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Hobsons Bay Chess Club</h1>
-                            </Link>
+                                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Hobsons Bay Chess Club</h1>
+                            </div>
+                            <button
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                                <span className="sr-only">Close menu</span>
+                                <HiXMark className="h-6 w-6" />
+                            </button>
                         </div>
 
-                        {/* Desktop Navigation */}
-                        <nav className="hidden md:flex items-center space-x-4">
+                        {/* Menu items */}
+                        <div className="px-4 py-4 space-y-1 max-h-screen overflow-y-auto">
+                            {isActivePath('/') ? (
+                                <span className={getNavLinkClasses('/', false)}>
+                                    Events
+                                </span>
+                            ) : (
+                                <Link
+                                    href="/"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className={getNavLinkClasses('/', false)}
+                                >
+                                    Events
+                                </Link>
+                            )}
+
                             {user && (
                                 <>
                                     {isActivePath('/dashboard') ? (
-                                        <span className={getNavLinkClasses('/dashboard', true)}>
+                                        <span className={getNavLinkClasses('/dashboard', false)}>
                                             Dashboard
                                         </span>
                                     ) : (
                                         <Link
                                             href="/dashboard"
-                                            className={getNavLinkClasses('/dashboard', true)}
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className={getNavLinkClasses('/dashboard', false)}
                                         >
                                             Dashboard
                                         </Link>
                                     )}
 
-                                    {/* Admin/Organizer Quick Links */}
+                                    {/* Admin/Organizer Menu Items */}
                                     {(profile?.role === 'admin' || profile?.role === 'organizer') && (
                                         <>
-                                            <div className="h-6 w-px bg-gray-300 dark:bg-gray-600 mx-2"></div>
+                                            <div className="border-t border-gray-200 dark:border-gray-700 my-3"></div>
+                                            <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                                Management
+                                            </div>
 
                                             {isActivePath('/organizer') ? (
-                                                <span className={getNavLinkClasses('/organizer', true)}>
+                                                <span className={getNavLinkClasses('/organizer', false)}>
                                                     Manage Events
                                                 </span>
                                             ) : (
                                                 <Link
                                                     href="/organizer"
-                                                    className={getNavLinkClasses('/organizer', true)}
+                                                    onClick={() => setMobileMenuOpen(false)}
+                                                    className={getNavLinkClasses('/organizer', false)}
                                                 >
                                                     Manage Events
                                                 </Link>
                                             )}
 
                                             {isActivePath('/organizer/mailing-list') ? (
-                                                <span className={getNavLinkClasses('/organizer/mailing-list', true)}>
+                                                <span className={getNavLinkClasses('/organizer/mailing-list', false)}>
                                                     Mailing List
                                                 </span>
                                             ) : (
                                                 <Link
                                                     href="/organizer/mailing-list"
-                                                    className={getNavLinkClasses('/organizer/mailing-list', true)}
+                                                    onClick={() => setMobileMenuOpen(false)}
+                                                    className={getNavLinkClasses('/organizer/mailing-list', false)}
                                                 >
                                                     Mailing List
                                                 </Link>
                                             )}
 
-                                            {profile?.role === 'admin' && (
-                                                <>
-                                                    {isActivePath('/admin/users') ? (
-                                                        <span className={getNavLinkClasses('/admin/users', true)}>
-                                                            Users
-                                                        </span>
-                                                    ) : (
-                                                        <Link
-                                                            href="/admin/users"
-                                                            className={getNavLinkClasses('/admin/users', true)}
-                                                        >
-                                                            Users
-                                                        </Link>
-                                                    )}
-
-                                                    {isActivePath('/admin/bookings') ? (
-                                                        <span className={getNavLinkClasses('/admin/bookings', true)}>
-                                                            Bookings
-                                                        </span>
-                                                    ) : (
-                                                        <Link
-                                                            href="/admin/bookings"
-                                                            className={getNavLinkClasses('/admin/bookings', true)}
-                                                        >
-                                                            Bookings
-                                                        </Link>
-                                                    )}
-
-                                                    {isActivePath('/admin/cms') ? (
-                                                        <span className={getNavLinkClasses('/admin/cms', true)}>
-                                                            Content
-                                                        </span>
-                                                    ) : (
-                                                        <Link
-                                                            href="/admin/cms"
-                                                            className={getNavLinkClasses('/admin/cms', true)}
-                                                        >
-                                                            Content
-                                                        </Link>
-                                                    )}
-                                                </>
-                                            )}
-
-                                            {/* Customer Support Links */}
-                                            {(profile?.role as unknown as string) === 'customer_support' && (
-                                                <>
-                                                    {isActivePath('/admin/bookings') ? (
-                                                        <span className={getNavLinkClasses('/admin/bookings', true)}>
-                                                            Bookings
-                                                        </span>
-                                                    ) : (
-                                                        <Link
-                                                            href="/admin/bookings"
-                                                            className={getNavLinkClasses('/admin/bookings', true)}
-                                                        >
-                                                            Bookings
-                                                        </Link>
-                                                    )}
-                                                </>
+                                            {isActivePath('/organizer/messages') ? (
+                                                <span className={getNavLinkClasses('/organizer/messages', false)}>
+                                                    Messages
+                                                </span>
+                                            ) : (
+                                                <Link
+                                                    href="/organizer/messages"
+                                                    onClick={() => setMobileMenuOpen(false)}
+                                                    className={getNavLinkClasses('/organizer/messages', false)}
+                                                >
+                                                    Messages
+                                                </Link>
                                             )}
                                         </>
                                     )}
 
-                                    {/* Profile Dropdown */}
-                                    <div className="relative" ref={dropdownRef}>
-                                        <button
-                                            onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                                            className="flex items-center text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                                        >
-                                            <span>{profile?.full_name || user?.email || 'Profile'}</span>
-                                            <svg
-                                                className={`ml-1 w-4 h-4 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`}
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </button>
-
-                                        {profileDropdownOpen && (
-                                            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700">
-                                                {isActivePath('/profile') ? (
-                                                    <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 cursor-default">
-                                                        <span className="flex items-center">
-                                                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                            </svg>
-                                                            Profile Settings
-                                                        </span>
-                                                    </span>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => handleNavigate('/profile')}
-                                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                                    >
-                                                        <span className="flex items-center">
-                                                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                            </svg>
-                                                            Profile Settings
-                                                        </span>
-                                                    </button>
-                                                )}
-
-                                                {/* Messages Link for Organizers */}
-                                                {(profile?.role === 'organizer' || profile?.role === 'admin') && (
-                                                    <>
-                                                        {isActivePath('/organizer/messages') ? (
-                                                            <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 cursor-default">
-                                                                <span className="flex items-center">
-                                                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                                                    </svg>
-                                                                    Messages
-                                                                </span>
-                                                            </span>
-                                                        ) : (
-                                                            <button
-                                                                onClick={() => handleNavigate('/organizer/messages')}
-                                                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                                            >
-                                                                <span className="flex items-center">
-                                                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                                                    </svg>
-                                                                    Messages
-                                                                </span>
-                                                            </button>
-                                                        )}
-                                                    </>
-                                                )}
-
-                                                <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                                                <div className="px-4 py-2">
-                                                    <LogoutButton className="w-full text-left text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors">
-                                                        <span className="flex items-center">
-                                                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                                            </svg>
-                                                            Sign out
-                                                        </span>
-                                                    </LogoutButton>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                    <div className="border-t border-gray-200 dark:border-gray-700 my-3"></div>
+                                    <LogoutButton className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors">
+                                        Sign out
+                                    </LogoutButton>
                                 </>
                             )}
-                        </nav>
-
-                        {/* Mobile menu button */}
-                        <div className="md:hidden">
-                            <button
-                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-                                aria-expanded={mobileMenuOpen}
-                            >
-                                <span className="sr-only">Open main menu</span>
-                                {/* Hamburger icon */}
-                                <svg
-                                    className={`${mobileMenuOpen ? 'hidden' : 'block'} h-6 w-6`}
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                                </svg>
-                                {/* Close icon */}
-                                <svg
-                                    className={`${mobileMenuOpen ? 'block' : 'hidden'} h-6 w-6`}
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
                         </div>
                     </div>
                 </div>
-
-                {/* Mobile menu */}
-                {mobileMenuOpen && (
-                    <div className="fixed inset-x-0 top-0 z-50 md:hidden" ref={mobileMenuRef}>
-                        {/* Backdrop */}
-                        <div className="fixed inset-0 bg-black bg-opacity-25" aria-hidden="true"></div>
-
-                        {/* Menu panel */}
-                        <div className="relative bg-white dark:bg-gray-800 shadow-lg">
-                            {/* Header with logo and close button */}
-                            <div className="flex justify-between items-center px-4 py-4 border-b border-gray-200 dark:border-gray-700">
-                                <div className="flex items-center">
-                                    <Image
-                                        src="/chess-logo.svg"
-                                        alt="HBCC Logo"
-                                        className="h-8 w-8 mr-3"
-                                        width={32}
-                                        height={32}
-                                    />
-                                    <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Hobsons Bay Chess Club</h1>
-                                </div>
-                                <button
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                >
-                                    <span className="sr-only">Close menu</span>
-                                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            {/* Menu items */}
-                            <div className="px-4 py-4 space-y-1 max-h-screen overflow-y-auto">
-                                {isActivePath('/') ? (
-                                    <span className={getNavLinkClasses('/', false)}>
-                                        Events
-                                    </span>
-                                ) : (
-                                    <Link
-                                        href="/"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className={getNavLinkClasses('/', false)}
-                                    >
-                                        Events
-                                    </Link>
-                                )}
-
-                                {user && (
-                                    <>
-                                        {isActivePath('/dashboard') ? (
-                                            <span className={getNavLinkClasses('/dashboard', false)}>
-                                                Dashboard
-                                            </span>
-                                        ) : (
-                                            <Link
-                                                href="/dashboard"
-                                                onClick={() => setMobileMenuOpen(false)}
-                                                className={getNavLinkClasses('/dashboard', false)}
-                                            >
-                                                Dashboard
-                                            </Link>
-                                        )}
-
-                                        {/* Admin/Organizer Menu Items */}
-                                        {(profile?.role === 'admin' || profile?.role === 'organizer') && (
-                                            <>
-                                                <div className="border-t border-gray-200 dark:border-gray-700 my-3"></div>
-                                                <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                                    Management
-                                                </div>
-
-                                                {isActivePath('/organizer') ? (
-                                                    <span className={getNavLinkClasses('/organizer', false)}>
-                                                        Manage Events
-                                                    </span>
-                                                ) : (
-                                                    <Link
-                                                        href="/organizer"
-                                                        onClick={() => setMobileMenuOpen(false)}
-                                                        className={getNavLinkClasses('/organizer', false)}
-                                                    >
-                                                        Manage Events
-                                                    </Link>
-                                                )}
-
-                                                {isActivePath('/organizer/mailing-list') ? (
-                                                    <span className={getNavLinkClasses('/organizer/mailing-list', false)}>
-                                                        Mailing List
-                                                    </span>
-                                                ) : (
-                                                    <Link
-                                                        href="/organizer/mailing-list"
-                                                        onClick={() => setMobileMenuOpen(false)}
-                                                        className={getNavLinkClasses('/organizer/mailing-list', false)}
-                                                    >
-                                                        Mailing List
-                                                    </Link>
-                                                )}
-
-                                                {isActivePath('/organizer/custom-fields') ? (
-                                                    <span className={getNavLinkClasses('/organizer/custom-fields', false)}>
-                                                        Custom Fields
-                                                    </span>
-                                                ) : (
-                                                    <Link
-                                                        href="/organizer/custom-fields"
-                                                        onClick={() => setMobileMenuOpen(false)}
-                                                        className={getNavLinkClasses('/organizer/custom-fields', false)}
-                                                    >
-                                                        Custom Fields
-                                                    </Link>
-                                                )}
-
-                                                {profile?.role === 'admin' && (
-                                                    <>
-                                                        {isActivePath('/admin/bookings') ? (
-                                                            <span className={getNavLinkClasses('/admin/bookings', false)}>
-                                                                Manage Bookings
-                                                            </span>
-                                                        ) : (
-                                                            <Link
-                                                                href="/admin/bookings"
-                                                                onClick={() => setMobileMenuOpen(false)}
-                                                                className={getNavLinkClasses('/admin/bookings', false)}
-                                                            >
-                                                                Manage Bookings
-                                                            </Link>
-                                                        )}
-
-                                                        {isActivePath('/admin/users') ? (
-                                                            <span className={getNavLinkClasses('/admin/users', false)}>
-                                                                Manage Users
-                                                            </span>
-                                                        ) : (
-                                                            <Link
-                                                                href="/admin/users"
-                                                                onClick={() => setMobileMenuOpen(false)}
-                                                                className={getNavLinkClasses('/admin/users', false)}
-                                                            >
-                                                                Manage Users
-                                                            </Link>
-                                                        )}
-
-                                                        {isActivePath('/admin/cms') ? (
-                                                            <span className={getNavLinkClasses('/admin/cms', false)}>
-                                                                Content Management
-                                                            </span>
-                                                        ) : (
-                                                            <Link
-                                                                href="/admin/cms"
-                                                                onClick={() => setMobileMenuOpen(false)}
-                                                                className={getNavLinkClasses('/admin/cms', false)}
-                                                            >
-                                                                Content Management
-                                                            </Link>
-                                                        )}
-                                                    </>
-                                                )}
-                                            </>
-                                        )}
-
-                                        {isActivePath('/profile') ? (
-                                            <span className={getNavLinkClasses('/profile', false)}>
-                                                Profile Settings
-                                            </span>
-                                        ) : (
-                                            <Link
-                                                href="/profile"
-                                                onClick={() => setMobileMenuOpen(false)}
-                                                className={getNavLinkClasses('/profile', false)}
-                                            >
-                                                Profile Settings
-                                            </Link>
-                                        )}
-
-                                        <div className="border-t border-gray-200 dark:border-gray-700 my-3"></div>
-                                        <div className="px-3 py-2">
-                                            <LogoutButton className="block w-full text-left text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-3 rounded-md text-base font-medium transition-colors">
-                                                Sign out
-                                            </LogoutButton>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </header>
-
-            {/* Breadcrumbs */}
-            {breadcrumbs.length > 1 && (
-                <nav className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center space-x-4 py-3">
-                            {breadcrumbs.map((item, index) => (
-                                <div key={index} className="flex items-center">
-                                    {index > 0 && (
-                                        <svg
-                                            className="h-4 w-4 text-gray-400 dark:text-gray-500 mx-2"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M9 5l7 7-7 7"
-                                            />
-                                        </svg>
-                                    )}
-                                    {item.href && index < breadcrumbs.length - 1 ? (
-                                        <Link
-                                            href={item.href}
-                                            className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-                                        >
-                                            {item.label}
-                                        </Link>
-                                    ) : (
-                                        <span className={`text-sm font-medium ${index === breadcrumbs.length - 1
-                                            ? 'text-gray-900 dark:text-gray-100'
-                                            : 'text-gray-500 dark:text-gray-400'
-                                            }`}>
-                                            {item.label}
-                                        </span>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </nav>
             )}
-        </>
+        </nav>
     )
 }

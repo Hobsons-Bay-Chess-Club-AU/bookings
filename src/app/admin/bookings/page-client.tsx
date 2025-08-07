@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-// ...existing code...
 import Link from 'next/link'
+import { HiClipboardDocumentList } from 'react-icons/hi2'
 
 interface Booking {
     id: string
@@ -173,9 +173,7 @@ export default function AdminBookingsPageClient({ bookings }: AdminBookingsPageC
                 {filteredBookings.length === 0 && (
                     <div className="text-center py-12">
                         <div className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500">
-                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
+                            <HiClipboardDocumentList className="h-12 w-12" />
                         </div>
                         <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No bookings found</h3>
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">

@@ -249,16 +249,15 @@ export default async function AdminDashboard() {
     const stats = await getDashboardStats()
 
     return (
-        <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Admin Dashboard</h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-2">System overview and key metrics</p>
-                </div>
+        <>
+            {/* Header */}
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Admin Dashboard</h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-2">System overview and key metrics</p>
+            </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     {/* Total Users */}
                     <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
                         <div className="flex items-center">
@@ -459,7 +458,6 @@ export default async function AdminDashboard() {
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+        </>
     )
 } 

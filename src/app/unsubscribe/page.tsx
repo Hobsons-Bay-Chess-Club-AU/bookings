@@ -1,114 +1,122 @@
 'use client'
 
-import { useState, useEffect, useCallback, Suspense } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
+import { 
+    HiXMark, 
+    HiCheck, 
+    HiExclamationTriangle, 
+    HiLockClosed 
+} from 'react-icons/hi2'
 
 function UnsubscribePageContent() {
-    const [loading, setLoading] = useState(false)
-    const [success, setSuccess] = useState(false)
+    const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
+    const [success, setSuccess] = useState(false)
+    const [showReasonForm, setShowReasonForm] = useState(false)
     const [subscriberEmail, setSubscriberEmail] = useState('')
     const [unsubscribeReason, setUnsubscribeReason] = useState('')
-    const [showReasonForm, setShowReasonForm] = useState(false)
-    
     const searchParams = useSearchParams()
-    const unsubscribeCode = searchParams.get('code')
     const supabase = createClient()
 
-    const verifyUnsubscribeCode = useCallback(async () => {
-        if (!unsubscribeCode) return
-
-        setLoading(true)
-        setError('')
-
-        try {
-            const { data: subscriber, error } = await supabase
-                .from('mailing_list')
-                .select('email, status')
-                .eq('unsubscribe_code', unsubscribeCode)
-                .single()
-
-            if (error || !subscriber) {
-                setError('Invalid or expired unsubscribe link')
-                return
-            }
-
-            if (subscriber.status === 'unsubscribed') {
-                setSuccess(true)
-                setSubscriberEmail(subscriber.email)
-                return
-            }
-
-            setSubscriberEmail(subscriber.email)
-            setShowReasonForm(true)
-        } catch {
-            setError('An error occurred while verifying your unsubscribe request')
-        } finally {
-            setLoading(false)
-        }
-    }, [unsubscribeCode, supabase])
-
     useEffect(() => {
-        if (unsubscribeCode) {
-            verifyUnsubscribeCode()
+        const verifyUnsubscribeRequest = async () => {
+            try {
+                const token = searchParams.get('token')
+                const email = searchParams.get('email')
+
+                if (!token || !email) {
+                    setError('Invalid unsubscribe link. Please check your email and try again.')
+                    setLoading(false)
+                    return
+                }
+
+                // Verify the token and get subscriber info
+                const { data, error: verifyError } = await supabase
+                    .from('mailing_list_subscribers')
+                    .select('*')
+                    .eq('email', email)
+                    .eq('unsubscribe_token', token)
+                    .single()
+
+                if (verifyError || !data) {
+                    setError('Invalid or expired unsubscribe link. Please check your email and try again.')
+                    setLoading(false)
+                    return
+                }
+
+                setSubscriberEmail(email)
+                setShowReasonForm(true)
+                setLoading(false)
+            } catch (err) {
+                console.error('Error verifying unsubscribe request:', err)
+                setError('An error occurred while processing your request. Please try again.')
+                setLoading(false)
+            }
         }
-    }, [unsubscribeCode, verifyUnsubscribeCode])
+
+        verifyUnsubscribeRequest()
+    }, [searchParams, supabase])
 
     const handleUnsubscribe = async () => {
-        if (!unsubscribeCode) return
-
         setLoading(true)
-        setError('')
-
         try {
-            const { error } = await supabase
-                .from('mailing_list')
-                .update({
-                    status: 'unsubscribed',
-                    unsubscribe_reason: unsubscribeReason || null,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('unsubscribe_code', unsubscribeCode)
+            const token = searchParams.get('token')
+            const email = searchParams.get('email')
 
-            if (error) {
-                setError('Failed to unsubscribe: ' + error.message)
-            } else {
-                setSuccess(true)
-                setShowReasonForm(false)
+            // Update the subscriber record
+            const { error: updateError } = await supabase
+                .from('mailing_list_subscribers')
+                .update({
+                    is_subscribed: false,
+                    unsubscribed_at: new Date().toISOString(),
+                    unsubscribe_reason: unsubscribeReason || null
+                })
+                .eq('email', email)
+                .eq('unsubscribe_token', token)
+
+            if (updateError) {
+                throw updateError
             }
-        } catch {
-            setError('An error occurred while processing your unsubscribe request')
+
+            setSuccess(true)
+            setShowReasonForm(false)
+        } catch (err) {
+            console.error('Error unsubscribing:', err)
+            setError('An error occurred while unsubscribing. Please try again.')
         } finally {
             setLoading(false)
         }
     }
 
     const handleResubscribe = async () => {
-        if (!unsubscribeCode) return
-
         setLoading(true)
-        setError('')
-
         try {
-            const { error } = await supabase
-                .from('mailing_list')
-                .update({
-                    status: 'subscribed',
-                    unsubscribe_reason: null,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('unsubscribe_code', unsubscribeCode)
+            const token = searchParams.get('token')
+            const email = searchParams.get('email')
 
-            if (error) {
-                setError('Failed to resubscribe: ' + error.message)
-            } else {
-                setSuccess(false)
-                setShowReasonForm(true)
+            // Update the subscriber record
+            const { error: updateError } = await supabase
+                .from('mailing_list_subscribers')
+                .update({
+                    is_subscribed: true,
+                    unsubscribed_at: null,
+                    unsubscribe_reason: null
+                })
+                .eq('email', email)
+                .eq('unsubscribe_token', token)
+
+            if (updateError) {
+                throw updateError
             }
-        } catch {
-            setError('An error occurred while processing your resubscribe request')
+
+            setSuccess(false)
+            setShowReasonForm(true)
+        } catch (err) {
+            console.error('Error resubscribing:', err)
+            setError('An error occurred while resubscribing. Please try again.')
         } finally {
             setLoading(false)
         }
@@ -120,7 +128,7 @@ function UnsubscribePageContent() {
                 <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                        <p className="mt-4 text-gray-600">Processing your request...</p>
+                        <p className="mt-4 text-gray-600">Loading...</p>
                     </div>
                 </div>
             </div>
@@ -133,9 +141,7 @@ function UnsubscribePageContent() {
                 <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
                     <div className="text-center">
                         <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                            <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <HiXMark className="h-6 w-6 text-red-600" />
                         </div>
                         <h3 className="mt-4 text-lg font-medium text-gray-900">Error</h3>
                         <p className="mt-2 text-sm text-gray-600">{error}</p>
@@ -159,9 +165,7 @@ function UnsubscribePageContent() {
                 <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
                     <div className="text-center">
                         <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
+                            <HiCheck className="h-6 w-6 text-green-600" />
                         </div>
                         <h3 className="mt-4 text-lg font-medium text-gray-900">Successfully Unsubscribed</h3>
                         <p className="mt-2 text-sm text-gray-600">
@@ -197,9 +201,7 @@ function UnsubscribePageContent() {
                 <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
                     <div className="text-center">
                         <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
-                            <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                            </svg>
+                            <HiExclamationTriangle className="h-6 w-6 text-yellow-600" />
                         </div>
                         <h3 className="mt-4 text-lg font-medium text-gray-900">Unsubscribe Confirmation</h3>
                         <p className="mt-2 text-sm text-gray-600">
@@ -245,9 +247,7 @@ function UnsubscribePageContent() {
             <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
                 <div className="text-center">
                     <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100">
-                        <svg className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
+                        <HiLockClosed className="h-6 w-6 text-gray-600" />
                     </div>
                     <h3 className="mt-4 text-lg font-medium text-gray-900">Unsubscribe</h3>
                     <p className="mt-2 text-sm text-gray-600">

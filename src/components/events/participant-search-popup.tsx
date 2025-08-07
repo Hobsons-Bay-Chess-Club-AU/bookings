@@ -2,7 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { CustomDataValue, Participant } from '@/lib/types/database'
+import { Participant, CustomDataValue } from '@/lib/types/database'
+import { 
+    HiUsers, 
+    HiXMark, 
+    HiMagnifyingGlass, 
+    HiEnvelope, 
+    HiChevronRight, 
+    HiInformationCircle 
+} from 'react-icons/hi2'
 
 interface ParticipantSearchPopupProps {
     isOpen: boolean
@@ -26,92 +34,86 @@ export default function ParticipantSearchPopup({
     onSelectParticipant,
     userId
 }: ParticipantSearchPopupProps) {
-    const [recentParticipants, setRecentParticipants] = useState<RecentParticipant[]>([])
+    const [participants, setParticipants] = useState<RecentParticipant[]>([])
     const [loading, setLoading] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
+    const supabase = createClient()
 
     const fetchRecentParticipants = useCallback(async () => {
         setLoading(true)
         try {
-            const supabase = createClient()
-
-            // First get all booking IDs for this user
-            const { data: userBookings, error: bookingsError } = await supabase
+            // Fetch recent bookings for this user
+            const { data: bookings, error: bookingsError } = await supabase
                 .from('bookings')
-                .select('id')
+                .select(`
+                    id,
+                    events!bookings_event_id_fkey (
+                        id,
+                        title
+                    )
+                `)
                 .eq('user_id', userId)
                 .order('created_at', { ascending: false })
+                .limit(10)
 
             if (bookingsError) {
-                console.error('Error fetching user bookings:', bookingsError)
+                console.error('Error fetching bookings:', bookingsError)
                 return
             }
 
-            if (!userBookings || userBookings.length === 0) {
-                console.log('No bookings found for user:', userId)
-                setRecentParticipants([])
-                return
-            }
+            // Fetch participants from these bookings
+            const participantPromises = bookings.map(async (booking) => {
+                const { data: participants, error: participantsError } = await supabase
+                    .from('participants')
+                    .select(`
+                        first_name,
+                        last_name,
+                        date_of_birth,
+                        contact_email,
+                        contact_phone,
+                        custom_data
+                    `)
+                    .eq('booking_id', booking.id)
 
-            const bookingIds = userBookings.map(booking => booking.id)
-
-            // Fetch recent participants for this user's bookings
-            const { data, error } = await supabase
-                .from('participants')
-                .select(`
-                    first_name,
-                    last_name,
-                    date_of_birth,
-                    contact_email,
-                    contact_phone,
-                    custom_data,
-                    created_at
-                `)
-                .in('booking_id', bookingIds)
-                .order('created_at', { ascending: false })
-                .limit(50) // Get more to ensure we have enough unique ones
-
-            if (error) {
-                console.error('Error fetching recent participants:', error)
-                return
-            }
-
-            console.log('Fetched participants:', data)
-            console.log('Booking IDs:', bookingIds)
-
-            if (!data || data.length === 0) {
-                console.log('No participants found for bookings')
-                setRecentParticipants([])
-                return
-            }
-
-            // Filter to unique participants by first_name + last_name + date_of_birth
-            const uniqueParticipants = data.reduce((acc: RecentParticipant[], participant) => {
-                const key = `${participant.first_name}-${participant.last_name}-${participant.date_of_birth}`
-                const exists = acc.find(p =>
-                    `${p.first_name}-${p.last_name}-${p.date_of_birth}` === key
-                )
-                if (!exists) {
-                    acc.push(participant)
+                if (participantsError) {
+                    console.error('Error fetching participants:', participantsError)
+                    return []
                 }
-                return acc
-            }, []).slice(0, 10)
 
-            console.log('Unique participants:', uniqueParticipants)
-            setRecentParticipants(uniqueParticipants)
+                return participants || []
+            })
+
+            const allParticipants = await Promise.all(participantPromises)
+            const flatParticipants = allParticipants.flat()
+
+            // Remove duplicates based on name and date of birth
+            const uniqueParticipants = flatParticipants.filter((participant, index, self) =>
+                index === self.findIndex(p => 
+                    p.first_name === participant.first_name &&
+                    p.last_name === participant.last_name &&
+                    p.date_of_birth === participant.date_of_birth
+                )
+            )
+
+            setParticipants(uniqueParticipants)
         } catch (error) {
             console.error('Error fetching recent participants:', error)
         } finally {
             setLoading(false)
         }
-    }, [userId])
+    }, [supabase, userId])
 
     useEffect(() => {
         if (isOpen && userId) {
-            console.log('Opening popup for userId:', userId)
             fetchRecentParticipants()
         }
     }, [isOpen, userId, fetchRecentParticipants])
+
+    const filteredParticipants = participants.filter(participant =>
+        `${participant.first_name} ${participant.last_name}`
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
+    )
 
     const handleSelectParticipant = (participant: RecentParticipant) => {
         onSelectParticipant({
@@ -120,14 +122,10 @@ export default function ParticipantSearchPopup({
             date_of_birth: participant.date_of_birth,
             email: participant.contact_email,
             phone: participant.contact_phone,
-            custom_data: participant.custom_data || {}
+            custom_data: participant.custom_data
         })
         onClose()
     }
-
-    const filteredParticipants = recentParticipants.filter(participant =>
-        `${participant.first_name} ${participant.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
-    )
 
     if (!isOpen) return null
 
@@ -138,9 +136,7 @@ export default function ParticipantSearchPopup({
                 <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20">
                     <div className="flex items-center space-x-3">
                         <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-                            <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
+                            <HiUsers className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                         </div>
                         <div>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
@@ -153,9 +149,7 @@ export default function ParticipantSearchPopup({
                         onClick={onClose}
                         className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                     >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <HiXMark className="w-6 h-6" />
                     </button>
                 </div>
 
@@ -163,9 +157,7 @@ export default function ParticipantSearchPopup({
                 <div className="p-6 border-b border-gray-100 dark:border-gray-700">
                     <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
+                            <HiMagnifyingGlass className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                         </div>
                         <input
                             type="text"
@@ -188,9 +180,7 @@ export default function ParticipantSearchPopup({
                     ) : filteredParticipants.length === 0 ? (
                         <div className="p-8 text-center">
                             <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                                <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
+                                <HiUsers className="w-8 h-8 text-gray-400 dark:text-gray-500" />
                             </div>
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                                 {searchTerm ? 'No matches found' : 'No recent participants'}
@@ -229,18 +219,14 @@ export default function ParticipantSearchPopup({
                                             </div>
                                             {participant.contact_email && (
                                                 <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                    </svg>
+                                                    <HiEnvelope className="w-4 h-4" />
                                                     <span>{participant.contact_email}</span>
                                                 </div>
                                             )}
                                         </div>
                                         <div className="flex items-center space-x-2 text-gray-400 dark:text-gray-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                                             <span className="text-sm font-medium">Select</span>
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                            </svg>
+                                            <HiChevronRight className="w-5 h-5" />
                                         </div>
                                     </div>
                                 </button>
@@ -252,9 +238,7 @@ export default function ParticipantSearchPopup({
                 {/* Footer */}
                 <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700">
                     <div className="flex items-center justify-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                        <HiInformationCircle className="w-4 h-4" />
                         <span>Select a participant to auto-fill the form</span>
                     </div>
                 </div>

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getCurrentProfile } from '@/lib/utils/auth'
 import NotFoundNavigation from '@/components/ui/not-found-navigation'
+import { HiExclamationTriangle, HiCheckCircle } from 'react-icons/hi2'
 
 export default async function NotFound() {
     const profile = await getCurrentProfile()
@@ -11,19 +12,7 @@ export default async function NotFound() {
                 {/* 404 Icon */}
                 <div className="mb-8">
                     <div className="mx-auto w-32 h-32 bg-gradient-to-br from-red-400 to-red-600 dark:from-red-500 dark:to-red-700 rounded-full flex items-center justify-center shadow-lg">
-                        <svg 
-                            className="w-16 h-16 text-white" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
-                        >
-                            <path 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round" 
-                                strokeWidth={2} 
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" 
-                            />
-                        </svg>
+                        <HiExclamationTriangle className="w-16 h-16 text-white" />
                     </div>
                 </div>
 
@@ -76,13 +65,7 @@ export default async function NotFound() {
 
                 {/* Chess-themed decorative element */}
                 <div className="mt-12 opacity-20">
-                    <svg 
-                        className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600" 
-                        fill="currentColor" 
-                        viewBox="0 0 24 24"
-                    >
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
+                    <HiCheckCircle className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600" />
                 </div>
             </div>
         </div>

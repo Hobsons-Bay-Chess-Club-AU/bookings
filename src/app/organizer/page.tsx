@@ -98,10 +98,6 @@ export default function OrganizerPage() {
     }
 
     return (
-        <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
-            <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                <OrganizerPageClient events={events} totalRevenue={totalRevenue} totalBookings={totalBookings} />
-            </div>
-        </div>
+        <OrganizerPageClient events={events} totalRevenue={totalRevenue} totalBookings={totalBookings} />
     )
 }

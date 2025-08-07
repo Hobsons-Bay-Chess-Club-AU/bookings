@@ -58,17 +58,15 @@ export default async function MessagesPage() {
     const conversations = await getOrganizerConversations(profile.id)
 
     return (
-        <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
-            <div className="max-w-7xl mx-auto py-1 px-4 sm:px-6 lg:px-0">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Messages</h1>
-                    <p className="mt-2 text-gray-600 dark:text-gray-400">
-                        Manage conversations with event participants
-                    </p>
-                </div>
-
-                <MessagesClient conversations={conversations} profile={profile} />
+        <>
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Messages</h1>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                    Manage conversations with event participants
+                </p>
             </div>
-        </div>
+
+            <MessagesClient conversations={conversations} profile={profile} />
+        </>
     )
 } 

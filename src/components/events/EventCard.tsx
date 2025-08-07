@@ -5,7 +5,7 @@ import QRCode from 'react-qr-code'
 import MarkdownContent from '@/components/ui/html-content'
 import CopyButton from '@/components/ui/copy-button'
 import Image from 'next/image'
-import { HiStar, HiMapPin } from 'react-icons/hi2'
+import { HiStar, HiMapPin, HiQrCode, HiXMark } from 'react-icons/hi2'
 import type { Event } from '@/lib/types/database'
 
 interface EventCardProps {
@@ -35,14 +35,7 @@ export default function EventCard({ event }: EventCardProps) {
         onClick={() => setShowQR(true)}
         type="button"
       >
-        {/* QR code SVG icon */}
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <rect x="3" y="3" width="7" height="7" rx="2" strokeWidth="2" />
-          <rect x="14" y="3" width="7" height="7" rx="2" strokeWidth="2" />
-          <rect x="14" y="14" width="7" height="7" rx="2" strokeWidth="2" />
-          <rect x="3" y="14" width="7" height="7" rx="2" strokeWidth="2" />
-          <rect x="10" y="10" width="4" height="4" rx="1" strokeWidth="2" />
-        </svg>
+        <HiQrCode className="h-5 w-5 text-gray-500 dark:text-gray-300" />
       </button>
 
       {/* QR Overlay */}
@@ -54,9 +47,7 @@ export default function EventCard({ event }: EventCardProps) {
             title="Close QR code"
             type="button"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <HiXMark className="h-5 w-5 text-gray-500 dark:text-gray-300" />
           </button>
           <QRCode value={eventUrl} size={180} />
           <div className="mt-4 text-xs text-gray-500 dark:text-gray-300 break-all text-center max-w-xs">

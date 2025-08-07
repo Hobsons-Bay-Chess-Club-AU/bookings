@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { EventPricing, PricingType, MembershipType, Event } from '@/lib/types/database'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
 import { createClient } from '@/lib/supabase/client'
-import { HiDocumentDuplicate } from 'react-icons/hi2'
+import { HiDocumentDuplicate, HiCog6Tooth, HiPencilSquare, HiEye, HiTrash } from 'react-icons/hi2'
 
 interface PricingManagerProps {
     eventId: string
@@ -20,6 +20,8 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
     const [error, setError] = useState('')
     const [showConfirmModal, setShowConfirmModal] = useState(false)
     const [pricingToDelete, setPricingToDelete] = useState<string | null>(null)
+    const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
+    const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
     const [formData, setFormData] = useState({
         name: '',
@@ -118,6 +120,7 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
         })
         setEditingId(pricingItem.id)
         setIsAdding(true)
+        setOpenDropdownId(null) // Close dropdown
     }
 
     const handleClone = (pricingItem: EventPricing) => {
@@ -133,6 +136,7 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
         })
         setEditingId(null) // No editing ID since this is a new item
         setIsAdding(true)
+        setOpenDropdownId(null) // Close dropdown
     }
 
     const handleToggleActive = async (pricingId: string, currentActive: boolean) => {
@@ -148,9 +152,9 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
             setPricing(prev => prev.map(p =>
                 p.id === pricingId ? { ...p, is_active: !currentActive } : p
             ))
+            setOpenDropdownId(null) // Close dropdown
         } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to update pricing status'
-            setError(errorMessage)
+            setError((err as Error).message || 'Failed to update pricing status')
         } finally {
             setLoading(false)
         }
@@ -159,6 +163,7 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
     const handleDelete = async (pricingId: string) => {
         setPricingToDelete(pricingId)
         setShowConfirmModal(true)
+        setOpenDropdownId(null) // Close dropdown
     }
 
     const confirmDelete = async () => {
@@ -174,13 +179,12 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
             if (error) throw error
 
             setPricing(prev => prev.filter(p => p.id !== pricingToDelete))
-        } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to delete pricing'
-            setError(errorMessage)
-        } finally {
-            setLoading(false)
             setShowConfirmModal(false)
             setPricingToDelete(null)
+        } catch (err: unknown) {
+            setError((err as Error).message || 'Failed to delete pricing')
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -188,7 +192,7 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
         switch (type) {
             case 'early_bird': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
             case 'regular': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
-            case 'late_bird': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300'
+            case 'late_bird': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
             case 'special': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
             default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
         }
@@ -196,12 +200,33 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
 
     const getMembershipTypeColor = (type: MembershipType) => {
         switch (type) {
-            case 'member': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+            case 'member': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
             case 'non_member': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
             case 'all': return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
             default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
         }
     }
+
+    const toggleDropdown = (pricingId: string) => {
+        setOpenDropdownId(openDropdownId === pricingId ? null : pricingId)
+    }
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (openDropdownId) {
+                const dropdownElement = dropdownRefs.current[openDropdownId]
+                if (dropdownElement && !dropdownElement.contains(event.target as Node)) {
+                    setOpenDropdownId(null)
+                }
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [openDropdownId])
 
     return (
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
@@ -335,9 +360,22 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                 />
                                 {!editingId && event && (
-                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        Auto-filled with event start date
-                                    </p>
+                                    <div className="mt-1 flex items-center space-x-2">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            Auto-filled with event start date
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const now = new Date()
+                                                const formattedDate = now.toISOString().slice(0, 16)
+                                                setFormData(prev => ({ ...prev, start_date: formattedDate }))
+                                            }}
+                                            className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                                        >
+                                            Use Now
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                             <div>
@@ -352,9 +390,22 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                                 />
                                 {!editingId && event && (
-                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        Auto-filled with event end date
-                                    </p>
+                                    <div className="mt-1 flex items-center space-x-2">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            Auto-filled with event end date
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const now = new Date()
+                                                const formattedDate = now.toISOString().slice(0, 16)
+                                                setFormData(prev => ({ ...prev, end_date: formattedDate }))
+                                            }}
+                                            className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                                        >
+                                            Use Now
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -453,40 +504,54 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                     </div>
                                 </div>
 
-                                <div className="ml-6 flex flex-col space-y-2">
+                                <div className="ml-6 flex-shrink-0 relative">
                                     <button
-                                        onClick={() => handleEdit(pricingItem)}
-                                        className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-                                        disabled={loading}
+                                        onClick={() => toggleDropdown(pricingItem.id)}
+                                        className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                                        title="Pricing Actions"
                                     >
-                                        Edit
+                                        <HiCog6Tooth className="h-5 w-5" />
                                     </button>
-                                    <button
-                                        onClick={() => handleClone(pricingItem)}
-                                        className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-                                        disabled={loading}
-                                        title="Clone this pricing tier for quick editing"
-                                    >
-                                        <HiDocumentDuplicate className="h-4 w-4 mr-1" />
-                                        Clone
-                                    </button>
-                                    <button
-                                        onClick={() => handleToggleActive(pricingItem.id, pricingItem.is_active)}
-                                        className={`inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white ${pricingItem.is_active
-                                            ? 'bg-yellow-600 hover:bg-yellow-700'
-                                            : 'bg-green-600 hover:bg-green-700'
-                                            }`}
-                                        disabled={loading}
-                                    >
-                                        {pricingItem.is_active ? 'Deactivate' : 'Activate'}
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(pricingItem.id)}
-                                        className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-                                        disabled={loading}
-                                    >
-                                        Delete
-                                    </button>
+
+                                    {/* Dropdown Menu */}
+                                    {openDropdownId === pricingItem.id && (
+                                        <div
+                                            ref={(el) => { dropdownRefs.current[pricingItem.id] = el }}
+                                            className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+                                        >
+                                            <div className="py-1">
+                                                <button
+                                                    onClick={() => handleEdit(pricingItem)}
+                                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                >
+                                                    <HiPencilSquare className="mr-2 h-4 w-4" /> Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => handleClone(pricingItem)}
+                                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                >
+                                                    <HiDocumentDuplicate className="mr-2 h-4 w-4" /> Clone
+                                                </button>
+                                                <button
+                                                    onClick={() => handleToggleActive(pricingItem.id, pricingItem.is_active)}
+                                                    className={`flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-left ${
+                                                        pricingItem.is_active 
+                                                            ? 'text-yellow-700 dark:text-yellow-400' 
+                                                            : 'text-green-700 dark:text-green-400'
+                                                    }`}
+                                                >
+                                                    <HiEye className="mr-2 h-4 w-4" />
+                                                    {pricingItem.is_active ? 'Deactivate' : 'Activate'}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(pricingItem.id)}
+                                                    className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                >
+                                                    <HiTrash className="mr-2 h-4 w-4" /> Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
