@@ -29,6 +29,10 @@ export default function EditEventPage() {
         location_settings: {
             map_url: '',
             direction_url: ''
+        },
+        settings: {
+            notify_organizer_on_booking: false,
+            terms_conditions: ''
         }
     })
     const [formFields, setFormFields] = useState<FormField[]>([])
@@ -91,7 +95,11 @@ export default function EditEventPage() {
                     organizer_phone: eventData.organizer_phone || '',
                     status: eventData.status,
                     is_promoted: eventData.is_promoted || false,
-                    location_settings: eventData.location_settings || { map_url: '', direction_url: '' }
+                    location_settings: eventData.location_settings || { map_url: '', direction_url: '' },
+                    settings: {
+                        notify_organizer_on_booking: eventData.settings?.notify_organizer_on_booking || false,
+                        terms_conditions: eventData.settings?.terms_conditions || ''
+                    }
                 })
 
                 // Set form fields
@@ -206,6 +214,27 @@ export default function EditEventPage() {
                 throw new Error('There was an issue processing the description content. Please try again.')
             }
 
+            // Sanitize and encode terms & conditions to handle special characters
+            let sanitizedTermsConditions: string | null = null
+            
+            try {
+                if (formData.settings.terms_conditions) {
+                    sanitizedTermsConditions = formData.settings.terms_conditions
+                        .replace(/\r\n/g, '\n') // Normalize line endings
+                        .replace(/\r/g, '\n')    // Convert remaining carriage returns
+                        .trim()                  // Remove leading/trailing whitespace
+                }
+
+                console.log('🔄 Sanitizing terms & conditions...', {
+                    originalLength: formData.settings.terms_conditions?.length,
+                    sanitizedLength: sanitizedTermsConditions?.length,
+                    hasSpecialChars: sanitizedTermsConditions?.includes("'") || sanitizedTermsConditions?.includes('"')
+                })
+            } catch (sanitizeError) {
+                console.error('❌ Error sanitizing terms & conditions:', sanitizeError)
+                throw new Error('There was an issue processing the terms & conditions content. Please try again.')
+            }
+
             // Update event
             const { error: eventError } = await supabase
                 .from('events')
@@ -228,6 +257,10 @@ export default function EditEventPage() {
                     timeline: Object.keys(timeline).length > 0 ? timeline : null,
                     is_promoted: formData.is_promoted,
                     location_settings: finalLocationSettings,
+                    settings: {
+                        notify_organizer_on_booking: formData.settings.notify_organizer_on_booking,
+                        terms_conditions: sanitizedTermsConditions
+                    },
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', eventId)
@@ -409,14 +442,14 @@ export default function EditEventPage() {
     }
 
     const getFieldClasses = (fieldName: string) => {
-        const baseClasses = "mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 sm:text-sm"
+        const baseClasses = "mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
         const hasError = fieldErrors[fieldName]
         
         if (hasError) {
-            return `${baseClasses} border-red-300 focus:ring-red-500 focus:border-red-500`
+            return `${baseClasses} border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500 dark:focus:ring-red-400 dark:focus:border-red-400`
         }
         
-        return `${baseClasses} border-gray-300 focus:ring-indigo-500 focus:border-indigo-500`
+        return `${baseClasses} border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 dark:focus:border-indigo-400`
     }
 
     if (initialLoading) {
@@ -424,7 +457,7 @@ export default function EditEventPage() {
             <div className="flex items-center justify-center min-h-96">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                    <p className="mt-2 text-sm text-gray-500">Loading event...</p>
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading event...</p>
                 </div>
             </div>
         )
@@ -434,8 +467,8 @@ export default function EditEventPage() {
         return (
             <div className="flex items-center justify-center min-h-96">
                 <div className="text-center">
-                    <p className="text-red-600 mb-4">{error}</p>
-                    <Link href="/organizer" className="text-indigo-600 hover:text-indigo-500">
+                    <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+                    <Link href="/organizer" className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
                         Back to Dashboard
                     </Link>
                 </div>
@@ -447,16 +480,16 @@ export default function EditEventPage() {
         <>
             {/* Page Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Edit Event</h1>
-                <p className="mt-2 text-gray-600">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Edit Event</h1>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
                     Update your event details and participant form.
                 </p>
             </div>
 
-            <div className="bg-white shadow rounded-lg text-gray-900">
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg text-gray-900 dark:text-gray-100">
                 <form onSubmit={handleSubmit} className="space-y-6 p-6">
                     {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded flex items-start">
+                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded flex items-start">
                             <HiExclamationTriangle className="h-5 w-5 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
                             <div>
                                 <p className="font-medium">Error</p>
@@ -466,7 +499,7 @@ export default function EditEventPage() {
                     )}
 
                     {success && (
-                        <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded flex items-start">
+                        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 px-4 py-3 rounded flex items-start">
                             <HiCheckCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
                             <div>
                                 <p className="font-medium">Success</p>
@@ -477,7 +510,7 @@ export default function EditEventPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="md:col-span-2">
-                            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Event Title <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -491,7 +524,7 @@ export default function EditEventPage() {
                                 placeholder="Enter event title"
                             />
                             {fieldErrors.title && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.title}
                                 </p>
@@ -499,7 +532,7 @@ export default function EditEventPage() {
                         </div>
 
                         <div className="md:col-span-2">
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Description (Markdown)
                             </label>
                             <MarkdownEditor
@@ -508,11 +541,11 @@ export default function EditEventPage() {
                                 placeholder="Describe your event using Markdown formatting..."
                             />
                             <div className="mt-2 flex justify-between items-center">
-                                <div className="text-sm text-gray-500">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
                                     {formData.description?.length || 0} / 10,000 characters
                                 </div>
                                 {fieldErrors.description && (
-                                    <p className="text-sm text-red-600 flex items-center">
+                                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center">
                                         <HiExclamationCircle className="h-4 w-4 mr-1" />
                                         {fieldErrors.description}
                                     </p>
@@ -520,8 +553,42 @@ export default function EditEventPage() {
                             </div>
                         </div>
 
+                        <div className="md:col-span-2">
+                            <label htmlFor="terms_conditions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Event Terms & Conditions (Markdown)
+                            </label>
+                            <MarkdownEditor
+                                value={formData.settings.terms_conditions}
+                                onChange={(content) => {
+                                    clearFieldError('terms_conditions')
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        settings: {
+                                            ...prev.settings,
+                                            terms_conditions: content
+                                        }
+                                    }))
+                                }}
+                                placeholder="Enter the terms and conditions using Markdown formatting..."
+                            />
+                            <div className="mt-2 flex justify-between items-center">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    {formData.settings.terms_conditions?.length || 0} / 10,000 characters
+                                </div>
+                                {fieldErrors.terms_conditions && (
+                                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center">
+                                        <HiExclamationCircle className="h-4 w-4 mr-1" />
+                                        {fieldErrors.terms_conditions}
+                                    </p>
+                                )}
+                            </div>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                These terms will be displayed to participants during booking and included on their tickets. Use Markdown for formatting.
+                            </p>
+                        </div>
+
                         <div>
-                            <label htmlFor="start_date" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Start Date & Time <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -534,7 +601,7 @@ export default function EditEventPage() {
                                 className={getFieldClasses('start_date')}
                             />
                             {fieldErrors.start_date && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.start_date}
                                 </p>
@@ -542,7 +609,7 @@ export default function EditEventPage() {
                         </div>
 
                         <div>
-                            <label htmlFor="end_date" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 End Date & Time <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -555,7 +622,7 @@ export default function EditEventPage() {
                                 className={getFieldClasses('end_date')}
                             />
                             {fieldErrors.end_date && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.end_date}
                                 </p>
@@ -563,7 +630,7 @@ export default function EditEventPage() {
                         </div>
 
                         <div>
-                            <label htmlFor="entry_close_date" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="entry_close_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Entry Close Date & Time
                             </label>
                             <input
@@ -576,16 +643,16 @@ export default function EditEventPage() {
                                 placeholder="Leave empty for no entry close date"
                             />
                             {fieldErrors.entry_close_date && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.entry_close_date}
                                 </p>
                             )}
-                            <p className="mt-1 text-sm text-gray-500">If set, entries will close automatically after this date/time.</p>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">If set, entries will close automatically after this date/time.</p>
                         </div>
 
                         <div className="md:col-span-2">
-                            <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Location <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -599,7 +666,7 @@ export default function EditEventPage() {
                                 placeholder="Enter event location"
                             />
                             {fieldErrors.location && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.location}
                                 </p>
@@ -607,17 +674,17 @@ export default function EditEventPage() {
                         </div>
 
                         {/* Location Settings */}
-                        <div className="md:col-span-2 pt-6 border-t border-gray-200">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">
+                        <div className="md:col-span-2 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
                                 Location Settings
                             </h3>
-                            <p className="text-sm text-gray-600 mb-4">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                                 Add embedded map and directions to help attendees find your event location.
                             </p>
                         </div>
 
                         <div className="md:col-span-2">
-                            <label htmlFor="map_url" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="map_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Embedded Map URL
                             </label>
                             <input
@@ -640,16 +707,16 @@ export default function EditEventPage() {
                                         }
                                     }));
                                 }}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 dark:focus:border-indigo-400 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                 placeholder="https://www.google.com/maps/embed?pb=... or paste the &lt;iframe&gt; code here"
                             />
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Paste the embed URL from Google Maps, or the full &lt;iframe&gt; code. The URL will be extracted automatically.
                             </p>
                         </div>
 
                         <div className="md:col-span-2">
-                            <label htmlFor="direction_url" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="direction_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Directions URL
                             </label>
                             <input
@@ -664,16 +731,16 @@ export default function EditEventPage() {
                                         direction_url: e.target.value
                                     }
                                 }))}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 dark:focus:border-indigo-400 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                 placeholder="https://maps.google.com/directions?daddr=..."
                             />
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Link to directions (optional). This will be shown as a &quot;Get Directions&quot; button.
                             </p>
                         </div>
 
                         <div>
-                            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Ticket Price (AUD)
                             </label>
                             <input
@@ -688,16 +755,16 @@ export default function EditEventPage() {
                                 placeholder="0.00"
                             />
                             {fieldErrors.price && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.price}
                                 </p>
                             )}
-                            <p className="mt-1 text-sm text-gray-500">Leave empty or set to 0 for free events</p>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Leave empty or set to 0 for free events</p>
                         </div>
 
                         <div>
-                            <label htmlFor="max_attendees" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="max_attendees" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Maximum Attendees
                             </label>
                             <input
@@ -711,7 +778,7 @@ export default function EditEventPage() {
                                 placeholder="Leave empty for unlimited"
                             />
                             {fieldErrors.max_attendees && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.max_attendees}
                                 </p>
@@ -719,7 +786,7 @@ export default function EditEventPage() {
                         </div>
 
                         <div className="md:col-span-2">
-                            <label htmlFor="image_url" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="image_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Event Image URL
                             </label>
                             <input
@@ -728,23 +795,23 @@ export default function EditEventPage() {
                                 name="image_url"
                                 value={formData.image_url}
                                 onChange={handleChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 dark:focus:border-indigo-400 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                 placeholder="https://example.com/image.jpg"
                             />
                         </div>
 
                         {/* Organizer Contact Information */}
-                        <div className="md:col-span-2 pt-6 border-t border-gray-200">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">
+                        <div className="md:col-span-2 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
                                 Organizer Contact Information
                             </h3>
-                            <p className="text-sm text-gray-600 mb-4">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                                 Contact details for this specific event. Leave empty to use your profile information.
                             </p>
                         </div>
 
                         <div>
-                            <label htmlFor="organizer_name" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="organizer_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Organizer Name
                             </label>
                             <input
@@ -753,13 +820,13 @@ export default function EditEventPage() {
                                 name="organizer_name"
                                 value={formData.organizer_name}
                                 onChange={handleChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 dark:focus:border-indigo-400 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                 placeholder="Leave empty to use profile name"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="organizer_email" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="organizer_email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Organizer Email
                             </label>
                             <input
@@ -772,7 +839,7 @@ export default function EditEventPage() {
                                 placeholder="Leave empty to use profile email"
                             />
                             {fieldErrors.organizer_email && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.organizer_email}
                                 </p>
@@ -780,7 +847,7 @@ export default function EditEventPage() {
                         </div>
 
                         <div>
-                            <label htmlFor="organizer_phone" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="organizer_phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Organizer Phone
                             </label>
                             <input
@@ -793,7 +860,7 @@ export default function EditEventPage() {
                                 placeholder="Leave empty to use profile phone"
                             />
                             {fieldErrors.organizer_phone && (
-                                <p className="mt-1 text-sm text-red-600 flex items-center">
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.organizer_phone}
                                 </p>
@@ -801,7 +868,7 @@ export default function EditEventPage() {
                         </div>
 
                         <div>
-                            <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Status
                             </label>
                             <select
@@ -809,7 +876,7 @@ export default function EditEventPage() {
                                 name="status"
                                 value={formData.status}
                                 onChange={handleChange}
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 dark:focus:border-indigo-400 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                             >
                                 <option value="draft">Draft</option>
                                 <option value="published">Published</option>
@@ -817,7 +884,7 @@ export default function EditEventPage() {
                                 <option value="cancelled">Cancelled</option>
                                 <option value="completed">Completed</option>
                             </select>
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Only published events are visible to users
                             </p>
                         </div>
@@ -830,26 +897,26 @@ export default function EditEventPage() {
                                     name="is_promoted"
                                     checked={formData.is_promoted}
                                     onChange={handleChange}
-                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
                                 />
-                                <label htmlFor="is_promoted" className="ml-2 block text-sm font-medium text-gray-700">
+                                <label htmlFor="is_promoted" className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Promote on Landing Page
                                 </label>
                             </div>
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Promoted events appear first on the landing page
                             </p>
                         </div>
                     </div>
 
                     {/* Refund Timeline */}
-                    <div className="mt-8 pt-6 border-t border-gray-200">
+                    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                         <div className="flex items-center justify-between mb-4">
                             <div>
-                                <h3 className="text-lg font-medium text-gray-900">
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                     Refund Policy
                                 </h3>
-                                <p className="text-sm text-gray-600 mt-1">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                     Configure automatic refund policies based on timing.
                                 </p>
                             </div>
@@ -859,9 +926,9 @@ export default function EditEventPage() {
                                     id="enable_refunds"
                                     checked={enableRefunds}
                                     onChange={(e) => setEnableRefunds(e.target.checked)}
-                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
                                 />
-                                <label htmlFor="enable_refunds" className="ml-2 block text-sm font-medium text-gray-700">
+                                <label htmlFor="enable_refunds" className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Enable Refunds
                                 </label>
                             </div>
@@ -877,11 +944,11 @@ export default function EditEventPage() {
                     </div>
 
                     {/* Participant Form Fields */}
-                    <div className="mt-8 pt-6 border-t border-gray-200">
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
                             Participant Information Form
                         </h3>
-                        <p className="text-sm text-gray-600 mb-6">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
                             Define what information you want to collect from each participant during booking.
                         </p>
                         <FormBuilder
@@ -890,11 +957,11 @@ export default function EditEventPage() {
                         />
                     </div>
 
-                    <div className="flex justify-between items-center pt-6 border-t border-gray-200">
+                    <div className="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-700">
                         <div className="flex space-x-4">
                             <Link
                                 href="/organizer"
-                                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
                             >
                                 Cancel
                             </Link>
@@ -902,13 +969,13 @@ export default function EditEventPage() {
                                 <>
                                     <Link
                                         href={`/organizer/events/${event.id}/bookings`}
-                                        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
                                     >
                                         View Bookings
                                     </Link>
                                     <Link
                                         href={`/organizer/events/${event.id}/discounts`}
-                                        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
                                     >
                                         Manage Discounts
                                     </Link>
@@ -916,7 +983,7 @@ export default function EditEventPage() {
                                         type="button"
                                         onClick={handleCloneEvent}
                                         disabled={cloning}
-                                        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {cloning ? 'Cloning...' : 'Clone Event'}
                                     </button>
@@ -926,7 +993,7 @@ export default function EditEventPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? 'Updating...' : 'Update Event'}
                         </button>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Event, Booking, Participant } from '@/lib/types/database'
+import { Event, Booking } from '@/lib/types/database'
 import EventBookingsPageClient from './page-client'
 import { BookingWithProfile } from '@/lib/types/ui'
 

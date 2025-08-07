@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Event, EventDiscount, ParticipantDiscountRule, SeatDiscountRule } from '@/lib/types/database'
-import { HiPlus, HiPencil, HiTrash, HiX, HiInformationCircle } from 'react-icons/hi'
+import { HiPlus, HiPencil, HiTrash, HiInformationCircle } from 'react-icons/hi'
 
 interface DiscountFormData {
     name: string

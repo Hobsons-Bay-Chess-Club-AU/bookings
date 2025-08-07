@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { MailingList, UserRole } from '@/lib/types/database'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
@@ -10,7 +10,7 @@ interface MailingListClientProps {
     userRole: UserRole
 }
 
-export default function MailingListClient({ initialMailingList, userRole }: MailingListClientProps) {
+export default function MailingListClient({ initialMailingList }: MailingListClientProps) {
     const [mailingList, setMailingList] = useState<MailingList[]>(initialMailingList)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
@@ -60,7 +60,7 @@ export default function MailingListClient({ initialMailingList, userRole }: Mail
                     .order('created_at', { ascending: false })
                 if (data) setMailingList(data)
             }
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred')
         } finally {
             setLoading(false)
@@ -91,7 +91,7 @@ export default function MailingListClient({ initialMailingList, userRole }: Mail
                 setSuccess('Subscriber removed successfully')
                 setMailingList(mailingList.filter(sub => sub.id !== subscriberToRemove))
             }
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred')
         } finally {
             setLoading(false)

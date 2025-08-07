@@ -75,17 +75,17 @@ export default function RefundPolicyDisplay({ refundTimeline, eventStartDate }: 
     const hasRefunds = currentRefund.value > 0
 
     return (
-        <div className="border-t pt-6 mt-6">
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
             <div 
                 className="flex items-center justify-between cursor-pointer"
                 onClick={() => setIsExpanded(!isExpanded)}
             >
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                     Refund Policy
                 </h3>
                 <div className="ml-2">
                     <svg
-                        className={`h-5 w-5 text-gray-500 transition-transform duration-200 ${
+                        className={`h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
                             isExpanded ? 'rotate-180' : ''
                         }`}
                         fill="none"
@@ -106,8 +106,8 @@ export default function RefundPolicyDisplay({ refundTimeline, eventStartDate }: 
                 <div className="mt-4">
                     {/* Current refund status */}
                     <div className={`p-4 rounded-lg mb-4 ${hasRefunds
-                            ? 'bg-green-50 border border-green-200'
-                            : 'bg-red-50 border border-red-200'
+                            ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+                            : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
                         }`}>
                         <div className="flex items-center">
                             <div className={`flex-shrink-0 ${hasRefunds ? 'text-green-400' : 'text-red-400'}`}>
@@ -122,11 +122,11 @@ export default function RefundPolicyDisplay({ refundTimeline, eventStartDate }: 
                                 )}
                             </div>
                             <div className="ml-3">
-                                <h4 className={`text-sm font-medium ${hasRefunds ? 'text-green-800' : 'text-red-800'
+                                <h4 className={`text-sm font-medium ${hasRefunds ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'
                                     }`}>
                                     Current Refund Status
                                 </h4>
-                                <p className={`text-sm ${hasRefunds ? 'text-green-700' : 'text-red-700'}`}>
+                                <p className={`text-sm ${hasRefunds ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
                                     {hasRefunds ? (
                                         <>
                                             You can get a {formatRefundValue(currentRefund.value, currentRefund.type)} refund
@@ -145,8 +145,8 @@ export default function RefundPolicyDisplay({ refundTimeline, eventStartDate }: 
 
                     {/* Full refund schedule */}
                     <div className="space-y-3">
-                        <h4 className="text-sm font-medium text-gray-900">Full Refund Schedule</h4>
-                        <div className="bg-gray-50 rounded-lg p-4">
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Full Refund Schedule</h4>
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                             <div className="space-y-2">
                                 {refundTimeline.map((item, index) => {
                                     const refundValue = formatRefundValue(item.value, item.type)
@@ -162,25 +162,25 @@ export default function RefundPolicyDisplay({ refundTimeline, eventStartDate }: 
                                         <div
                                             key={index}
                                             className={`flex justify-between items-center py-2 px-3 rounded ${isCurrentPeriod
-                                                    ? 'bg-indigo-100 border border-indigo-200'
-                                                    : 'bg-white'
+                                                    ? 'bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700'
+                                                    : 'bg-white dark:bg-gray-700'
                                                 }`}
                                         >
                                             <div className="flex items-center">
                                                 {isCurrentPeriod && (
                                                     <div className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></div>
                                                 )}
-                                                <span className="text-sm text-gray-700">
+                                                <span className="text-sm text-gray-700 dark:text-gray-300">
                                                     {dateRange}
                                                 </span>
                                             </div>
                                             <div className="text-right">
-                                                <span className={`text-sm font-medium ${item.value > 0 ? 'text-green-600' : 'text-red-600'
+                                                <span className={`text-sm font-medium ${item.value > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                                                     }`}>
                                                     {refundValue} refund
                                                 </span>
                                                 {item.description && (
-                                                    <div className="text-xs text-gray-500">
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
                                                         {item.description}
                                                     </div>
                                                 )}
@@ -192,7 +192,7 @@ export default function RefundPolicyDisplay({ refundTimeline, eventStartDate }: 
                         </div>
                     </div>
 
-                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                         <div className="flex">
                             <div className="flex-shrink-0">
                                 <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -200,10 +200,10 @@ export default function RefundPolicyDisplay({ refundTimeline, eventStartDate }: 
                                 </svg>
                             </div>
                             <div className="ml-3">
-                                <h4 className="text-sm font-medium text-blue-800">
+                                <h4 className="text-sm font-medium text-blue-800 dark:text-blue-300">
                                     Refund Information
                                 </h4>
-                                <div className="mt-1 text-sm text-blue-700">
+                                <div className="mt-1 text-sm text-blue-700 dark:text-blue-400">
                                     <ul className="list-disc pl-5 space-y-1">
                                         <li>Refunds are processed automatically when requested</li>
                                         <li>Percentage refunds are calculated from your original booking amount</li>

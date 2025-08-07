@@ -1,6 +1,7 @@
 import React from 'react'
+import { render } from '@react-email/render'
 
-interface BookingTransferNotificationEmailProps {
+interface BookingTransferNotificationEmailData {
     userName: string
     userEmail: string
     bookingId: string
@@ -18,9 +19,8 @@ interface BookingTransferNotificationEmailProps {
     transferredAt: string
 }
 
-export default function BookingTransferNotificationEmail({
+function BookingTransferNotificationEmail({
     userName,
-    userEmail,
     bookingId,
     quantity,
     totalAmount,
@@ -34,7 +34,7 @@ export default function BookingTransferNotificationEmail({
     transferNotes,
     adminName,
     transferredAt
-}: BookingTransferNotificationEmailProps) {
+}: BookingTransferNotificationEmailData) {
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             weekday: 'long',
@@ -210,4 +210,13 @@ export default function BookingTransferNotificationEmail({
             </div>
         </div>
     )
-} 
+}
+
+export async function renderBookingTransferNotificationEmail(data: BookingTransferNotificationEmailData) {
+    const html = await render(React.createElement(BookingTransferNotificationEmail, data))
+    const text = await render(React.createElement(BookingTransferNotificationEmail, data), { plainText: true })
+    
+    return { html, text }
+}
+
+export default BookingTransferNotificationEmail 

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter, useParams } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { 
     HiCalendarDays, 
@@ -16,9 +16,7 @@ import {
     HiEnvelope,
     HiMapPin,
     HiClock,
-    HiExclamationTriangle,
     HiCheckCircle,
-    HiXCircle,
     HiDocumentText,
     HiArrowTopRightOnSquare
 } from 'react-icons/hi2'
@@ -48,7 +46,6 @@ export default function EventViewPage() {
         totalParticipants: 0
     })
 
-    const router = useRouter()
     const params = useParams()
     const eventId = params.id as string
     const supabase = createClient()
@@ -64,11 +61,7 @@ export default function EventViewPage() {
         { id: 'settings', name: 'Settings', icon: <HiCog8Tooth className="h-5 w-5" /> }
     ]
 
-    useEffect(() => {
-        fetchEventData()
-    }, [eventId])
-
-    const fetchEventData = async () => {
+    const fetchEventData = useCallback(async () => {
         try {
             setLoading(true)
             
@@ -157,7 +150,11 @@ export default function EventViewPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [eventId, supabase])
+
+    useEffect(() => {
+        fetchEventData()
+    }, [fetchEventData])
 
     const getStatusColor = (status: string) => {
         switch (status) {

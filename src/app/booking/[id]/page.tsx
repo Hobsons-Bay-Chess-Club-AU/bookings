@@ -49,10 +49,12 @@ async function getBooking(bookingId: string, userId: string): Promise<(Booking &
 
 interface BookingDetailsPageProps {
     params: Promise<{ id: string }>
+    searchParams?: Promise<{ error?: string }>
 }
 
-export default async function BookingDetailsPage({ params }: BookingDetailsPageProps) {
+export default async function BookingDetailsPage({ params, searchParams }: BookingDetailsPageProps) {
     const { id } = await params
+    const resolvedSearchParams = await searchParams
     const profile = await getCurrentProfile()
 
     if (!profile) {
@@ -490,6 +492,18 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                 </div>
                             )}
 
+                            {/* Invalid Status Error Message */}
+                            {resolvedSearchParams?.error === 'invalid_status' && (
+                                <div className="mt-8 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                                    <h3 className="font-medium text-red-900 dark:text-red-100 mb-2">Tickets Not Available</h3>
+                                    <p className="text-sm text-red-900 dark:text-red-200">
+                                        Tickets cannot be generated for this booking because it has a status of &quot;{booking.status}&quot;. 
+                                        Tickets are only available for verified or confirmed bookings. Please contact the event organizer 
+                                        if you believe this is an error.
+                                    </p>
+                                </div>
+                            )}
+
                             {/* Action Buttons */}
                             <div className="mt-8 space-y-3">
                                 <Link
@@ -498,6 +512,16 @@ export default async function BookingDetailsPage({ params }: BookingDetailsPageP
                                 >
                                     ← Back to My Bookings
                                 </Link>
+                                
+                                {/* Download Tickets Button */}
+                                {(booking.status === 'confirmed' || booking.status === 'verified') && (
+                                    <Link
+                                        href={`/tickets/${booking.id}`}
+                                        className="w-full bg-green-600 border border-transparent rounded-md py-2 px-4 flex items-center justify-center text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                    >
+                                        📄 Download Tickets (PDF)
+                                    </Link>
+                                )}
                                 
                                 {/* Contact Organizer Button */}
                                 {booking.event.organizer && (

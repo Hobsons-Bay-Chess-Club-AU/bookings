@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sendWelcomeEmail } from '@/lib/email/service'
 import { createClient } from '@/lib/supabase/server'
 
-export async function POST(request: NextRequest, _: unknown) {
+export async function POST(request: NextRequest) {
   try {
     const { userId } = await request.json()
 

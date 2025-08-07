@@ -27,6 +27,7 @@ export default function EventSettingsModal({ event, isOpen, onClose, onUpdate }:
         participant_display_fields: event.settings?.participant_display_fields || ['first_name', 'last_name'],
         show_attendance_count: event.settings?.show_attendance_count || false,
         allow_participant_contact: event.settings?.allow_participant_contact || false,
+        notify_organizer_on_booking: event.settings?.notify_organizer_on_booking || false,
     })
 
     // Generate available fields dynamically from built-in fields and custom fields
@@ -274,6 +275,33 @@ export default function EventSettingsModal({ event, isOpen, onClose, onUpdate }:
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                         Allow participants to contact each other through the event page.
                                         This can facilitate networking and coordination between participants.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Organizer Email Notifications */}
+                        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
+                            <div className="flex items-start space-x-3">
+                                <div className="flex-shrink-0">
+                                    <input
+                                        id="notify_organizer_on_booking"
+                                        type="checkbox"
+                                        checked={settings.notify_organizer_on_booking}
+                                        onChange={(e) => setSettings(prev => ({
+                                            ...prev,
+                                            notify_organizer_on_booking: e.target.checked
+                                        }))}
+                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label htmlFor="notify_organizer_on_booking" className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        Email Notifications for New Bookings
+                                    </label>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                        Receive email notifications when someone books your event.
+                                        You&apos;ll get details about the booking, participants, and customer information.
                                     </p>
                                 </div>
                             </div>

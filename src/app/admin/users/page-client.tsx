@@ -193,13 +193,6 @@ export default function AdminUsersPageClient({ users }: AdminUsersPageClientProp
 
             setEditSuccess('User updated successfully')
             
-            // Update the local users array
-            const updatedUsers = users.map(user => 
-                user.id === editingUser.id 
-                    ? { ...user, full_name: editForm.full_name, email: editForm.email, role: editForm.role }
-                    : user
-            )
-            
             // We need to trigger a re-render, but since users is passed as prop, we'll need to refresh the page
             setTimeout(() => {
                 window.location.reload()

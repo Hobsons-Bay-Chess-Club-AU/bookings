@@ -339,13 +339,6 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
         setUseAdvancedOptions(newUseAdvanced)
 
         if (newUseAdvanced) {
-            // Convert string/number options to object options for UI
-            const uiOptions: FormFieldUIOptions = (editingField.options || []).map(opt =>
-                typeof opt === 'string' || typeof opt === 'number' ?
-                    { value: String(opt), label: String(opt) } :
-                    opt as OptionObject
-            )
-
             // Keep the original options type since we're just changing the UI representation
             // The actual database format doesn't change here
             updateEditingField({ options: editingField.options })

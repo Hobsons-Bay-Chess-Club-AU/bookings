@@ -39,29 +39,16 @@ export async function sendEventUpdateEmail({
     organizerEmail: string
 }) {
     try {
-        const html = await render(
-            React.createElement(EventUpdateEmail, {
-                eventName,
-                eventDate,
-                eventLocation,
-                updateType,
-                updateDetails,
-                organizerName: organizerName || 'Event Organizer',
-                organizerEmail
-            })
-        )
-        const text = await render(
-            React.createElement(EventUpdateEmail, {
-                eventName,
-                eventDate,
-                eventLocation,
-                updateType,
-                updateDetails,
-                organizerName: organizerName || 'Event Organizer',
-                organizerEmail
-            }),
-            { plainText: true }
-        )
+        const { html, text } = await renderEventUpdateEmail({
+            eventName,
+            eventDate,
+            eventLocation,
+            updateType,
+            updateDetails,
+            organizerName: organizerName || 'Event Organizer',
+            organizerEmail
+        })
+        
         const { data, error } = await resend.emails.send({
             from: process.env.RESEND_FROM_EMAIL || '',
             to: userEmail,
@@ -80,11 +67,15 @@ export async function sendEventUpdateEmail({
     }
 }
 import { Booking, Event, Profile } from '@/lib/types/database'
-import { render } from '@react-email/render'
-import { BookingConfirmationEmail, EventUpdateEmail, WelcomeEmail, PasswordResetEmail } from './templates'
+import { 
+    renderBookingConfirmationEmail, 
+    renderEventUpdateEmail, 
+    renderWelcomeEmail, 
+    renderPasswordResetEmail,
+    renderOrganizerBookingNotificationEmail
+} from './templates/index'
 import { resend } from './client'
 import { createClient } from '@/lib/supabase/server'
-import React from 'react'
 
 interface EmailData {
     booking: Booking
@@ -104,37 +95,19 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
         .order('created_at', { ascending: true })
 
     try {
-        const html = await render(
-            React.createElement(BookingConfirmationEmail, {
-                bookingId: booking.booking_id || booking.id,
-                eventName: event.title,
-                eventDate: event.start_date,
-                eventLocation: event.location,
-                participantCount: booking.quantity,
-                totalAmount: booking.total_amount,
-                organizerName: (event && 'organizer_name' in event ? (event as Event & { organizer_name?: string }).organizer_name : undefined) || 'Event Organizer',
-                organizerEmail: (event && 'organizer_email' in event ? (event as Event & { organizer_email?: string }).organizer_email : undefined) || '',
-                organizerPhone: (event && 'organizer_phone' in event ? (event as Event & { organizer_phone?: string }).organizer_phone : undefined) || '',
-                eventDescription: event.description,
-                participants: participants || []
-            })
-        )
-        const text = await render(
-            React.createElement(BookingConfirmationEmail, {
-                bookingId: booking.booking_id || booking.id,
-                eventName: event.title,
-                eventDate: event.start_date,
-                eventLocation: event.location,
-                participantCount: booking.quantity,
-                totalAmount: booking.total_amount,
-                organizerName: (event && 'organizer_name' in event ? (event as Event & { organizer_name?: string }).organizer_name : undefined) || 'Event Organizer',
-                organizerEmail: (event && 'organizer_email' in event ? (event as Event & { organizer_email?: string }).organizer_email : undefined) || '',
-                organizerPhone: (event && 'organizer_phone' in event ? (event as Event & { organizer_phone?: string }).organizer_phone : undefined) || '',
-                eventDescription: event.description,
-                participants: participants || []
-            }),
-            { plainText: true }
-        )
+        const { html, text } = await renderBookingConfirmationEmail({
+            bookingId: booking.booking_id || booking.id,
+            eventName: event.title,
+            eventDate: event.start_date,
+            eventLocation: event.location,
+            participantCount: booking.quantity,
+            totalAmount: booking.total_amount,
+            organizerName: (event && 'organizer_name' in event ? (event as Event & { organizer_name?: string }).organizer_name : undefined) || 'Event Organizer',
+            organizerEmail: (event && 'organizer_email' in event ? (event as Event & { organizer_email?: string }).organizer_email : undefined) || '',
+            organizerPhone: (event && 'organizer_phone' in event ? (event as Event & { organizer_phone?: string }).organizer_phone : undefined) || '',
+            eventDescription: event.description,
+            participants: participants || []
+        })
         const { data: emailData, error } = await resend.emails.send({
             from: process.env.RESEND_FROM_EMAIL || "",
             to: user.email,
@@ -156,19 +129,10 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
 
 export async function sendWelcomeEmail(userEmail: string, userName: string) {
     try {
-        const html = await render(
-            React.createElement(WelcomeEmail, {
-                userName: userName,
-                userEmail,
-            })
-        )
-        const text = await render(
-            React.createElement(WelcomeEmail, {
-                userName: userName,
-                userEmail: userEmail
-            }),
-            { plainText: true }
-        )
+        const { html, text } = await renderWelcomeEmail({
+            userName: userName,
+            userEmail,
+        })
         const { data, error } = await resend.emails.send({
             from: process.env.RESEND_FROM_EMAIL || "",
             to: userEmail,
@@ -190,19 +154,10 @@ export async function sendWelcomeEmail(userEmail: string, userName: string) {
 
 export async function sendPasswordResetEmail(userEmail: string, userName: string, resetUrl: string) {
     try {
-        const html = await render(
-            React.createElement(PasswordResetEmail, {
-                userName: userName,
-                resetUrl: resetUrl
-            })
-        )
-        const text = await render(
-            React.createElement(PasswordResetEmail, {
-                userName: userName,
-                resetUrl: resetUrl
-            }),
-            { plainText: true }
-        )
+        const { html, text } = await renderPasswordResetEmail({
+            userName: userName,
+            resetUrl: resetUrl
+        })
         const { data, error } = await resend.emails.send({
             from: process.env.RESEND_FROM_EMAIL || "",
             to: userEmail,
@@ -218,5 +173,48 @@ export async function sendPasswordResetEmail(userEmail: string, userName: string
     } catch (error: unknown) {
         console.error('Error sending password reset email:', error)
         return { success: false, error: 'Failed to send password reset email' }
+    }
+}
+
+export async function sendOrganizerBookingNotificationEmail(data: {
+    organizerEmail: string
+    organizerName: string
+    eventTitle: string
+    eventDate: string
+    eventLocation: string
+    bookingId: string
+    participantCount: number
+    totalAmount: number
+    customerName: string
+    customerEmail: string
+    participants?: Array<{
+        first_name: string
+        last_name: string
+        date_of_birth?: string
+        contact_email?: string
+        contact_phone?: string
+        custom_data?: Record<string, unknown>
+    }>
+}) {
+    try {
+        const { html, text } = await renderOrganizerBookingNotificationEmail(data)
+        
+        const { data: emailData, error } = await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL || '',
+            to: data.organizerEmail,
+            subject: `New Booking: ${data.eventTitle}`,
+            html,
+            text
+        })
+        
+        if (error) {
+            console.error('Failed to send organizer booking notification email:', error)
+            return { success: false, error: error.message }
+        }
+        
+        return { success: true, data: emailData }
+    } catch (error) {
+        console.error('Error sending organizer booking notification email:', error)
+        return { success: false, error: 'Failed to send organizer booking notification email' }
     }
 }

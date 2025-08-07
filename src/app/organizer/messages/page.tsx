@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/utils/auth'
 import { redirect } from 'next/navigation'
-import { Conversation, Message, Profile } from '@/lib/types/database'
+import { Conversation } from '@/lib/types/database'
 import MessagesClient from './messages-client'
 
 async function getOrganizerConversations(organizerId: string): Promise<Conversation[]> {

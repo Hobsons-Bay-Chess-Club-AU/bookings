@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
-import { sendBookingConfirmationEmail } from '@/lib/email/service'
+import { sendBookingConfirmationEmail, sendOrganizerBookingNotificationEmail } from '@/lib/email/service'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-06-30.basil',
@@ -248,6 +248,35 @@ export async function POST(request: NextRequest) {
                             } catch (emailError) {
                                 console.error('❌ Failed to send confirmation email:', emailError)
                             }
+
+                            // Send organizer notification email if enabled
+                            try {
+                                if (booking.events?.settings?.notify_organizer_on_booking && booking.events?.organizer?.email) {
+                                    // Fetch participants for this booking
+                                    const { data: participants } = await supabase
+                                        .from('participants')
+                                        .select('*')
+                                        .eq('booking_id', booking.id)
+                                        .order('created_at', { ascending: true })
+
+                                    await sendOrganizerBookingNotificationEmail({
+                                        organizerEmail: booking.events.organizer.email,
+                                        organizerName: booking.events.organizer.full_name || booking.events.organizer.email,
+                                        eventTitle: booking.events.title,
+                                        eventDate: booking.events.start_date,
+                                        eventLocation: booking.events.location,
+                                        bookingId: booking.booking_id || booking.id,
+                                        participantCount: booking.quantity,
+                                        totalAmount: booking.total_amount,
+                                        customerName: booking.profiles.full_name || booking.profiles.email,
+                                        customerEmail: booking.profiles.email,
+                                        participants: participants || []
+                                    })
+                                    console.log('📧 Organizer notification email sent for payment_intent.created')
+                                }
+                            } catch (organizerEmailError) {
+                                console.error('❌ Failed to send organizer notification email:', organizerEmailError)
+                            }
                         }
                     } else {
                         console.log('⏭️ SKIPPING UPDATE (payment_intent.created):', {
@@ -421,6 +450,35 @@ export async function POST(request: NextRequest) {
                             } catch (emailError) {
                                 console.error('❌ Failed to send confirmation email:', emailError)
                             }
+
+                            // Send organizer notification email if enabled
+                            try {
+                                if (booking.events?.settings?.notify_organizer_on_booking && booking.events?.organizer?.email) {
+                                    // Fetch participants for this booking
+                                    const { data: participants } = await supabase
+                                        .from('participants')
+                                        .select('*')
+                                        .eq('booking_id', booking.id)
+                                        .order('created_at', { ascending: true })
+
+                                    await sendOrganizerBookingNotificationEmail({
+                                        organizerEmail: booking.events.organizer.email,
+                                        organizerName: booking.events.organizer.full_name || booking.events.organizer.email,
+                                        eventTitle: booking.events.title,
+                                        eventDate: booking.events.start_date,
+                                        eventLocation: booking.events.location,
+                                        bookingId: booking.booking_id || booking.id,
+                                        participantCount: booking.quantity,
+                                        totalAmount: booking.total_amount,
+                                        customerName: booking.profiles.full_name || booking.profiles.email,
+                                        customerEmail: booking.profiles.email,
+                                        participants: participants || []
+                                    })
+                                    console.log('📧 Organizer notification email sent for payment_intent.succeeded')
+                                }
+                            } catch (organizerEmailError) {
+                                console.error('❌ Failed to send organizer notification email:', organizerEmailError)
+                            }
                         }
                     }
                 } else {
@@ -490,6 +548,35 @@ export async function POST(request: NextRequest) {
                                     console.log('📧 Booking confirmation email sent for charge.succeeded')
                                 } catch (emailError) {
                                     console.error('❌ Failed to send confirmation email:', emailError)
+                                }
+
+                                // Send organizer notification email if enabled
+                                try {
+                                    if (booking.events?.settings?.notify_organizer_on_booking && booking.events?.organizer?.email) {
+                                        // Fetch participants for this booking
+                                        const { data: participants } = await supabase
+                                            .from('participants')
+                                            .select('*')
+                                            .eq('booking_id', booking.id)
+                                            .order('created_at', { ascending: true })
+
+                                        await sendOrganizerBookingNotificationEmail({
+                                            organizerEmail: booking.events.organizer.email,
+                                            organizerName: booking.events.organizer.full_name || booking.events.organizer.email,
+                                            eventTitle: booking.events.title,
+                                            eventDate: booking.events.start_date,
+                                            eventLocation: booking.events.location,
+                                            bookingId: booking.booking_id || booking.id,
+                                            participantCount: booking.quantity,
+                                            totalAmount: booking.total_amount,
+                                            customerName: booking.profiles.full_name || booking.profiles.email,
+                                            customerEmail: booking.profiles.email,
+                                            participants: participants || []
+                                        })
+                                        console.log('📧 Organizer notification email sent for charge.succeeded')
+                                    }
+                                } catch (organizerEmailError) {
+                                    console.error('❌ Failed to send organizer notification email:', organizerEmailError)
                                 }
                             }
                         }

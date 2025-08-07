@@ -105,7 +105,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
         })
 
         return () => subscription.unsubscribe()
-    }, [supabase.auth])
+    }, [supabase])
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

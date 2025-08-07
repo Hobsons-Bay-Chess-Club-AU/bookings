@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Conversation, Message, Profile } from '@/lib/types/database'
 import { HiChatBubbleLeftRight, HiUser, HiCalendarDays, HiPaperAirplane } from 'react-icons/hi2'
 import LoadingSpinner from '@/components/ui/loading-spinner'
@@ -22,21 +22,11 @@ export default function MessagesClient({ conversations, profile }: MessagesClien
 
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
-    useEffect(() => {
-        if (selectedConversation) {
-            loadMessages()
-        }
-    }, [selectedConversation])
-
-    useEffect(() => {
-        scrollToBottom()
-    }, [messages])
-
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
 
-    const loadMessages = async () => {
+    const loadMessages = useCallback(async () => {
         if (!selectedConversation) return
 
         setLoading(true)
@@ -57,12 +47,22 @@ export default function MessagesClient({ conversations, profile }: MessagesClien
             } else {
                 setError('Failed to load messages')
             }
-        } catch (err) {
+        } catch {
             setError('Failed to load messages')
         } finally {
             setLoading(false)
         }
-    }
+    }, [selectedConversation])
+
+    useEffect(() => {
+        if (selectedConversation) {
+            loadMessages()
+        }
+    }, [selectedConversation, loadMessages])
+
+    useEffect(() => {
+        scrollToBottom()
+    }, [messages])
 
     const sendMessage = async () => {
         if (!newMessage.trim() || !selectedConversation) return
@@ -103,7 +103,7 @@ export default function MessagesClient({ conversations, profile }: MessagesClien
             } else {
                 setError(data.error || 'Failed to send message')
             }
-        } catch (err) {
+        } catch {
             setError('Failed to send message')
         } finally {
             setSending(false)

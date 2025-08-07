@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Profile } from '@/lib/types/database'
 import Link from 'next/link'
-import JsonView from '@uiw/react-json-view'
+import ReactJson from 'react-json-view'
 
 interface PaymentEvent {
     id: string
@@ -54,14 +54,37 @@ export default function PaymentEventsPage() {
     const [loadingEvent, setLoadingEvent] = useState(false)
     const [showEventModal, setShowEventModal] = useState(false)
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+    const [isDarkMode, setIsDarkMode] = useState(false)
 
     const supabase = createClient()
 
     // Modal close handler (must be above useEffect)
-    const closeModal = () => {
+    const closeModal = useCallback(() => {
         setShowEventModal(false)
         setSelectedEvent(null)
-    }
+    }, [])
+
+    // Theme detection
+    useEffect(() => {
+        const checkTheme = () => {
+            if (typeof window !== 'undefined') {
+                const isDark = document.documentElement.classList.contains('dark')
+                setIsDarkMode(isDark)
+            }
+        }
+
+        // Check initial theme
+        checkTheme()
+
+        // Listen for theme changes
+        const observer = new MutationObserver(checkTheme)
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+        })
+
+        return () => observer.disconnect()
+    }, [])
 
     // Authentication check
     useEffect(() => {
@@ -110,7 +133,7 @@ export default function PaymentEventsPage() {
         })
 
         return () => subscription.unsubscribe()
-    }, [supabase.auth, router])
+    }, [supabase, router])
 
     // Keyboard event handler for modal
     useEffect(() => {
@@ -397,54 +420,20 @@ export default function PaymentEventsPage() {
                             </div>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4">
-                            <div className="dark:bg-gray-900 dark:text-gray-100 rounded-lg p-4">
-                                <style jsx>{`
-                                    .dark .w-rjv {
-                                        color: #e5e7eb !important;
-                                    }
-                                    .dark .w-rjv-container {
-                                        background-color: transparent !important;
-                                    }
-                                    .dark .w-rjv-container .w-rjv-value {
-                                        color: #e5e7eb !important;
-                                    }
-                                    .dark .w-rjv-container .w-rjv-key {
-                                        color: #60a5fa !important;
-                                    }
-                                    .dark .w-rjv-container .w-rjv-string {
-                                        color: #4ade80 !important;
-                                    }
-                                    .dark .w-rjv-container .w-rjv-number {
-                                        color: #fbbf24 !important;
-                                    }
-                                    .dark .w-rjv-container .w-rjv-boolean {
-                                        color: #f87171 !important;
-                                    }
-                                    .dark .w-rjv-container .w-rjv-null {
-                                        color: #9ca3af !important;
-                                    }
-                                    .dark .w-rjv-container .w-rjv-undefined {
-                                        color: #9ca3af !important;
-                                    }
-                                    .dark .w-rjv-container .w-rjv-function {
-                                        color: #a78bfa !important;
-                                    }
-                                    .dark .w-rjv-container .w-rjv-array {
-                                        color: #22d3ee !important;
-                                    }
-                                    .dark .w-rjv-container .w-rjv-object {
-                                        color: #f472b6 !important;
-                                    }
-                                `}</style>
-                                <JsonView
-                                    value={selectedEvent}
+                            <div className="bg-gray-50 dark:bg-white-500 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                                <ReactJson
+                                    src={selectedEvent}
+                                    theme={isDarkMode ? "hopscotch" : undefined}
                                     style={{ 
                                         backgroundColor: 'transparent',
-                                        color: 'inherit'
+                                        fontSize: '14px'
                                     }}
                                     displayDataTypes={false}
                                     displayObjectSize={false}
                                     enableClipboard={false}
+                                    name={null}
+                                    collapsed={1}
+                                    collapseStringsAfterLength={80}
                                 />
                             </div>
                         </div>

@@ -1,6 +1,7 @@
 import React from 'react'
+import { render } from '@react-email/render'
 
-interface UserProfileUpdateEmailProps {
+interface UserProfileUpdateEmailData {
     userName: string
     oldRole: string
     newRole: string
@@ -12,7 +13,7 @@ interface UserProfileUpdateEmailProps {
     updatedAt: string
 }
 
-export default function UserProfileUpdateEmail({
+function UserProfileUpdateEmail({
     userName,
     oldRole,
     newRole,
@@ -22,7 +23,7 @@ export default function UserProfileUpdateEmail({
     newEmail,
     adminName,
     updatedAt
-}: UserProfileUpdateEmailProps) {
+}: UserProfileUpdateEmailData) {
     const hasRoleChange = oldRole !== newRole
     const hasNameChange = oldName !== newName
     const hasEmailChange = oldEmail !== newEmail
@@ -192,4 +193,13 @@ export default function UserProfileUpdateEmail({
             </div>
         </div>
     )
-} 
+}
+
+export async function renderUserProfileUpdateEmail(data: UserProfileUpdateEmailData) {
+    const html = await render(React.createElement(UserProfileUpdateEmail, data))
+    const text = await render(React.createElement(UserProfileUpdateEmail, data), { plainText: true })
+    
+    return { html, text }
+}
+
+export default UserProfileUpdateEmail 

@@ -118,7 +118,7 @@ export default function ShortUrlPage({ params }: PageProps) {
 
         // Redirect to the full event page
         router.push(`/events/${event.id}`)
-      } catch (err) {
+      } catch {
         setError('Failed to load event')
         setTimeout(() => {
           router.push('/')

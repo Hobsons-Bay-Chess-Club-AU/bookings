@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Event } from '@/lib/types/database'
 import { HiXMark, HiArrowRight, HiExclamationTriangle } from 'react-icons/hi2'
 
@@ -19,7 +19,6 @@ export default function BookingTransferModal({
   isOpen,
   onClose,
   onTransfer,
-  bookingId,
   currentEventId,
   currentEventTitle,
   userEmail,
@@ -34,32 +33,32 @@ export default function BookingTransferModal({
     const [eventsLoading, setEventsLoading] = useState(false)
     const [showConfirmation, setShowConfirmation] = useState(false)
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchAvailableEvents()
-    }
-  }, [isOpen, currentEventId])
+      const fetchAvailableEvents = useCallback(async () => {
+        setEventsLoading(true)
+        setError('')
+        
+        try {
+            const response = await fetch(`/api/admin/events/available-for-transfer?excludeEventId=${currentEventId}`)
+            
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Failed to fetch events')
+            }
+            
+            const data = await response.json()
+            setAvailableEvents(data.events)
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to fetch available events')
+        } finally {
+            setEventsLoading(false)
+        }
+    }, [currentEventId])
 
-  const fetchAvailableEvents = async () => {
-    setEventsLoading(true)
-    setError('')
-    
-    try {
-      const response = await fetch(`/api/admin/events/available-for-transfer?excludeEventId=${currentEventId}`)
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to fetch events')
-      }
-      
-      const data = await response.json()
-      setAvailableEvents(data.events)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch available events')
-    } finally {
-      setEventsLoading(false)
-    }
-  }
+    useEffect(() => {
+        if (isOpen) {
+            fetchAvailableEvents()
+        }
+    }, [isOpen, fetchAvailableEvents])
 
       const handleTransfer = async () => {
         if (!selectedEventId || !reason.trim()) {

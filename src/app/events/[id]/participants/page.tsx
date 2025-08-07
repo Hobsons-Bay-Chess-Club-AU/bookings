@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import ParticipantsList from '@/components/events/participants-list'
-import { Event, Booking, Profile } from '@/lib/types/database'
+import { Event } from '@/lib/types/database'
 import { Metadata } from 'next'
 import { BookingWithProfile } from '@/lib/types/ui'
 

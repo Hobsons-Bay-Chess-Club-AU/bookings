@@ -7,11 +7,7 @@ import {
     HiCalendarDays, 
     HiCurrencyDollar, 
     HiTicket,
-    HiCheckCircle,
-    HiClock,
-    HiExclamationTriangle,
-    HiArrowTrendingUp,
-    HiArrowTrendingDown
+    HiArrowTrendingUp
 } from 'react-icons/hi2'
 
 interface DashboardStats {

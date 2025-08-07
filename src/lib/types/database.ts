@@ -82,6 +82,8 @@ export interface EventSettings {
     // Future settings can be added here
     show_attendance_count?: boolean
     allow_participant_contact?: boolean
+    notify_organizer_on_booking?: boolean
+    terms_conditions?: string
 }
 
 export interface LocationSettings {
@@ -202,6 +204,7 @@ export interface Event {
     is_promoted?: boolean
     settings?: EventSettings
     location_settings?: LocationSettings
+    terms_conditions?: string
     created_at: string
     updated_at: string
     organizer?: Profile

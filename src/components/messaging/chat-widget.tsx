@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Message, Conversation, Profile, Event } from '@/lib/types/database'
 import { HiChatBubbleLeftRight, HiXMark, HiPaperAirplane, HiUser } from 'react-icons/hi2'
@@ -47,14 +47,7 @@ export default function ChatWidget({ event, organizer, bookingId, onClose }: Cha
         getProfile()
     }, [supabase])
 
-    // Effect to load conversations when chat opens and profile is available
-    useEffect(() => {
-        if (isOpen && profile && organizer && !profileLoading) {
-            checkForConversations(profile)
-        }
-    }, [isOpen, profile, organizer, profileLoading])
-
-    const checkForConversations = async (userProfile: Profile) => {
+    const checkForConversations = useCallback(async (userProfile: Profile) => {
         try {
             const response = await fetch('/api/messages')
             const data = await response.json()
@@ -73,7 +66,14 @@ export default function ChatWidget({ event, organizer, bookingId, onClose }: Cha
         } catch (err) {
             console.error('Error checking conversations:', err)
         }
-    }
+    }, [organizer, event])
+
+    // Effect to load conversations when chat opens and profile is available
+    useEffect(() => {
+        if (isOpen && profile && organizer && !profileLoading) {
+            checkForConversations(profile)
+        }
+    }, [isOpen, profile, organizer, profileLoading, checkForConversations])
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -83,7 +83,7 @@ export default function ChatWidget({ event, organizer, bookingId, onClose }: Cha
         scrollToBottom()
     }, [messages])
 
-    const loadMessages = async () => {
+    const loadMessages = useCallback(async () => {
         if (!conversation?.id) return
 
         setLoading(true)
@@ -96,12 +96,12 @@ export default function ChatWidget({ event, organizer, bookingId, onClose }: Cha
             } else {
                 setError(data.error || 'Failed to load messages')
             }
-        } catch (err) {
+        } catch {
             setError('Failed to load messages')
         } finally {
             setLoading(false)
         }
-    }
+    }, [conversation])
 
     const sendMessage = async () => {
         
@@ -149,7 +149,7 @@ export default function ChatWidget({ event, organizer, bookingId, onClose }: Cha
             } else {
                 setError(data.error || 'Failed to send message')
             }
-        } catch (err) {
+        } catch {
             setError('Failed to send message')
         } finally {
             setSending(false)
@@ -193,7 +193,7 @@ export default function ChatWidget({ event, organizer, bookingId, onClose }: Cha
         if (conversation && isOpen) {
             loadMessages()
         }
-    }, [conversation, isOpen])
+    }, [conversation, isOpen, loadMessages])
 
     if (!organizer) return null
 

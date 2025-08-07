@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+
 import { Event, Profile } from '@/lib/types/database'
 
 interface ContactOrganizerButtonProps {
@@ -9,11 +9,8 @@ interface ContactOrganizerButtonProps {
     bookingId?: string
 }
 
-export default function ContactOrganizerButton({ event, organizer, bookingId }: ContactOrganizerButtonProps) {
-    const handleContactClick = (e: React.MouseEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        
+export default function ContactOrganizerButton({ organizer }: ContactOrganizerButtonProps) {
+    const handleContactClick = () => {
         // Trigger the existing chat widget button
         setTimeout(() => {
             const chatButton = document.querySelector('[data-chat-widget-button]') as HTMLButtonElement

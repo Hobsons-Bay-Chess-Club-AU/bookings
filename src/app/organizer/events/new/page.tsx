@@ -23,6 +23,7 @@ export default function NewEventPage() {
         organizer_name: '',
         organizer_email: '',
         organizer_phone: '',
+        terms_conditions: '',
         status: 'draft' as 'draft' | 'published',
         is_promoted: false,
         location_settings: {
@@ -158,6 +159,27 @@ export default function NewEventPage() {
                 }
             }
 
+            // Sanitize and encode terms & conditions to handle special characters
+            let sanitizedTermsConditions: string | null = null
+            
+            try {
+                if (formData.terms_conditions) {
+                    sanitizedTermsConditions = formData.terms_conditions
+                        .replace(/\r\n/g, '\n') // Normalize line endings
+                        .replace(/\r/g, '\n')    // Convert remaining carriage returns
+                        .trim()                  // Remove leading/trailing whitespace
+                }
+
+                console.log('🔄 Sanitizing terms & conditions...', {
+                    originalLength: formData.terms_conditions?.length,
+                    sanitizedLength: sanitizedTermsConditions?.length,
+                    hasSpecialChars: sanitizedTermsConditions?.includes("'") || sanitizedTermsConditions?.includes('"')
+                })
+            } catch (sanitizeError) {
+                console.error('❌ Error sanitizing terms & conditions:', sanitizeError)
+                throw new Error('There was an issue processing the terms & conditions content. Please try again.')
+            }
+
             // Create event
             const { error: eventError } = await supabase
                 .from('events')
@@ -174,6 +196,7 @@ export default function NewEventPage() {
                     organizer_name: formData.organizer_name || null,
                     organizer_email: formData.organizer_email || null,
                     organizer_phone: formData.organizer_phone || null,
+                    terms_conditions: sanitizedTermsConditions,
                     status: formData.status,
                     alias: alias,
                     organizer_id: user.id,
@@ -615,6 +638,47 @@ export default function NewEventPage() {
                             </div>
                             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Promoted events appear first on the landing page
+                            </p>
+                        </div>
+
+                        {/* Terms & Conditions */}
+                        <div className="md:col-span-2 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                                Terms & Conditions
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                Define the terms and conditions that participants must accept when booking this event. These will be displayed on each ticket.
+                            </p>
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <label htmlFor="terms_conditions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Event Terms & Conditions (Markdown)
+                            </label>
+                            <MarkdownEditor
+                                value={formData.terms_conditions}
+                                onChange={(content) => {
+                                    clearFieldError('terms_conditions')
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        terms_conditions: content
+                                    }))
+                                }}
+                                placeholder="Enter the terms and conditions using Markdown formatting..."
+                            />
+                            <div className="mt-2 flex justify-between items-center">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    {formData.terms_conditions?.length || 0} / 10,000 characters
+                                </div>
+                                {fieldErrors.terms_conditions && (
+                                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center">
+                                        <HiExclamationCircle className="h-4 w-4 mr-1" />
+                                        {fieldErrors.terms_conditions}
+                                    </p>
+                                )}
+                            </div>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                These terms will be included on each ticket and participants must accept them during booking. Use Markdown for formatting.
                             </p>
                         </div>
                     </div>
