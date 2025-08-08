@@ -22,7 +22,7 @@ interface SocialShareProps {
 export default function SocialShare({ event }: SocialShareProps) {
     const [copied, setCopied] = useState(false)
 
-    const eventUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/e/${event.alias}`
+    const eventUrl = `${process.env.NEXT_PUBLIC_APP_URL}/e/${event.alias}`
     const encodedUrl = encodeURIComponent(eventUrl)
     const encodedTitle = encodeURIComponent(event.title)
     const encodedText = encodeURIComponent(`${event.title} - ${event.location} on ${new Date(event.start_date).toLocaleDateString()}`)
