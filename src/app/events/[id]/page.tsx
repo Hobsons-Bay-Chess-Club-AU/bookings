@@ -80,9 +80,18 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
         ? event.description.substring(0, 160).replace(/[#*`]/g, '').trim() + (event.description.length > 160 ? '...' : '')
         : `Join us for ${event.title} at ${event.location} on ${new Date(event.start_date).toLocaleDateString()}`
 
+    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const eventUrl = event.alias
-        ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://your-domain.com'}/e/${event.alias}`
-        : `${process.env.NEXT_PUBLIC_APP_URL || 'https://your-domain.com'}/events/${event.id}`
+        ? `${siteUrl}/e/${event.alias}`
+        : `${siteUrl}/events/${event.id}`
+
+    const makeAbsolute = (src?: string | null) => {
+        if (!src) return undefined
+        if (/^https?:\/\//i.test(src)) return src
+        return `${siteUrl}${src.startsWith('/') ? '' : '/'}${src}`
+    }
+
+    const imageAbsolute = makeAbsolute(event.image_url)
 
     const startDate = new Date(event.start_date).toISOString()
     const endDate = new Date(event.end_date).toISOString()
@@ -108,7 +117,7 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
             address: false,
             telephone: false,
         },
-        metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://your-domain.com'),
+        metadataBase: new URL(siteUrl),
         alternates: {
             canonical: eventUrl,
         },
@@ -117,19 +126,19 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
             description,
             url: eventUrl,
             siteName: 'Hobsons Bay Chess Club',
-            images: event.image_url ? [
+            images: imageAbsolute ? [
                 {
-                    url: event.image_url,
+                    url: imageAbsolute,
                     width: 1200,
                     height: 630,
                     alt: event.title,
                 }
             ] : [
                 {
-                    url: '/og-default.jpg', // You'll need to add a default OG image
+                    url: `${siteUrl}/api/og/qr?url=${encodeURIComponent(eventUrl)}`,
                     width: 1200,
                     height: 630,
-                    alt: 'Hobsons Bay Chess Club Event',
+                    alt: 'Hobsons Bay Chess Club',
                 }
             ],
             locale: 'en_AU',
@@ -139,8 +148,7 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
             card: 'summary_large_image',
             title,
             description,
-            creator: '@HobsonsBayChess', // Update with your actual Twitter handle
-            images: event.image_url ? [event.image_url] : ['/og-default.jpg'],
+            images: imageAbsolute ? [imageAbsolute] : [`${siteUrl}/api/og/qr?url=${encodeURIComponent(eventUrl)}`],
         },
         robots: {
             index: event.status === 'published',
