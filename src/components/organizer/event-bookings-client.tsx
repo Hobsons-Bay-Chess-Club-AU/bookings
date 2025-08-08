@@ -429,7 +429,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
             {/* Search and Controls */}
             <div className="mb-6 bg-white dark:bg-gray-800 shadow rounded-lg p-4">
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                    <div className="flex-1 max-w-md">
+                    <div className="flex-1 max-w-md w-full">
                         <div className="relative">
                             <input
                                 type="text"
@@ -515,8 +515,159 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                         )}
                     </div>
                 ) : (
-                    <>
-                        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                    <div className="overflow-x-auto">
+                        {/* Desktop Table */}
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 hidden lg:table">
+                            <thead className="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Customer
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Contact
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Booking Details
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Status
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Amount
+                                    </th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                {paginatedBookings.map((booking) => (
+                                    <tr key={booking.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex flex-col">
+                                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                    {booking.profile.full_name || 'Unknown Customer'}
+                                                </div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                    ID: {booking.booking_id || booking.id.slice(0, 8)}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="space-y-1">
+                                                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                    <FiMail className="mr-2 h-3 w-3" />
+                                                    {booking.profile.email}
+                                                </div>
+                                                {booking.profile.phone && (
+                                                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                        <FiPhone className="mr-2 h-3 w-3" />
+                                                        {booking.profile.phone}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="space-y-1">
+                                                <div className="text-sm text-gray-900 dark:text-gray-100">
+                                                    {booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}
+                                                </div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                    Booked {new Date(booking.booking_date || booking.created_at).toLocaleDateString('en-AU')}
+                                                </div>
+                                                {booking.transferred_from_event_id && (
+                                                    <div className="text-xs text-blue-600 dark:text-blue-400">
+                                                        🔄 Transferred
+                                                        {booking.transferred_at && (
+                                                            <span className="text-gray-500 dark:text-gray-400 ml-1">
+                                                                on {new Date(booking.transferred_at).toLocaleDateString()}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="space-y-1">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                                                    {getStatusIcon(booking.status)} {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                                                </span>
+                                                {booking.refund_status && booking.refund_status !== 'none' && (
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
+                                                        💰 Refund: {booking.refund_status}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-900 dark:text-gray-100">
+                                                <div className="font-bold">AUD ${booking.total_amount.toFixed(2)}</div>
+                                                {booking.refund_amount && (
+                                                    <div className="text-xs text-purple-600 dark:text-purple-400">
+                                                        Refunded: ${booking.refund_amount.toFixed(2)}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+                                            <button
+                                                onClick={() => toggleMenu(booking.id)}
+                                                className="inline-flex items-center p-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                            >
+                                                <FiSettings className="w-4 h-4" />
+                                            </button>
+
+                                            {/* Dropdown Menu */}
+                                            {openMenus[booking.id] && (
+                                                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg py-1 z-10 border border-gray-200 dark:border-gray-600">
+                                                    <Link
+                                                        href={`/organizer/events/${event.id}/bookings/${booking.id}`}
+                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                                        onClick={() => setOpenMenus({})}
+                                                    >
+                                                        <FiEye className="mr-2 w-4 h-4" />
+                                                        View Details
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => openPaymentModal(booking)}
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                                    >
+                                                        <FiCreditCard className="mr-2 w-4 h-4" />
+                                                        Payment Info
+                                                    </button>
+                                                    <button
+                                                        onClick={() => openTransferModal(booking)}
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                    >
+                                                        <FiArrowRight className="mr-2 w-4 h-4" />
+                                                        Transfer Booking
+                                                    </button>
+                                                    {booking.status === 'pending' && (
+                                                        <button
+                                                            className="flex items-center w-full px-4 py-2 text-sm text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
+                                                            title="Manual confirmation (if needed)"
+                                                        >
+                                                            ✓ Mark Confirmed
+                                                        </button>
+                                                    )}
+                                                    {(booking.status === 'confirmed' || booking.status === 'verified') && (
+                                                        <button
+                                                            className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                            title="Refund booking"
+                                                        >
+                                                            💰 Process Refund
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        {/* Mobile Cards */}
+                        <div className="lg:hidden divide-y divide-gray-200 dark:divide-gray-700">
                             {paginatedBookings.map((booking) => (
                                 <div key={booking.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700">
                                     <div className="flex items-start justify-between">
@@ -667,62 +818,62 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                 </div>
                             ))}
                         </div>
+                    </div>
+                )}
 
-                        {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-sm text-gray-700 dark:text-gray-300">
-                                        Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <button
-                                            onClick={() => handlePageChange(currentPage - 1)}
-                                            disabled={currentPage === 1}
-                                            className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            Previous
-                                        </button>
-                                        <div className="flex space-x-1">
-                                            {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                                                let pageNumber
-                                                if (totalPages <= 7) {
-                                                    pageNumber = i + 1
-                                                } else if (currentPage <= 4) {
-                                                    pageNumber = i + 1
-                                                } else if (currentPage >= totalPages - 3) {
-                                                    pageNumber = totalPages - 6 + i
-                                                } else {
-                                                    pageNumber = currentPage - 3 + i
-                                                }
-
-                                                const isActive = pageNumber === currentPage
-                                                return (
-                                                    <button
-                                                        key={pageNumber}
-                                                        onClick={() => handlePageChange(pageNumber)}
-                                                        className={`px-3 py-2 text-sm font-medium rounded-md ${isActive
-                                                            ? 'bg-indigo-600 text-white'
-                                                            : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-                                                            }`}
-                                                    >
-                                                        {pageNumber}
-                                                    </button>
-                                                )
-                                            })}
-                                        </div>
-                                        <button
-                                            onClick={() => handlePageChange(currentPage + 1)}
-                                            disabled={currentPage === totalPages}
-                                            className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            Next
-                                        </button>
-                                    </div>
-                                </div>
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between">
+                            <div className="text-sm text-gray-700 dark:text-gray-300">
+                                Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
                             </div>
-                        )}
-                    </>
+                            <div className="flex items-center space-x-2">
+                                <button
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                    className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Previous
+                                </button>
+                                <div className="flex space-x-1">
+                                    {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                                        let pageNumber
+                                        if (totalPages <= 7) {
+                                            pageNumber = i + 1
+                                        } else if (currentPage <= 4) {
+                                            pageNumber = i + 1
+                                        } else if (currentPage >= totalPages - 3) {
+                                            pageNumber = totalPages - 6 + i
+                                        } else {
+                                            pageNumber = currentPage - 3 + i
+                                        }
+
+                                        const isActive = pageNumber === currentPage
+                                        return (
+                                            <button
+                                                key={pageNumber}
+                                                onClick={() => handlePageChange(pageNumber)}
+                                                className={`px-3 py-2 text-sm font-medium rounded-md ${isActive
+                                                    ? 'bg-indigo-600 text-white'
+                                                    : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                                                    }`}
+                                            >
+                                                {pageNumber}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                                <button
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                    className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 )}
             </div>            {/* Export Options */}
             {filteredBookings.length > 0 && (

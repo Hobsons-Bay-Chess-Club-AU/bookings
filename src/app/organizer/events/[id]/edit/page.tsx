@@ -8,6 +8,7 @@ import { HiExclamationTriangle, HiCheckCircle, HiExclamationCircle } from 'react
 import MarkdownEditor from '@/components/ui/markdown-editor'
 import FormBuilder from '@/components/events/form-builder'
 import TimelineBuilder from '@/components/events/timeline-builder'
+import Breadcrumb from '@/components/ui/breadcrumb'
 import { FormField, Event, RefundTimelineItem, EventTimeline } from '@/lib/types/database'
 
 export default function EditEventPage() {
@@ -507,6 +508,17 @@ export default function EditEventPage() {
 
     return (
         <>
+            {/* Breadcrumb */}
+            <div className="mb-6">
+                <Breadcrumb 
+                    items={[
+                        { label: 'Events', href: '/organizer' },
+                        { label: event?.title || 'Event', href: `/organizer/events/${eventId}` },
+                        { label: 'Edit' }
+                    ]} 
+                />
+            </div>
+
             {/* Page Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Edit Event</h1>

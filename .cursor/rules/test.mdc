@@ -1,0 +1,6 @@
+---
+globs: tests
+---
+
+- when write the test you can update application data-testId or attribute to make query simpler
+- you can run the test without 

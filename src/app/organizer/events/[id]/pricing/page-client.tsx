@@ -1,7 +1,8 @@
 'use client'
 
 import PricingManager from '@/components/events/pricing-manager'
-import { HiCalendarDays, HiClock, HiMapPin } from 'react-icons/hi2'
+import Breadcrumb from '@/components/ui/breadcrumb'
+import { HiCalendarDays, HiClock, HiMapPin, HiUsers } from 'react-icons/hi2'
 import { Event, EventPricing } from '@/lib/types/database'
 
 interface EventPricingPageClientProps {
@@ -15,6 +16,17 @@ export default function EventPricingPageClient({
 }: EventPricingPageClientProps) {
     return (
         <div>
+            {/* Breadcrumb */}
+            <div className="mb-6">
+                <Breadcrumb 
+                    items={[
+                        { label: 'Events', href: '/organizer' },
+                        { label: event.title, href: `/organizer/events/${event.id}` },
+                        { label: 'Pricing' }
+                    ]} 
+                />
+            </div>
+
             {/* Page Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Event Pricing</h1>
@@ -57,7 +69,7 @@ export default function EventPricingPageClient({
                                 <span>{event.location}</span>
                             </div>
                             <div className="flex items-center">
-                                <span className="mr-2">👥</span>
+                                <HiUsers className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
                                 <span>
                                     {event.max_attendees
                                         ? `${event.current_attendees} / ${event.max_attendees} attendees`

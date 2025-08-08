@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { Event, Participant, Booking, Profile } from '@/lib/types/database'
+import { HiCalendarDays, HiClock, HiMapPin, HiUsers, HiPlus, HiPencilSquare, HiTrash, HiEye, HiEyeSlash } from 'react-icons/hi2'
+import Breadcrumb from '@/components/ui/breadcrumb'
 
 interface ParticipantWithBooking extends Participant {
     bookings: (Booking & {
@@ -216,6 +218,17 @@ export default function EventParticipantsPageClient({
 
     return (
         <>
+            {/* Breadcrumb */}
+            <div className="mb-6">
+                <Breadcrumb 
+                    items={[
+                        { label: 'Events', href: '/organizer' },
+                        { label: event.title, href: `/organizer/events/${event.id}` },
+                        { label: 'Participants' }
+                    ]} 
+                />
+            </div>
+
             {/* Page Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Event Participants</h1>
@@ -228,7 +241,7 @@ export default function EventParticipantsPageClient({
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <span className="text-2xl">👥</span>
+                                <HiUsers className="text-2xl text-gray-400" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
@@ -406,7 +419,7 @@ export default function EventParticipantsPageClient({
                 </div>
                 {filteredParticipants.length === 0 ? (
                     <div className="text-center py-12">
-                        <span className="text-4xl mb-4 block">👥</span>
+                        <HiUsers className="text-4xl mb-4 block text-gray-400" />
                         <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                             {participants.length === 0 ? 'No participants yet' : 'No participants match your search'}
                         </h4>

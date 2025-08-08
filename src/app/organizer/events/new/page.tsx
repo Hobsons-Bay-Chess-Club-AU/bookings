@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { HiExclamationTriangle, HiCheckCircle, HiExclamationCircle } from 'react-icons/hi2'
 import MarkdownEditor from '@/components/ui/markdown-editor'
 import FormBuilder from '@/components/events/form-builder'
+import Breadcrumb from '@/components/ui/breadcrumb'
 import { FormField } from '@/lib/types/database'
 
 export default function NewEventPage() {
@@ -293,6 +294,16 @@ export default function NewEventPage() {
 
     return (
         <>
+            {/* Breadcrumb */}
+            <div className="mb-6">
+                <Breadcrumb 
+                    items={[
+                        { label: 'Events', href: '/organizer' },
+                        { label: 'Create New Event' }
+                    ]} 
+                />
+            </div>
+
             {/* Page Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Create New Event</h1>

@@ -1,6 +1,7 @@
 'use client'
 
 import OrganizerEventsClient, { EventWithBookings } from '@/components/organizer/organizer-events-client'
+import Breadcrumb from '@/components/ui/breadcrumb'
 import Link from 'next/link'
 
 interface OrganizerPageClientProps {
@@ -17,29 +18,29 @@ export default function OrganizerPageClient({
     return (
         <div>
             {/* Page Header */}
-            <div className="mb-8 flex justify-between items-start">
+            <div className="mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Event Management</h1>
                     <p className="text-gray-600 dark:text-gray-400 mt-2">Manage your events and bookings</p>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center space-x-3">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     <Link
                         href="/organizer/mailing-list"
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors"
                     >
                         Mailing List
                     </Link>
                     <Link
                         href="/organizer/html-to-markdown"
-                        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors"
                     >
                         HTML to Markdown
                     </Link>
                     <Link
                         href="/organizer/custom-fields"
-                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors"
                     >
                         Custom Fields
                     </Link>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import Breadcrumb from '@/components/ui/breadcrumb'
 import { 
     HiCalendarDays, 
     HiUsers, 
@@ -205,6 +206,16 @@ export default function EventViewPage() {
 
     return (
         <div className="max-w-7xl mx-auto ">
+            {/* Breadcrumb */}
+            <div className="mb-6">
+                <Breadcrumb 
+                    items={[
+                        { label: 'Events', href: '/organizer' },
+                        { label: event.title }
+                    ]} 
+                />
+            </div>
+
             {/* Header */}
             <div className="mb-8">
                 <div className="flex items-center justify-between">

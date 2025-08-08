@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Link from 'next/link';
 import { Booking, Event, Profile, Participant, DiscountApplication } from '@/lib/types/database';
 import {
     HiArrowLeft,
@@ -142,31 +141,18 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                 <HiXCircle className="h-16 w-16 text-red-400 dark:text-red-500 mx-auto mb-4" />
                 <h2 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-2">Error Loading Booking</h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">{error || 'Booking not found'}</p>
-                <Link
-                    href={`/organizer/events/${eventId}/bookings`}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                >
-                    <HiArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Event Bookings
-                </Link>
+               
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
+        <div className="max-w-7xl mx-auto py-0 px-0 md:py-12 md:px-4 sm:px-6 lg:px-0">
             {/* Header with Back Button */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
                 <div className="flex items-center space-x-4">
-                    <Link
-                        href={`/organizer/events/${eventId}/bookings`}
-                        className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-                    >
-                        <HiArrowLeft className="h-5 w-5 mr-2" />
-                        Back to Event Bookings
-                    </Link>
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Booking Details</h1>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Booking Details</h1>
                         <p className="text-gray-600 dark:text-gray-400 mt-1">
                             Booking ID: {booking.booking_id || booking.id.slice(0, 8)}
                         </p>
@@ -272,55 +258,122 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
 
                     {/* Participants */}
                     {booking.participants && booking.participants.length > 0 && (
-                        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                                <HiUsers className="h-5 w-5 mr-2" />
-                                Participants ({booking.participants.length})
-                            </h2>
-                            <div className="space-y-4">
-                                {booking.participants.map((participant, index) => (
-                                    <div key={participant.id || index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                                            <div>
-                                                <div className="font-medium text-gray-900 dark:text-gray-100">
-                                                    {participant.first_name} {participant.last_name}
-                                                </div>
-                                                {participant.email && (
-                                                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center mt-1">
-                                                        <HiEnvelope className="h-3 w-3 mr-1" />
-                                                        {participant.email}
+                        <div className="bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+                                    <HiUsers className="h-5 w-5 mr-2" />
+                                    Participants ({booking.participants.length})
+                                </h2>
+                            </div>
+                            
+                            <div className="overflow-x-auto">
+                                {/* Desktop Table */}
+                                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 hidden lg:table">
+                                    <thead className="bg-gray-50 dark:bg-gray-700">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                Name
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                Contact
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                Additional Info
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                        {booking.participants.map((participant, index) => (
+                                            <tr key={participant.id || index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                        {participant.first_name} {participant.last_name}
                                                     </div>
-                                                )}
-                                                {participant.phone && (
-                                                    <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center mt-1">
-                                                        <HiPhone className="h-3 w-3 mr-1" />
-                                                        {participant.phone}
+                                                    {participant.date_of_birth && (
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                            DOB: {participant.date_of_birth}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="space-y-1">
+                                                        {participant.email && (
+                                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                                <HiEnvelope className="h-3 w-3 mr-1" />
+                                                                {participant.email}
+                                                            </div>
+                                                        )}
+                                                        {participant.phone && (
+                                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                                <HiPhone className="h-3 w-3 mr-1" />
+                                                                {participant.phone}
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                )}
-                                            </div>
-                                            <div>
-                                                {participant.date_of_birth && (
-                                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                        <span className="font-medium">DOB:</span> {participant.date_of_birth}
-                                                    </div>
-                                                )}
-                                                {participant.custom_data && Object.keys(participant.custom_data).length > 0 && (
-                                                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                                                        <span className="font-medium">Additional Info:</span>
-                                                        <div className="mt-1">
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {participant.custom_data && Object.keys(participant.custom_data).length > 0 ? (
+                                                        <div className="text-xs text-gray-600 dark:text-gray-400">
                                                             {Object.entries(participant.custom_data).map(([key, value]) => (
-                                                                <div key={key} className="text-xs">
+                                                                <div key={key} className="mb-1">
                                                                     <span className="font-medium">{key}:</span> {String(value)}
                                                                 </div>
                                                             ))}
                                                         </div>
+                                                    ) : (
+                                                        <span className="text-xs text-gray-400 dark:text-gray-500">No additional info</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+
+                                {/* Mobile Cards */}
+                                <div className="lg:hidden divide-y divide-gray-200 dark:divide-gray-700">
+                                    {booking.participants.map((participant, index) => (
+                                        <div key={participant.id || index} className="p-6">
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <div className="font-medium text-gray-900 dark:text-gray-100">
+                                                        {participant.first_name} {participant.last_name}
+                                                    </div>
+                                                    {participant.date_of_birth && (
+                                                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                                                            DOB: {participant.date_of_birth}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                
+                                                <div className="space-y-2">
+                                                    {participant.email && (
+                                                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                            <HiEnvelope className="h-4 w-4 mr-2" />
+                                                            {participant.email}
+                                                        </div>
+                                                    )}
+                                                    {participant.phone && (
+                                                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                            <HiPhone className="h-4 w-4 mr-2" />
+                                                            {participant.phone}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                
+                                                {participant.custom_data && Object.keys(participant.custom_data).length > 0 && (
+                                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                                        <div className="font-medium mb-1">Additional Info:</div>
+                                                        {Object.entries(participant.custom_data).map(([key, value]) => (
+                                                            <div key={key} className="text-xs">
+                                                                <span className="font-medium">{key}:</span> {String(value)}
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}

@@ -216,12 +216,17 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
         const handleClickOutside = (event: MouseEvent) => {
             if (openDropdownId) {
                 const dropdownElement = dropdownRefs.current[openDropdownId]
-                if (dropdownElement && !dropdownElement.contains(event.target as Node)) {
+                
+                // Check if the click target is a menu item
+                const target = event.target as HTMLElement;
+                const isMenuItem = target.closest('[data-menu-item]');
+                
+                // Only close if click is outside the dropdown AND not on a menu item
+                if (dropdownElement && !dropdownElement.contains(event.target as Node) && !isMenuItem) {
                     setOpenDropdownId(null)
                 }
             }
         }
-
         document.addEventListener('mousedown', handleClickOutside)
         return () => {
             document.removeEventListener('mousedown', handleClickOutside)
@@ -449,113 +454,263 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                         </button>
                     </div>
                 ) : (
-                    pricing.map((pricingItem) => (
-                        <div key={pricingItem.id} className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                    <div className="flex items-center space-x-3 mb-2">
-                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                            {pricingItem.name}
-                                        </h3>
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPricingTypeColor(pricingItem.pricing_type)}`}>
-                                            {pricingItem.pricing_type.replace('_', ' ')}
-                                        </span>
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getMembershipTypeColor(pricingItem.membership_type)}`}>
-                                            {pricingItem.membership_type === 'all' ? 'All Users' :
-                                                pricingItem.membership_type === 'member' ? 'Members' : 'Non-Members'}
-                                        </span>
-                                        {!pricingItem.is_active && (
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
-                                                Inactive
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {pricingItem.description && (
-                                        <p className="text-sm text-gray-800 dark:text-gray-300 mb-3">
-                                            {pricingItem.description}
-                                        </p>
-                                    )}
-
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                        <div>
-                                            <span className="text-gray-800 dark:text-gray-300 font-medium">Price:</span>
-                                            <div className="font-semibold text-lg text-gray-900 dark:text-gray-100">AUD ${pricingItem.price.toFixed(2)}</div>
-                                        </div>
-                                        <div>
-                                            <span className="text-gray-800 dark:text-gray-300 font-medium">Valid:</span>
-                                            <div className="font-medium text-gray-900 dark:text-gray-100">
-                                                {new Date(pricingItem.start_date).toLocaleDateString()} - {new Date(pricingItem.end_date).toLocaleDateString()}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <span className="text-gray-800 dark:text-gray-300 font-medium">Tickets Sold:</span>
-                                            <div className="font-medium text-gray-900 dark:text-gray-100">
-                                                {pricingItem.tickets_sold}
-                                                {pricingItem.max_tickets && ` / ${pricingItem.max_tickets}`}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <span className="text-gray-800 dark:text-gray-300 font-medium">Status:</span>
-                                            <div className={`font-medium ${pricingItem.is_active ? 'text-green-700 dark:text-green-400' : 'text-gray-700 dark:text-gray-400'}`}>
-                                                {pricingItem.is_active ? 'Active' : 'Inactive'}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="ml-6 flex-shrink-0 relative">
-                                    <button
-                                        onClick={() => toggleDropdown(pricingItem.id)}
-                                        className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                                        title="Pricing Actions"
-                                    >
-                                        <HiCog6Tooth className="h-5 w-5" />
-                                    </button>
-
-                                    {/* Dropdown Menu */}
-                                    {openDropdownId === pricingItem.id && (
-                                        <div
-                                            ref={(el) => { dropdownRefs.current[pricingItem.id] = el }}
-                                            className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50"
-                                        >
-                                            <div className="py-1">
+                    <>
+                        {/* Desktop Table */}
+                        <div className="hidden lg:block overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead className="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            Pricing Tier
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            Type & Membership
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            Price
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            Validity Period
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            Tickets
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            Status
+                                        </th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    {pricing.map((pricingItem) => (
+                                        <tr key={pricingItem.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex flex-col">
+                                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                        {pricingItem.name}
+                                                    </div>
+                                                    {pricingItem.description && (
+                                                        <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                            {pricingItem.description}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex flex-col space-y-1">
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPricingTypeColor(pricingItem.pricing_type)}`}>
+                                                        {pricingItem.pricing_type.replace('_', ' ')}
+                                                    </span>
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getMembershipTypeColor(pricingItem.membership_type)}`}>
+                                                        {pricingItem.membership_type === 'all' ? 'All Users' :
+                                                            pricingItem.membership_type === 'member' ? 'Members' : 'Non-Members'}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                    AUD ${pricingItem.price.toFixed(2)}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-gray-900 dark:text-gray-100">
+                                                    <div>{new Date(pricingItem.start_date).toLocaleDateString()}</div>
+                                                    <div className="text-gray-500 dark:text-gray-400">
+                                                        to {new Date(pricingItem.end_date).toLocaleDateString()}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-gray-900 dark:text-gray-100">
+                                                    {pricingItem.tickets_sold}
+                                                    {pricingItem.max_tickets && ` / ${pricingItem.max_tickets}`}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                    pricingItem.is_active 
+                                                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' 
+                                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+                                                }`}>
+                                                    {pricingItem.is_active ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
                                                 <button
-                                                    onClick={() => handleEdit(pricingItem)}
-                                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                    onClick={() => toggleDropdown(pricingItem.id)}
+                                                    className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors relative z-20"
+                                                    title="Pricing Actions"
                                                 >
-                                                    <HiPencilSquare className="mr-2 h-4 w-4" /> Edit
+                                                    <HiCog6Tooth className="h-5 w-5" />
                                                 </button>
-                                                <button
-                                                    onClick={() => handleClone(pricingItem)}
-                                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
-                                                >
-                                                    <HiDocumentDuplicate className="mr-2 h-4 w-4" /> Clone
-                                                </button>
-                                                <button
-                                                    onClick={() => handleToggleActive(pricingItem.id, pricingItem.is_active)}
-                                                    className={`flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-left ${
-                                                        pricingItem.is_active 
-                                                            ? 'text-yellow-700 dark:text-yellow-400' 
-                                                            : 'text-green-700 dark:text-green-400'
-                                                    }`}
-                                                >
-                                                    <HiEye className="mr-2 h-4 w-4" />
-                                                    {pricingItem.is_active ? 'Deactivate' : 'Activate'}
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(pricingItem.id)}
-                                                    className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
-                                                >
-                                                    <HiTrash className="mr-2 h-4 w-4" /> Delete
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+
+                                                {/* Desktop Dropdown Menu */}
+                                                {openDropdownId === pricingItem.id && (
+                                                    <div
+                                                        ref={(el) => { dropdownRefs.current[pricingItem.id] = el }}
+                                                        className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-[9999]"
+                                                    >
+                                                        <div className="py-1">
+                                                            <button
+                                                                onClick={() => handleEdit(pricingItem)}
+                                                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                                data-menu-item
+                                                            >
+                                                                <HiPencilSquare className="mr-2 h-4 w-4" /> Edit
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleClone(pricingItem)}
+                                                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                                data-menu-item
+                                                            >
+                                                                <HiDocumentDuplicate className="mr-2 h-4 w-4" /> Clone
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleToggleActive(pricingItem.id, pricingItem.is_active)}
+                                                                className={`flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-left ${
+                                                                    pricingItem.is_active 
+                                                                        ? 'text-yellow-700 dark:text-yellow-400' 
+                                                                        : 'text-green-700 dark:text-green-400'
+                                                                }`}
+                                                                data-menu-item
+                                                            >
+                                                                <HiEye className="mr-2 h-4 w-4" />
+                                                                {pricingItem.is_active ? 'Deactivate' : 'Activate'}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(pricingItem.id)}
+                                                                className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                                data-menu-item
+                                                            >
+                                                                <HiTrash className="mr-2 h-4 w-4" /> Delete
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                    ))
+
+                        {/* Mobile Cards */}
+                        <div className="lg:hidden divide-y divide-gray-200 dark:divide-gray-700">
+                            {pricing.map((pricingItem) => (
+                                <div key={pricingItem.id} className="p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex-1">
+                                            <div className="flex items-center space-x-3 mb-2">
+                                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                                    {pricingItem.name}
+                                                </h3>
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPricingTypeColor(pricingItem.pricing_type)}`}>
+                                                    {pricingItem.pricing_type.replace('_', ' ')}
+                                                </span>
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getMembershipTypeColor(pricingItem.membership_type)}`}>
+                                                    {pricingItem.membership_type === 'all' ? 'All Users' :
+                                                        pricingItem.membership_type === 'member' ? 'Members' : 'Non-Members'}
+                                                </span>
+                                                {!pricingItem.is_active && (
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
+                                                        Inactive
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {pricingItem.description && (
+                                                <p className="text-sm text-gray-800 dark:text-gray-300 mb-3">
+                                                    {pricingItem.description}
+                                                </p>
+                                            )}
+
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                                <div>
+                                                    <span className="text-gray-800 dark:text-gray-300 font-medium">Price:</span>
+                                                    <div className="font-semibold text-lg text-gray-900 dark:text-gray-100">AUD ${pricingItem.price.toFixed(2)}</div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-800 dark:text-gray-300 font-medium">Valid:</span>
+                                                    <div className="font-medium text-gray-900 dark:text-gray-100">
+                                                        {new Date(pricingItem.start_date).toLocaleDateString()} - {new Date(pricingItem.end_date).toLocaleDateString()}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-800 dark:text-gray-300 font-medium">Tickets Sold:</span>
+                                                    <div className="font-medium text-gray-900 dark:text-gray-100">
+                                                        {pricingItem.tickets_sold}
+                                                        {pricingItem.max_tickets && ` / ${pricingItem.max_tickets}`}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-800 dark:text-gray-300 font-medium">Status:</span>
+                                                    <div className={`font-medium ${pricingItem.is_active ? 'text-green-700 dark:text-green-400' : 'text-gray-700 dark:text-gray-400'}`}>
+                                                        {pricingItem.is_active ? 'Active' : 'Inactive'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="ml-6 flex-shrink-0 relative">
+                                            <button
+                                                onClick={() => toggleDropdown(pricingItem.id)}
+                                                className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                                                title="Pricing Actions"
+                                            >
+                                                <HiCog6Tooth className="h-5 w-5" />
+                                            </button>
+
+                                            {/* Mobile Dropdown Menu */}
+                                            {openDropdownId === pricingItem.id && (
+                                                <div
+                                                    ref={(el) => { dropdownRefs.current[pricingItem.id] = el }}
+                                                    className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50 lg:hidden"
+                                                >
+                                                    <div className="py-1">
+                                                        <button
+                                                            onClick={() => handleEdit(pricingItem)}
+                                                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                            data-menu-item
+                                                        >
+                                                            <HiPencilSquare className="mr-2 h-4 w-4" /> Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleClone(pricingItem)}
+                                                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                            data-menu-item
+                                                        >
+                                                            <HiDocumentDuplicate className="mr-2 h-4 w-4" /> Clone
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleToggleActive(pricingItem.id, pricingItem.is_active)}
+                                                            className={`flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-left ${
+                                                                pricingItem.is_active 
+                                                                    ? 'text-yellow-700 dark:text-yellow-400' 
+                                                                    : 'text-green-700 dark:text-green-400'
+                                                            }`}
+                                                            data-menu-item
+                                                        >
+                                                            <HiEye className="mr-2 h-4 w-4" />
+                                                            {pricingItem.is_active ? 'Deactivate' : 'Activate'}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(pricingItem.id)}
+                                                            className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                            data-menu-item
+                                                        >
+                                                            <HiTrash className="mr-2 h-4 w-4" /> Delete
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
                 )}
             </div>
 

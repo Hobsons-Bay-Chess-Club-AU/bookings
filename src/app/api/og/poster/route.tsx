@@ -44,7 +44,7 @@ export async function GET(request: Request) {
         tw="relative flex h-[630px] w-[1200px] flex-col gap-6 p-12 text-white"
         style={{
           backgroundColor: '#0b1220',
-          backgroundImage: `url(${siteUrl}/og/template.png)`,
+          backgroundImage: `url(${siteUrl}/og/template1.png)`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
