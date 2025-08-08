@@ -22,10 +22,7 @@ async function getEvent(id: string): Promise<Event | null> {
 
     const { data: event, error } = await supabase
         .from('events')
-        .select(`
-      *,
-      organizer:profiles(id, full_name, email, avatar_url)
-    `)
+        .select('*')
         .eq('id', id)
         .single()
 
@@ -122,7 +119,7 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
             siteName: 'Hobsons Bay Chess Club',
             images: [
                 {
-                    url: `${siteUrl}/api/og/poster?title=${encodeURIComponent(event.title)}&summary=${encodeURIComponent(event.event_summary || event.description?.substring(0, 200) || '')}&date=${encodeURIComponent(new Date(event.start_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))}&time=${encodeURIComponent(`${new Date(event.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(event.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`)}&location=${encodeURIComponent(event.location)}&organizer=${encodeURIComponent(event.organizer?.full_name || '')}&phone=${encodeURIComponent(event.organizer?.phone || '')}&email=${encodeURIComponent(event.organizer?.email || '')}&close=${encodeURIComponent(event.entry_close_date ? new Date(event.entry_close_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '')}&url=${encodeURIComponent(eventUrl)}&mapUrl=${encodeURIComponent(event.location_settings?.map_url || '')}`,
+                    url: `${siteUrl}/api/og/poster?title=${encodeURIComponent(event.title)}&summary=${encodeURIComponent(event.event_summary || event.description?.substring(0, 200) || '')}&date=${encodeURIComponent(new Date(event.start_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))}&time=${encodeURIComponent(`${new Date(event.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(event.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`)}&location=${encodeURIComponent(event.location)}&organizer=${encodeURIComponent(event.organizer_name || '')}&phone=${encodeURIComponent(event.organizer_phone || '')}&email=${encodeURIComponent(event.organizer_email || '')}&close=${encodeURIComponent(event.entry_close_date ? new Date(event.entry_close_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '')}&url=${encodeURIComponent(eventUrl)}&mapUrl=${encodeURIComponent(event.location_settings?.map_url || '')}`,
                     width: 1200,
                     height: 630,
                     alt: event.title,
@@ -135,7 +132,7 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
             card: 'summary_large_image',
             title,
             description,
-            images: [`${siteUrl}/api/og/poster?title=${encodeURIComponent(event.title)}&summary=${encodeURIComponent(event.event_summary || event.description?.substring(0, 200) || '')}&date=${encodeURIComponent(new Date(event.start_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))}&time=${encodeURIComponent(`${new Date(event.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(event.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`)}&location=${encodeURIComponent(event.location)}&organizer=${encodeURIComponent(event.organizer?.full_name || '')}&phone=${encodeURIComponent(event.organizer?.phone || '')}&email=${encodeURIComponent(event.organizer?.email || '')}&close=${encodeURIComponent(event.entry_close_date ? new Date(event.entry_close_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '')}&url=${encodeURIComponent(eventUrl)}&mapUrl=${encodeURIComponent(event.location_settings?.map_url || '')}`],
+            images: [`${siteUrl}/api/og/poster?title=${encodeURIComponent(event.title)}&summary=${encodeURIComponent(event.event_summary || event.description?.substring(0, 200) || '')}&date=${encodeURIComponent(new Date(event.start_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))}&time=${encodeURIComponent(`${new Date(event.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(event.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`)}&location=${encodeURIComponent(event.location)}&organizer=${encodeURIComponent(event.organizer_name || '')}&phone=${encodeURIComponent(event.organizer_phone || '')}&email=${encodeURIComponent(event.organizer_email || '')}&close=${encodeURIComponent(event.entry_close_date ? new Date(event.entry_close_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '')}&url=${encodeURIComponent(eventUrl)}&mapUrl=${encodeURIComponent(event.location_settings?.map_url || '')}`],
         },
         robots: {
             index: event.status === 'published',
@@ -313,14 +310,40 @@ export default async function EventPage({ params }: EventPageProps) {
                                 />
                             )}
 
-                            {event.organizer && (
+                            {(event.organizer_name || event.organizer_email || event.organizer_phone) && (
                                 <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
                                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">
                                         Organizer
                                     </h3>
-                                    <p className="text-gray-700 dark:text-gray-300">
-                                        {event.organizer.full_name || event.organizer.email}
-                                    </p>
+                                    <div className="space-y-2">
+                                        {event.organizer_name && (
+                                            <p className="text-gray-700 dark:text-gray-300 font-medium">
+                                                {event.organizer_name}
+                                            </p>
+                                        )}
+                                        {event.organizer_email && (
+                                            <p className="text-gray-700 dark:text-gray-300">
+                                                <span className="text-gray-500 dark:text-gray-400">Email:</span>{' '}
+                                                <a 
+                                                    href={`mailto:${event.organizer_email}`}
+                                                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+                                                >
+                                                    {event.organizer_email}
+                                                </a>
+                                            </p>
+                                        )}
+                                        {event.organizer_phone && (
+                                            <p className="text-gray-700 dark:text-gray-300">
+                                                <span className="text-gray-500 dark:text-gray-400">Phone:</span>{' '}
+                                                <a 
+                                                    href={`tel:${event.organizer_phone}`}
+                                                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+                                                >
+                                                    {event.organizer_phone}
+                                                </a>
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -332,10 +355,19 @@ export default async function EventPage({ params }: EventPageProps) {
             </div>
 
             {/* Chat Widget - Only visible when not in booking journey */}
-            {event.organizer && (
+            {(event.organizer_name || event.organizer_email) && (
                 <EventChatClient 
                     event={event} 
-                    organizer={event.organizer} 
+                    organizer={{
+                        id: event.organizer_id,
+                        full_name: event.organizer_name || '',
+                        email: event.organizer_email || '',
+                        phone: event.organizer_phone || undefined,
+                        avatar_url: undefined,
+                        role: 'organizer' as const,
+                        created_at: '',
+                        updated_at: ''
+                    }} 
                 />
             )}
             

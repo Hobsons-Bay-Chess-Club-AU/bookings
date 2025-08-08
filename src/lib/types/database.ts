@@ -199,6 +199,9 @@ export interface Event {
     current_attendees: number
     status: EventStatus
     organizer_id: string
+    organizer_name?: string
+    organizer_email?: string
+    organizer_phone?: string
     entry_close_date?: string
     custom_form_fields?: FormField[]
     timeline?: EventTimeline
