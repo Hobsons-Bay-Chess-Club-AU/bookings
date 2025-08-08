@@ -12,6 +12,7 @@ import ContactOrganizerButton from '@/components/messaging/contact-organizer-but
 import ChatWidget from '@/components/messaging/chat-widget'
 import EventLocationMap from '@/components/events/event-location-map'
 import { HiCalendarDays, HiClock, HiMapPin } from 'react-icons/hi2'
+import { HiHome } from 'react-icons/hi2'
 
 async function getBooking(bookingId: string, userId: string): Promise<(Booking & { event: Event; discount_applications?: DiscountApplication[] }) | null> {
     const supabase = await createClient()
@@ -128,7 +129,7 @@ export default async function BookingDetailsPage({ params, searchParams }: Booki
                                 <li>
                                     <Link href="/dashboard" className="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400">
                                         <span className="sr-only">Dashboard</span>
-                                        🏠
+                                        <HiHome className="h-5 w-5" />
                                     </Link>
                                 </li>
                                 <li>

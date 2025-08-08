@@ -1,6 +1,36 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { Event } from '@/lib/types/database'
 import EventCard from '@/components/events/EventCard'
+import type { Metadata } from 'next'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const title = 'Hobsons Bay Chess Club Bookings'
+  const description = 'Bookings for Hobsons Bay Chess Club events'
+  const imageUrl = `${siteUrl}/api/og/home`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      type: 'website',
+      url: siteUrl,
+      siteName: 'Hobsons Bay Chess Club',
+      title,
+      description,
+      images: [{ url: imageUrl }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [imageUrl],
+    },
+    alternates: {
+      canonical: siteUrl,
+    },
+  }
+}
 
 async function getPublishedEvents(): Promise<Event[]> {
   try {
