@@ -25,6 +25,8 @@
     "@types/stripe": "^8.0.416",
     "@uiw/react-json-view": "^2.0.0-alpha.34",
     "@uiw/react-md-editor": "^4.0.8",
+    "@vercel/analytics": "^1.5.0",
+    "@vercel/speed-insights": "^1.2.0",
     "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

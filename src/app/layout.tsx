@@ -4,6 +4,8 @@ import CookieConsentWrapper from "@/components/ui/cookie-consent-wrapper";
 import ConditionalLayout from "@/components/layout/conditional-nav";
 import { BookingJourneyProvider } from '@/contexts/BookingJourneyContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -40,6 +42,9 @@ export default function RootLayout({
                 </ConditionalLayout>
               </BookingJourneyProvider>
           </CookieConsentWrapper>
+          {/* Vercel Analytics */}
+          <Analytics />
+          <SpeedInsights />
         </ThemeProvider>
       </body>
     </html>
