@@ -215,7 +215,7 @@ export default function Step4Review({
                                 <a href="/content/privacy-policy" target="_blank" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
                                     Privacy Policy
                                 </a>
-                                {event.terms_conditions && (
+                                {event.settings?.terms_conditions && (
                                     <>
                                         , and the{' '}
                                         <button
@@ -237,7 +237,7 @@ export default function Step4Review({
                         </div>
 
                         {/* Event Terms & Conditions Modal */}
-                        {event.terms_conditions && (
+                        {event.settings?.terms_conditions && (
                             <dialog id="event-terms-modal" className="modal">
                                 <div className="modal-box max-w-2xl bg-white dark:bg-gray-800">
                                     <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-4">
@@ -245,7 +245,7 @@ export default function Step4Review({
                                     </h3>
                                     <div className="prose dark:prose-invert max-w-none">
                                         <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 text-sm">
-                                            {event.terms_conditions}
+                                            {event.settings.terms_conditions}
                                         </div>
                                     </div>
                                     <div className="modal-action">

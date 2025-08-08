@@ -14,6 +14,7 @@ export default function EditEventPage() {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
+        event_summary: '',
         start_date: '',
         end_date: '',
         entry_close_date: '',
@@ -83,6 +84,7 @@ export default function EditEventPage() {
                 setFormData({
                     title: eventData.title,
                     description: eventData.description || '',
+                    event_summary: eventData.event_summary || '',
                     start_date: eventData.start_date ? new Date(eventData.start_date).toISOString().slice(0, 16) : '',
                     end_date: eventData.end_date ? new Date(eventData.end_date).toISOString().slice(0, 16) : '',
                     entry_close_date: eventData.entry_close_date ? new Date(eventData.entry_close_date).toISOString().slice(0, 16) : '',
@@ -214,6 +216,27 @@ export default function EditEventPage() {
                 throw new Error('There was an issue processing the description content. Please try again.')
             }
 
+            // Sanitize and encode event summary to handle special characters
+            let sanitizedSummary: string | null = null
+            
+            try {
+                if (formData.event_summary) {
+                    sanitizedSummary = formData.event_summary
+                        .replace(/\r\n/g, '\n') // Normalize line endings
+                        .replace(/\r/g, '\n')    // Convert remaining carriage returns
+                        .trim()                  // Remove leading/trailing whitespace
+                }
+
+                console.log('🔄 Sanitizing event summary...', {
+                    originalLength: formData.event_summary?.length,
+                    sanitizedLength: sanitizedSummary?.length,
+                    hasSpecialChars: sanitizedSummary?.includes("'") || sanitizedSummary?.includes('"')
+                })
+            } catch (sanitizeError) {
+                console.error('❌ Error sanitizing event summary:', sanitizeError)
+                throw new Error('There was an issue processing the event summary content. Please try again.')
+            }
+
             // Sanitize and encode terms & conditions to handle special characters
             let sanitizedTermsConditions: string | null = null
             
@@ -241,6 +264,7 @@ export default function EditEventPage() {
                 .update({
                     title: formData.title,
                     description: sanitizedDescription,
+                    event_summary: sanitizedSummary,
                     start_date: formData.start_date,
                     end_date: formData.end_date,
                     entry_close_date: formData.entry_close_date || null,
@@ -348,6 +372,11 @@ export default function EditEventPage() {
         // Description validation
         if (formData.description && formData.description.length > 10000) {
             errors.description = 'Description is too long (maximum 10,000 characters)'
+        }
+        
+        // Event summary validation
+        if (formData.event_summary && formData.event_summary.length > 200) {
+            errors.event_summary = 'Event summary is too long (maximum 200 characters)'
         }
         
         if (!formData.start_date) {
@@ -551,6 +580,37 @@ export default function EditEventPage() {
                                     </p>
                                 )}
                             </div>
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <label htmlFor="event_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Event Summary (Markdown)
+                            </label>
+                            <MarkdownEditor
+                                value={formData.event_summary}
+                                onChange={(content) => {
+                                    clearFieldError('event_summary')
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        event_summary: content
+                                    }))
+                                }}
+                                placeholder="Enter a brief summary of your event using Markdown formatting..."
+                            />
+                            <div className="mt-2 flex justify-between items-center">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    {formData.event_summary?.length || 0} / 200 characters
+                                </div>
+                                {fieldErrors.event_summary && (
+                                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center">
+                                        <HiExclamationCircle className="h-4 w-4 mr-1" />
+                                        {fieldErrors.event_summary}
+                                    </p>
+                                )}
+                            </div>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                This summary will be displayed on the event listing page. Use Markdown for formatting.
+                            </p>
                         </div>
 
                         <div className="md:col-span-2">

@@ -13,6 +13,7 @@ export default function NewEventPage() {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
+        event_summary: '',
         start_date: '',
         end_date: '',
         entry_close_date: '',
@@ -23,12 +24,14 @@ export default function NewEventPage() {
         organizer_name: '',
         organizer_email: '',
         organizer_phone: '',
-        terms_conditions: '',
         status: 'draft' as 'draft' | 'published',
         is_promoted: false,
         location_settings: {
             map_url: '',
             direction_url: ''
+        },
+        settings: {
+            terms_conditions: ''
         }
     })
     const [formFields, setFormFields] = useState<FormField[]>([])
@@ -103,6 +106,11 @@ export default function NewEventPage() {
             errors.organizer_phone = 'Please enter a valid phone number'
         }
         
+        // Event summary validation
+        if (formData.event_summary && formData.event_summary.length > 200) {
+            errors.event_summary = 'Event summary is too long (maximum 200 characters)'
+        }
+        
         setFieldErrors(errors)
         return Object.keys(errors).length === 0
     }
@@ -159,19 +167,40 @@ export default function NewEventPage() {
                 }
             }
 
+            // Sanitize and encode event summary to handle special characters
+            let sanitizedSummary: string | null = null
+            
+            try {
+                if (formData.event_summary) {
+                    sanitizedSummary = formData.event_summary
+                        .replace(/\r\n/g, '\n') // Normalize line endings
+                        .replace(/\r/g, '\n')    // Convert remaining carriage returns
+                        .trim()                  // Remove leading/trailing whitespace
+                }
+
+                console.log('🔄 Sanitizing event summary...', {
+                    originalLength: formData.event_summary?.length,
+                    sanitizedLength: sanitizedSummary?.length,
+                    hasSpecialChars: sanitizedSummary?.includes("'") || sanitizedSummary?.includes('"')
+                })
+            } catch (sanitizeError) {
+                console.error('❌ Error sanitizing event summary:', sanitizeError)
+                throw new Error('There was an issue processing the event summary content. Please try again.')
+            }
+
             // Sanitize and encode terms & conditions to handle special characters
             let sanitizedTermsConditions: string | null = null
             
             try {
-                if (formData.terms_conditions) {
-                    sanitizedTermsConditions = formData.terms_conditions
+                if (formData.settings.terms_conditions) {
+                    sanitizedTermsConditions = formData.settings.terms_conditions
                         .replace(/\r\n/g, '\n') // Normalize line endings
                         .replace(/\r/g, '\n')    // Convert remaining carriage returns
                         .trim()                  // Remove leading/trailing whitespace
                 }
 
                 console.log('🔄 Sanitizing terms & conditions...', {
-                    originalLength: formData.terms_conditions?.length,
+                    originalLength: formData.settings.terms_conditions?.length,
                     sanitizedLength: sanitizedTermsConditions?.length,
                     hasSpecialChars: sanitizedTermsConditions?.includes("'") || sanitizedTermsConditions?.includes('"')
                 })
@@ -186,6 +215,7 @@ export default function NewEventPage() {
                 .insert({
                     title: formData.title,
                     description: formData.description || null,
+                    event_summary: sanitizedSummary,
                     start_date: formData.start_date,
                     end_date: formData.end_date,
                     entry_close_date: formData.entry_close_date || null,
@@ -196,13 +226,15 @@ export default function NewEventPage() {
                     organizer_name: formData.organizer_name || null,
                     organizer_email: formData.organizer_email || null,
                     organizer_phone: formData.organizer_phone || null,
-                    terms_conditions: sanitizedTermsConditions,
                     status: formData.status,
                     alias: alias,
                     organizer_id: user.id,
                     custom_form_fields: formFields,
                     is_promoted: formData.is_promoted,
-                    location_settings: formData.location_settings
+                    location_settings: formData.location_settings,
+                    settings: {
+                        terms_conditions: sanitizedTermsConditions
+                    }
                 })
                 .select()
                 .single()
@@ -321,6 +353,36 @@ export default function NewEventPage() {
                                 onChange={handleDescriptionChange}
                                 placeholder="Describe your event using Markdown formatting..."
                             />
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <label htmlFor="event_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Event Summary (Max 200 characters)
+                            </label>
+                            <textarea
+                                id="event_summary"
+                                name="event_summary"
+                                value={formData.event_summary}
+                                onChange={handleChange}
+                                maxLength={200}
+                                rows={3}
+                                className={getFieldClasses('event_summary')}
+                                placeholder="Enter a brief summary of your event..."
+                            />
+                            <div className="mt-2 flex justify-between items-center">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    {formData.event_summary?.length || 0} / 200 characters
+                                </div>
+                                {fieldErrors.event_summary && (
+                                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center">
+                                        <HiExclamationCircle className="h-4 w-4 mr-1" />
+                                        {fieldErrors.event_summary}
+                                    </p>
+                                )}
+                            </div>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                This summary will be displayed on event cards and social sharing.
+                            </p>
                         </div>
 
                         <div>
@@ -656,19 +718,22 @@ export default function NewEventPage() {
                                 Event Terms & Conditions (Markdown)
                             </label>
                             <MarkdownEditor
-                                value={formData.terms_conditions}
+                                value={formData.settings.terms_conditions}
                                 onChange={(content) => {
                                     clearFieldError('terms_conditions')
                                     setFormData(prev => ({
                                         ...prev,
-                                        terms_conditions: content
+                                        settings: {
+                                            ...prev.settings,
+                                            terms_conditions: content
+                                        }
                                     }))
                                 }}
                                 placeholder="Enter the terms and conditions using Markdown formatting..."
                             />
                             <div className="mt-2 flex justify-between items-center">
                                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    {formData.terms_conditions?.length || 0} / 10,000 characters
+                                    {formData.settings.terms_conditions?.length || 0} / 10,000 characters
                                 </div>
                                 {fieldErrors.terms_conditions && (
                                     <p className="text-sm text-red-600 dark:text-red-400 flex items-center">

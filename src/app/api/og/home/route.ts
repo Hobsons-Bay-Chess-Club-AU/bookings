@@ -21,7 +21,7 @@ export async function GET() {
         'Cache-Control': 'public, max-age=3600, s-maxage=3600',
       },
     })
-  } catch (error) {
+  } catch {
     // Fallback 1x1 PNG if generation fails
     const emptyPng = Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=',

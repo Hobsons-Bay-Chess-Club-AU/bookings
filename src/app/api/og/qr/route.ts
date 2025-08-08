@@ -39,7 +39,7 @@ export async function GET(request: Request) {
         'Cache-Control': 'public, max-age=3600, s-maxage=3600',
       },
     })
-  } catch (error) {
+  } catch {
     const emptyPng = Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=',
       'base64'

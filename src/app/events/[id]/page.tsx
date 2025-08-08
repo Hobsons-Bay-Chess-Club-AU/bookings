@@ -85,13 +85,7 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
         ? `${siteUrl}/e/${event.alias}`
         : `${siteUrl}/events/${event.id}`
 
-    const makeAbsolute = (src?: string | null) => {
-        if (!src) return undefined
-        if (/^https?:\/\//i.test(src)) return src
-        return `${siteUrl}${src.startsWith('/') ? '' : '/'}${src}`
-    }
 
-    const imageAbsolute = makeAbsolute(event.image_url)
 
     const startDate = new Date(event.start_date).toISOString()
     const endDate = new Date(event.end_date).toISOString()
@@ -126,19 +120,12 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
             description,
             url: eventUrl,
             siteName: 'Hobsons Bay Chess Club',
-            images: imageAbsolute ? [
+            images: [
                 {
-                    url: imageAbsolute,
+                    url: `${siteUrl}/api/og/poster?title=${encodeURIComponent(event.title)}&summary=${encodeURIComponent(event.event_summary || event.description?.substring(0, 200) || '')}&date=${encodeURIComponent(new Date(event.start_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))}&time=${encodeURIComponent(`${new Date(event.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(event.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`)}&location=${encodeURIComponent(event.location)}&organizer=${encodeURIComponent(event.organizer?.full_name || '')}&phone=${encodeURIComponent(event.organizer?.phone || '')}&email=${encodeURIComponent(event.organizer?.email || '')}&close=${encodeURIComponent(event.entry_close_date ? new Date(event.entry_close_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '')}&url=${encodeURIComponent(eventUrl)}&mapUrl=${encodeURIComponent(event.location_settings?.map_url || '')}`,
                     width: 1200,
                     height: 630,
                     alt: event.title,
-                }
-            ] : [
-                {
-                    url: `${siteUrl}/api/og/qr?url=${encodeURIComponent(eventUrl)}`,
-                    width: 1200,
-                    height: 630,
-                    alt: 'Hobsons Bay Chess Club',
                 }
             ],
             locale: 'en_AU',
@@ -148,7 +135,7 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
             card: 'summary_large_image',
             title,
             description,
-            images: imageAbsolute ? [imageAbsolute] : [`${siteUrl}/api/og/qr?url=${encodeURIComponent(eventUrl)}`],
+            images: [`${siteUrl}/api/og/poster?title=${encodeURIComponent(event.title)}&summary=${encodeURIComponent(event.event_summary || event.description?.substring(0, 200) || '')}&date=${encodeURIComponent(new Date(event.start_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))}&time=${encodeURIComponent(`${new Date(event.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(event.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`)}&location=${encodeURIComponent(event.location)}&organizer=${encodeURIComponent(event.organizer?.full_name || '')}&phone=${encodeURIComponent(event.organizer?.phone || '')}&email=${encodeURIComponent(event.organizer?.email || '')}&close=${encodeURIComponent(event.entry_close_date ? new Date(event.entry_close_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '')}&url=${encodeURIComponent(eventUrl)}&mapUrl=${encodeURIComponent(event.location_settings?.map_url || '')}`],
         },
         robots: {
             index: event.status === 'published',

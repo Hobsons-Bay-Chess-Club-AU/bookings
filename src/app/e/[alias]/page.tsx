@@ -97,7 +97,7 @@ export default function ShortUrlPage({ params }: PageProps) {
   const router = useRouter()
   const supabase = createClient()
   const log = (...args: unknown[]) => {
-    // eslint-disable-next-line no-console
+     
     console.log('[AliasRedirect]', new Date().toISOString(), ...args)
   }
 

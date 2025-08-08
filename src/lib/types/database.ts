@@ -189,6 +189,7 @@ export interface Event {
     id: string
     title: string
     description?: string
+    event_summary?: string
     image_url?: string
     start_date: string
     end_date: string
@@ -204,7 +205,6 @@ export interface Event {
     is_promoted?: boolean
     settings?: EventSettings
     location_settings?: LocationSettings
-    terms_conditions?: string
     created_at: string
     updated_at: string
     organizer?: Profile
