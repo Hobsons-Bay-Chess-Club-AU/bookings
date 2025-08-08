@@ -18,6 +18,105 @@ export default function EventParticipantsPageClient({
     event,
     participants
 }: EventParticipantsPageClientProps) {
+    // Helper function to render custom field values
+    const renderCustomFieldValue = (value: unknown): React.ReactNode => {
+        // Handle null/undefined values
+        if (value === null || value === undefined) {
+            return <span className="text-gray-500 dark:text-gray-400 italic">Not provided</span>
+        }
+
+        // Handle arrays
+        if (Array.isArray(value)) {
+            if (value.length === 0) {
+                return <span className="text-gray-500 dark:text-gray-400 italic">None selected</span>
+            }
+            return <span>{value.join(', ')}</span>
+        }
+
+        // Handle FIDE/ACF player objects
+        if (typeof value === 'object' && value !== null) {
+            // Check if it's a player object (FIDE or ACF)
+            const playerObj = value as Record<string, unknown>
+            if (playerObj.id && playerObj.name && ('std_rating' in playerObj || 'quick_rating' in playerObj)) {
+                const ratings = []
+                if (playerObj.std_rating) ratings.push(`Std: ${playerObj.std_rating}`)
+                if (playerObj.rapid_rating) ratings.push(`Rapid: ${playerObj.rapid_rating}`)
+                if (playerObj.blitz_rating) ratings.push(`Blitz: ${playerObj.blitz_rating}`)
+                if (playerObj.quick_rating) ratings.push(`Quick: ${playerObj.quick_rating}`)
+
+                return (
+                    <div className="space-y-1">
+                        <div className="font-medium">{String(playerObj.name)}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                            ID: {String(playerObj.id)}
+                        </div>
+                        {ratings.length > 0 && (
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                                Ratings: {ratings.join(', ')}
+                            </div>
+                        )}
+                    </div>
+                )
+            }
+
+            // Handle other object types
+            if (playerObj.name) {
+                return <span>{String(playerObj.name)}</span>
+            } else if (playerObj.label) {
+                return <span>{String(playerObj.label)}</span>
+            } else if (playerObj.title) {
+                return <span>{String(playerObj.title)}</span>
+            } else {
+                // Fallback for generic objects - show key-value pairs
+                const entries = Object.entries(value)
+                    .filter(([, val]) => val !== null && val !== undefined && val !== '')
+                    .slice(0, 3) // Limit to first 3 entries
+
+                if (entries.length > 0) {
+                    return (
+                        <div className="space-y-1">
+                            {entries.map(([key, val]) => (
+                                <div key={key} className="text-sm">
+                                    <span className="font-medium capitalize">{key.replace(/_/g, ' ')}:</span>{' '}
+                                    <span>{String(val)}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )
+                }
+
+                return <span className="text-gray-500 dark:text-gray-400 italic">Complex data</span>
+            }
+        }
+
+        // Handle primitive types
+        if (typeof value === 'boolean') {
+            return (
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    value 
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' 
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                }`}>
+                    {value ? 'Yes' : 'No'}
+                </span>
+            )
+        }
+
+        if (typeof value === 'number') {
+            return <span>{value.toLocaleString()}</span>
+        }
+
+        // Handle strings
+        if (typeof value === 'string') {
+            if (value.trim() === '') {
+                return <span className="text-gray-500 dark:text-gray-400 italic">Not provided</span>
+            }
+            return <span>{value}</span>
+        }
+
+        // Fallback
+        return <span className="text-gray-500 dark:text-gray-400 italic">Unknown data type</span>
+    }
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedParticipant, setSelectedParticipant] = useState<ParticipantWithBooking | null>(null)
     const [currentPage, setCurrentPage] = useState(1)
@@ -536,9 +635,9 @@ export default function EventParticipantsPageClient({
                                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
                                                         {key.replace(/_/g, ' ')}
                                                     </label>
-                                                    <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                                        {Array.isArray(value) ? value.join(', ') : String(value)}
-                                                    </p>
+                                                    <div className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                                                        {renderCustomFieldValue(value)}
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>

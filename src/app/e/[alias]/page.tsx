@@ -26,7 +26,7 @@ function EventSkeleton() {
       </div>
 
       {/* Main Content Skeleton */}
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-2 md:py-12 px-2 md:px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Event Details */}
           <div className="lg:col-span-2">

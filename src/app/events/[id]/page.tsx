@@ -176,7 +176,7 @@ export default async function EventPage({ params }: EventPageProps) {
             {/* Structured Data for SEO */}
             <EventStructuredData event={event} />
 
-            <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto py-2 md:py-12 px-2 md:px-4 sm:px-6 lg:px-8">
                 <EventLayout event={event} profile={profile || undefined}>
                     {/* Event Details */}
                     <div>

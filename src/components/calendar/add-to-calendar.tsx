@@ -34,7 +34,7 @@ export default function AddToCalendar({ event }: AddToCalendarProps) {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
       >
         <svg 
           className="w-4 h-4 mr-2" 
@@ -66,11 +66,11 @@ export default function AddToCalendar({ event }: AddToCalendarProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+        <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black dark:ring-gray-600 ring-opacity-5 dark:ring-opacity-20 z-10">
           <div className="py-1" role="menu">
             <button
               onClick={handleGoogleCalendar}
-              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               role="menuitem"
             >
               <svg className="w-4 h-4 mr-3" viewBox="0 0 24 24">
@@ -96,7 +96,7 @@ export default function AddToCalendar({ event }: AddToCalendarProps) {
             
             <button
               onClick={handleOutlookCalendar}
-              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               role="menuitem"
             >
               <svg className="w-4 h-4 mr-3" viewBox="0 0 24 24">
@@ -114,7 +114,7 @@ export default function AddToCalendar({ event }: AddToCalendarProps) {
             
             <button
               onClick={handleIcsDownload}
-              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               role="menuitem"
             >
               <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

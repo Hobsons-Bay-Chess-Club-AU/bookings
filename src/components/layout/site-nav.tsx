@@ -464,7 +464,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                     }`}>
                         <form
                             ref={searchFormRef}
-                            className={`w-full p-2 max-w-2xl mx-auto flex flex-col items-center relative transition-all duration-200 ease-out ${
+                            className={`w-full px-3 max-w-2xl mx-auto flex flex-col items-center relative transition-all duration-200 ease-out ${
                                 searchAnimating 
                                     ? 'opacity-100 scale-100' 
                                     : 'opacity-0 scale-95'

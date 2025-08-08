@@ -17,7 +17,7 @@ function DashboardLoading() {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto py-2 md:py-12 px-2 md:px-4 sm:px-6 lg:px-8">
                 <div className="text-center py-12">
                     <LoadingSpinner size="lg" text="Loading dashboard..." />
                 </div>
@@ -72,7 +72,7 @@ async function DashboardContent({ profile }: { profile: Profile }) {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto py-2 md:py-12 px-2 md:px-4 sm:px-6 lg:px-8">
                 <DashboardClient bookings={bookings} />
             </div>
         </div>
