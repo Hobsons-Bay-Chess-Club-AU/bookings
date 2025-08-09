@@ -73,26 +73,26 @@ export default function TimelineBuilder({ eventStartDate, refundTimeline, onChan
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h4 className="text-lg font-medium text-gray-900">Refund Timeline</h4>
+                <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100">Refund Timeline</h4>
                 <button
                     type="button"
                     onClick={addItem}
-                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:text-indigo-300 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
                 >
                     Add Period
                 </button>
             </div>
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+            <div className="bg-yellow-50 border border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-700 rounded-md p-4">
                 <div className="flex">
                     <div className="flex-shrink-0">
                         <HiExclamationTriangle className="h-5 w-5 text-yellow-400" />
                     </div>
                     <div className="ml-3">
-                        <h3 className="text-sm font-medium text-yellow-800">
+                        <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
                             Refund Timeline Tips
                         </h3>
-                        <div className="mt-2 text-sm text-yellow-700">
+                        <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-200">
                             <ul className="list-disc pl-5 space-y-1">
                                 <li>Periods should not overlap and should be in chronological order</li>
                                 <li>Leave dates empty for open-ended periods (e.g., &quot;from event creation&quot; or &quot;until event date&quot;)</li>
@@ -106,16 +106,16 @@ export default function TimelineBuilder({ eventStartDate, refundTimeline, onChan
 
             <div className="space-y-3">
                 {items.map((item, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
                         <div className="flex items-start justify-between mb-4">
-                            <h5 className="text-sm font-medium text-gray-900">
+                            <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                 Refund Period {index + 1}
                             </h5>
                             {items.length > 1 && (
                                 <button
                                     type="button"
                                     onClick={() => removeItem(index)}
-                                    className="text-red-600 hover:text-red-800 text-sm"
+                                    className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm"
                                 >
                                     Remove
                                 </button>
@@ -124,23 +124,23 @@ export default function TimelineBuilder({ eventStartDate, refundTimeline, onChan
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     From Date & Time
                                 </label>
                                 <input
                                     type="datetime-local"
                                     value={formatDateTime(item.from_date)}
                                     onChange={(e) => updateItem(index, 'from_date', parseDateTime(e.target.value))}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                     placeholder="Leave empty for event creation"
                                 />
-                                <p className="mt-1 text-xs text-gray-500">
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                     Leave empty to start from event creation
                                 </p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     To Date & Time
                                 </label>
                                 <input
@@ -148,21 +148,21 @@ export default function TimelineBuilder({ eventStartDate, refundTimeline, onChan
                                     value={formatDateTime(item.to_date)}
                                     max={formatDateTime(eventStartDate)}
                                     onChange={(e) => updateItem(index, 'to_date', parseDateTime(e.target.value))}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 />
-                                <p className="mt-1 text-xs text-gray-500">
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                     Leave empty to continue until event date
                                 </p>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Refund Type
                                 </label>
                                 <select
                                     value={item.type}
                                     onChange={(e) => updateItem(index, 'type', e.target.value as RefundValueType)}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 >
                                     <option value="percentage">Percentage</option>
                                     <option value="fixed">Fixed Amount (AUD)</option>
@@ -170,7 +170,7 @@ export default function TimelineBuilder({ eventStartDate, refundTimeline, onChan
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     {item.type === 'percentage' ? 'Percentage (%)' : 'Amount (AUD)'}
                                 </label>
                                 <input
@@ -180,19 +180,19 @@ export default function TimelineBuilder({ eventStartDate, refundTimeline, onChan
                                     step={item.type === 'percentage' ? 1 : 0.01}
                                     value={item.value}
                                     onChange={(e) => updateItem(index, 'value', parseFloat(e.target.value) || 0)}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 />
                             </div>
 
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Description (Optional)
                                 </label>
                                 <input
                                     type="text"
                                     value={item.description || ''}
                                     onChange={(e) => updateItem(index, 'description', e.target.value)}
-                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                     placeholder="e.g., &apos;Full refund&apos;, &apos;Partial refund&apos;, &apos;No refund&apos;"
                                 />
                             </div>
@@ -202,9 +202,9 @@ export default function TimelineBuilder({ eventStartDate, refundTimeline, onChan
             </div>
 
             {/* Preview */}
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h5 className="text-sm font-medium text-blue-900 mb-2">Refund Policy Preview</h5>
-                <div className="text-sm text-blue-800 space-y-1">
+            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <h5 className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-2">Refund Policy Preview</h5>
+                <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                     {items.map((item, index) => {
                         const fromText = item.from_date
                             ? new Date(item.from_date).toLocaleDateString()

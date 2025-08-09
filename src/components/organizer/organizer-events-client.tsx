@@ -368,9 +368,13 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                     </Link>
                                                     <div className="flex items-center space-x-2 mt-1">
                                                         {event.settings?.show_participants_public && (
-                                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                                                            <Link
+                                                                href={`/events/${event.id}/participants`}
+                                                                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            >
                                                                 Public Participants
-                                                            </span>
+                                                            </Link>
                                                         )}
                                                     </div>
                                                 </div>
@@ -427,7 +431,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                 {openDropdownId === event.id && desktopMenuPos && (
                                                     <div
                                                         ref={(el) => { dropdownRefs.current[event.id] = el }}
-                                                        style={{ position: 'fixed', top: desktopMenuPos.top, left: desktopMenuPos.left, maxHeight: 320, overflow: 'auto' }}
+                                                        style={{ position: 'fixed', top: desktopMenuPos.top, left: desktopMenuPos.left }}
                                                         className="w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-[9999] hidden lg:block"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
@@ -587,6 +591,12 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                 <HiTicket className="mr-2 h-4 w-4" />
                                                 <span>
                                                     {event.confirmedBookings} / {event.max_attendees || '∞'} booked
+                                                    {typeof event.current_attendees === 'number' && (
+                                                        <>
+                                                            {' '}
+                                                            • {event.current_attendees} participants
+                                                        </>
+                                                    )}
                                                 </span>
                                             </div>
                                             <div className="flex items-center">
