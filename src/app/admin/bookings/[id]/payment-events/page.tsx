@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import JsonViewer from '@/components/JsonViewer'
 import { HiExclamationCircle, HiDocumentText, HiLightningBolt } from 'react-icons/hi'
+import { HiCog6Tooth, HiClipboardDocumentList, HiArrowTopRightOnSquare } from 'react-icons/hi2'
 
 interface PaymentEvent {
     id: string
@@ -21,6 +22,7 @@ interface Booking {
     status: string
     total_amount: number
     events: {
+        id: string
         title: string
     } | null
     profiles: {
@@ -46,6 +48,8 @@ export default function PaymentEventsPage() {
     const [selectedEvent, setSelectedEvent] = useState<StripeEvent | null>(null)
     const [loadingEvent, setLoadingEvent] = useState(false)
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+    const [menuOpen, setMenuOpen] = useState(false)
+    const menuRef = useState<HTMLDivElement | null>(null)[0]
 
     const params = useParams()
     const bookingId = params.id as string
@@ -102,6 +106,7 @@ export default function PaymentEventsPage() {
                         status,
                         total_amount,
                         events!bookings_event_id_fkey (
+                            id,
                             title
                         ),
                         profiles!bookings_user_id_fkey (
@@ -215,6 +220,23 @@ export default function PaymentEventsPage() {
         setTimeout(() => setToast(null), 3000)
     }
 
+    // Close dropdown on escape and outside click
+    useEffect(() => {
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setMenuOpen(false)
+        }
+        const handleClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement
+            if (!target.closest('#payment-events-gear-menu')) setMenuOpen(false)
+        }
+        document.addEventListener('keydown', handleKey)
+        document.addEventListener('mousedown', handleClick)
+        return () => {
+            document.removeEventListener('keydown', handleKey)
+            document.removeEventListener('mousedown', handleClick)
+        }
+    }, [])
+
     return (
         <div className="max-w-7xl mx-auto">
             {/* Header */}
@@ -226,12 +248,50 @@ export default function PaymentEventsPage() {
                             {booking ? `Booking: ${booking.booking_id}` : 'Loading...'}
                         </p>
                     </div>
-                    <Link
-                        href="/admin/bookings"
-                        className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
-                    >
-                        ← Back to Bookings
-                    </Link>
+                    <div className="flex items-center space-x-2" id="payment-events-gear-menu">
+                        <Link
+                            href="/admin/bookings"
+                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                            title="Back to Bookings"
+                        >
+                            ← Back to Bookings
+                        </Link>
+                        <div className="relative">
+                            <button
+                                onClick={() => setMenuOpen(!menuOpen)}
+                                className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                                title="Actions"
+                            >
+                                <HiCog6Tooth className="h-5 w-5" />
+                            </button>
+                            {menuOpen && (
+                                <div
+                                    className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+                                >
+                                    <div className="py-1">
+                                        {booking?.events?.id && (
+                                            <Link
+                                                href={`/organizer/events/${booking.events.id}/bookings/${booking.booking_id}`}
+                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                onClick={() => setMenuOpen(false)}
+                                            >
+                                                <HiClipboardDocumentList className="mr-2 h-4 w-4" /> View Booking Details
+                                            </Link>
+                                        )}
+                                        {booking?.events?.id && (
+                                            <Link
+                                                href={`/organizer/events/${booking.events.id}`}
+                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                onClick={() => setMenuOpen(false)}
+                                            >
+                                                <HiArrowTopRightOnSquare className="mr-2 h-4 w-4" /> View Event
+                                            </Link>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 

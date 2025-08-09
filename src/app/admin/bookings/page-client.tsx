@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { HiClipboardDocumentList } from 'react-icons/hi2'
+import { HiClipboardDocumentList, HiCog6Tooth, HiArrowTopRightOnSquare } from 'react-icons/hi2'
 
 interface Booking {
     id: string
@@ -29,6 +29,7 @@ export default function AdminBookingsPageClient({ bookings }: AdminBookingsPageC
     const [searchTerm, setSearchTerm] = useState('')
     const [statusFilter, setStatusFilter] = useState<string>('all')
     const [currentPage, setCurrentPage] = useState(1)
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null)
     const itemsPerPage = 20
 
     const filteredBookings = bookings.filter(booking => {
@@ -123,7 +124,7 @@ export default function AdminBookingsPageClient({ bookings }: AdminBookingsPageC
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     Date
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     Actions
                                 </th>
                             </tr>
@@ -156,13 +157,49 @@ export default function AdminBookingsPageClient({ bookings }: AdminBookingsPageC
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                         {new Date(booking.created_at).toLocaleDateString()}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <Link
-                                            href={`/admin/bookings/${booking.id}/payment-events`}
-                                            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-4"
-                                        >
-                                            Payment Events
-                                        </Link>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                                        <div className="relative inline-block text-left" data-admin-booking-actions>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    setOpenMenuId(openMenuId === booking.id ? null : booking.id)
+                                                }}
+                                                className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                                                title="Actions"
+                                            >
+                                                <HiCog6Tooth className="h-5 w-5" />
+                                            </button>
+                                            {openMenuId === booking.id && (
+                                                <div
+                                                    className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+                                                >
+                                                    <div className="py-1">
+                                                        {booking.events?.id && booking.booking_id && (
+                                                            <Link
+                                                                href={`/organizer/events/${booking.events.id}/bookings/${booking.booking_id}`}
+                                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setOpenMenuId(null)
+                                                                }}
+                                                            >
+                                                                <HiClipboardDocumentList className="mr-2 h-4 w-4" /> View Booking Details
+                                                            </Link>
+                                                        )}
+                                                        <Link
+                                                            href={`/admin/bookings/${booking.id}/payment-events`}
+                                                            className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setOpenMenuId(null)
+                                                            }}
+                                                        >
+                                                            <HiArrowTopRightOnSquare className="mr-2 h-4 w-4" /> View Payment Events
+                                                        </Link>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
