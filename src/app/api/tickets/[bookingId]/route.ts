@@ -69,6 +69,7 @@ export async function GET(
                 user: profile.id
             })
             
+            console.log('Generating error PDF')
             // Generate error PDF instead of returning error response
             const errorPdfBuffer = await TicketGenerator.generateErrorPDF(
                 'Tickets Not Available',
@@ -98,7 +99,7 @@ export async function GET(
                 { status: 500 }
             )
         }
-
+        
         // Generate PDF with all tickets
         const pdfBuffer = await TicketGenerator.generateAllTicketsPDF(
             booking.events,

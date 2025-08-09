@@ -16,6 +16,7 @@ interface EventCardProps {
 export default function EventCard({ event, hideBooking = false }: EventCardProps) {
   const [showQR, setShowQR] = useState(false)
   const [eventUrl, setEventUrl] = useState('')
+  const [priceLabel, setPriceLabel] = useState<string>('')
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -26,6 +27,50 @@ export default function EventCard({ event, hideBooking = false }: EventCardProps
       )
     }
   }, [event.alias, event.id])
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadPricingRange() {
+      try {
+        const res = await fetch(`/api/events/${event.id}/pricing?membership_type=all`, { cache: 'no-store' })
+        if (!res.ok) throw new Error('Failed to load pricing')
+        const pricing: Array<{ price: number }> = await res.json()
+        if (!isMounted) return
+
+        if (!pricing || pricing.length === 0) {
+          // Fall back to base price
+          const base = event.price
+          setPriceLabel(base === 0 ? 'Contact organizer' : `AUD $${base.toFixed(2)}`)
+          return
+        }
+
+        const prices = pricing.map(p => p.price).filter((p) => typeof p === 'number')
+        if (prices.length === 0) {
+          const base = event.price
+          setPriceLabel(base === 0 ? 'Contact organizer' : `AUD $${base.toFixed(2)}`)
+          return
+        }
+
+        const min = Math.min(...prices)
+        const max = Math.max(...prices)
+        if (min === max) {
+          setPriceLabel(min === 0 ? 'Free' : `AUD $${min.toFixed(2)}`)
+        } else {
+          setPriceLabel(`From AUD $${min.toFixed(2)} - $${max.toFixed(2)}`)
+        }
+      } catch {
+        // Silent fallback to base price
+        const base = event.price
+        setPriceLabel(base === 0 ? 'Contact organizer' : `AUD $${base.toFixed(2)}`)
+      }
+    }
+
+    loadPricingRange()
+    return () => {
+      isMounted = false
+    }
+  }, [event.id, event.price])
 
   return (
     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-lg relative flex flex-col h-full transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.02] group border border-gray-100 dark:border-gray-700">
@@ -120,7 +165,7 @@ export default function EventCard({ event, hideBooking = false }: EventCardProps
           </p>
           <div className="mt-2 flex items-center justify-between">
             <p className="text-lg font-bold text-gray-900 dark:text-gray-100 transition-colors duration-200 group-hover:text-gray-800 dark:group-hover:text-gray-200">
-              AUD ${event.price.toFixed(2)}
+              {priceLabel}
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {event.max_attendees ?

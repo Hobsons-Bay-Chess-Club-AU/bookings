@@ -40,6 +40,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
     const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({})
+    const [desktopMenuPos, setDesktopMenuPos] = useState<{ top: number; left: number } | null>(null)
     const [showEmailModal, setShowEmailModal] = useState(false)
     const [emailSubject, setEmailSubject] = useState('')
     const [emailBody, setEmailBody] = useState('')
@@ -136,6 +137,38 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
     const toggleDropdown = (eventId: string) => {
         setOpenDropdownId(openDropdownId === eventId ? null : eventId)
     }
+
+    const openDesktopDropdown = (id: string, anchorEl: HTMLElement) => {
+        if (openDropdownId === id) {
+            setOpenDropdownId(null)
+            return
+        }
+        const rect = anchorEl.getBoundingClientRect()
+        const menuWidth = 192 // w-48
+        const viewportPadding = 8
+        let left = rect.right - menuWidth
+        if (left < viewportPadding) left = viewportPadding
+        let top = rect.bottom + 8
+        const assumedMenuHeight = 320
+        if (top + assumedMenuHeight > window.innerHeight - viewportPadding) {
+            top = Math.max(viewportPadding, rect.top - assumedMenuHeight - 8)
+        }
+        setDesktopMenuPos({ top, left })
+        setOpenDropdownId(id)
+    }
+
+    useEffect(() => {
+        if (!openDropdownId) return
+        const handleWindowChange = () => {
+            setOpenDropdownId(null)
+        }
+        window.addEventListener('scroll', handleWindowChange, true)
+        window.addEventListener('resize', handleWindowChange)
+        return () => {
+            window.removeEventListener('scroll', handleWindowChange, true)
+            window.removeEventListener('resize', handleWindowChange)
+        }
+    }, [openDropdownId])
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -372,14 +405,18 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                                AUD ${event.price.toFixed(2)}
+                                                {event.price === 0 ? 'Varies' : `AUD ${event.price.toFixed(2)}`}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        toggleDropdown(event.id);
-                                                    }}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (window.matchMedia('(min-width: 1024px)').matches) {
+                                                        openDesktopDropdown(event.id, e.currentTarget)
+                                                    } else {
+                                                        toggleDropdown(event.id)
+                                                    }
+                                                }}
                                                     className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors relative z-20"
                                                     title="Event Actions"
                                                 >
@@ -387,10 +424,11 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                 </button>
                                                 
                                                 {/* Desktop Dropdown Menu */}
-                                                {openDropdownId === event.id && (
+                                                {openDropdownId === event.id && desktopMenuPos && (
                                                     <div
                                                         ref={(el) => { dropdownRefs.current[event.id] = el }}
-                                                        className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-[9999] hidden lg:block"
+                                                        style={{ position: 'fixed', top: desktopMenuPos.top, left: desktopMenuPos.left, maxHeight: 320, overflow: 'auto' }}
+                                                        className="w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-[9999] hidden lg:block"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                         }}
@@ -559,7 +597,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
 
                                         <div className="flex items-center justify-between">
                                             <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                                AUD ${event.price.toFixed(2)} per ticket
+                                                {event.price === 0 ? 'Varies' : `AUD ${event.price.toFixed(2)} per ticket`}
                                             </span>
                                             <div className="relative">
                                                 <button

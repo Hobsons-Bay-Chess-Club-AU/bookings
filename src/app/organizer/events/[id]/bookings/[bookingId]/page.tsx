@@ -393,7 +393,7 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-600 dark:text-gray-400">Unit Price:</span>
-                                <span className="font-medium text-gray-900 dark:text-gray-100">${booking.event.price.toFixed(2)}</span>
+                                            <span className="font-medium text-gray-900 dark:text-gray-100">{booking.event.price === 0 ? 'Varies' : `$${booking.event.price.toFixed(2)}`}</span>
                             </div>
                             
                             {/* Discount Information */}

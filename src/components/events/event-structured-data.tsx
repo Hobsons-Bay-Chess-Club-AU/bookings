@@ -52,10 +52,13 @@ export default function EventStructuredData({ event }: EventStructuredDataProps)
             "url": typeof window !== 'undefined' ? window.location.origin : ''
         },
         "offers": {
-            "@type": "Offer",
+            "@type": "AggregateOffer",
             "url": eventUrl,
-            "price": event.price.toString(),
             "priceCurrency": "AUD",
+            // Note: we do not have pricing tiers here; approximate using base price as low/high fallback
+            "lowPrice": event.price,
+            "highPrice": event.price,
+            "offerCount": 1,
             "availability": event.max_attendees && event.current_attendees >= event.max_attendees
                 ? "https://schema.org/SoldOut"
                 : "https://schema.org/InStock",

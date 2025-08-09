@@ -99,37 +99,139 @@ export class TicketGenerator {
         }
     }
 
-    private static async generateSingleTicketPDF(
+    // Generate a vertical barcode PNG data URL using jsbarcode + node-canvas at runtime
+    private static async generateBarcodeDataUrl(
+        ticketNumber: string,
+        targetLongSidePx: number,
+        orientation: 'horizontal' | 'vertical' = 'horizontal'
+    ): Promise<string | null> {
+        try {
+            // Dynamic imports to avoid build-time dependency issues
+            const canvasMod: unknown = await import('canvas').catch(() => null as unknown)
+            const jsbarcodeMod: unknown = await import('jsbarcode').catch(() => null as unknown)
+
+            // Minimal runtime validation and extraction
+            type NodeCanvas = { width: number; height: number; getContext: (t: '2d') => CanvasRenderingContext2D; toBuffer: (mime?: string) => Buffer }
+            const createCanvas = (canvasMod as { createCanvas?: (w: number, h: number) => NodeCanvas } | null)?.createCanvas
+            const JsBarcode = (jsbarcodeMod as { default?: (el: unknown, text: string, opts?: Record<string, unknown>) => unknown } | null)?.default
+
+            if (!createCanvas) {
+                console.warn('[Ticket Barcode] canvas.createCanvas not available')
+                return null
+            }
+            if (!JsBarcode) {
+                console.warn('[Ticket Barcode] JsBarcode not available')
+                return null
+            }
+
+            // Create a high-resolution horizontal barcode first
+            const horizontalWidth = Math.max(600, Math.floor(targetLongSidePx * 1.5))
+            const horizontalHeight = 120
+            const tempCanvas = createCanvas(horizontalWidth, horizontalHeight)
+            JsBarcode(tempCanvas as unknown as HTMLCanvasElement, ticketNumber, {
+                format: 'CODE128',
+                displayValue: false,
+                margin: 0,
+                background: '#FFFFFF',
+                lineColor: '#000000',
+                width: 2,
+                height: horizontalHeight
+            })
+            
+            let buffer: Buffer
+            if (orientation === 'vertical') {
+                // Rotate to vertical: long side becomes height
+                const rotatedCanvas = createCanvas(horizontalHeight, horizontalWidth)
+                const ctx = rotatedCanvas.getContext('2d')
+                // Fill white background
+                ctx.fillStyle = '#FFFFFF'
+                ctx.fillRect(0, 0, rotatedCanvas.width, rotatedCanvas.height)
+                // Rotate -90deg and draw
+                ctx.translate(0, rotatedCanvas.height)
+                ctx.rotate(-Math.PI / 2)
+                // Draw with some padding
+                ctx.drawImage(tempCanvas as unknown as CanvasImageSource, 0, 0)
+                buffer = rotatedCanvas.toBuffer('image/png')
+            } else {
+                buffer = (tempCanvas as unknown as { toBuffer: (mime?: string) => Buffer }).toBuffer('image/png')
+            }
+            const base64 = buffer.toString('base64')
+            console.log('[Ticket Barcode] Generated barcode image base64 length:', base64.length, 'orientation:', orientation)
+            return `data:image/png;base64,${base64}`
+        } catch (error) {
+            console.error('[Ticket Barcode] Error generating barcode with jsbarcode:', error)
+            return null
+        }
+    }
+
+    private static async addBarcodeToPDF(
+        pdf: jsPDF,
+        ticketNumber: string,
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        orientation: 'horizontal' | 'vertical' = 'horizontal'
+    ): Promise<void> {
+        try {
+            console.log("addBarcodeToPDF")
+            // Aim for a high-resolution asset to preserve quality when scaled into PDF
+            const targetLongSidePx = Math.max(600, Math.floor((orientation === 'horizontal' ? width : height) * 12)) // heuristic
+            const dataUrl = await this.generateBarcodeDataUrl(ticketNumber, targetLongSidePx, orientation)
+            if (!dataUrl) {
+                console.log('[Ticket Barcode] Barcode generation not possible')
+                // Fallback: simple label if barcode generation not possible
+                pdf.setFontSize(10)
+                pdf.text('TICKET', x, y + 10, { angle: 90 })
+                pdf.setFontSize(8)
+                pdf.text(ticketNumber, x + 5, y + height - 5, { angle: 90 })
+                return
+            }
+            const base64DataUrl = dataUrl
+            console.log('[Ticket Barcode] Adding barcode to PDF at', { x, y, width, height, orientation })
+            pdf.addImage(base64DataUrl, 'PNG', x, y, width, height)
+        } catch (error) {
+            console.error('[Ticket Barcode] Error adding barcode to PDF:', error)
+        }
+    }
+
+    // Shared renderer for a single ticket page
+    private static async drawTicketPage(
+        pdf: jsPDF,
         event: Event,
         booking: Booking,
         participant: Participant,
         participantIndex: number,
         options: TicketGenerationOptions = {}
-    ): Promise<jsPDF> {
+    ): Promise<void> {
         const { includeTermsConditions = true, signatureLine = true } = options
-        
-        const ticketNumber = this.generateTicketNumber(booking.booking_id || "", participantIndex)
-        const qrCodeDataURL = await this.generateQRCode(ticketNumber)
-        
-        const eventDate = new Date(event.start_date)
-        const bookingDate = new Date(booking.created_at)
 
-        // Create PDF
-        const pdf = new jsPDF('p', 'mm', 'a4')
+        const ticketNumber = this.generateTicketNumber(booking.booking_id || '', participantIndex)
+        const qrCodeDataURL = await this.generateQRCode(ticketNumber)
+
         const pageWidth = pdf.internal.pageSize.getWidth()
         const pageHeight = pdf.internal.pageSize.getHeight()
         const margin = 20
-        const contentWidth = pageWidth - (margin * 2)
+        const contentWidth = pageWidth - margin * 2
+
+        // Barcode (working placement at top-left gutter)
+        try {
+            const barcodeWidth = 18 // mm
+            const barcodeHeight = 110 // mm
+            const barcodeX = 1
+            const barcodeY = 0
+            await this.addBarcodeToPDF(pdf, ticketNumber, barcodeX, barcodeY, barcodeWidth, barcodeHeight, 'vertical')
+        } catch (e) {
+            console.error('[Ticket Barcode] failed placement (drawTicketPage):', e)
+        }
 
         // Header
-        pdf.setFillColor(31, 41, 55) // Dark gray
+        pdf.setFillColor(31, 41, 55)
         pdf.rect(0, 0, pageWidth, 40, 'F')
-        
         pdf.setTextColor(255, 255, 255)
         pdf.setFontSize(24)
         pdf.setFont('helvetica', 'bold')
         pdf.text(event.title, pageWidth / 2, 20, { align: 'center' })
-        
         pdf.setFontSize(14)
         pdf.setFont('helvetica', 'normal')
         pdf.text('Event Ticket', pageWidth / 2, 30, { align: 'center' })
@@ -137,14 +239,15 @@ export class TicketGenerator {
         // Reset text color
         pdf.setTextColor(0, 0, 0)
 
-        // Participant Name
+        // Left column
         pdf.setFontSize(20)
         pdf.setFont('helvetica', 'bold')
         pdf.text(`${participant.first_name} ${participant.last_name}`, margin, 60)
 
-        // Event Information
         let yPosition = 80
         const lineHeight = 8
+        const eventDate = new Date(event.start_date)
+        const bookingDate = new Date(booking.created_at)
 
         pdf.setFontSize(12)
         pdf.setFont('helvetica', 'bold')
@@ -177,26 +280,20 @@ export class TicketGenerator {
         pdf.text(event.organizer?.full_name || 'Hobsons Bay Chess Club', margin + 50, yPosition)
         yPosition += lineHeight
 
-        // Terms & Conditions
+        // Terms & Conditions (short)
         if (includeTermsConditions && event.settings?.terms_conditions) {
-            yPosition += 70
+            yPosition += 10
             pdf.setFont('helvetica', 'bold')
             pdf.setFontSize(14)
             pdf.text('Terms & Conditions:', margin, yPosition)
             yPosition += lineHeight
-
             pdf.setFont('helvetica', 'normal')
             pdf.setFontSize(10)
-            
-            // Convert markdown to plain text for PDF
             const plainTextTerms = this.convertMarkdownToText(event.settings.terms_conditions)
-            
-            // Split terms into lines that fit the page width
             const termsLines = pdf.splitTextToSize(plainTextTerms, contentWidth - 50)
             for (const line of termsLines) {
                 if (yPosition > pageHeight - 80) {
-                    pdf.addPage()
-                    yPosition = 20
+                    break
                 }
                 pdf.text(line, margin + 10, yPosition)
                 yPosition += 5
@@ -205,49 +302,37 @@ export class TicketGenerator {
 
         // Signature Lines
         if (signatureLine) {
-            // Ensure signature lines are positioned below the QR code
-            const signatureY = Math.max(yPosition + 10, 140) // QR code ends around 130, so start at 140
+            const signatureY = Math.max(yPosition + 10, 140)
             pdf.setFont('helvetica', 'normal')
             pdf.setFontSize(10)
-            
-            // Booker signature line
             pdf.line(margin, signatureY, margin + 80, signatureY)
             pdf.text('Signature', margin, signatureY + 5)
-            
-            // Date line
             pdf.line(margin + 100, signatureY, margin + 180, signatureY)
             pdf.text('Date', margin + 100, signatureY + 5)
         }
 
-        // Right section - Participant Name, QR Code and Ticket Number
-        const rightSectionX = pageWidth - margin - 70 // Move further right
-        const rightSectionY = 80
-
-        // Participant Name
+        // Right column: QR & ticket number
+        const rightSectionX = pageWidth - margin - 40
+        const rightSectionY = 70
         pdf.setFontSize(14)
         pdf.setFont('helvetica', 'bold')
-        pdf.text(`${participant.first_name} ${participant.last_name}`, rightSectionX, rightSectionY - 10)
-
-        // QR Code
+        pdf.text(`${participant.first_name} ${participant.last_name}`, rightSectionX, rightSectionY -2)
         await this.addQRCodeToPDF(pdf, qrCodeDataURL, rightSectionX, rightSectionY, 50)
-
-        // Ticket Number
         pdf.setFontSize(10)
         pdf.setFont('helvetica', 'bold')
-        pdf.text('Ticket Number:', rightSectionX, rightSectionY + 70)
+        pdf.text('Ticket Number:', rightSectionX + 10, rightSectionY + 55)
         pdf.setFont('helvetica', 'normal')
         pdf.setFontSize(8)
-        pdf.text(ticketNumber, rightSectionX, rightSectionY + 75)
+        pdf.text(ticketNumber, rightSectionX + 10, rightSectionY +58)
 
         // Footer
-        const footerY = pageHeight - 20
-        pdf.setFontSize(10)
+        const footerY = pageHeight - 10
+        pdf.setFontSize(9)
         pdf.setFont('helvetica', 'normal')
-        pdf.setTextColor(107, 114, 128) // Gray color
+        pdf.setTextColor(107, 114, 128)
         pdf.text('This ticket is valid for one person only. Please present this ticket at the event entrance.', pageWidth / 2, footerY, { align: 'center' })
         pdf.text('Generated by Hobsons Bay Chess Club Booking System', pageWidth / 2, footerY + 5, { align: 'center' })
-
-        return pdf
+        pdf.setTextColor(0, 0, 0)
     }
 
     public static async generateTicketPDF(
@@ -258,7 +343,8 @@ export class TicketGenerator {
         options: TicketGenerationOptions = {}
     ): Promise<Buffer> {
         try {
-            const pdf = await this.generateSingleTicketPDF(event, booking, participant, participantIndex, options)
+            const pdf = new jsPDF('p', 'mm', 'a4')
+            await this.drawTicketPage(pdf, event, booking, participant, participantIndex, options)
             return Buffer.from(pdf.output('arraybuffer'))
         } catch (error) {
             console.error('Error generating ticket PDF:', error)
@@ -368,158 +454,12 @@ export class TicketGenerator {
             if (participants.length === 0) {
                 throw new Error('No participants provided')
             }
-
-            // Create a new PDF document
             const pdf = new jsPDF('p', 'mm', 'a4')
-
-            // Generate each ticket and add it as a page
             for (let i = 0; i < participants.length; i++) {
                 const participant = participants[i]
-                
-                // Add new page for each ticket (except the first one)
-                if (i > 0) {
-                    pdf.addPage()
-                }
-
-                // Generate ticket content for this page
-                const ticketNumber = this.generateTicketNumber(booking.id, i)
-                const qrCodeDataURL = await this.generateQRCode(ticketNumber)
-                
-                const eventDate = new Date(event.start_date)
-                const bookingDate = new Date(booking.created_at)
-                const { includeTermsConditions = true, signatureLine = true } = options
-
-                const pageWidth = pdf.internal.pageSize.getWidth()
-                const pageHeight = pdf.internal.pageSize.getHeight()
-                const margin = 20
-                const contentWidth = pageWidth - (margin * 2)
-
-                // Header
-                pdf.setFillColor(31, 41, 55) // Dark gray
-                pdf.rect(0, 0, pageWidth, 40, 'F')
-                
-                pdf.setTextColor(255, 255, 255)
-                pdf.setFontSize(24)
-                pdf.setFont('helvetica', 'bold')
-                pdf.text(event.title, pageWidth / 2, 20, { align: 'center' })
-                
-                pdf.setFontSize(14)
-                pdf.setFont('helvetica', 'normal')
-                pdf.text('Event Ticket', pageWidth / 2, 30, { align: 'center' })
-
-                // Reset text color
-                pdf.setTextColor(0, 0, 0)
-
-                // Participant Name
-                pdf.setFontSize(20)
-                pdf.setFont('helvetica', 'bold')
-                pdf.text(`${participant.first_name} ${participant.last_name}`, margin, 60)
-
-                // Event Information
-                let yPosition = 80
-                const lineHeight = 8
-
-                pdf.setFontSize(12)
-                pdf.setFont('helvetica', 'bold')
-                pdf.text('Event Date & Time:', margin, yPosition)
-                pdf.setFont('helvetica', 'normal')
-                pdf.text(`${this.formatDate(eventDate)} at ${this.formatTime(eventDate)}`, margin + 50, yPosition)
-                yPosition += lineHeight
-
-                pdf.setFont('helvetica', 'bold')
-                pdf.text('Location:', margin, yPosition)
-                pdf.setFont('helvetica', 'normal')
-                pdf.text(event.location, margin + 50, yPosition)
-                yPosition += lineHeight
-
-                pdf.setFont('helvetica', 'bold')
-                pdf.text('Booking ID:', margin, yPosition)
-                pdf.setFont('helvetica', 'normal')
-                pdf.text(booking.booking_id || booking.id, margin + 50, yPosition)
-                yPosition += lineHeight
-
-                pdf.setFont('helvetica', 'bold')
-                pdf.text('Booking Date:', margin, yPosition)
-                pdf.setFont('helvetica', 'normal')
-                pdf.text(this.formatDate(bookingDate), margin + 50, yPosition)
-                yPosition += lineHeight
-
-                pdf.setFont('helvetica', 'bold')
-                pdf.text('Organizer:', margin, yPosition)
-                pdf.setFont('helvetica', 'normal')
-                pdf.text(event.organizer?.full_name || 'Hobsons Bay Chess Club', margin + 50, yPosition)
-                yPosition += lineHeight
-
-                // Terms & Conditions
-                if (includeTermsConditions && event.settings?.terms_conditions) {
-                    yPosition += 10
-                    pdf.setFont('helvetica', 'bold')
-                    pdf.setFontSize(14)
-                    pdf.text('Terms & Conditions:', margin, yPosition)
-                    yPosition += lineHeight
-
-                    pdf.setFont('helvetica', 'normal')
-                    pdf.setFontSize(10)
-                    
-                    // Convert markdown to plain text for PDF
-                    const plainTextTerms = this.convertMarkdownToText(event.settings.terms_conditions)
-                    
-                    // Split terms into lines that fit the page width
-                    const termsLines = pdf.splitTextToSize(plainTextTerms, contentWidth - 50)
-                    for (const line of termsLines) {
-                        if (yPosition > pageHeight - 80) {
-                            break // Don't add new pages for terms in multi-ticket PDF
-                        }
-                        pdf.text(line, margin + 10, yPosition)
-                        yPosition += 5
-                    }
-                }
-
-                // Signature Lines
-                if (signatureLine) {
-                    // Ensure signature lines are positioned below the QR code
-                    const signatureY = Math.max(yPosition + 10, 140) // QR code ends around 130, so start at 140
-                    pdf.setFont('helvetica', 'normal')
-                    pdf.setFontSize(10)
-                    
-                    // Booker signature line
-                    pdf.line(margin, signatureY, margin + 80, signatureY)
-                    pdf.text('Booker Signature', margin, signatureY + 5)
-                    
-                    // Date line
-                    pdf.line(margin + 100, signatureY, margin + 180, signatureY)
-                    pdf.text('Date', margin + 100, signatureY + 5)
-                }
-
-                // Right section - Participant Name, QR Code and Ticket Number
-                const rightSectionX = pageWidth - margin - 40 // Move further right
-                const rightSectionY = 80
-
-                // Participant Name
-                pdf.setFontSize(14)
-                pdf.setFont('helvetica', 'bold')
-                pdf.text(`${participant.first_name} ${participant.last_name}`, rightSectionX, rightSectionY - 10)
-
-                // QR Code
-                await this.addQRCodeToPDF(pdf, qrCodeDataURL, rightSectionX, rightSectionY, 50)
-
-                // Ticket Number
-                pdf.setFontSize(10)
-                pdf.setFont('helvetica', 'bold')
-                pdf.text('Ticket Number:', rightSectionX + 13, rightSectionY + 53)
-                pdf.setFont('helvetica', 'normal')
-                pdf.setFontSize(8)
-                pdf.text(ticketNumber, rightSectionX +8, rightSectionY + 58)
-
-                // Footer
-                const footerY = pageHeight - 20
-                pdf.setFontSize(10)
-                pdf.setFont('helvetica', 'normal')
-                pdf.setTextColor(107, 114, 128) // Gray color
-                pdf.text('This ticket is valid for one person only. Please present this ticket at the event entrance.', pageWidth / 2, footerY, { align: 'center' })
-                pdf.text('Generated by Hobsons Bay Chess Club Booking System', pageWidth / 2, footerY + 5, { align: 'center' })
+                if (i > 0) pdf.addPage()
+                await this.drawTicketPage(pdf, event, booking, participant, i, options)
             }
-
             return Buffer.from(pdf.output('arraybuffer'))
         } catch (error) {
             console.error('Error generating all tickets PDF:', error)

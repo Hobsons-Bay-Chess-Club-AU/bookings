@@ -366,7 +366,7 @@ export default function EventViewPage() {
                                             )}
                                             <div className="flex justify-between">
                                                 <dt className="text-gray-600 dark:text-gray-400">Price:</dt>
-                                                <dd className="text-gray-900 dark:text-gray-100">{formatCurrency(event.price)}</dd>
+                                                <dd className="text-gray-900 dark:text-gray-100">{event.price === 0 ? 'Varies' : formatCurrency(event.price)}</dd>
                                             </div>
                                             <div className="flex justify-between">
                                                 <dt className="text-gray-600 dark:text-gray-400">Capacity:</dt>

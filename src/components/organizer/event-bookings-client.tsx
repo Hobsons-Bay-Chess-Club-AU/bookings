@@ -341,7 +341,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                             </div>
                             <div className="flex items-center">
                                 <span className="mr-2">💰</span>
-                                <span>AUD ${event.price.toFixed(2)} per ticket</span>
+                                <span>{event.price === 0 ? 'Varies' : `AUD ${event.price.toFixed(2)} per ticket`}</span>
                             </div>
                         </div>
                     </div>

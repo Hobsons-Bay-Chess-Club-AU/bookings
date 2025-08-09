@@ -229,6 +229,29 @@ export default async function EventPage({ params }: EventPageProps) {
     }
 
     const participants = await getEventParticipants(event.id)
+
+    // Fetch pricing range for display
+    let priceDisplay: string = ''
+    try {
+        const siteUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+        const res = await fetch(`${siteUrl}/api/events/${event.id}/pricing?membership_type=all`, { cache: 'no-store' })
+        if (res.ok) {
+            const pricing: Array<{ price: number }> = await res.json()
+            if (pricing && pricing.length > 0) {
+                const prices = pricing.map(p => p.price).filter((p) => typeof p === 'number')
+                if (prices.length > 0) {
+                    const min = Math.min(...prices)
+                    const max = Math.max(...prices)
+                    priceDisplay = min === max ? (min === 0 ? 'Free' : `AUD $${min.toFixed(2)}`) : `From AUD $${min.toFixed(2)} - $${max.toFixed(2)}`
+                }
+            }
+        }
+    } catch {
+        // ignore and fall back to base price below
+    }
+    if (!priceDisplay) {
+        priceDisplay = event.price === 0 ? 'Contact organizer' : `AUD $${event.price.toFixed(2)}`
+    }
     const isEventFull = event.max_attendees ? event.current_attendees >= event.max_attendees : false
     const isEventPast = new Date(event.start_date) < new Date()
 
@@ -330,7 +353,7 @@ export default async function EventPage({ params }: EventPageProps) {
                                         <div className="flex items-center">
                                             <HiCurrencyDollar className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
                                             <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                                {event.price === 0 ? 'Free' : `AUD $${event.price.toFixed(2)}`}
+                                                {priceDisplay}
                                             </p>
                                         </div>
                                     </div>

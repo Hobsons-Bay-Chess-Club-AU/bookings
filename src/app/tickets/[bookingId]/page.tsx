@@ -72,15 +72,6 @@ export default async function TicketPage({ params }: TicketPageProps) {
     const isOrganizer = booking.events.organizer_id === profile.id
     const isAdmin = profile.role === 'admin'
 
-    console.log('Permission check:', { 
-        isOwner, 
-        isOrganizer, 
-        isAdmin, 
-        bookingUserId: booking.user_id, 
-        currentUserId: profile.id,
-        eventOrganizerId: booking.events.organizer_id,
-        userRole: profile.role 
-    })
 
     if (!isOwner && !isOrganizer && !isAdmin) {
         console.log('Access denied - redirecting to unauthorized')
@@ -215,6 +206,7 @@ export default async function TicketPage({ params }: TicketPageProps) {
 
                         <div className="space-y-4">
                             <a
+                            target='_blank'
                                 href={`/api/tickets/${booking.id}`}
                                 className="inline-flex items-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
                             >

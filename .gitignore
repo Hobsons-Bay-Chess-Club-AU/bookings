@@ -43,3 +43,5 @@ error.txt
 
 playwright-report
 test-results
+.next-local
+dist
