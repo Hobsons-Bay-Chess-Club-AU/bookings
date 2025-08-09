@@ -111,11 +111,54 @@ export default function ShortUrlPage({ params }: PageProps) {
         
         const upper = alias.toUpperCase()
         log('supabase:query:start', { aliasUpper: upper })
-        const { data: event, error } = await supabase
+        const TIMEOUT_MS = 5000
+        const reloadKey = `alias_reload_done_${upper}`
+
+        async function withTimeout<T>(promiseLike: PromiseLike<T>, ms: number): Promise<{ type: 'success'; value: T } | { type: 'timeout' }> {
+          return new Promise((resolve, reject) => {
+            const timer = setTimeout(() => resolve({ type: 'timeout' }), ms)
+            promiseLike.then(
+              (value) => {
+                clearTimeout(timer)
+                resolve({ type: 'success', value })
+              },
+              (err) => {
+                clearTimeout(timer)
+                reject(err)
+              }
+            )
+          })
+        }
+
+        const fetchPromise = supabase
           .from('events')
           .select('id')
           .eq('alias', upper)
           .single()
+
+        const raced = await withTimeout(fetchPromise, TIMEOUT_MS)
+
+        if (raced.type === 'timeout') {
+          log('supabase:query:timeout', { timeoutMs: TIMEOUT_MS })
+          try {
+            const alreadyReloaded = typeof window !== 'undefined' ? window.sessionStorage.getItem(reloadKey) === '1' : false
+            if (!alreadyReloaded) {
+              if (typeof window !== 'undefined') {
+                window.sessionStorage.setItem(reloadKey, '1')
+                log('window:reload')
+                window.location.reload()
+                return
+              }
+            }
+          } catch (e) {
+            // Ignore sessionStorage errors and fall through to error state
+          }
+          // If we already reloaded once (or cannot reload), show error instead of hanging
+          setError('We were unable to load this event. Please try again later.')
+          return
+        }
+
+        const { data: event, error } = raced.value as { data: { id: string } | null; error: unknown }
         log('supabase:query:end', { errorPresent: Boolean(error), hasEvent: Boolean(event) })
 
         if (error || !event) {
