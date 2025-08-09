@@ -72,6 +72,8 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
 
     const baseAmount = selectedPricing ? selectedPricing.price * quantity : (event.price * quantity)
     const totalAmount = discountInfo?.finalAmount ?? baseAmount
+    // Processing fee estimation for display (final fee calculated server-side)
+    const processingFee = totalAmount > 0 ? totalAmount * 0.017 + 0.30 : 0
     const maxQuantity = event.max_attendees
         ? Math.min(10, event.max_attendees - event.current_attendees)
         : 10
@@ -746,6 +748,7 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                     quantity={quantity}
                     totalAmount={totalAmount}
                     baseAmount={baseAmount}
+                    processingFee={processingFee}
                     discountInfo={discountInfo}
                     discountLoading={discountLoading}
                     contactInfo={contactInfo}

@@ -13,7 +13,8 @@ import {
     HiArrowRightOnRectangle, 
     HiChevronDown, 
     HiBars3, 
-    HiXMark 
+    HiXMark,
+    HiMagnifyingGlass
 } from 'react-icons/hi2'
 import type { User } from '@supabase/supabase-js'
 
@@ -92,6 +93,8 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
     const [profile, setProfile] = useState<Profile | null>(null)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
+    const [searchOpen, setSearchOpen] = useState(false)
+    const [searchValue, setSearchValue] = useState('')
     const pathname = usePathname()
     const supabase = createClient()
     const mobileMenuRef = useRef<HTMLDivElement>(null)
@@ -155,12 +158,18 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
             if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
                 setProfileDropdownOpen(false)
             }
+            // Close search on outside click
+            const target = event.target as HTMLElement
+            if (searchOpen && !target.closest('#admin-search-overlay')) {
+                setSearchOpen(false)
+            }
         }
 
         const handleEscapeKey = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
                 setMobileMenuOpen(false)
                 setProfileDropdownOpen(false)
+                setSearchOpen(false)
             }
         }
 
@@ -171,11 +180,28 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
             document.removeEventListener('mousedown', handleClickOutside)
             document.removeEventListener('keydown', handleEscapeKey)
         }
-    }, [])
+    }, [searchOpen])
 
     const handleNavigate = (href: string) => {
         window.location.href = href
         setProfileDropdownOpen(false)
+    }
+
+    const handleSearch = () => {
+        const q = searchValue.trim()
+        if (!q) return
+        // Accept either short booking_id or UUID; navigate organizer booking details if found by id
+        // Prefer short booking code as bookingId; otherwise assume UUID
+        const isUuid = q.length === 36 && q.includes('-')
+        if (isUuid) {
+            // Organizer booking details requires event id + bookingId; we only have booking id, so send admin API first? Simplify: try admin page pattern later.
+            window.location.href = `/admin/bookings?id=${encodeURIComponent(q)}`
+        } else {
+            // Short booking id; admin flow can resolve, use admin list with filter via query param
+            window.location.href = `/admin/bookings?booking_id=${encodeURIComponent(q.toUpperCase())}`
+        }
+        setSearchOpen(false)
+        setSearchValue('')
     }
 
     const isActivePath = (path: string) => {
@@ -212,6 +238,7 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
 
                     {/* Quick action menu (role-based) */}
                     <div className="hidden md:flex md:items-center md:space-x-4">
+                        
                         {isOrganizer && (
                             <>
                                 <Link href="/organizer" className={getNavLinkClasses('/organizer', true)}>
@@ -234,7 +261,16 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                         )}
                         {/* User dropdown menu only (no horizontal admin/organizer links) */}
                         {user && (
-                            <div className="relative ml-3" ref={profileDropdownRef}>
+                            <div className="relative ml-3 flex items-center" ref={profileDropdownRef}>
+                                {/* Search button placed next to profile avatar */}
+                                <button
+                                    type="button"
+                                    className="mr-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    title="Search booking by ID"
+                                    onClick={() => setSearchOpen(true)}
+                                >
+                                    <HiMagnifyingGlass className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+                                </button>
                                 <button
                                     onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                                     className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -327,6 +363,41 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                     </div>
                 </div>
             </div>
+
+            {/* Search overlay */}
+            {searchOpen && (
+                <div id="admin-search-overlay" className="fixed inset-0 z-50 flex items-start justify-center pt-24 bg-black/60 backdrop-blur-sm">
+                    <div className="w-full max-w-md mx-auto px-4">
+                        <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4 border border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center gap-2">
+                                <input
+                                    autoFocus
+                                    type="text"
+                                    placeholder="Enter booking ID (short code or UUID)"
+                                    value={searchValue}
+                                    onChange={e => setSearchValue(e.target.value)}
+                                    className="flex-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleSearch}
+                                    className="px-3 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium"
+                                >
+                                    Search
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchOpen(false)}
+                                    className="px-3 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">Tip: You can paste either the 7-char booking code or the full UUID.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Mobile menu */}
             {mobileMenuOpen && (

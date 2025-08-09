@@ -9,14 +9,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(request: NextRequest) {
     try {
         const requestBody = await request.json()
-        const { bookingId, eventId, quantity, amount, eventTitle, optInMarketing } = requestBody
+        const { bookingId, eventId, quantity, amount: _clientAmount, eventTitle, optInMarketing } = requestBody
 
-        if (!bookingId || !eventId || !quantity || !amount || !eventTitle) {
+        if (!bookingId || !eventId || !quantity || !_clientAmount || !eventTitle) {
             console.log('❌ [create-checkout-session] Missing required fields:', {
                 hasBookingId: !!bookingId,
                 hasEventId: !!eventId,
                 hasQuantity: !!quantity,
-                hasAmount: !!amount,
+                hasAmount: !!_clientAmount,
                 hasEventTitle: !!eventTitle
             })
             return NextResponse.json(
@@ -118,7 +118,12 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Entries for this event are now closed (entry close date has passed).' }, { status: 400 })
         }
 
-        // Create Stripe checkout session
+        // Calculate processing fee (1.7% + $0.30) based on booking total amount (server-side trusted)
+        const bookingTotalAud = Number(booking.total_amount) || 0
+        const processingFeeAud = bookingTotalAud > 0 ? (bookingTotalAud * 0.017 + 0.30) : 0
+        const processingFeeCents = Math.round(processingFeeAud * 100)
+
+        // Create Stripe checkout session (server-trusted amounts)
         const sessionConfig: Stripe.Checkout.SessionCreateParams = {
             payment_method_types: ['card'],
             line_items: [
@@ -129,10 +134,24 @@ export async function POST(request: NextRequest) {
                             name: eventTitle,
                             description: `${quantity} ticket${quantity > 1 ? 's' : ''}`,
                         },
-                        unit_amount: Math.round((amount / quantity) * 100), // Convert to cents
+                        unit_amount: Math.round((bookingTotalAud / quantity) * 100), // Convert to cents
                     },
                     quantity: quantity,
                 },
+                // Add processing fee as a transparent line item if applicable
+                ...(processingFeeCents > 0
+                    ? [{
+                        price_data: {
+                            currency: 'aud',
+                            product_data: {
+                                name: 'Processing fee',
+                                description: '1.7% + A$0.30'
+                            },
+                            unit_amount: processingFeeCents,
+                        },
+                        quantity: 1,
+                    } as Stripe.Checkout.SessionCreateParams.LineItem]
+                    : []),
             ],
             mode: 'payment',
             success_url: `${process.env.NEXT_PUBLIC_APP_URL}/booking/success?session_id={CHECKOUT_SESSION_ID}`,

@@ -8,6 +8,7 @@ interface Step4ReviewProps {
     quantity: number
     totalAmount: number
     baseAmount: number
+    processingFee?: number
     discountInfo?: {
         totalDiscount: number
         appliedDiscounts: Array<{
@@ -50,6 +51,7 @@ export default function Step4Review({
     quantity,
     totalAmount,
     baseAmount,
+    processingFee,
     discountInfo,
     discountLoading,
     contactInfo,
@@ -137,6 +139,12 @@ export default function Step4Review({
                                 </span>
                             </div>
                         </div>
+                        {/* Processing fee disclosure */}
+                        {!isFreeEvent && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                A processing fee of 1.7% + A$0.30 will be added at checkout.
+                            </div>
+                        )}
                     </div>
                 </div>
 

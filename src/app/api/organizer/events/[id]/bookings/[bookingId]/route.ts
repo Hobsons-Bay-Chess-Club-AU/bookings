@@ -40,7 +40,8 @@ export async function GET(
         }
 
         // Fetch booking with all related details
-        const { data: booking, error } = await supabase
+        // Support both UUID id and short booking_id in the [bookingId] path param
+        const bookingQuery = supabase
             .from('bookings')
             .select(`
                 *,
@@ -52,11 +53,35 @@ export async function GET(
                     discount:event_discounts(*)
                 )
             `)
-            .eq('id', bookingId)
             .eq('event_id', eventId)
+            .eq('id', bookingId)
             .single()
 
-        if (error) {
+        let { data: booking, error } = await bookingQuery
+
+        if (error || !booking) {
+            // Fallback to booking_id (case-insensitive by uppercasing input)
+            const code = bookingId.toUpperCase()
+            const res = await supabase
+                .from('bookings')
+                .select(`
+                    *,
+                    event:events!bookings_event_id_fkey(*),
+                    user:profiles!bookings_user_id_fkey(*),
+                    participants(*),
+                    discount_applications(
+                        *,
+                        discount:event_discounts(*)
+                    )
+                `)
+                .eq('event_id', eventId)
+                .eq('booking_id', code)
+                .single()
+            booking = res.data
+            error = res.error
+        }
+
+        if (error || !booking) {
             console.error('Error fetching booking details:', error)
             return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
         }

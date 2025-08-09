@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import AdminBookingsPageClient from './page-client'
 import { HiExclamationCircle } from 'react-icons/hi'
@@ -27,6 +28,58 @@ export default function AdminBookingsPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const supabase = createClient()
+    const searchParams = useSearchParams()
+    const router = useRouter()
+
+    useEffect(() => {
+        // If query params include id or booking_id, resolve and redirect to booking details
+        const resolveAndRedirect = async () => {
+            const idParam = searchParams?.get('id')
+            const bookingCodeParam = searchParams?.get('booking_id')
+            const qParam = searchParams?.get('q')
+            const input = (idParam || bookingCodeParam || qParam || '').trim()
+            if (!input) return
+
+            try {
+                setLoading(true)
+                type Lookup = { id: string; booking_id: string; event_id: string }
+                const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input)
+                let data: Lookup | null = null
+                let error: unknown = null
+                if (isUuid) {
+                    const res = await supabase
+                        .from('bookings')
+                        .select('id, booking_id, event_id')
+                        .eq('id', input)
+                        .single()
+                    data = res.data as Lookup | null
+                    error = res.error
+                } else {
+                    const codeUpper = input.toUpperCase()
+                    const res = await supabase
+                        .from('bookings')
+                        .select('id, booking_id, event_id')
+                        .eq('booking_id', codeUpper)
+                        .single()
+                    data = res.data as Lookup | null
+                    error = res.error
+                }
+                if (error || !data) {
+                    setError('Booking not found')
+                    return
+                }
+                const found = data as unknown as Lookup
+                router.replace(`/organizer/events/${found.event_id}/bookings/${found.booking_id}`)
+            } catch (e) {
+                console.error('Error resolving booking by query:', e)
+                setError('Failed to resolve booking by query')
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        resolveAndRedirect()
+    }, [searchParams, supabase, router])
 
     useEffect(() => {
         const fetchData = async () => {

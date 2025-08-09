@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Breadcrumb from '@/components/ui/breadcrumb'
 import { Booking, Event, Profile, Participant, DiscountApplication } from '@/lib/types/database';
 import {
     HiTicket,
@@ -39,6 +40,66 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
     const [eventId, setEventId] = useState<string>('');
     const [bookingId, setBookingId] = useState<string>('');
     const [actionLoading, setActionLoading] = useState(false);
+
+    const renderCustomField = (fieldKey: string, fieldValue: unknown): React.ReactNode => {
+        const label = fieldKey;
+
+        const renderFideIdLink = (idValue: string) => (
+            <a
+                href={`https://ratings.fide.com/profile/${idValue}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
+            >
+                {idValue}
+            </a>
+        );
+
+        const renderObject = (obj: Record<string, unknown>) => {
+            const hasPlayerShape = typeof obj.id === 'string' && typeof obj.name === 'string';
+            if (hasPlayerShape) {
+                const idText = obj.id as string;
+                const nameText = obj.name as string;
+                const parts: string[] = [];
+                if (obj.std_rating) parts.push(`Std: ${obj.std_rating}`);
+                if (obj.rapid_rating) parts.push(`Rapid: ${obj.rapid_rating}`);
+                if (obj.blitz_rating) parts.push(`Blitz: ${obj.blitz_rating}`);
+                if (obj.quick_rating) parts.push(`Quick: ${obj.quick_rating}`);
+                const ratingsText = parts.length > 0 ? ` - ${parts.join(', ')}` : '';
+                const idNode = fieldKey.toLowerCase().includes('fide') ? renderFideIdLink(idText) : <>{idText}</>;
+                return (
+                    <>
+                        {nameText} (ID: {idNode}){ratingsText}
+                    </>
+                );
+            }
+
+            const entries = Object.entries(obj)
+                .filter(([, value]) => value !== null && value !== undefined && value !== '')
+                .slice(0, 5);
+            if (entries.length === 0) return <>-</>;
+            return <>{entries.map(([k, v]) => `${k}: ${v}`).join(', ')}</>;
+        };
+
+        let valueNode: React.ReactNode;
+        if (fieldValue === null || fieldValue === undefined) {
+            valueNode = <>-</>;
+        } else if (Array.isArray(fieldValue)) {
+            valueNode = <>{fieldValue.join(', ')}</>;
+        } else if (typeof fieldValue === 'object') {
+            valueNode = renderObject(fieldValue as Record<string, unknown>);
+        } else if (typeof fieldValue === 'boolean') {
+            valueNode = <>{fieldValue ? 'Yes' : 'No'}</>;
+        } else {
+            valueNode = <>{String(fieldValue)}</>;
+        }
+
+        return (
+            <div className="mb-1">
+                <span className="font-medium">{label}:</span> {valueNode}
+            </div>
+        );
+    };
 
     useEffect(() => {
         const getParams = async () => {
@@ -147,6 +208,17 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
 
     return (
         <div className="max-w-7xl mx-auto py-0 px-0 md:py-12 md:px-4 sm:px-6 lg:px-0">
+            {/* Breadcrumb */}
+            <div className="mb-6">
+                <Breadcrumb
+                    items={[
+                        { label: 'Events', href: '/organizer' },
+                        { label: booking.event.title, href: `/organizer/events/${booking.event.id}` },
+                        { label: 'Bookings', href: `/organizer/events/${booking.event.id}/bookings` },
+                        { label: booking.booking_id || booking.id.slice(0, 8) }
+                    ]}
+                />
+            </div>
             {/* Header with Back Button */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
                 <div className="flex items-center space-x-4">
@@ -310,19 +382,19 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                                         )}
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    {participant.custom_data && Object.keys(participant.custom_data).length > 0 ? (
-                                                        <div className="text-xs text-gray-600 dark:text-gray-400">
-                                                            {Object.entries(participant.custom_data).map(([key, value]) => (
-                                                                <div key={key} className="mb-1">
-                                                                    <span className="font-medium">{key}:</span> {String(value)}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-xs text-gray-400 dark:text-gray-500">No additional info</span>
-                                                    )}
-                                                </td>
+                                                    <td className="px-6 py-4">
+                                                        {participant.custom_data && Object.keys(participant.custom_data).length > 0 ? (
+                                                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                                                                {Object.entries(participant.custom_data).map(([key, value]) => (
+                                                                    <React.Fragment key={key}>
+                                                                        {renderCustomField(key, value)}
+                                                                    </React.Fragment>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-xs text-gray-400 dark:text-gray-500">No additional info</span>
+                                                        )}
+                                                    </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -359,16 +431,16 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                                     )}
                                                 </div>
                                                 
-                                                {participant.custom_data && Object.keys(participant.custom_data).length > 0 && (
-                                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                        <div className="font-medium mb-1">Additional Info:</div>
-                                                        {Object.entries(participant.custom_data).map(([key, value]) => (
-                                                            <div key={key} className="text-xs">
-                                                                <span className="font-medium">{key}:</span> {String(value)}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
+                                                    {participant.custom_data && Object.keys(participant.custom_data).length > 0 && (
+                                                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                                                            <div className="font-medium mb-1">Additional Info:</div>
+                                                            {Object.entries(participant.custom_data).map(([key, value]) => (
+                                                                <div key={key} className="text-xs">
+                                                                    {renderCustomField(key, value)}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                             </div>
                                         </div>
                                     ))}
