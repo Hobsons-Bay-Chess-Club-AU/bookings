@@ -17,43 +17,100 @@ import { HiCalendarDays, HiMapPin, HiUsers, HiCurrencyDollar } from 'react-icons
 import Image from 'next/image'
 import { BookingWithProfile } from '@/lib/types/ui'
 
+class TimeoutError extends Error {
+    constructor(message: string) {
+        super(message)
+        this.name = 'TimeoutError'
+    }
+}
+
+async function raceWithTimeout<T>(promiseLike: PromiseLike<T>, timeoutMs: number): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new TimeoutError(`Timed out after ${timeoutMs}ms`)), timeoutMs)
+        Promise.resolve(promiseLike).then(
+            (value) => {
+                clearTimeout(timer)
+                resolve(value)
+            },
+            (err) => {
+                clearTimeout(timer)
+                reject(err)
+            }
+        )
+    })
+}
+
 async function getEvent(id: string): Promise<Event | null> {
     const supabase = await createClient()
 
-    const { data: event, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('id', id)
-        .single()
+    const TIMEOUT_MS = 5000
+    const fetchQuery = () =>
+        supabase
+            .from('events')
+            .select('*')
+            .eq('id', id)
+            .single()
 
-    if (error || !event) {
+    // Try once with timeout, then retry once if timed out
+    try {
+        const resp = (await raceWithTimeout(fetchQuery(), TIMEOUT_MS)) as { data: Event | null; error: unknown }
+        if (!resp || (resp as any).error || !resp.data) {
+            return null
+        }
+        return resp.data
+    } catch (err) {
+        if (err instanceof TimeoutError) {
+            try {
+                const resp = (await raceWithTimeout(fetchQuery(), TIMEOUT_MS)) as { data: Event | null; error: unknown }
+                if (!resp || (resp as any).error || !resp.data) {
+                    return null
+                }
+                return resp.data
+            } catch {
+                return null
+            }
+        }
         return null
     }
-
-    return event
 }
 
 
 async function getEventParticipants(eventId: string): Promise<BookingWithProfile[]> {
     const supabase = await createClient()
 
-    const { data: bookings, error } = await supabase
-        .from('bookings')
-        .select(`
-            *,
-            profile:profiles!bookings_user_id_fkey(*),
-            participants(*)
-        `)
-        .eq('event_id', eventId)
-        .in('status', ['confirmed', 'verified'])
-        .order('created_at', { ascending: false })
+    const TIMEOUT_MS = 5000
+    const fetchQuery = () =>
+        supabase
+            .from('bookings')
+            .select(`
+                *,
+                profile:profiles!bookings_user_id_fkey(*),
+                participants(*)
+            `)
+            .eq('event_id', eventId)
+            .in('status', ['confirmed', 'verified'])
+            .order('created_at', { ascending: false })
 
-    if (error) {
-        console.error('Error fetching participants:', error)
+    try {
+        const resp = (await raceWithTimeout(fetchQuery(), TIMEOUT_MS)) as { data: BookingWithProfile[] | null; error: unknown }
+        if (!resp || (resp as any).error) {
+            return []
+        }
+        return (resp.data || []) as BookingWithProfile[]
+    } catch (err) {
+        if (err instanceof TimeoutError) {
+            try {
+                const resp = (await raceWithTimeout(fetchQuery(), TIMEOUT_MS)) as { data: BookingWithProfile[] | null; error: unknown }
+                if (!resp || (resp as any).error) {
+                    return []
+                }
+                return (resp.data || []) as BookingWithProfile[]
+            } catch {
+                return []
+            }
+        }
         return []
     }
-
-    return (bookings || []) as BookingWithProfile[]
 }
 
 interface EventPageProps {
