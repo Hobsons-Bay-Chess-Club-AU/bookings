@@ -109,6 +109,7 @@ import {
 } from './templates/index'
 import { resend } from './client'
 import { createClient } from '@/lib/supabase/server'
+import { CalendarEvent, generateGoogleCalendarUrl, generateOutlookCalendarUrl, generateIcsFile } from '@/lib/utils/calendar'
 
 interface EmailData {
     booking: Booking
@@ -180,18 +181,41 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
             timestamp: new Date().toISOString()
         })
 
+        // Prepare calendar event and links
+        const startDate = new Date(event.start_date)
+        const endDate = event.end_date ? new Date(event.end_date) : new Date(startDate.getTime() + 2 * 60 * 60 * 1000)
+        const calendarEvent: CalendarEvent = {
+            title: event.title,
+            description: event.description,
+            location: event.location,
+            startDate,
+            endDate,
+            url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/events/${event.id}`,
+            organizerName: (event && 'organizer_name' in event ? (event as Event & { organizer_name?: string }).organizer_name : undefined) || undefined,
+            organizerEmail: (event && 'organizer_email' in event ? (event as Event & { organizer_email?: string }).organizer_email : undefined) || undefined
+        }
+
+        const googleCalendarUrl = generateGoogleCalendarUrl(calendarEvent)
+        const outlookCalendarUrl = generateOutlookCalendarUrl(calendarEvent)
+
         const { html, text } = await renderBookingConfirmationEmail({
             bookingId: booking.booking_id || booking.id,
             eventName: event.title,
             eventDate: event.start_date,
             eventLocation: event.location,
+            eventEndDate: event.end_date,
             participantCount: booking.quantity,
             totalAmount: booking.total_amount,
             organizerName: (event && 'organizer_name' in event ? (event as Event & { organizer_name?: string }).organizer_name : undefined) || 'Event Organizer',
             organizerEmail: (event && 'organizer_email' in event ? (event as Event & { organizer_email?: string }).organizer_email : undefined) || '',
             organizerPhone: (event && 'organizer_phone' in event ? (event as Event & { organizer_phone?: string }).organizer_phone : undefined) || '',
             eventDescription: event.description,
-            participants: participants || []
+            participants: participants || [],
+            calendarUrls: {
+                google: googleCalendarUrl,
+                outlook: outlookCalendarUrl
+            },
+            hasIcsAttachment: true
         })
 
         console.log('✅ [BOOKING CONFIRMATION] Email template rendered:', {
@@ -209,12 +233,24 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
             timestamp: new Date().toISOString()
         })
 
+        const icsContent = generateIcsFile(calendarEvent)
+        const icsFilename = `${event.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${startDate
+            .toISOString()
+            .slice(0, 10)}.ics`
+
         const { data: emailData, error } = await resend.emails.send({
             from: process.env.RESEND_FROM_EMAIL || "",
             to: user.email,
             subject: `Booking Confirmed: ${event.title}`,
             html,
-            text
+            text,
+            attachments: [
+                {
+                    filename: icsFilename,
+                    content: Buffer.from(icsContent),
+                    contentType: 'text/calendar; charset=utf-8'
+                }
+            ]
         })
 
         if (error) {

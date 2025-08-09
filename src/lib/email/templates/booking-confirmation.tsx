@@ -8,6 +8,7 @@ interface BookingConfirmationEmailData {
   eventName: string
   eventDate: string
   eventLocation: string
+  eventEndDate?: string
   participantCount: number
   totalAmount: number
   organizerName: string
@@ -22,6 +23,8 @@ interface BookingConfirmationEmailData {
     contact_phone?: string
     custom_data?: Record<string, unknown>
   }>
+  calendarUrls?: { google: string; outlook: string }
+  hasIcsAttachment?: boolean
 }
 
 function BookingConfirmationEmail({
@@ -29,14 +32,19 @@ function BookingConfirmationEmail({
   eventName,
   eventDate,
   eventLocation,
+  eventEndDate,
   participantCount,
   totalAmount,
   organizerName,
   organizerEmail,
   organizerPhone,
   eventDescription,
-  participants
+  participants,
+  calendarUrls,
+  hasIcsAttachment
 }: BookingConfirmationEmailData) {
+  const formattedStart = new Date(eventDate)
+  const formattedEnd = eventEndDate ? new Date(eventEndDate) : undefined
   return (
     <EmailLayout
       title="Booking Confirmation"
@@ -51,15 +59,17 @@ function BookingConfirmationEmail({
           <strong>Event:</strong> {eventName}
         </EmailText>
         <EmailText style={{ marginBottom: '10px' }}>
-          <strong>Date:</strong> {new Date(eventDate).toLocaleDateString('en-AU', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+          <strong>Starts:</strong> {formattedStart.toLocaleDateString('en-AU', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
           })}
         </EmailText>
+        {formattedEnd && (
+          <EmailText style={{ marginBottom: '10px' }}>
+            <strong>Ends:</strong> {formattedEnd.toLocaleDateString('en-AU', {
+              weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            })}
+          </EmailText>
+        )}
         <EmailText style={{ marginBottom: '10px' }}>
           <strong>Location:</strong> {eventLocation}
         </EmailText>
@@ -74,11 +84,63 @@ function BookingConfirmationEmail({
         </EmailText>
       </EmailCard>
 
+      {(calendarUrls || hasIcsAttachment) && (
+        <EmailCard backgroundColor="#eef2ff" borderColor="#6366f1">
+          <EmailHeading level={3}>Add to your calendar</EmailHeading>
+          {calendarUrls && (
+            <EmailText style={{ marginBottom: '10px' }}>
+              Add this event to your calendar: 
+              <a href={calendarUrls.google} style={{ color: '#2563eb', textDecoration: 'underline' }}> Google Calendar</a>
+              {' '}|{' '}
+              <a href={calendarUrls.outlook} style={{ color: '#2563eb', textDecoration: 'underline' }}> Outlook</a>
+            </EmailText>
+          )}
+          {hasIcsAttachment && (
+            <EmailText style={{ marginBottom: '0' }}>
+              We've attached an .ics calendar invite to this email. Download and open it to add the event to Apple Calendar, Outlook, or other calendar apps.
+            </EmailText>
+          )}
+        </EmailCard>
+      )}
+
       {eventDescription && (
         <EmailSection>
           <EmailHeading level={3}>Event Description</EmailHeading>
           <div dangerouslySetInnerHTML={{ __html: renderMarkdownForEmail(eventDescription) }} />
         </EmailSection>
+      )}
+
+      {eventLocation && (
+        <EmailCard backgroundColor="#fff7ed" borderColor="#fb923c">
+          <EmailHeading level={3}>Getting there</EmailHeading>
+          <EmailText style={{ marginBottom: '10px' }}>
+            <strong>Venue:</strong> {eventLocation}
+          </EmailText>
+          <EmailText style={{ marginBottom: '0' }}>
+            For directions, open the location in your preferred maps app.
+          </EmailText>
+        </EmailCard>
+      )}
+
+      {(organizerName || organizerEmail || organizerPhone) && (
+        <EmailCard backgroundColor="#f0f9ff" borderColor="#38bdf8">
+          <EmailHeading level={3}>Organizer</EmailHeading>
+          {organizerName && (
+            <EmailText style={{ marginBottom: '10px' }}>
+              <strong>Name:</strong> {organizerName}
+            </EmailText>
+          )}
+          {organizerEmail && (
+            <EmailText style={{ marginBottom: '10px' }}>
+              <strong>Email:</strong> {organizerEmail}
+            </EmailText>
+          )}
+          {organizerPhone && (
+            <EmailText style={{ marginBottom: '0' }}>
+              <strong>Phone:</strong> {organizerPhone}
+            </EmailText>
+          )}
+        </EmailCard>
       )}
 
       {participants && participants.length > 0 && (

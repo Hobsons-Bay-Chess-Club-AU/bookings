@@ -6,6 +6,9 @@ export interface CalendarEvent {
   location?: string
   startDate: Date
   endDate: Date
+  url?: string
+  organizerName?: string
+  organizerEmail?: string
 }
 
 export function formatDateForCalendar(date: Date): string {
@@ -38,25 +41,45 @@ export function generateOutlookCalendarUrl(event: CalendarEvent): string {
   return `${baseUrl}?${params.toString()}`
 }
 
+function escapeIcsText(value: string): string {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '')
+    .replace(/,/g, '\\,')
+    .replace(/;/g, '\\;')
+}
+
 export function generateIcsFile(event: CalendarEvent): string {
-  const icsContent = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Hobsons Bay Chess Club//Booking System//EN',
-    'BEGIN:VEVENT',
-    `UID:${Date.now()}@hobsonsbaycc.com`,
-    `DTSTART:${formatDateForCalendar(event.startDate)}`,
-    `DTEND:${formatDateForCalendar(event.endDate)}`,
-    `SUMMARY:${event.title}`,
-    `DESCRIPTION:${event.description || ''}`,
-    `LOCATION:${event.location || ''}`,
-    'STATUS:CONFIRMED',
-    'SEQUENCE:0',
-    'END:VEVENT',
-    'END:VCALENDAR'
-  ].join('\r\n')
-  
-  return icsContent
+  const lines: string[] = []
+  lines.push('BEGIN:VCALENDAR')
+  lines.push('VERSION:2.0')
+  lines.push('PRODID:-//Hobsons Bay Chess Club//Booking System//EN')
+  lines.push('CALSCALE:GREGORIAN')
+  lines.push('METHOD:PUBLISH')
+  lines.push('BEGIN:VEVENT')
+  lines.push(`UID:${Date.now()}@hobsonsbaycc.com`)
+  lines.push(`DTSTART:${formatDateForCalendar(event.startDate)}`)
+  lines.push(`DTEND:${formatDateForCalendar(event.endDate)}`)
+  lines.push(`SUMMARY:${escapeIcsText(event.title)}`)
+  if (event.description) {
+    lines.push(`DESCRIPTION:${escapeIcsText(event.description)}`)
+  }
+  if (event.location) {
+    lines.push(`LOCATION:${escapeIcsText(event.location)}`)
+  }
+  if (event.url) {
+    lines.push(`URL:${escapeIcsText(event.url)}`)
+  }
+  if (event.organizerEmail) {
+    const cn = event.organizerName ? `;CN=${escapeIcsText(event.organizerName)}` : ''
+    lines.push(`ORGANIZER${cn}:mailto:${escapeIcsText(event.organizerEmail)}`)
+  }
+  lines.push('STATUS:CONFIRMED')
+  lines.push('SEQUENCE:0')
+  lines.push('END:VEVENT')
+  lines.push('END:VCALENDAR')
+  return lines.join('\r\n')
 }
 
 export function downloadIcsFile(event: CalendarEvent, filename: string = 'event.ics'): void {
