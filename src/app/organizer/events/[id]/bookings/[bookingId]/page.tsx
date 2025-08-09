@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { Booking, Event, Profile, Participant, DiscountApplication } from '@/lib/types/database';
 import {
-    HiArrowLeft,
     HiTicket,
     HiCheckCircle,
     HiClock,

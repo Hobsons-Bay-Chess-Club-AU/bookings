@@ -59,7 +59,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
         setSelectedEvent(null)
     }
 
-    const handleUpdateSettings = (settings: EventSettings) => {
+    const handleUpdateSettings = (_settings: EventSettings) => {
         // Update settings logic here
         handleCloseSettings()
     }

@@ -97,7 +97,7 @@ function BookingConfirmationEmail({
           )}
           {hasIcsAttachment && (
             <EmailText style={{ marginBottom: '0' }}>
-              We've attached an .ics calendar invite to this email. Download and open it to add the event to Apple Calendar, Outlook, or other calendar apps.
+              We&apos;ve attached an .ics calendar invite to this email. Download and open it to add the event to Apple Calendar, Outlook, or other calendar apps.
             </EmailText>
           )}
         </EmailCard>

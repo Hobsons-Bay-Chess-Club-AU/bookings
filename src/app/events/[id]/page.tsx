@@ -51,18 +51,20 @@ async function getEvent(id: string): Promise<Event | null> {
             .eq('id', id)
             .single()
 
+    type EventQueryResp = { data: Event | null; error: { message?: string } | null }
+
     // Try once with timeout, then retry once if timed out
     try {
-        const resp = (await raceWithTimeout(fetchQuery(), TIMEOUT_MS)) as { data: Event | null; error: unknown }
-        if (!resp || (resp as any).error || !resp.data) {
+        const resp = (await raceWithTimeout(fetchQuery(), TIMEOUT_MS)) as EventQueryResp
+        if (!resp || resp.error || !resp.data) {
             return null
         }
         return resp.data
     } catch (err) {
         if (err instanceof TimeoutError) {
             try {
-                const resp = (await raceWithTimeout(fetchQuery(), TIMEOUT_MS)) as { data: Event | null; error: unknown }
-                if (!resp || (resp as any).error || !resp.data) {
+                const resp = (await raceWithTimeout(fetchQuery(), TIMEOUT_MS)) as EventQueryResp
+                if (!resp || resp.error || !resp.data) {
                     return null
                 }
                 return resp.data
@@ -91,17 +93,19 @@ async function getEventParticipants(eventId: string): Promise<BookingWithProfile
             .in('status', ['confirmed', 'verified'])
             .order('created_at', { ascending: false })
 
+    type ParticipantsQueryResp = { data: BookingWithProfile[] | null; error: { message?: string } | null }
+
     try {
-        const resp = (await raceWithTimeout(fetchQuery(), TIMEOUT_MS)) as { data: BookingWithProfile[] | null; error: unknown }
-        if (!resp || (resp as any).error) {
+        const resp = (await raceWithTimeout(fetchQuery(), TIMEOUT_MS)) as ParticipantsQueryResp
+        if (!resp || resp.error) {
             return []
         }
         return (resp.data || []) as BookingWithProfile[]
     } catch (err) {
         if (err instanceof TimeoutError) {
             try {
-                const resp = (await raceWithTimeout(fetchQuery(), TIMEOUT_MS)) as { data: BookingWithProfile[] | null; error: unknown }
-                if (!resp || (resp as any).error) {
+                const resp = (await raceWithTimeout(fetchQuery(), TIMEOUT_MS)) as ParticipantsQueryResp
+                if (!resp || resp.error) {
                     return []
                 }
                 return (resp.data || []) as BookingWithProfile[]

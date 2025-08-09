@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Event, Participant, Booking, Profile } from '@/lib/types/database'
-import { HiCalendarDays, HiClock, HiMapPin, HiUsers, HiPlus, HiPencilSquare, HiTrash, HiEye, HiEyeSlash } from 'react-icons/hi2'
+import { HiUsers } from 'react-icons/hi2'
 import Breadcrumb from '@/components/ui/breadcrumb'
 
 interface ParticipantWithBooking extends Participant {

@@ -1,7 +1,7 @@
 'use client'
 
 import OrganizerEventsClient, { EventWithBookings } from '@/components/organizer/organizer-events-client'
-import Breadcrumb from '@/components/ui/breadcrumb'
+// import Breadcrumb from '@/components/ui/breadcrumb'
 import Link from 'next/link'
 
 interface OrganizerPageClientProps {

@@ -150,7 +150,7 @@ export default function ShortUrlPage({ params }: PageProps) {
                 return
               }
             }
-          } catch (e) {
+          } catch {
             // Ignore sessionStorage errors and fall through to error state
           }
           // If we already reloaded once (or cannot reload), show error instead of hanging
