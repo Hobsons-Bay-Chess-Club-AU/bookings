@@ -307,6 +307,10 @@ export interface ParticipantDiscountRule {
     field_value?: string
     operator?: string // 'equals', 'contains', 'starts_with', 'ends_with'
     related_event_id?: string
+    previous_event_id?: string
+    min_participants?: number
+    max_participants?: number
+    discount_percentage?: number
     created_at: string
 }
 

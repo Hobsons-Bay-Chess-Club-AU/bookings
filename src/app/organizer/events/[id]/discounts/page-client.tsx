@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Event, EventDiscount, ParticipantDiscountRule, SeatDiscountRule } from '@/lib/types/database'
 import { HiPlus, HiPencil, HiTrash, HiInformationCircle } from 'react-icons/hi'
 import Breadcrumb from '@/components/ui/breadcrumb'
+import ConfirmationModal from '@/components/ui/confirmation-modal'
 
 interface DiscountFormData {
     name: string
@@ -19,12 +20,7 @@ interface DiscountFormData {
     max_uses: number
     min_quantity: number
     max_quantity: number
-    rules: Array<ParticipantDiscountRule & {
-        previous_event_id?: string
-        min_participants?: number
-        max_participants?: number
-        discount_percentage?: number
-    }>
+    rules: ParticipantDiscountRule[]
     seat_rules: Array<SeatDiscountRule & {
         seat_number?: string
     }>
@@ -60,6 +56,9 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
     })
     const [formLoading, setFormLoading] = useState(false)
     const [formError, setFormError] = useState('')
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+    const [discountToDelete, setDiscountToDelete] = useState<string | null>(null)
+    const [deleteLoading, setDeleteLoading] = useState(false)
 
     const supabase = createClient()
 
@@ -167,8 +166,16 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
 
                     // Insert new rules
                     const rulesToInsert = formData.rules.map(rule => ({
-                        ...rule,
-                        discount_id: editingDiscount.id
+                        discount_id: editingDiscount.id,
+                        rule_type: rule.rule_type,
+                        field_name: rule.field_name,
+                        field_value: rule.field_value,
+                        operator: rule.operator,
+                        related_event_id: rule.related_event_id,
+                        previous_event_id: rule.previous_event_id,
+                        min_participants: rule.min_participants,
+                        max_participants: rule.max_participants,
+                        discount_percentage: rule.discount_percentage
                     }))
 
                     const { error: rulesError } = await supabase
@@ -217,8 +224,16 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
                 // Insert rules if they exist
                 if (formData.rules.length > 0) {
                     const rulesToInsert = formData.rules.map(rule => ({
-                        ...rule,
-                        discount_id: newDiscount.id
+                        discount_id: newDiscount.id,
+                        rule_type: rule.rule_type,
+                        field_name: rule.field_name,
+                        field_value: rule.field_value,
+                        operator: rule.operator,
+                        related_event_id: rule.related_event_id,
+                        previous_event_id: rule.previous_event_id,
+                        min_participants: rule.min_participants,
+                        max_participants: rule.max_participants,
+                        discount_percentage: rule.discount_percentage
                     }))
 
                     const { error: rulesError } = await supabase
@@ -262,29 +277,51 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
         }
     }
 
-    const handleDelete = async (discountId: string) => {
-        if (!confirm('Are you sure you want to delete this discount?')) {
-            return
-        }
+    const handleDeleteClick = (discountId: string) => {
+        setDiscountToDelete(discountId)
+        setDeleteModalOpen(true)
+    }
 
+    const handleDeleteConfirm = async () => {
+        if (!discountToDelete) return
+
+        setDeleteLoading(true)
         try {
             const { error } = await supabase
                 .from('event_discounts')
                 .delete()
-                .eq('id', discountId)
+                .eq('id', discountToDelete)
 
             if (error) {
                 throw new Error(error.message)
             }
 
             await fetchEventAndDiscounts()
+            setDeleteModalOpen(false)
+            setDiscountToDelete(null)
         } catch (err) {
             console.error('Error deleting discount:', err)
             alert(err instanceof Error ? err.message : 'An error occurred while deleting the discount')
+        } finally {
+            setDeleteLoading(false)
         }
     }
 
+    const handleDeleteCancel = () => {
+        setDeleteModalOpen(false)
+        setDiscountToDelete(null)
+    }
+
     const handleEdit = (discount: EventDiscount) => {
+        // Map the database rules to the form structure
+        const mappedRules = (discount.rules || []).map(rule => ({
+            ...rule,
+            previous_event_id: rule.previous_event_id || rule.related_event_id || '',
+            min_participants: rule.min_participants || 1,
+            max_participants: rule.max_participants || 0,
+            discount_percentage: rule.discount_percentage || 0
+        }))
+
         setFormData({
             name: discount.name,
             description: discount.description || '',
@@ -298,7 +335,7 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
             max_uses: discount.max_uses || 0,
             min_quantity: discount.min_quantity,
             max_quantity: discount.max_quantity || 0,
-            rules: discount.rules || [],
+            rules: mappedRules,
             seat_rules: discount.seat_rules || []
         })
         setEditingDiscount(discount)
@@ -332,22 +369,21 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
             rules: [...prev.rules, {
                 id: `temp-${Date.now()}`,
                 discount_id: '',
-                rule_type: 'custom',
+                rule_type: 'previous_event',
                 field_name: '',
                 field_value: '',
                 operator: 'equals',
                 related_event_id: '',
+                previous_event_id: '',
+                min_participants: 1,
+                max_participants: 0,
+                discount_percentage: 0,
                 created_at: new Date().toISOString()
             }]
         }))
     }
 
-    const updateRule = (index: number, field: keyof (ParticipantDiscountRule & {
-        previous_event_id?: string
-        min_participants?: number
-        max_participants?: number
-        discount_percentage?: number
-    }), value: string | number | boolean | undefined) => {
+    const updateRule = (index: number, field: keyof ParticipantDiscountRule, value: string | number | boolean | undefined) => {
         setFormData(prev => ({
             ...prev,
             rules: prev.rules.map((rule, i) => 
@@ -505,7 +541,7 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
                                                     Edit
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(discount.id)}
+                                                    onClick={() => handleDeleteClick(discount.id)}
                                                     className="inline-flex items-center px-3 py-2 border border-red-300 dark:border-red-600 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 dark:text-red-400 bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                                                 >
                                                     <HiTrash className="h-4 w-4 mr-1" />
@@ -838,6 +874,19 @@ export default function EventDiscountsPageClient({ eventId }: EventDiscountsPage
                         </div>
                     </div>
                 )}
+
+                {/* Delete Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={deleteModalOpen}
+                    onClose={handleDeleteCancel}
+                    onConfirm={handleDeleteConfirm}
+                    title="Delete Discount"
+                    message="Are you sure you want to delete this discount? This action cannot be undone."
+                    confirmText="Delete"
+                    cancelText="Cancel"
+                    variant="danger"
+                    loading={deleteLoading}
+                />
             </div>
         </div>
     )
