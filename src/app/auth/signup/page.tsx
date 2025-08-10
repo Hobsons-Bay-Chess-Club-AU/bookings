@@ -90,7 +90,7 @@ export default function SignupPage() {
                         </div>
                     )}
                     <div className="rounded-md shadow-sm -space-y-px">
-                        <div>
+                        <div className='mb-2'>
                             <label htmlFor="fullName" className="sr-only">
                                 Full name
                             </label>
@@ -106,7 +106,7 @@ export default function SignupPage() {
                                 onChange={(e) => setFullName(e.target.value)}
                             />
                         </div>
-                        <div>
+                        <div className='mb-2'>
                             <label htmlFor="email" className="sr-only">
                                 Email address
                             </label>
@@ -122,7 +122,7 @@ export default function SignupPage() {
                                 onChange={(e) => setEmail(e.target.value)}
                             />
                         </div>
-                        <div>
+                        <div className='mb-2'>
                             <label htmlFor="password" className="sr-only">
                                 Password
                             </label>

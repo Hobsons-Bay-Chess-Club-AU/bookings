@@ -67,7 +67,7 @@ function LoginForm() {
                         </div>
                     )}
                     <div className="rounded-md shadow-sm -space-y-px">
-                        <div>
+                        <div className='mb-2'>
                             <label htmlFor="email" className="sr-only">
                                 Email address
                             </label>
@@ -83,7 +83,7 @@ function LoginForm() {
                                 onChange={(e) => setEmail(e.target.value)}
                             />
                         </div>
-                        <div>
+                        <div className='mb-2'>
                             <label htmlFor="password" className="sr-only">
                                 Password
                             </label>
