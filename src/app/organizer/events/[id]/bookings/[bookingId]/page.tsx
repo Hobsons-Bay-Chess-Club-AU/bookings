@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Breadcrumb from '@/components/ui/breadcrumb'
+import ConfirmationModal from '@/components/ui/confirmation-modal'
 import { Booking, Event, Profile, Participant, DiscountApplication } from '@/lib/types/database';
 import {
     HiTicket,
@@ -19,7 +20,8 @@ import {
     HiCreditCard,
     HiDocumentText,
     HiInformationCircle,
-    HiArrowRight
+    HiArrowRight,
+    HiEye
 } from 'react-icons/hi2';
 
 interface BookingWithDetails extends Booking {
@@ -40,6 +42,8 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
     const [eventId, setEventId] = useState<string>('');
     const [bookingId, setBookingId] = useState<string>('');
     const [actionLoading, setActionLoading] = useState(false);
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<{ type: string; status: string; title: string; message: string; variant: 'danger' | 'warning' | 'info' } | null>(null);
 
     const renderCustomField = (fieldKey: string, fieldValue: unknown): React.ReactNode => {
         const label = fieldKey;
@@ -160,17 +164,50 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
         }
     };
 
-    const updateBookingStatus = async (newStatus: string) => {
-        if (!booking) return;
+    const handleActionClick = (actionType: string, newStatus: string) => {
+        let title = '';
+        let message = '';
+        let variant: 'danger' | 'warning' | 'info' = 'info';
 
+        switch (actionType) {
+            case 'confirm':
+                title = 'Confirm Booking';
+                message = 'Are you sure you want to confirm this booking? This will mark it as confirmed.';
+                variant = 'info';
+                break;
+            case 'verify':
+                title = 'Mark as Verified';
+                message = 'Are you sure you want to mark this booking as verified? This indicates the participant has attended.';
+                variant = 'info';
+                break;
+            case 'cancel':
+                title = 'Cancel Booking';
+                message = 'Are you sure you want to cancel this booking? This action cannot be undone.';
+                variant = 'danger';
+                break;
+            default:
+                title = 'Confirm Action';
+                message = 'Are you sure you want to perform this action?';
+                variant = 'warning';
+        }
+
+        setConfirmAction({ type: actionType, status: newStatus, title, message, variant });
+        setShowConfirmDialog(true);
+    };
+
+    const confirmActionHandler = async () => {
+        if (!confirmAction || !booking) return;
+        
+        setActionLoading(true);
+        setShowConfirmDialog(false);
+        
         try {
-            setActionLoading(true);
             const response = await fetch(`/api/organizer/events/${eventId}/bookings/${booking.id}/status`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ status: newStatus }),
+                body: JSON.stringify({ status: confirmAction.status }),
             });
 
             if (!response.ok) {
@@ -184,7 +221,13 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
             setError('Failed to update booking status');
         } finally {
             setActionLoading(false);
+            setConfirmAction(null);
         }
+    };
+
+    const cancelAction = () => {
+        setShowConfirmDialog(false);
+        setConfirmAction(null);
     };
 
     if (loading) {
@@ -250,9 +293,6 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                         <div className="space-y-4">
                             <div>
                                 <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{booking.event.title}</h3>
-                                {booking.event.description && (
-                                    <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm line-clamp-3">{booking.event.description}</p>
-                                )}
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
@@ -280,6 +320,33 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                 <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                     <HiMapPin className="h-4 w-4 mr-2" />
                                     <span>{booking.event.location}</span>
+                                </div>
+                                {booking.event.entry_close_date && (
+                                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                        <HiClock className="h-4 w-4 mr-2" />
+                                        <div>
+                                            <div className="font-medium">Registration Closes</div>
+                                            <div className="text-xs text-gray-500 dark:text-gray-500">
+                                                {new Date(booking.event.entry_close_date).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric'
+                                                })} at {new Date(booking.event.entry_close_date).toLocaleTimeString([], {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                    <HiUsers className="h-4 w-4 mr-2" />
+                                    <div>
+                                        <div className="font-medium">Entry Status</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-500">
+                                            {booking.event.current_attendees} / {booking.event.max_attendees || '∞'} participants
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -525,10 +592,20 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
 
                     {/* Payment Information */}
                     <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-                        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                            <HiCreditCard className="h-5 w-5 mr-2" />
-                            Payment Information
-                        </h2>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 flex items-center">
+                                <HiCreditCard className="h-5 w-5 mr-2" />
+                                Payment Information
+                            </h2>
+                            <a
+                                href={`/admin/bookings/${booking.id}/payment-events`}
+                                className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                                title="View Payment Events"
+                            >
+                                <HiEye className="h-3 w-3 mr-1" />
+                                Events
+                            </a>
+                        </div>
                         <div className="space-y-3">
                             {booking.stripe_payment_intent_id && (
                                 <div>
@@ -640,7 +717,7 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                             {booking.status === 'pending' && (
                                 <>
                                     <button
-                                        onClick={() => updateBookingStatus('confirmed')}
+                                        onClick={() => handleActionClick('confirm', 'confirmed')}
                                         disabled={actionLoading}
                                         className="w-full flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
                                     >
@@ -648,7 +725,7 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                         Confirm Booking
                                     </button>
                                     <button
-                                        onClick={() => updateBookingStatus('cancelled')}
+                                        onClick={() => handleActionClick('cancel', 'cancelled')}
                                         disabled={actionLoading}
                                         className="w-full flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
                                     >
@@ -660,7 +737,7 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                             {booking.status === 'confirmed' && (
                                 <>
                                     <button
-                                        onClick={() => updateBookingStatus('verified')}
+                                        onClick={() => handleActionClick('verify', 'verified')}
                                         disabled={actionLoading}
                                         className="w-full flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                                     >
@@ -668,7 +745,7 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                         Mark as Verified
                                     </button>
                                     <button
-                                        onClick={() => updateBookingStatus('cancelled')}
+                                        onClick={() => handleActionClick('cancel', 'cancelled')}
                                         disabled={actionLoading}
                                         className="w-full flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
                                     >
@@ -685,6 +762,17 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                     </div>
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showConfirmDialog}
+                onClose={cancelAction}
+                onConfirm={confirmActionHandler}
+                title={confirmAction?.title || 'Confirm Action'}
+                message={confirmAction?.message || 'Are you sure you want to perform this action?'}
+                variant={confirmAction?.variant || 'warning'}
+                loading={actionLoading}
+            />
         </div>
     );
 }

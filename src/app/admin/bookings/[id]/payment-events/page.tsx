@@ -49,7 +49,6 @@ export default function PaymentEventsPage() {
     const [loadingEvent, setLoadingEvent] = useState(false)
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
     const [menuOpen, setMenuOpen] = useState(false)
-    const menuRef = useState<HTMLDivElement | null>(null)[0]
 
     const params = useParams()
     const bookingId = params.id as string

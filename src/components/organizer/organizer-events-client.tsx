@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { Event, EventSettings } from '@/lib/types/database'
+import { Event } from '@/lib/types/database'
 import CopyButton from '@/components/ui/copy-button'
 import EventSettingsModal from '@/components/events/event-settings-modal'
 import { HiCog6Tooth } from 'react-icons/hi2'
@@ -60,7 +60,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
         setSelectedEvent(null)
     }
 
-    const handleUpdateSettings = (_settings: EventSettings) => {
+    const handleUpdateSettings = () => {
         // Update settings logic here
         handleCloseSettings()
     }

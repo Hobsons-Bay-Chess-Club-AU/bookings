@@ -8,3 +8,4 @@ globs: *.tsx
 - Follow layout conventions: rely on shared layout containers for outer padding; avoid redundant per-page padding.
 - Maintain consistent alignment across admin/organizer pages. Use wrappers like `max-w-7xl mx-auto` where appropriate.
 - Forms and overlays should support keyboard (e.g., ESC to close) and click-outside dismissal when relevant.
+- all button delete, change status of booking will require confirmation. using confirmation modal consistently

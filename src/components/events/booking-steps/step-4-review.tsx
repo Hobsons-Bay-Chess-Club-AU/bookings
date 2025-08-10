@@ -51,7 +51,6 @@ export default function Step4Review({
     quantity,
     totalAmount,
     baseAmount,
-    processingFee,
     discountInfo,
     discountLoading,
     contactInfo,
