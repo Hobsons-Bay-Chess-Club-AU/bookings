@@ -85,7 +85,7 @@ export default function AdminLayout({
     return (
         <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 ${className} text-gray-900 dark:text-gray-100`}>
             <AdminNav />
-            <main className="max-w-7xl mx-auto px-2 py-2 md:px-4 sm:px-6 lg:px-8 md:py-8">
+            <main className="max-w-7xl mx-auto px-2 py-2 md:px-4 sm:px-6 lg:px-8 md:py-5">
                 {children}
             </main>
         </div>

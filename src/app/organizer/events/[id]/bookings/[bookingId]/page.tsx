@@ -250,7 +250,7 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
     }
 
     return (
-        <div className="max-w-7xl mx-auto py-0 px-0 md:py-12 md:px-4 sm:px-6 lg:px-0">
+        <div className="">
             {/* Breadcrumb */}
             <div className="mb-6">
                 <Breadcrumb

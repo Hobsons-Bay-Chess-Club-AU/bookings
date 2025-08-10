@@ -209,7 +209,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
 
     return (
         <>
-            <div className="max-w-7xl mx-auto py-0 px-0 md:py-12 md:px-4 sm:px-6 lg:px-0">
+            <div className="">
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg border border-gray-200 dark:border-gray-700">
