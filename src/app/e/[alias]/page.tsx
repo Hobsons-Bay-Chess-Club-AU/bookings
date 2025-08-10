@@ -132,7 +132,7 @@ export default function ShortUrlPage({ params }: PageProps) {
 
         const fetchPromise = supabase
           .from('events')
-          .select('id')
+          .select('id, status')
           .eq('alias', upper)
           .single()
 
@@ -158,8 +158,8 @@ export default function ShortUrlPage({ params }: PageProps) {
           return
         }
 
-        const { data: event, error } = raced.value as { data: { id: string } | null; error: unknown }
-        log('supabase:query:end', { errorPresent: Boolean(error), hasEvent: Boolean(event) })
+        const { data: event, error } = raced.value as { data: { id: string; status: string } | null; error: unknown }
+        log('supabase:query:end', { errorPresent: Boolean(error), hasEvent: Boolean(event), eventStatus: event?.status })
 
         if (error || !event) {
           log('resolveAlias:not-found', { error })

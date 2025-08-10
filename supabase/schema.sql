@@ -154,7 +154,7 @@ CREATE POLICY "Admins can insert profiles" ON profiles
 
 -- Events policies
 CREATE POLICY "Anyone can view published events" ON events
-  FOR SELECT USING (status = 'published');
+  FOR SELECT USING (status IN ('published', 'entry_closed', 'completed'));
 
 CREATE POLICY "Organizers can view their own events" ON events
   FOR SELECT USING (organizer_id = auth.uid());

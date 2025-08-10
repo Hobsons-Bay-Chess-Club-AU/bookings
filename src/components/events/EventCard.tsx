@@ -177,12 +177,19 @@ export default function EventCard({ event, hideBooking = false }: EventCardProps
         </div>
         
         <div className="mt-6 space-y-2 mt-auto">
-          {!hideBooking && (
+          {!hideBooking ? (
             <Link
               href={event.alias ? `/e/${event.alias}` : `/events/${event.id}`}
               className="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 border border-transparent rounded-md py-2 px-4 flex items-center justify-center text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] dark:focus:ring-offset-0"
             >
               View Details & Book
+            </Link>
+          ) : (
+            <Link
+              href={event.alias ? `/e/${event.alias}` : `/events/${event.id}`}
+              className="w-full bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-800 border border-transparent rounded-md py-2 px-4 flex items-center justify-center text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] dark:focus:ring-offset-0"
+            >
+              View Details
             </Link>
           )}
           {event.alias && (

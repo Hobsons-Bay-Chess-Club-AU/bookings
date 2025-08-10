@@ -14,15 +14,19 @@ async function getPastEvents(): Promise<Event[]> {
     const { data: events, error } = await supabase
       .from('events')
       .select(`*, organizer:profiles(full_name, email)`)
-      .in('status', ['published', 'entry_closed'])
+      .in('status', ['published', 'entry_closed', 'completed'])
       .order('end_date', { ascending: false })
     if (error) {
       console.error('Error fetching events:', error)
       return []
     }
-    // Only show events whose end_date is in the past
+    // Show completed events regardless of date, or events whose end_date is in the past
     const now = new Date()
     return (events || []).filter(event => {
+      // If status is completed, show it regardless of date
+      if (event.status === 'completed') return true
+      
+      // For other statuses, only show if end_date is in the past
       if (!event.end_date) return false
       return new Date(event.end_date) < new Date(now.toDateString())
     })
