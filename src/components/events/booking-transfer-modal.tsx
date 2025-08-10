@@ -105,18 +105,18 @@ export default function BookingTransferModal({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={handleClose} />
+        <div className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity" onClick={handleClose} />
         
-        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+        <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
           {/* Header */}
-          <div className="bg-gray-50 px-4 py-3 sm:px-6">
+          <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Transfer Booking
               </h3>
               <button
                 type="button"
-                className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                className="rounded-md bg-white dark:bg-gray-600 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
                 onClick={handleClose}
               >
                 <HiXMark className="h-6 w-6" />
@@ -127,9 +127,9 @@ export default function BookingTransferModal({
           {/* Content */}
           <div className="px-4 py-5 sm:p-6">
             {/* Booking Info */}
-            <div className="mb-6 rounded-lg bg-blue-50 p-4">
-              <h4 className="text-sm font-medium text-blue-900 mb-2">Booking Details</h4>
-              <div className="text-sm text-blue-800">
+            <div className="mb-6 rounded-lg bg-blue-50 dark:bg-blue-900/30 p-4">
+              <h4 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">Booking Details</h4>
+              <div className="text-sm text-blue-800 dark:text-blue-200">
                 <p><strong>User:</strong> {userEmail}</p>
                 <p><strong>Quantity:</strong> {quantity} ticket{quantity > 1 ? 's' : ''}</p>
                 <p><strong>Current Event:</strong> {currentEventTitle}</p>
@@ -138,12 +138,12 @@ export default function BookingTransferModal({
 
             {/* Error Display */}
             {error && (
-              <div className="mb-4 rounded-md bg-red-50 p-4">
+              <div className="mb-4 rounded-md bg-red-50 dark:bg-red-900/30 p-4">
                 <div className="flex">
                   <HiExclamationTriangle className="h-5 w-5 text-red-400" />
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800">Error</h3>
-                    <div className="mt-2 text-sm text-red-700">{error}</div>
+                    <h3 className="text-sm font-medium text-red-800 dark:text-red-300">Error</h3>
+                    <div className="mt-2 text-sm text-red-700 dark:text-red-200">{error}</div>
                   </div>
                 </div>
               </div>
@@ -151,16 +151,16 @@ export default function BookingTransferModal({
 
             {/* Target Event Selection */}
             <div className="mb-6">
-              <label htmlFor="targetEvent" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="targetEvent" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Transfer to Event *
               </label>
               {eventsLoading ? (
                 <div className="flex items-center justify-center py-4">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
-                  <span className="ml-2 text-sm text-gray-500">Loading events...</span>
+                  <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">Loading events...</span>
                 </div>
               ) : availableEvents.length === 0 ? (
-                <div className="text-sm text-gray-500 py-2">
+                <div className="text-sm text-gray-500 dark:text-gray-400 py-2">
                   No available events found for transfer.
                 </div>
               ) : (
@@ -168,7 +168,7 @@ export default function BookingTransferModal({
                   id="targetEvent"
                   value={selectedEventId}
                   onChange={(e) => setSelectedEventId(e.target.value)}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:focus:ring-indigo-400 sm:text-sm"
                 >
                   <option value="">Select an event...</option>
                   {availableEvents.map((event) => (
@@ -183,14 +183,14 @@ export default function BookingTransferModal({
 
             {/* Transfer Preview */}
             {selectedEvent && (
-              <div className="mb-6 rounded-lg bg-yellow-50 p-4">
-                <h4 className="text-sm font-medium text-yellow-900 mb-2">Transfer Preview</h4>
-                <div className="flex items-center text-sm text-yellow-800">
+              <div className="mb-6 rounded-lg bg-yellow-50 dark:bg-yellow-900/30 p-4">
+                <h4 className="text-sm font-medium text-yellow-900 dark:text-yellow-300 mb-2">Transfer Preview</h4>
+                <div className="flex items-center text-sm text-yellow-800 dark:text-yellow-200">
                   <span className="truncate">{currentEventTitle}</span>
                   <HiArrowRight className="h-4 w-4 mx-2 flex-shrink-0" />
                   <span className="truncate">{selectedEvent.title}</span>
                 </div>
-                <div className="mt-2 text-xs text-yellow-700">
+                <div className="mt-2 text-xs text-yellow-700 dark:text-yellow-300">
                   <p>Date: {new Date(selectedEvent.start_date).toLocaleDateString()}</p>
                   <p>Location: {selectedEvent.location}</p>
                   {selectedEvent.max_attendees && (
@@ -202,7 +202,7 @@ export default function BookingTransferModal({
 
             {/* Reason */}
             <div className="mb-4">
-              <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Reason for Transfer *
               </label>
               <textarea
@@ -211,14 +211,14 @@ export default function BookingTransferModal({
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Please explain why this booking is being transferred..."
-                className="p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className="p-2 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:focus:ring-indigo-400 sm:text-sm"
                 required
               />
             </div>
 
             {/* Notes */}
             <div className="mb-6">
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Additional Notes (Optional)
               </label>
               <textarea
@@ -227,18 +227,18 @@ export default function BookingTransferModal({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Any additional information..."
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className="block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:focus:ring-indigo-400 sm:text-sm"
               />
             </div>
           </div>
 
                       {/* Footer */}
-            <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+            <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                 <button
                     type="button"
                     onClick={handleTransfer}
                     disabled={loading || !selectedEventId || !reason.trim()}
-                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Continue to Transfer
                 </button>
@@ -246,7 +246,7 @@ export default function BookingTransferModal({
                     type="button"
                     onClick={handleClose}
                     disabled={loading}
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-600 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-indigo-500 sm:mt-0 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Cancel
                 </button>
