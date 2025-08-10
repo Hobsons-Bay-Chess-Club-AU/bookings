@@ -11,9 +11,10 @@ This system handles abandoned checkouts to prevent orphaned pending bookings and
 
 ### 2. **Automatic Cleanup**
 - **Immediate Cleanup**: Removes pending booking when user abandons checkout
-- **Stripe Integration**: Handles cancellation and session expiration
-- **Scheduled Cleanup**: Database trigger cleans up old pending bookings (>1 hour)
+- **Stripe Integration**: Handles cancellation and session expiration with comprehensive data cleanup
+- **Scheduled Cleanup**: Database trigger cleans up old pending bookings (>7 days)
 - **API Endpoints**: Multiple cleanup routes for different scenarios
+- **Comprehensive Cleanup**: Removes all related data (participants, discount applications, payment events)
 
 ### 3. **User Experience**
 - **Smart Confirmation**: Only shows dialog when a booking is actually in progress
@@ -38,8 +39,9 @@ This system handles abandoned checkouts to prevent orphaned pending bookings and
 
 ### Stripe Integration
 - **Cancel URL**: Redirects to cleanup API when user cancels checkout
-- **Webhook**: Handles `checkout.session.expired` events
+- **Webhook**: Handles `checkout.session.expired` events with comprehensive data cleanup
 - **Session Metadata**: Stores booking ID for cleanup reference
+- **Expired Sessions**: Automatically removes all booking data when Stripe sessions expire
 
 ## Usage
 
@@ -65,7 +67,7 @@ curl -X POST https://your-domain.com/api/cron/cleanup-pending-bookings \
 - `CRON_SECRET_KEY`: Secret key for cron job authentication
 
 ### Database Settings
-- **Cleanup Interval**: 1 hour (configurable in trigger function)
+- **Cleanup Interval**: 7 days (configurable in trigger function)
 - **Trigger Frequency**: Runs on ~1% of booking insertions (to avoid performance impact)
 
 ## Benefits

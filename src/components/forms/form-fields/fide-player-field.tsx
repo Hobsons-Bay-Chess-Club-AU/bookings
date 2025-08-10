@@ -80,6 +80,7 @@ export default function FidePlayerField({
 
                 if (response.ok) {
                     const data = await response.json()
+                    console.log('FIDE search response:', data)
                     setPlayers(data.players || [])
                     setShowDropdown(true)
                     
@@ -87,6 +88,8 @@ export default function FidePlayerField({
                         setSearchError('No players found matching your search')
                     }
                 } else {
+                    const errorData = await response.json().catch(() => ({}))
+                    console.error('FIDE search failed:', response.status, errorData)
                     throw new Error('Failed to search FIDE players')
                 }
 
@@ -115,6 +118,7 @@ export default function FidePlayerField({
                     const response = await fetch(`/api/players/fide/${query.trim()}`)
                     if (response.ok) {
                         const player = await response.json()
+                        console.log('FIDE ID lookup response:', player)
                         setPlayers([player])
                         setShowDropdown(true)
                     } else {
@@ -252,10 +256,13 @@ export default function FidePlayerField({
                         <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
                             {searchError}
                         </div>
-                    ) : null}
+                    ) : (
+                        <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                            No results found
+                        </div>
+                    )}
                 </div>
             )}
-
             {/* Show search error below input if no dropdown */}
             {searchError && !showDropdown && query.trim() && (
                 <p className="mt-1 text-sm text-amber-600 dark:text-amber-400">{searchError}</p>

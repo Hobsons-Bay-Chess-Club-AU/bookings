@@ -10,6 +10,7 @@ import Step3Participants from './booking-steps/step-3-participants'
 import Step4Review from './booking-steps/step-4-review'
 import { useBookingJourney } from '@/contexts/BookingJourneyContext'
 import { HiCheck } from 'react-icons/hi2'
+import { useSearchParams } from 'next/navigation'
 
 interface BookingFormProps {
     event: Event
@@ -25,6 +26,7 @@ interface BookingFormProps {
 // }
 
 export default function BookingForm({ event, user, onStepChange }: BookingFormProps) {
+    const searchParams = useSearchParams()
     const [step, setStep] = useState(1) // 1: Pricing & Quantity, 2: Contact Info, 3: Participant Info, 4: Review, 5: Checkout
     const [quantity, setQuantity] = useState(1)
     const [loading, setLoading] = useState(false)
@@ -45,6 +47,7 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
     const [optInMarketing, setOptInMarketing] = useState(false)
     const [shouldRedirect, setShouldRedirect] = useState(false)
     const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const [isResuming, setIsResuming] = useState(false)
     const [discountInfo, setDiscountInfo] = useState<{
         totalDiscount: number
         appliedDiscounts: Array<{
@@ -166,6 +169,61 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
             setShouldRedirect(false)
         }
     }, [step])
+
+    // Handle resuming from URL parameters
+    useEffect(() => {
+        const urlStep = searchParams?.get('step')
+        const resumeBookingId = searchParams?.get('resume')
+        
+        if (urlStep && resumeBookingId) {
+            const stepNumber = parseInt(urlStep)
+            if (stepNumber >= 1 && stepNumber <= 4) {
+                setIsResuming(true)
+                setStep(stepNumber)
+                
+                // Load existing booking data
+                loadResumedBookingData(resumeBookingId)
+            }
+        }
+    }, [searchParams])
+
+    const loadResumedBookingData = async (bookingId: string) => {
+        try {
+            const response = await fetch('/api/bookings/check-complete-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ bookingId })
+            })
+
+            if (response.ok) {
+                const data = await response.json()
+                if (data.canResume) {
+                    // Set the existing booking ID
+                    setCurrentBookingId(bookingId)
+                    
+                    // Load participants data
+                    if (data.booking.participants) {
+                        setParticipants(data.booking.participants)
+                        setQuantity(data.booking.quantity)
+                    }
+                    
+                    // Set form fields
+                    if (data.booking.formFields) {
+                        setFormFields(data.booking.formFields)
+                    }
+                    
+                    console.log('✅ Resumed booking data loaded:', data.booking)
+                }
+            }
+        } catch (error) {
+            console.error('Error loading resumed booking data:', error)
+            setError('Failed to load booking data')
+        } finally {
+            setIsResuming(false)
+        }
+    }
 
     // Handle redirect for free events
     useEffect(() => {
@@ -686,10 +744,15 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                         </div>
                         <div className="ml-3">
                             <h3 className="text-sm font-medium text-blue-800">
-                                Booking in Progress
+                                {isResuming ? 'Resuming Previous Booking' : 'Booking in Progress'}
                             </h3>
                             <div className="mt-2 text-sm text-blue-700">
-                                <p>Your booking is being processed. Please don&apos;t close this page or navigate away.</p>
+                                <p>
+                                    {isResuming 
+                                        ? 'Your previous booking data has been loaded. You can review and complete your payment.'
+                                        : 'Your booking is being processed. Please don\'t close this page or navigate away.'
+                                    }
+                                </p>
                             </div>
                         </div>
                     </div>

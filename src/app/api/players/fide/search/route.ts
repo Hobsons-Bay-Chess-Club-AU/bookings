@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
         // Parse the HTML to extract player data
         const players = parseFideSearchResults(html)
 
-        return NextResponse.json(players)
+        return NextResponse.json({ players })
     } catch (error) {
         console.error('Error searching FIDE players:', error)
         return NextResponse.json({ error: 'Failed to search FIDE players' }, { status: 500 })

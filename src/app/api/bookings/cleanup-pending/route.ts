@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { cleanupBookingData } from '@/lib/utils/booking-cleanup'
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,16 +12,27 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Delete the pending booking
-    const { error } = await supabase
+    // First, check if the booking exists and is pending
+    const { data: booking, error: fetchError } = await supabase
       .from('bookings')
-      .delete()
+      .select('id, status, event_id')
       .eq('id', bookingId)
       .eq('status', 'pending')
+      .single()
 
-    if (error) {
-      console.error('Error cleaning up booking:', error)
-      return NextResponse.json({ error: 'Failed to cleanup booking' }, { status: 500 })
+    if (fetchError || !booking) {
+      return NextResponse.json({ error: 'Booking not found or not pending' }, { status: 404 })
+    }
+
+    // Use the comprehensive cleanup function
+    const cleanupResult = await cleanupBookingData(supabase, bookingId, 'cleanup-pending')
+
+    if (!cleanupResult.success) {
+      console.error('❌ Failed to cleanup booking:', cleanupResult.errors)
+      return NextResponse.json({ 
+        error: 'Failed to cleanup booking',
+        details: cleanupResult.errors
+      }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, message: 'Booking cleaned up successfully' })

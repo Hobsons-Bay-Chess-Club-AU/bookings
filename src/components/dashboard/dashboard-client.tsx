@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import RefundRequestButton from './refund-request-button'
+import ResumePaymentButton from './resume-payment-button'
 import { Booking, Event } from '@/lib/types/database'
 import { 
     HiTicket, 
@@ -353,6 +354,14 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                         >
                                             View Details
                                         </Link>
+                                        {booking.status === 'pending' && (
+                                            <ResumePaymentButton
+                                                bookingId={booking.id}
+                                                eventTitle={booking.event.title}
+                                                totalAmount={booking.total_amount}
+                                                className="flex-1"
+                                            />
+                                        )}
                                         {(booking.status === 'confirmed' || booking.status === 'verified') && (
                                             <Link
                                                 href={`/tickets/${booking.id}`}
@@ -429,6 +438,13 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                             >
                                                 View Details
                                             </Link>
+                                            {booking.status === 'pending' && (
+                                                <ResumePaymentButton
+                                                    bookingId={booking.id}
+                                                    eventTitle={booking.event.title}
+                                                    totalAmount={booking.total_amount}
+                                                />
+                                            )}
                                             {(booking.status === 'confirmed' || booking.status === 'verified') && (
                                                 <Link
                                                     href={`/tickets/${booking.id}`}
