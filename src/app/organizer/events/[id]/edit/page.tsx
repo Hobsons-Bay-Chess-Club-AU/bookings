@@ -4,10 +4,9 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { HiExclamationTriangle, HiCheckCircle, HiExclamationCircle } from 'react-icons/hi2'
-import MarkdownEditor from '@/components/ui/markdown-editor'
-import FormBuilder from '@/components/events/form-builder'
-import TimelineBuilder from '@/components/events/timeline-builder'
+import { HiExclamationCircle } from 'react-icons/hi2'
+import EventForm, { EventFormValues } from '../../EventForm'
+
 import Breadcrumb from '@/components/ui/breadcrumb'
 import { FormField, Event, RefundTimelineItem, EventTimeline } from '@/lib/types/database'
 import { TIMEZONE_OPTIONS, DEFAULT_TIMEZONE } from '@/lib/utils/timezone'
@@ -41,7 +40,6 @@ export default function EditEventPage() {
     })
     const [formFields, setFormFields] = useState<FormField[]>([])
     const [refundTimeline, setRefundTimeline] = useState<RefundTimelineItem[]>([])
-    const [enableRefunds, setEnableRefunds] = useState(false)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
@@ -136,7 +134,6 @@ export default function EditEventPage() {
                 // Set refund timeline
                 if (eventData.timeline?.refund) {
                     setRefundTimeline(eventData.timeline.refund)
-                    setEnableRefunds(true)
                 }
 
             } catch (err) {
@@ -152,41 +149,19 @@ export default function EditEventPage() {
         }
     }, [eventId, router, supabase])
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        console.log('🔄 Starting event update...')
+    const handleUpdate = async (values: EventFormValues, updatedFormFields: FormField[], updatedRefundTimeline: RefundTimelineItem[]) => {
         setLoading(true)
         setError('')
         setSuccess('')
-        setFieldErrors({})
-
         try {
-            // Validate form before submission
-            if (!validateForm()) {
-                console.log('❌ Form validation failed')
-                setError('Please fix the errors below before saving')
-                setLoading(false)
-                return
-            }
-
-            console.log('✅ Form validation passed')
-
             // Handle alias for published events
             let alias: string | null = event?.alias || null
-            if (formData.status === 'published' && !event?.alias) {
-                console.log('🔄 Generating alias for published event...')
+            if (values.status === 'published' && !event?.alias) {
                 try {
-                    const response = await fetch('/api/events/generate-alias', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    })
-
+                    const response = await fetch('/api/events/generate-alias', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
                     if (response.ok) {
                         const data = await response.json()
                         alias = data.alias
-                        console.log('✅ Alias generated:', alias)
                     } else {
                         throw new Error('Failed to generate alias')
                     }
@@ -195,132 +170,53 @@ export default function EditEventPage() {
                 }
             }
 
-            // Prepare timeline data
             const timeline: EventTimeline = {}
-            if (enableRefunds && refundTimeline.length > 0) {
-                timeline.refund = refundTimeline
+            if (updatedRefundTimeline.length > 0) {
+                timeline.refund = updatedRefundTimeline
             }
 
-            // Clean location_settings - remove empty strings and properly encode URLs
             const cleanedLocationSettings = {
-                map_url: formData.location_settings.map_url?.trim() ? encodeURI(formData.location_settings.map_url.trim()) : null,
-                direction_url: formData.location_settings.direction_url?.trim() ? encodeURI(formData.location_settings.direction_url.trim()) : null
+                map_url: values.location_settings.map_url?.trim() ? encodeURI(values.location_settings.map_url.trim()) : null,
+                direction_url: values.location_settings.direction_url?.trim() ? encodeURI(values.location_settings.direction_url.trim()) : null
             }
-            
-            // Only include location_settings if at least one field has a value
-            const finalLocationSettings = (cleanedLocationSettings.map_url || cleanedLocationSettings.direction_url) 
-                ? cleanedLocationSettings 
-                : {}
+            const finalLocationSettings = (cleanedLocationSettings.map_url || cleanedLocationSettings.direction_url) ? cleanedLocationSettings : {}
 
-            console.log('🔄 Updating event in database...', {
-                eventId,
-                locationSettings: finalLocationSettings,
-                locationSettingsType: typeof finalLocationSettings,
-                locationSettingsStringified: JSON.stringify(finalLocationSettings),
-                originalMapUrl: formData.location_settings.map_url,
-                encodedMapUrl: cleanedLocationSettings.map_url
-            })
+            const sanitizedDescription = values.description ? values.description.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim() : null
+            const sanitizedSummary = values.event_summary ? values.event_summary.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim() : null
+            const sanitizedTermsConditions = values.settings.terms_conditions ? values.settings.terms_conditions.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim() : null
 
-            // Sanitize and encode description to handle special characters safely
-            let sanitizedDescription: string | null = null
-            
-            try {
-                if (formData.description) {
-                    sanitizedDescription = formData.description
-                        .replace(/\r\n/g, '\n') // Normalize line endings
-                        .replace(/\r/g, '\n')    // Convert remaining carriage returns
-                        .trim()                  // Remove leading/trailing whitespace
-                }
-
-                console.log('🔄 Sanitizing description...', {
-                    originalLength: formData.description?.length,
-                    sanitizedLength: sanitizedDescription?.length,
-                    hasSpecialChars: sanitizedDescription?.includes('🎉') || sanitizedDescription?.includes('✅') || sanitizedDescription?.includes('🚀')
-                })
-            } catch (sanitizeError) {
-                console.error('❌ Error sanitizing description:', sanitizeError)
-                throw new Error('There was an issue processing the description content. Please try again.')
-            }
-
-            // Sanitize and encode event summary to handle special characters
-            let sanitizedSummary: string | null = null
-            
-            try {
-                if (formData.event_summary) {
-                    sanitizedSummary = formData.event_summary
-                        .replace(/\r\n/g, '\n') // Normalize line endings
-                        .replace(/\r/g, '\n')    // Convert remaining carriage returns
-                        .trim()                  // Remove leading/trailing whitespace
-                }
-
-                console.log('🔄 Sanitizing event summary...', {
-                    originalLength: formData.event_summary?.length,
-                    sanitizedLength: sanitizedSummary?.length,
-                    hasSpecialChars: sanitizedSummary?.includes("'") || sanitizedSummary?.includes('"')
-                })
-            } catch (sanitizeError) {
-                console.error('❌ Error sanitizing event summary:', sanitizeError)
-                throw new Error('There was an issue processing the event summary content. Please try again.')
-            }
-
-            // Sanitize and encode terms & conditions to handle special characters
-            let sanitizedTermsConditions: string | null = null
-            
-            try {
-                if (formData.settings.terms_conditions) {
-                    sanitizedTermsConditions = formData.settings.terms_conditions
-                        .replace(/\r\n/g, '\n') // Normalize line endings
-                        .replace(/\r/g, '\n')    // Convert remaining carriage returns
-                        .trim()                  // Remove leading/trailing whitespace
-                }
-
-                console.log('🔄 Sanitizing terms & conditions...', {
-                    originalLength: formData.settings.terms_conditions?.length,
-                    sanitizedLength: sanitizedTermsConditions?.length,
-                    hasSpecialChars: sanitizedTermsConditions?.includes("'") || sanitizedTermsConditions?.includes('"')
-                })
-            } catch (sanitizeError) {
-                console.error('❌ Error sanitizing terms & conditions:', sanitizeError)
-                throw new Error('There was an issue processing the terms & conditions content. Please try again.')
-            }
-
-            // Update event
             const { error: eventError } = await supabase
                 .from('events')
                 .update({
-                    title: formData.title,
+                    title: values.title,
                     description: sanitizedDescription,
                     event_summary: sanitizedSummary,
-                    start_date: formData.start_date,
-                    end_date: formData.end_date,
-                    entry_close_date: formData.entry_close_date || null,
-                    location: formData.location,
-                    price: parseFloat(formData.price) || 0,
-                    max_attendees: formData.max_attendees ? parseInt(formData.max_attendees) : null,
-                    image_url: formData.image_url || null,
-                    organizer_name: formData.organizer_name || null,
-                    organizer_email: formData.organizer_email || null,
-                    organizer_phone: formData.organizer_phone || null,
-                    timezone: formData.timezone,
-                    status: formData.status,
+                    start_date: values.start_date,
+                    end_date: values.end_date,
+                    entry_close_date: values.entry_close_date || null,
+                    location: values.location,
+                    price: parseFloat(values.price) || 0,
+                    max_attendees: values.max_attendees ? parseInt(values.max_attendees) : null,
+                    image_url: values.image_url || null,
+                    organizer_name: values.organizer_name || null,
+                    organizer_email: values.organizer_email || null,
+                    organizer_phone: values.organizer_phone || null,
+                    timezone: values.timezone,
+                    status: values.status,
                     alias: alias,
-                    custom_form_fields: formFields,
+                    custom_form_fields: updatedFormFields,
                     timeline: Object.keys(timeline).length > 0 ? timeline : null,
-                    is_promoted: formData.is_promoted,
+                    is_promoted: values.is_promoted,
                     location_settings: finalLocationSettings,
                     settings: {
-                        notify_organizer_on_booking: formData.settings.notify_organizer_on_booking,
+                        notify_organizer_on_booking: event?.settings?.notify_organizer_on_booking || false,
                         terms_conditions: sanitizedTermsConditions
                     },
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', eventId)
 
-            console.log('🔄 Event updated successfully!', { eventError })
             if (eventError) {
-                console.error('❌ Database update error:', eventError)
-                
-                // Provide more specific error messages
                 if (eventError.code === '23505') {
                     throw new Error('An event with this title already exists. Please choose a different title.')
                 } else if (eventError.code === '23514') {
@@ -332,20 +228,14 @@ export default function EditEventPage() {
                 }
             }
 
-            console.log('✅ Event updated successfully!')
             setSuccess('Event updated successfully!')
-            setError('')
-            
-            // Redirect after a short delay to show success message
             setTimeout(() => {
                 router.push('/organizer')
             }, 1500)
         } catch (err) {
-            console.error('❌ Event update error:', err)
             const errorMessage = err instanceof Error ? err.message : 'An error occurred while updating the event'
             setError(errorMessage)
         } finally {
-            console.log('🔄 Setting loading to false')
             setLoading(false)
         }
     }
@@ -388,83 +278,7 @@ export default function EditEventPage() {
         }
     }
 
-    const validateForm = (): boolean => {
-        const errors: Record<string, string> = {}
-        
-        // Required field validation
-        if (!formData.title.trim()) {
-            errors.title = 'Event title is required'
-        }
-        
-        // Description validation
-        if (formData.description && formData.description.length > 10000) {
-            errors.description = 'Description is too long (maximum 10,000 characters)'
-        }
-        
-        // Event summary validation
-        if (formData.event_summary && formData.event_summary.length > 200) {
-            errors.event_summary = 'Event summary is too long (maximum 200 characters)'
-        }
-        
-        if (!formData.start_date) {
-            errors.start_date = 'Start date is required'
-        }
-        
-        if (!formData.end_date) {
-            errors.end_date = 'End date is required'
-        }
-        
-        if (!formData.location.trim()) {
-            errors.location = 'Location is required'
-        }
-        
-        // Date validation
-        if (formData.start_date && formData.end_date) {
-            const startDate = new Date(formData.start_date)
-            const endDate = new Date(formData.end_date)
-            
-            if (startDate >= endDate) {
-                errors.end_date = 'End date must be after start date'
-            }
-            
-            if (startDate < new Date()) {
-                errors.start_date = 'Start date cannot be in the past'
-            }
-        }
-        
-        // Entry close date validation
-        if (formData.entry_close_date) {
-            const entryCloseDate = new Date(formData.entry_close_date)
-            const startDate = new Date(formData.start_date)
-            
-            if (entryCloseDate >= startDate) {
-                // errors.entry_close_date = 'Entry close date must be before the event start date'
-            }
-        }
-        
-        // Price validation
-        if (formData.price && parseFloat(formData.price) < 0) {
-            errors.price = 'Price cannot be negative'
-        }
-        
-        // Max attendees validation
-        if (formData.max_attendees && parseInt(formData.max_attendees) < 1) {
-            errors.max_attendees = 'Maximum attendees must be at least 1'
-        }
-        
-        // Email validation
-        if (formData.organizer_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.organizer_email)) {
-            errors.organizer_email = 'Please enter a valid email address'
-        }
-        
-        // Phone validation (basic)
-        if (formData.organizer_phone && formData.organizer_phone.length < 8) {
-            errors.organizer_phone = 'Please enter a valid phone number'
-        }
-        
-        setFieldErrors(errors)
-        return Object.keys(errors).length === 0
-    }
+    // Validation handled inside shared EventForm now
 
     const clearFieldError = (fieldName: string) => {
         setFieldErrors(prev => {
@@ -488,14 +302,7 @@ export default function EditEventPage() {
         }
     }
 
-    const handleDescriptionChange = (content: string) => {
-        // Clear description error when user starts typing
-        clearFieldError('description')
-        setFormData(prev => ({
-            ...prev,
-            description: content
-        }))
-    }
+    // Description handled in EventForm
 
     const getFieldClasses = (fieldName: string) => {
         const baseClasses = "mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
@@ -554,31 +361,47 @@ export default function EditEventPage() {
             </div>
 
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg text-gray-900 dark:text-gray-100">
-                <form onSubmit={handleSubmit} className="space-y-6 p-6">
-                    {error && (
-                        <div 
-                            ref={errorRef}
-                            className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded flex items-start"
-                        >
-                            <HiExclamationTriangle className="h-5 w-5 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
-                            <div>
-                                <p className="font-medium">Error</p>
-                                <p className="text-sm">{error}</p>
-                            </div>
-                        </div>
-                    )}
+                <div className="p-6">
+                    <EventForm
+                        mode="edit"
+                        initialValues={event ? ({
+                            title: event.title,
+                            description: event.description || '',
+                            event_summary: event.event_summary || '',
+                            start_date: event.start_date ? new Date(event.start_date).toISOString().slice(0, 16) : '',
+                            end_date: event.end_date ? new Date(event.end_date).toISOString().slice(0, 16) : '',
+                            entry_close_date: event.entry_close_date ? new Date(event.entry_close_date).toISOString().slice(0, 16) : '',
+                            location: event.location,
+                            price: event.price?.toString() || '',
+                            max_attendees: event.max_attendees?.toString() || '',
+                            image_url: event.image_url || '',
+                            organizer_name: event.organizer_name || '',
+                            organizer_email: event.organizer_email || '',
+                            organizer_phone: event.organizer_phone || '',
+                            timezone: event.timezone || DEFAULT_TIMEZONE,
+                            status: event.status,
+                            is_promoted: event.is_promoted || false,
+                            location_settings: {
+                                map_url: typeof event.location_settings === 'object' && event.location_settings && 'map_url' in event.location_settings ? (event.location_settings as { map_url?: string }).map_url ?? '' : '',
+                                direction_url: typeof event.location_settings === 'object' && event.location_settings && 'direction_url' in event.location_settings ? (event.location_settings as { direction_url?: string }).direction_url ?? '' : ''
+                            },
+                            settings: { terms_conditions: (typeof event.settings === 'object' && event.settings && 'terms_conditions' in event.settings ? (event.settings as { terms_conditions?: string }).terms_conditions : '') || '' }
+                        }) : undefined}
+                        initialFormFields={formFields}
+                        initialRefundTimeline={refundTimeline}
+                        onSubmit={handleUpdate}
+                        loading={loading}
+                        error={error}
+                        success={success}
+                        setError={setError}
+                        setSuccess={setSuccess}
+                        submitLabel="Update Event"
+                        cancelHref="/organizer"
+                    />
+                </div>
+                    
 
-                    {success && (
-                        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 px-4 py-3 rounded flex items-start">
-                            <HiCheckCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                            <div>
-                                <p className="font-medium">Success</p>
-                                <p className="text-sm">{success}</p>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="hidden">
                         <div className="md:col-span-2">
                             <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Event Title <span className="text-red-500">*</span>
@@ -604,92 +427,11 @@ export default function EditEventPage() {
                             )}
                         </div>
 
-                        <div className="md:col-span-2">
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Description (Markdown)
-                            </label>
-                            <MarkdownEditor
-                                value={formData.description}
-                                onChange={handleDescriptionChange}
-                                placeholder="Describe your event using Markdown formatting..."
-                            />
-                            <div className="mt-2 flex justify-between items-center">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    {formData.description?.length || 0} / 10,000 characters
-                                </div>
-                                {fieldErrors.description && (
-                                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center">
-                                        <HiExclamationCircle className="h-4 w-4 mr-1" />
-                                        {fieldErrors.description}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
+                        
 
-                        <div className="md:col-span-2">
-                            <label htmlFor="event_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Event Summary (Markdown)
-                            </label>
-                            <MarkdownEditor
-                                value={formData.event_summary}
-                                onChange={(content) => {
-                                    clearFieldError('event_summary')
-                                    setFormData(prev => ({
-                                        ...prev,
-                                        event_summary: content
-                                    }))
-                                }}
-                                placeholder="Enter a brief summary of your event using Markdown formatting..."
-                            />
-                            <div className="mt-2 flex justify-between items-center">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    {formData.event_summary?.length || 0} / 200 characters
-                                </div>
-                                {fieldErrors.event_summary && (
-                                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center">
-                                        <HiExclamationCircle className="h-4 w-4 mr-1" />
-                                        {fieldErrors.event_summary}
-                                    </p>
-                                )}
-                            </div>
-                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                This summary will be displayed on the event listing page. Use Markdown for formatting.
-                            </p>
-                        </div>
+                        
 
-                        <div className="md:col-span-2">
-                            <label htmlFor="terms_conditions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Event Terms & Conditions (Markdown)
-                            </label>
-                            <MarkdownEditor
-                                value={formData.settings.terms_conditions}
-                                onChange={(content) => {
-                                    clearFieldError('terms_conditions')
-                                    setFormData(prev => ({
-                                        ...prev,
-                                        settings: {
-                                            ...prev.settings,
-                                            terms_conditions: content
-                                        }
-                                    }))
-                                }}
-                                placeholder="Enter the terms and conditions using Markdown formatting..."
-                            />
-                            <div className="mt-2 flex justify-between items-center">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    {formData.settings.terms_conditions?.length || 0} / 10,000 characters
-                                </div>
-                                {fieldErrors.terms_conditions && (
-                                    <p className="text-sm text-red-600 dark:text-red-400 flex items-center">
-                                        <HiExclamationCircle className="h-4 w-4 mr-1" />
-                                        {fieldErrors.terms_conditions}
-                                    </p>
-                                )}
-                            </div>
-                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                These terms will be displayed to participants during booking and included on their tickets. Use Markdown for formatting.
-                            </p>
-                        </div>
+                        
 
                         <div>
                             <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1041,62 +783,9 @@ export default function EditEventPage() {
                         </div>
                     </div>
 
-                    {/* Refund Timeline */}
+                    {/* Additional Actions for Edit Page */}
                     <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center justify-between mb-4">
-                            <div>
-                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                    Refund Policy
-                                </h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    Configure automatic refund policies based on timing.
-                                </p>
-                            </div>
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id="enable_refunds"
-                                    checked={enableRefunds}
-                                    onChange={(e) => setEnableRefunds(e.target.checked)}
-                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
-                                />
-                                <label htmlFor="enable_refunds" className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Enable Refunds
-                                </label>
-                            </div>
-                        </div>
-
-                        {enableRefunds && (
-                            <TimelineBuilder
-                                eventStartDate={formData.start_date}
-                                refundTimeline={refundTimeline}
-                                onChange={setRefundTimeline}
-                            />
-                        )}
-                    </div>
-
-                    {/* Participant Form Fields */}
-                    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-                            Participant Information Form
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                            Define what information you want to collect from each participant during booking.
-                        </p>
-                        <FormBuilder
-                            fields={formFields}
-                            onChange={setFormFields}
-                        />
-                    </div>
-
-                    <div className="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-700">
                         <div className="flex space-x-4">
-                            <Link
-                                href="/organizer"
-                                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
-                            >
-                                Cancel
-                            </Link>
                             {event && (
                                 <>
                                     <Link
@@ -1122,15 +811,7 @@ export default function EditEventPage() {
                                 </>
                             )}
                         </div>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {loading ? 'Updating...' : 'Update Event'}
-                        </button>
                     </div>
-                </form>
             </div>
         </>
     )
