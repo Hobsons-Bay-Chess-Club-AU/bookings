@@ -14,6 +14,13 @@ export default async function TicketPage({ params }: TicketPageProps) {
     const supabase = await createClient()
     const profile = await getCurrentProfile()
 
+    // Check if user is authenticated first
+    if (!profile) {
+        // Redirect to login with return URL to come back to this ticket page
+        const returnUrl = encodeURIComponent(`/tickets/${bookingId}`)
+        redirect(`/auth/login?redirectTo=${returnUrl}`)
+    }
+
     // Get booking with event and participants
     // Check if the bookingId is a UUID (36 characters) or short booking ID (7 characters)
     const isUUID = bookingId.length === 36 && bookingId.includes('-')
@@ -62,16 +69,10 @@ export default async function TicketPage({ params }: TicketPageProps) {
         console.error('Error fetching participants:', participantsError)
     }
 
-    // Check if user has permission to access this booking
-    if (!profile) {
-        redirect('/auth/login')
-    }
-
     // Allow access if user is the booking owner, event organizer, or admin
     const isOwner = booking.user_id === profile.id
     const isOrganizer = booking.events.organizer_id === profile.id
     const isAdmin = profile.role === 'admin'
-
 
     if (!isOwner && !isOrganizer && !isAdmin) {
         console.log('Access denied - redirecting to unauthorized')
