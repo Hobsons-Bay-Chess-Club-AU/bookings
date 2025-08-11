@@ -10,11 +10,9 @@ const RATE_LIMITED_ROUTES = [
   '/api/create-checkout-session',
   '/api/events/',
   '/api/public/events/',
-  '/api/admin/',
   '/api/webhooks/',
   '/api/public/content/',
   '/api/public/players/',
-  '/api/'
 ]
 
 // Helper function to check if a route should be rate limited
