@@ -7,7 +7,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   const title = 'Hobsons Bay Chess Club Bookings'
   const description = 'Discover and book Hobsons Bay Chess Club tournaments, coaching, and community events. Secure your spot, check schedules, and share with friends.'
-  const imageUrl = `${siteUrl}/api/og/qr?url=${encodeURIComponent(siteUrl)}`
+      const imageUrl = `${siteUrl}/api/public/og/qr?url=${encodeURIComponent(siteUrl)}`
 
   return {
     title,

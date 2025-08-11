@@ -1,5 +1,10 @@
 import { ImageResponse } from 'next/og'
 
+// Note: This route generates OG images and should have caching headers.
+// However, ImageResponse doesn't support custom headers directly.
+// Consider implementing caching at the CDN level or using a different approach.
+// For Vercel deployment, the CDN will cache these responses based on the URL.
+
 // Load Montserrat via Google Fonts dynamically (ensures availability on edge)
 async function loadGoogleFont(fontQuery: string, text: string): Promise<ArrayBuffer | null> {
   try {
@@ -30,8 +35,8 @@ export async function GET(request: Request) {
   const close = (searchParams.get('close') || searchParams.get('close_date') || '').slice(0, 80)
   const targetUrl = searchParams.get('url') || siteUrl
   const mapUrl = (searchParams.get('mapUrl') || searchParams.get('map') || '').slice(0, 200)
-  const qrApi = `${siteUrl}/api/og/qr?url=${encodeURIComponent(targetUrl)}`
-  const qrMapApi = mapUrl ? `${siteUrl}/api/og/qr?url=${encodeURIComponent(mapUrl)}` : ''
+  const qrApi = `${siteUrl}/api/public/og/qr?url=${encodeURIComponent(targetUrl)}`
+  const qrMapApi = mapUrl ? `${siteUrl}/api/public/og/qr?url=${encodeURIComponent(mapUrl)}` : ''
   const fontText = `${title} ${description} ${date} ${time} ${location} ${organizer} ${phone} ${email} ${close} Scan to view Registration closes 0123456789@.-:+()`
   const [regularFont, boldFont] = await Promise.all([
     loadGoogleFont('Montserrat:wght@400', fontText),

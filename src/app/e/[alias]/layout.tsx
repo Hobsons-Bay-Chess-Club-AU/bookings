@@ -65,13 +65,13 @@ export async function generateMetadata(
         url: aliasUrl,
         title,
         description,
-        images: image ? [{ url: image }] : [{ url: `${siteUrl}/api/og/qr?url=${encodeURIComponent(eventUrl)}` }],
+                        images: image ? [{ url: image }] : [{ url: `${siteUrl}/api/public/og/qr?url=${encodeURIComponent(eventUrl)}` }],
       },
       twitter: {
         card: 'summary_large_image',
         title,
         description,
-        images: image ? [image] : [`${siteUrl}/api/og/qr?url=${encodeURIComponent(eventUrl)}`],
+                    images: image ? [image] : [`${siteUrl}/api/public/og/qr?url=${encodeURIComponent(eventUrl)}`],
       },
     }
   } catch {

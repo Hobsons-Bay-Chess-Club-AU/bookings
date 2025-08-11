@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PlayerData } from '@/lib/types/database'
+import { createCachedResponse, getCachePresets } from '@/lib/utils/cache'
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
         // Parse the HTML to extract player data
         const players = parseFideSearchResults(html)
 
-        return NextResponse.json({ players })
+        return createCachedResponse({ players }, getCachePresets().SHORT)
     } catch (error) {
         console.error('Error searching FIDE players:', error)
         return NextResponse.json({ error: 'Failed to search FIDE players' }, { status: 500 })

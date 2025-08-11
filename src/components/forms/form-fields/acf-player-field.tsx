@@ -63,7 +63,7 @@ export default function AcfPlayerField({
 
             setIsLoading(true)
             try {
-                const response = await fetch(`/api/players/acf/search?q=${encodeURIComponent(query)}`)
+                const response = await fetch(`/api/public/players/acf/search?q=${encodeURIComponent(query)}`)
                 if (response.ok) {
                     const data = await response.json()
                     setPlayers(data.players || [])
@@ -91,7 +91,7 @@ export default function AcfPlayerField({
             if (/^\d+$/.test(query.trim()) && query.length >= 3) {
                 setIsLoading(true)
                 try {
-                    const response = await fetch(`/api/players/acf/${query.trim()}`)
+                    const response = await fetch(`/api/public/players/acf/${query.trim()}`)
                     if (response.ok) {
                         const player = await response.json()
                         setPlayers([player])

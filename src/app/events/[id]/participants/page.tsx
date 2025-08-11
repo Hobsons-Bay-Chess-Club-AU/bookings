@@ -8,13 +8,13 @@ import { HiHome, HiLockClosed, HiCalendar, HiMapPin, HiUsers } from 'react-icons
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
 async function getEvent(id: string): Promise<Event | null> {
-    const res = await fetch(`${SITE_URL}/api/events/${id}`)
+    const res = await fetch(`${SITE_URL}/api/public/events/${id}`)
     if (!res.ok) return null
     return res.json()
 }
 
 async function getPublicParticipants(eventId: string) {
-    const res = await fetch(`${SITE_URL}/api/events/${eventId}/public-participants`, { cache: 'no-store' })
+    const res = await fetch(`${SITE_URL}/api/public/events/${eventId}/public-participants`, { cache: 'no-store' })
     if (!res.ok) return []
     return res.json()
 }

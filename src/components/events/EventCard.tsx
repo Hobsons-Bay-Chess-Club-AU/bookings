@@ -33,7 +33,7 @@ export default function EventCard({ event, hideBooking = false }: EventCardProps
 
     async function loadPricingRange() {
       try {
-        const res = await fetch(`/api/events/${event.id}/pricing?membership_type=all`, { cache: 'no-store' })
+        const res = await fetch(`/api/public/events/${event.id}/pricing?membership_type=all`, { cache: 'no-store' })
         if (!res.ok) throw new Error('Failed to load pricing')
         const pricing: Array<{ price: number }> = await res.json()
         if (!isMounted) return

@@ -104,7 +104,7 @@ export function getRateLimitConfig(pathname: string): Ratelimit | null {
   }
 
   // Event management routes
-  if (pathname.startsWith('/api/events/')) {
+  if (pathname.startsWith('/api/events/') || pathname.startsWith('/api/public/events/')) {
     return rateLimitConfigs.events
   }
 
@@ -119,12 +119,12 @@ export function getRateLimitConfig(pathname: string): Ratelimit | null {
   }
 
   // Content management routes
-  if (pathname.startsWith('/api/content/')) {
+  if (pathname.startsWith('/api/public/content/')) {
     return rateLimitConfigs.content
   }
 
   // Search routes
-  if (pathname.startsWith('/api/players/') || pathname.includes('search')) {
+  if (pathname.startsWith('/api/public/players/') || pathname.includes('search')) {
     return rateLimitConfigs.search
   }
 

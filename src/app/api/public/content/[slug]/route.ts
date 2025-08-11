@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { createCachedResponse, getCachePresets } from '@/lib/utils/cache'
 
 
 // GET /api/content/[slug] - Get published content by slug
@@ -34,11 +35,8 @@ export async function GET(request: NextRequest, context: unknown) {
             return NextResponse.json({ error: 'Failed to fetch content' }, { status: 500 })
         }
 
-        // Set cache headers for published content
-        const response = NextResponse.json(content)
-        response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
-
-        return response
+        // Return cached response for published content
+        return createCachedResponse(content, getCachePresets().STATIC)
 
     } catch (error) {
         console.error('API error:', error)

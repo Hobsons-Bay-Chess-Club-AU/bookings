@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
 import { PlayerData } from '@/lib/types/database'
+import { createCachedResponse, getCachePresets } from '@/lib/utils/cache'
 
-export async function GET(request: NextRequest, context: unknown) {
-    const { params } = context as { params: { id: string } };
-    const { id: acfId } = params
+export async function GET(request: NextRequest) {
+    console.log('Received ACF search request')
+    const searchParams = request.nextUrl.searchParams
+    const query = searchParams.get('q')
 
-    if (!acfId || !/^\d+$/.test(acfId)) {
-        return NextResponse.json({ error: 'Invalid ACF ID' }, { status: 400 })
+    if (!query || query.trim().length < 2) {
+        return NextResponse.json({ error: 'Search query must be at least 2 characters' }, { status: 400 })
     }
 
     try {
-        // Use ACF quarterly rating files API to search by ID
+        // Use ACF quarterly rating files API
         // Files are published quarterly: March (mar), June (jun), September (sep), December (dec)
         // ACF has both standard and quick (rapid) rating files
         const now = new Date()
@@ -44,12 +46,12 @@ export async function GET(request: NextRequest, context: unknown) {
 
         const yearSuffix = year.toString().slice(-2) // Get last 2 digits of year
 
-        // Fetch both standard and quick rating files using ID as search term
+        // Fetch both standard and quick rating files
         const standardFilename = `${monthAbbr}mst${yearSuffix}.txt`
         const quickFilename = `${monthAbbr}${yearSuffix}quick.txt`
 
-        const standardUrl = `https://auschess.org.au/file_search.php?file=wp-content/uploads/${year}/${monthNum}/${standardFilename}&search=${acfId}`
-        const quickUrl = `https://auschess.org.au/file_search.php?file=wp-content/uploads/${year}/${monthNum}/${quickFilename}&search=${acfId}`
+        const standardUrl = `https://auschess.org.au/file_search.php?file=wp-content/uploads/${year}/${monthNum}/${standardFilename}&search=${encodeURIComponent(query.trim())}`
+        const quickUrl = `https://auschess.org.au/file_search.php?file=wp-content/uploads/${year}/${monthNum}/${quickFilename}&search=${encodeURIComponent(query.trim())}`
 
         console.log('Fetching ACF Standard URL:', standardUrl)
         console.log('Fetching ACF Quick URL:', quickUrl)
@@ -97,21 +99,16 @@ export async function GET(request: NextRequest, context: unknown) {
             quickPlayers = parseACFTextResults(quickHtml, 'rapid_rating')
         }
 
-        // Merge the results and find the specific player
+        // Merge the results - combine players with same ID
         const mergedPlayers = mergePlayerRatings(standardPlayers, quickPlayers)
-        const player = mergedPlayers.find((p: PlayerData) => p.id === acfId)
+        console.log('Merged players:', mergedPlayers.length)
 
-        if (!player) {
-            return NextResponse.json({ error: 'Player not found' }, { status: 404 })
-        }
-
-        return NextResponse.json(player)
+        return createCachedResponse({ players: mergedPlayers }, getCachePresets().SHORT)
     } catch (error) {
-        console.error('Error fetching ACF player:', error)
-        return NextResponse.json({ error: 'Failed to fetch ACF player' }, { status: 500 })
+        console.error('Error searching ACF players:', error)
+        return NextResponse.json({ error: 'Failed to search ACF players' }, { status: 500 })
     }
 }
-
 
 function parseACFTextResults(content: string, ratingType: 'std_rating' | 'rapid_rating' = 'std_rating'): PlayerData[] {
     try {
@@ -205,7 +202,7 @@ function parseACFTextResults(content: string, ratingType: 'std_rating' | 'rapid_
         }
 
         console.log(`Successfully parsed ${players.length} players for ${ratingType}`)
-        return players
+        return players.slice(0, 20) // Increase limit since we're merging
     } catch (error) {
         console.error(`Error parsing ACF text results for ${ratingType}:`, error)
         return []
@@ -232,6 +229,9 @@ function mergePlayerRatings(standardPlayers: PlayerData[], quickPlayers: PlayerD
         }
     }
 
-    // Convert back to array
-    return Array.from(playerMap.values())
+    // Convert back to array and sort by name
+    const mergedPlayers = Array.from(playerMap.values())
+        .sort((a, b) => a.name.localeCompare(b.name))
+
+    return mergedPlayers.slice(0, 10) // Final limit of 10 results
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createCachedResponse, getCachePresets } from '@/lib/utils/cache'
 
 export async function GET(
   request: NextRequest,
@@ -48,6 +49,6 @@ export async function GET(
     return NextResponse.json({ error: 'Failed to fetch participants' }, { status: 500 })
   }
 
-  // 3. Return the full booking structure that the UI expects
-  return NextResponse.json(bookings || [])
+  // 3. Return the full booking structure that the UI expects with caching
+  return createCachedResponse(bookings || [], getCachePresets().DYNAMIC)
 }

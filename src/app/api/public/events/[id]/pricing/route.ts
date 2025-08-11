@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/utils/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { MembershipType } from '@/lib/types/database'
+import { createCachedResponse, getCachePresets } from '@/lib/utils/cache'
 
 interface RouteParams {
     params: Promise<{ id: string }>
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             return NextResponse.json({ error: 'Failed to fetch pricing' }, { status: 500 })
         }
 
-        return NextResponse.json(pricing || [])
+        return createCachedResponse(pricing || [], getCachePresets().DYNAMIC)
     } catch (error) {
         console.error('Error in /api/events/[id]/pricing GET:', error)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

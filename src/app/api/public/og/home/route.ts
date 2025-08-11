@@ -1,4 +1,5 @@
 import QRCode from 'qrcode'
+import { createCacheHeaders, getCachePresets } from '@/lib/utils/cache'
 
 export async function GET() {
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
@@ -18,7 +19,7 @@ export async function GET() {
     return new Response(buffer, {
       headers: {
         'Content-Type': 'image/png',
-        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+        ...createCacheHeaders(getCachePresets().STATIC)
       },
     })
   } catch {

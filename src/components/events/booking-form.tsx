@@ -89,7 +89,7 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
 
                 // Fetch pricing options
                 const membershipType = user?.membership_type || 'non_member'
-                const pricingResponse = await fetch(`/api/events/${event.id}/pricing?membership_type=${membershipType}`)
+                const pricingResponse = await fetch(`/api/public/events/${event.id}/pricing?membership_type=${membershipType}`)
                 if (!pricingResponse.ok) {
                     throw new Error('Failed to fetch pricing')
                 }

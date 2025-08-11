@@ -38,23 +38,23 @@ export const securityHeaders = {
     // Default source restrictions
     "default-src 'self'",
     
-    // Script sources - allow self, Stripe, Google Maps, and inline scripts for Next.js
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://checkout.stripe.com https://maps.googleapis.com https://maps.gstatic.com",
+    // Script sources - allow self, Stripe, Google Maps, Vercel Speed Insights, and inline scripts for Next.js
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://checkout.stripe.com https://m.stripe.com https://maps.googleapis.com https://maps.gstatic.com https://b.stripecdn.com https://va.vercel-scripts.com",
     
     // Style sources - allow self, inline styles for Tailwind, and Google Maps
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://maps.googleapis.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://maps.googleapis.com https://js.stripe.com",
     
     // Image sources - allow self, data URIs, external image services, and Google Maps
-    "img-src 'self' data: https: blob: https://maps.googleapis.com https://maps.gstatic.com https://streetviewpixels-pa.googleapis.com",
+    "img-src 'self' data: https: blob: https://maps.googleapis.com https://maps.gstatic.com https://streetviewpixels-pa.googleapis.com https://js.stripe.com https://m.stripe.com https://b.stripecdn.com https://checkout.stripe.com https://pay.stripe.com",
     
     // Font sources - allow self and Google Fonts
-    "font-src 'self' https://fonts.gstatic.com",
+    "font-src 'self' https://fonts.gstatic.com https://js.stripe.com https://b.stripecdn.com",
     
     // Connect sources - allow self, Supabase, Stripe, analytics, and Google Maps
-    "connect-src 'self' https://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://va.vercel-scripts.com https://maps.googleapis.com",
+    "connect-src 'self' https://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://m.stripe.com https://va.vercel-scripts.com https://maps.googleapis.com wss://*.stripe.com https://hooks.stripe.com https://b.stripecdn.com https://pay.stripe.com https://www.google.com/maps/embed",
     
     // Frame sources - allow Stripe checkout and Google Maps
-    "frame-src 'self' https://js.stripe.com https://checkout.stripe.com https://www.google.com https://maps.google.com",
+    "frame-src 'self' https://js.stripe.com https://checkout.stripe.com https://m.stripe.com https://www.google.com https://maps.google.com https://checkout.stripe.com https://pay.stripe.com https://www.google.com/maps/embed",
     
     // Object sources - deny all
     "object-src 'none'",
@@ -64,6 +64,9 @@ export const securityHeaders = {
     
     // Form action - allow self and Stripe
     "form-action 'self' https://checkout.stripe.com",
+    
+    // Navigate to - allow navigation to Stripe checkout and Google Maps (CSP Level 3)
+    "navigate-to 'self' https://checkout.stripe.com https://pay.stripe.com https://www.google.com/maps/embed",
     
     // Upgrade insecure requests
     "upgrade-insecure-requests"
@@ -75,8 +78,8 @@ export const securityHeaders = {
   // Strict Transport Security (HTTPS only)
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
   
-  // Cross-Origin Embedder Policy
-  'Cross-Origin-Embedder-Policy': 'require-corp',
+  // Cross-Origin Embedder Policy - relaxed to allow Stripe.js
+  'Cross-Origin-Embedder-Policy': 'unsafe-none',
   
   // Cross-Origin Opener Policy
   'Cross-Origin-Opener-Policy': 'same-origin',

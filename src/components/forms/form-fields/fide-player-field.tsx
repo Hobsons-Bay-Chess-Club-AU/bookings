@@ -76,7 +76,7 @@ export default function FidePlayerField({
             setIsLoading(true)
             setSearchError(null)
             try {
-                const response = await fetch(`/api/players/fide/search?q=${encodeURIComponent(query)}`)
+                const response = await fetch(`/api/public/players/fide/search?q=${encodeURIComponent(query)}`)
 
                 if (response.ok) {
                     const data = await response.json()
@@ -115,7 +115,7 @@ export default function FidePlayerField({
                 setIsLoading(true)
                 setSearchError(null)
                 try {
-                    const response = await fetch(`/api/players/fide/${query.trim()}`)
+                    const response = await fetch(`/api/public/players/fide/${query.trim()}`)
                     if (response.ok) {
                         const player = await response.json()
                         console.log('FIDE ID lookup response:', player)
