@@ -25,7 +25,7 @@ export const rateLimitConfigs = redis ? {
   // Authentication endpoints - 5 requests per minute
   auth: new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(5, '1 m'),
+    limiter: Ratelimit.slidingWindow(60, '1 m'),
     analytics: true,
     prefix: 'ratelimit:auth',
   }),
@@ -33,7 +33,7 @@ export const rateLimitConfigs = redis ? {
   // Booking endpoints - 20 requests per minute
   booking: new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(20, '1 m'),
+    limiter: Ratelimit.slidingWindow(100, '1 m'),
     analytics: true,
     prefix: 'ratelimit:booking',
   }),

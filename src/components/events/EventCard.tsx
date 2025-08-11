@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import QRCode from 'react-qr-code'
 import MarkdownContent from '@/components/ui/html-content'
@@ -17,6 +17,9 @@ export default function EventCard({ event, hideBooking = false }: EventCardProps
   const [showQR, setShowQR] = useState(false)
   const [eventUrl, setEventUrl] = useState('')
   const [priceLabel, setPriceLabel] = useState<string>('')
+  const [isVisible, setIsVisible] = useState(false)
+  const [pricingLoaded, setPricingLoaded] = useState(false)
+  const cardRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -28,52 +31,91 @@ export default function EventCard({ event, hideBooking = false }: EventCardProps
     }
   }, [event.alias, event.id])
 
+  // Set initial price label from event base price
   useEffect(() => {
-    let isMounted = true
+    const base = event.price
+    setPriceLabel(base === 0 ? 'Contact organizer' : `AUD $${base.toFixed(2)}`)
+  }, [event.price])
 
-    async function loadPricingRange() {
-      try {
-        const res = await fetch(`/api/public/events/${event.id}/pricing?membership_type=all`, { cache: 'no-store' })
-        if (!res.ok) throw new Error('Failed to load pricing')
-        const pricing: Array<{ price: number }> = await res.json()
-        if (!isMounted) return
+  // Intersection Observer to detect when card becomes visible
+  useEffect(() => {
+    const currentRef = cardRef.current
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true)
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      {
+        rootMargin: '50px', // Start loading 50px before the card becomes visible
+        threshold: 0.1
+      }
+    )
 
-        if (!pricing || pricing.length === 0) {
-          // Fall back to base price
-          const base = event.price
-          setPriceLabel(base === 0 ? 'Contact organizer' : `AUD $${base.toFixed(2)}`)
-          return
-        }
+    if (currentRef) {
+      observer.observe(currentRef)
+    }
 
-        const prices = pricing.map(p => p.price).filter((p) => typeof p === 'number')
-        if (prices.length === 0) {
-          const base = event.price
-          setPriceLabel(base === 0 ? 'Contact organizer' : `AUD $${base.toFixed(2)}`)
-          return
-        }
-
-        const min = Math.min(...prices)
-        const max = Math.max(...prices)
-        if (min === max) {
-          setPriceLabel(min === 0 ? 'Free' : `AUD $${min.toFixed(2)}`)
-        } else {
-          setPriceLabel(`From AUD $${min.toFixed(2)} - $${max.toFixed(2)}`)
-        }
-      } catch {
-        // Silent fallback to base price
-        const base = event.price
-        setPriceLabel(base === 0 ? 'Contact organizer' : `AUD $${base.toFixed(2)}`)
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef)
       }
     }
+  }, [])
 
-    loadPricingRange()
-    return () => {
-      isMounted = false
+  // Load pricing data only when card becomes visible and hasn't been loaded yet
+  const loadPricingRange = useCallback(async () => {
+    if (!isVisible || pricingLoaded) return
+
+    try {
+      setPricingLoaded(true)
+      const res = await fetch(`/api/public/events/${event.id}/pricing?membership_type=all`, { cache: 'no-store' })
+      if (!res.ok) throw new Error('Failed to load pricing')
+      const pricing: Array<{ price: number }> = await res.json()
+
+      if (!pricing || pricing.length === 0) {
+        // Fall back to base price
+        const base = event.price
+        setPriceLabel(base === 0 ? 'Contact organizer' : `AUD $${base.toFixed(2)}`)
+        return
+      }
+
+      const prices = pricing.map(p => p.price).filter((p) => typeof p === 'number')
+      if (prices.length === 0) {
+        const base = event.price
+        setPriceLabel(base === 0 ? 'Contact organizer' : `AUD $${base.toFixed(2)}`)
+        return
+      }
+
+      const min = Math.min(...prices)
+      const max = Math.max(...prices)
+      if (min === max) {
+        setPriceLabel(min === 0 ? 'Free' : `AUD $${min.toFixed(2)}`)
+      } else {
+        setPriceLabel(`From AUD $${min.toFixed(2)} - $${max.toFixed(2)}`)
+      }
+    } catch {
+      // Silent fallback to base price
+      const base = event.price
+      setPriceLabel(base === 0 ? 'Contact organizer' : `AUD $${base.toFixed(2)}`)
     }
-  }, [event.id, event.price])
+  }, [isVisible, pricingLoaded, event.id, event.price])
+
+  // Load pricing when card becomes visible
+  useEffect(() => {
+    if (isVisible && !pricingLoaded) {
+      loadPricingRange()
+    }
+  }, [isVisible, pricingLoaded, loadPricingRange])
 
   return (
-    <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-lg relative flex flex-col h-full transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.02] group border border-gray-100 dark:border-gray-700">
+    <div 
+      ref={cardRef}
+      className="bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-lg relative flex flex-col h-full transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.02] group border border-gray-100 dark:border-gray-700"
+    >
       {/* QR Icon */}
       <button
         className="absolute top-1 right-1 z-20 p-1 bg-white dark:bg-gray-900 rounded-full shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 hover:shadow-lg hover:scale-110"
