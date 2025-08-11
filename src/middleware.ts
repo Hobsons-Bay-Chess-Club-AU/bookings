@@ -1,11 +1,18 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { rateLimitWithUser } from '@/lib/rate-limit/middleware'
 
 export async function middleware(request: NextRequest) {
     // Check if required environment variables are set
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
         console.error('Missing Supabase environment variables')
         return NextResponse.next()
+    }
+
+    // Apply rate limiting first
+    const rateLimitResult = await rateLimitWithUser(request)
+    if (rateLimitResult) {
+        return rateLimitResult
     }
 
     let supabaseResponse = NextResponse.next({

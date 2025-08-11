@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { adminApi } from '@/lib/rate-limit/api-wrapper'
 
 // GET /api/admin/content - List all content
-export async function GET(request: NextRequest) {
+async function getContentHandler(request: NextRequest) {
     try {
         const supabase = await createClient()
 
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/admin/content - Create new content
-export async function POST(request: NextRequest) {
+async function createContentHandler(request: NextRequest) {
     try {
         const supabase = await createClient()
 
@@ -151,3 +152,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }
+
+export const GET = adminApi(getContentHandler)
+export const POST = adminApi(createContentHandler)

@@ -20,6 +20,7 @@ A full-stack event booking system built with Next.js, Supabase, and Stripe. This
 - **Content Management**: Full CMS system for managing static website content
 - **Version Control**: Track content changes with automatic versioning
 - **SEO Management**: Built-in meta tag and keyword management
+- **Rate Limiting**: Comprehensive API protection with Upstash Redis
 
 ## Tech Stack
 
@@ -28,6 +29,7 @@ A full-stack event booking system built with Next.js, Supabase, and Stripe. This
 - **Database**: PostgreSQL (via Supabase)
 - **Authentication**: Supabase Auth
 - **Payments**: Stripe
+- **Rate Limiting**: Upstash Redis
 - **Deployment**: Vercel-ready
 
 ## Database Schema
@@ -67,7 +69,10 @@ STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
 
 # App Configuration
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
+
+# Rate Limiting (Optional - for production)
+UPSTASH_REDIS_REST_URL=your_upstash_redis_url
+UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_token
 
 ### 3. Supabase Setup
 
@@ -82,7 +87,24 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - Quick fixes for infinite recursion errors
 - Manual cleanup options
 
-### 4. Test Users Setup (Optional)
+### 4. Rate Limiting Setup (Optional)
+
+For production deployments, set up rate limiting to protect your API:
+
+1. **Create Upstash Redis Database:**
+   - Go to [Upstash Console](https://console.upstash.com/)
+   - Create a new Redis database
+   - Copy the `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`
+
+2. **Add Environment Variables:**
+   - Add the Redis credentials to your `.env.local` file
+   - For production, add them to your Vercel environment variables
+
+3. **Verify Setup:**
+   - Check rate limiting status at `/api/rate-limit/status`
+   - Review the [RATE_LIMITING.md](RATE_LIMITING.md) guide for detailed configuration
+
+### 5. Test Users Setup (Optional)
 
 To set up test users for development and testing:
 

@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { authApi } from '@/lib/rate-limit/api-wrapper'
 
-export async function POST() {
+async function logoutHandler() {
     try {
         const supabase = await createClient()
 
@@ -40,3 +41,5 @@ export async function POST() {
         )
     }
 }
+
+export const POST = authApi(logoutHandler)

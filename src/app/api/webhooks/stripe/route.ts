@@ -9,6 +9,7 @@ import {
     handlePaymentIntentPaymentFailed,
     handleChargeDisputeCreated
 } from './handlers'
+import { webhooksApi } from '@/lib/rate-limit/api-wrapper'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-06-30.basil',
@@ -16,7 +17,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
 
-export async function POST(request: NextRequest) {
+async function stripeWebhookHandler(request: NextRequest) {
     try {
         const body = await request.text()
         const signature = request.headers.get('stripe-signature')!
@@ -123,3 +124,5 @@ export async function POST(request: NextRequest) {
         )
     }
 }
+
+export const POST = webhooksApi(stripeWebhookHandler)

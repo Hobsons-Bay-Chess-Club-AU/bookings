@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
+import { bookingApi } from '@/lib/rate-limit/api-wrapper'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-06-30.basil',
 })
 
-export async function POST(request: NextRequest) {
+async function createCheckoutSessionHandler(request: NextRequest) {
     try {
         const requestBody = await request.json()
         const { bookingId, eventId, quantity, amount: _clientAmount, eventTitle, optInMarketing } = requestBody
@@ -227,3 +228,5 @@ export async function POST(request: NextRequest) {
         )
     }
 }
+
+export const POST = bookingApi(createCheckoutSessionHandler)
