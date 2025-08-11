@@ -14,9 +14,10 @@ type FormFieldUIOptions = FormFieldUIOption[]
 interface FormBuilderProps {
     fields: FormField[]
     onChange: (fields: FormField[]) => void
+    context?: 'event' | 'library' // Context where FormBuilder is being used
 }
 
-export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
+export default function FormBuilder({ fields, onChange, context = 'event' }: FormBuilderProps) {
     const [editingField, setEditingField] = useState<FormField | null>(null)
     const [isAdding, setIsAdding] = useState(false)
     const [showLibrary, setShowLibrary] = useState(false)
@@ -89,7 +90,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
     const handleAddField = () => {
         setEditingField(createNewField())
         setIsAdding(true)
-        setSaveToLibrary(false)
+        setSaveToLibrary(context === 'library') // Auto-save to library when in library context
         setUseAdvancedOptions(false)
     }
 
@@ -157,15 +158,9 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                 .replace(/^_+|_+$/g, '')
         }
 
-        // Save to event fields
-        if (isAdding) {
-            onChange([...fields, editingField])
-        } else {
-            onChange(fields.map(f => f.id === editingField.id ? editingField : f))
-        }
-
-        // Save to custom field library if requested
-        if (saveToLibrary && isAdding) {
+        // Handle different contexts
+        if (context === 'library') {
+            // In library context, always save to library
             try {
                 const customFieldData = {
                     name: editingField.name,
@@ -186,12 +181,53 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
 
                 if (!response.ok) {
                     const error = await response.json()
-                    console.error('Failed to save to library:', error)
-                    alert('Field saved to event but failed to save to library: ' + (error.error || 'Unknown error'))
+                    throw new Error(error.error || 'Failed to save to library')
                 }
+
+                // Call onChange to trigger parent component refresh
+                onChange([])
             } catch (error) {
                 console.error('Error saving to library:', error)
-                alert('Field saved to event but failed to save to library')
+                alert('Failed to save to library: ' + (error instanceof Error ? error.message : 'Unknown error'))
+                return
+            }
+        } else {
+            // In event context, save to event fields
+            if (isAdding) {
+                onChange([...fields, editingField])
+            } else {
+                onChange(fields.map(f => f.id === editingField.id ? editingField : f))
+            }
+
+            // Save to custom field library if requested
+            if (saveToLibrary && isAdding) {
+                try {
+                    const customFieldData = {
+                        name: editingField.name,
+                        label: editingField.label,
+                        description: editingField.description,
+                        type: editingField.type,
+                        required: editingField.required,
+                        options: editingField.options,
+                        validation: editingField.validation,
+                        placeholder: editingField.placeholder
+                    }
+
+                    const response = await fetch('/api/organizer/custom-fields', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(customFieldData)
+                    })
+
+                    if (!response.ok) {
+                        const error = await response.json()
+                        console.error('Failed to save to library:', error)
+                        alert('Field saved to event but failed to save to library: ' + (error.error || 'Unknown error'))
+                    }
+                } catch (error) {
+                    console.error('Error saving to library:', error)
+                    alert('Field saved to event but failed to save to library')
+                }
             }
         }
 
@@ -695,8 +731,8 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                 )}
                             </div>
 
-                            {/* Save to Library Option */}
-                            {isAdding && (
+                            {/* Save to Library Option - Only show when not in library context */}
+                            {isAdding && context !== 'library' && (
                                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
                                     <div className="flex items-center">
                                         <input

@@ -9,6 +9,7 @@ interface BookingConfirmationEmailData {
   eventDate: string
   eventLocation: string
   eventEndDate?: string
+  eventTimezone?: string
   participantCount: number
   totalAmount: number
   organizerName: string
@@ -33,6 +34,7 @@ function BookingConfirmationEmail({
   eventDate,
   eventLocation,
   eventEndDate,
+  eventTimezone,
   participantCount,
   totalAmount,
   organizerName,
@@ -62,12 +64,14 @@ function BookingConfirmationEmail({
           <strong>Starts:</strong> {formattedStart.toLocaleDateString('en-AU', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
           })}
+          {eventTimezone && ` (${eventTimezone})`}
         </EmailText>
         {formattedEnd && (
           <EmailText style={{ marginBottom: '10px' }}>
             <strong>Ends:</strong> {formattedEnd.toLocaleDateString('en-AU', {
               weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
             })}
+            {eventTimezone && ` (${eventTimezone})`}
           </EmailText>
         )}
         <EmailText style={{ marginBottom: '10px' }}>

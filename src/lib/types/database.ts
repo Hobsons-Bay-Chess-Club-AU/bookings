@@ -203,6 +203,7 @@ export interface Event {
     organizer_email?: string
     organizer_phone?: string
     entry_close_date?: string
+    timezone: string
     custom_form_fields?: FormField[]
     timeline?: EventTimeline
     is_promoted?: boolean

@@ -6,12 +6,18 @@ export interface CalendarEvent {
   location?: string
   startDate: Date
   endDate: Date
+  timezone?: string
   url?: string
   organizerName?: string
   organizerEmail?: string
 }
 
-export function formatDateForCalendar(date: Date): string {
+export function formatDateForCalendar(date: Date, timezone?: string): string {
+  if (timezone) {
+    // Convert to UTC for calendar services
+    const utcDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }))
+    return utcDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+  }
   return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
 }
 
@@ -20,7 +26,7 @@ export function generateGoogleCalendarUrl(event: CalendarEvent): string {
   const params = new URLSearchParams({
     action: 'TEMPLATE',
     text: event.title,
-    dates: `${formatDateForCalendar(event.startDate)}/${formatDateForCalendar(event.endDate)}`,
+    dates: `${formatDateForCalendar(event.startDate, event.timezone)}/${formatDateForCalendar(event.endDate, event.timezone)}`,
     details: event.description || '',
     location: event.location || '',
   })
@@ -32,8 +38,8 @@ export function generateOutlookCalendarUrl(event: CalendarEvent): string {
   const baseUrl = 'https://outlook.live.com/calendar/0/deeplink/compose'
   const params = new URLSearchParams({
     subject: event.title,
-    startdt: event.startDate.toISOString(),
-    enddt: event.endDate.toISOString(),
+    startdt: event.timezone ? new Date(event.startDate.toLocaleString('en-US', { timeZone: event.timezone })).toISOString() : event.startDate.toISOString(),
+    enddt: event.timezone ? new Date(event.endDate.toLocaleString('en-US', { timeZone: event.timezone })).toISOString() : event.endDate.toISOString(),
     body: event.description || '',
     location: event.location || '',
   })
@@ -59,8 +65,12 @@ export function generateIcsFile(event: CalendarEvent): string {
   lines.push('METHOD:PUBLISH')
   lines.push('BEGIN:VEVENT')
   lines.push(`UID:${Date.now()}@hobsonsbaycc.com`)
-  lines.push(`DTSTART:${formatDateForCalendar(event.startDate)}`)
-  lines.push(`DTEND:${formatDateForCalendar(event.endDate)}`)
+  lines.push(`DTSTART:${formatDateForCalendar(event.startDate, event.timezone)}`)
+  lines.push(`DTEND:${formatDateForCalendar(event.endDate, event.timezone)}`)
+  if (event.timezone) {
+    lines.push(`DTSTART;TZID=${event.timezone}:${formatDateForCalendar(event.startDate, event.timezone).replace('Z', '')}`)
+    lines.push(`DTEND;TZID=${event.timezone}:${formatDateForCalendar(event.endDate, event.timezone).replace('Z', '')}`)
+  }
   lines.push(`SUMMARY:${escapeIcsText(event.title)}`)
   if (event.description) {
     lines.push(`DESCRIPTION:${escapeIcsText(event.description)}`)

@@ -1,10 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-// import { createClient } from '@/lib/supabase/client'
 import { CustomField, FormField, FormFieldType } from '@/lib/types/database'
 import FormBuilder from '@/components/events/form-builder'
-import { HiDocumentText, HiUser, HiGlobeAlt, HiStar } from 'react-icons/hi2'
+import { HiDocumentText, HiUser, HiGlobeAlt, HiStar, HiPlus } from 'react-icons/hi2'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
 
 export default function CustomFieldsPage() {
@@ -18,8 +17,6 @@ export default function CustomFieldsPage() {
     const [editingField, setEditingField] = useState<CustomField | null>(null)
     const [showConfirmModal, setShowConfirmModal] = useState(false)
     const [fieldToDelete, setFieldToDelete] = useState<string | null>(null)
-
-    // (supabase client import removed, not used)
 
     const fieldTypes: { value: FormFieldType | 'all'; label: string }[] = [
         { value: 'all', label: 'All Types' },
@@ -165,6 +162,42 @@ export default function CustomFieldsPage() {
         return true
     })
 
+    // If we're in creation mode, show the form directly
+    if (isCreating) {
+        return (
+            <div className="max-w-4xl mx-auto">
+                <div className="mb-8">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Create Custom Field</h1>
+                            <p className="text-gray-600 dark:text-gray-400 mt-2">Add a new reusable field to your library</p>
+                        </div>
+                        <button
+                            onClick={() => setIsCreating(false)}
+                            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+
+                {error && (
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded mb-6">
+                        {error}
+                    </div>
+                )}
+
+                <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                    <FormBuilder
+                        fields={[]}
+                        onChange={handleCreateField}
+                        context="library"
+                    />
+                </div>
+            </div>
+        )
+    }
+
     return (
         <>
             {loading ? (
@@ -178,8 +211,19 @@ export default function CustomFieldsPage() {
                 <>
                     {/* Page Header */}
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Custom Field Library</h1>
-                        <p className="text-gray-600 dark:text-gray-400 mt-2">Manage reusable form fields for your events</p>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Custom Field Library</h1>
+                                <p className="text-gray-600 dark:text-gray-400 mt-2">Manage reusable form fields for your events</p>
+                            </div>
+                            <button
+                                onClick={() => setIsCreating(true)}
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                            >
+                                <HiPlus className="h-4 w-4 mr-2" />
+                                Create New Field
+                            </button>
+                        </div>
                     </div>
 
                     {error && (
@@ -273,20 +317,8 @@ export default function CustomFieldsPage() {
 
                     {/* Controls */}
                     <div className="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
-                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">Field Library</h2>
-                                <button
-                                    onClick={() => setIsCreating(true)}
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                                >
-                                    Create New Field
-                                </button>
-                            </div>
-                        </div>
-
                         <div className="p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                     <input
                                         type="text"
@@ -329,11 +361,11 @@ export default function CustomFieldsPage() {
                             <div className="text-center py-12">
                                 <HiDocumentText className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
                                 <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                                    {customFields.length === 0 ? 'No custom fields yet' : 'No fields match your search'}
+                                    {customFields.length === 0 ? 'Your field library is empty' : 'No fields match your search'}
                                 </h4>
                                 <p className="text-gray-600 dark:text-gray-400 mb-6">
                                     {customFields.length === 0
-                                        ? 'Create reusable form fields that you can use across multiple events.'
+                                        ? 'Create your first reusable form field to get started.'
                                         : 'Try adjusting your search criteria or filters.'
                                     }
                                 </p>
@@ -342,6 +374,7 @@ export default function CustomFieldsPage() {
                                         onClick={() => setIsCreating(true)}
                                         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                                     >
+                                        <HiPlus className="h-4 w-4 mr-2" />
                                         Create Your First Field
                                     </button>
                                 )}
@@ -403,39 +436,6 @@ export default function CustomFieldsPage() {
                         </div>
                     )}
 
-                    {/* Create Field Modal */}
-                    {isCreating && (
-                        <div className="fixed inset-0 bg-gray-600 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-75 overflow-y-auto h-full w-full z-50">
-                            <div className="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-11/12 max-w-4xl shadow-lg rounded-md bg-white dark:bg-gray-800">
-                                <div className="mt-3">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Create New Custom Field</h3>
-                                        <button
-                                            onClick={() => setIsCreating(false)}
-                                            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-
-                                    <FormBuilder
-                                        fields={[]}
-                                        onChange={handleCreateField}
-                                    />
-
-                                    <div className="flex items-center justify-end mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                                        <button
-                                            onClick={() => setIsCreating(false)}
-                                            className="bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-md text-sm font-medium"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
                     {/* Edit Field Modal */}
                     {editingField && (
                         <div className="fixed inset-0 bg-gray-600 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-75 overflow-y-auto h-full w-full z-50">
@@ -454,6 +454,7 @@ export default function CustomFieldsPage() {
                                     <FormBuilder
                                         fields={[convertToFormField(editingField) as FormField]}
                                         onChange={handleUpdateField}
+                                        context="library"
                                     />
 
                                     <div className="flex items-center justify-end mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">

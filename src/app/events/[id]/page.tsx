@@ -16,6 +16,7 @@ import { Metadata } from 'next'
 import { HiCalendarDays, HiMapPin, HiUsers, HiCurrencyDollar } from 'react-icons/hi2'
 import Image from 'next/image'
 import { BookingWithProfile } from '@/lib/types/ui'
+import { formatInTimezone } from '@/lib/utils/timezone'
 
 class TimeoutError extends Error {
     constructor(message: string) {
@@ -306,21 +307,10 @@ export default async function EventPage({ params }: EventPageProps) {
                                             <HiCalendarDays className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-3" />
                                             <div>
                                                 <p className="font-medium text-gray-900 dark:text-gray-100">
-                                                    {new Date(event.start_date).toLocaleDateString('en-US', {
-                                                        weekday: 'long',
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric'
-                                                    })}
+                                                    {formatInTimezone(event.start_date, event.timezone, 'EEEE, MMMM d, yyyy')}
                                                 </p>
                                                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                    {new Date(event.start_date).toLocaleTimeString([], {
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    })} - {new Date(event.end_date).toLocaleTimeString([], {
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    })}
+                                                    {formatInTimezone(event.start_date, event.timezone, 'h:mm a')} - {formatInTimezone(event.end_date, event.timezone, 'h:mm a')} ({formatInTimezone(event.start_date, event.timezone, 'zzz')})
                                                 </p>
                                             </div>
                                         </div>

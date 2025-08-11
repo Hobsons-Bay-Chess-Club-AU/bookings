@@ -7,6 +7,7 @@ import CopyButton from '@/components/ui/copy-button'
 import Image from 'next/image'
 import { HiStar, HiMapPin, HiQrCode, HiXMark } from 'react-icons/hi2'
 import type { Event } from '@/lib/types/database'
+import { formatInTimezone } from '@/lib/utils/timezone'
 
 interface EventCardProps {
   event: Event
@@ -162,16 +163,12 @@ export default function EventCard({ event, hideBooking = false }: EventCardProps
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400 transition-colors duration-200 group-hover:text-indigo-700 dark:group-hover:text-indigo-300">
-                {new Date(event.start_date).toLocaleDateString()}
+                {formatInTimezone(event.start_date, event.timezone, 'PPP')}
               </p>
             </div>
             <div className="ml-4">
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {new Date(event.start_date).toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  hour12: false
-                })}
+                {formatInTimezone(event.start_date, event.timezone, 'p')}
               </p>
             </div>
           </div>

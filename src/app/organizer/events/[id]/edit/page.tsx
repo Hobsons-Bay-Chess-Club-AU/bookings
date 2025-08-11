@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
@@ -10,6 +10,7 @@ import FormBuilder from '@/components/events/form-builder'
 import TimelineBuilder from '@/components/events/timeline-builder'
 import Breadcrumb from '@/components/ui/breadcrumb'
 import { FormField, Event, RefundTimelineItem, EventTimeline } from '@/lib/types/database'
+import { TIMEZONE_OPTIONS, DEFAULT_TIMEZONE } from '@/lib/utils/timezone'
 
 export default function EditEventPage() {
     const [formData, setFormData] = useState({
@@ -26,6 +27,7 @@ export default function EditEventPage() {
         organizer_name: '',
         organizer_email: '',
         organizer_phone: '',
+        timezone: DEFAULT_TIMEZONE,
         status: 'draft' as 'draft' | 'published',
         is_promoted: false,
         location_settings: {
@@ -52,6 +54,28 @@ export default function EditEventPage() {
     const params = useParams()
     const eventId = params.id as string
     const supabase = createClient()
+    const errorRef = useRef<HTMLDivElement>(null)
+    const firstFieldErrorRef = useRef<HTMLParagraphElement>(null)
+
+    // Auto-scroll to error message when error appears
+    useEffect(() => {
+        if (error && errorRef.current) {
+            errorRef.current.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            })
+        }
+    }, [error])
+
+    // Auto-scroll to first field error when field errors appear
+    useEffect(() => {
+        if (Object.keys(fieldErrors).length > 0 && firstFieldErrorRef.current) {
+            firstFieldErrorRef.current.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            })
+        }
+    }, [fieldErrors])
 
     // Load existing event data
     useEffect(() => {
@@ -96,6 +120,7 @@ export default function EditEventPage() {
                     organizer_name: eventData.organizer_name || '',
                     organizer_email: eventData.organizer_email || '',
                     organizer_phone: eventData.organizer_phone || '',
+                    timezone: eventData.timezone || DEFAULT_TIMEZONE,
                     status: eventData.status,
                     is_promoted: eventData.is_promoted || false,
                     location_settings: eventData.location_settings || { map_url: '', direction_url: '' },
@@ -276,6 +301,7 @@ export default function EditEventPage() {
                     organizer_name: formData.organizer_name || null,
                     organizer_email: formData.organizer_email || null,
                     organizer_phone: formData.organizer_phone || null,
+                    timezone: formData.timezone,
                     status: formData.status,
                     alias: alias,
                     custom_form_fields: formFields,
@@ -530,7 +556,10 @@ export default function EditEventPage() {
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg text-gray-900 dark:text-gray-100">
                 <form onSubmit={handleSubmit} className="space-y-6 p-6">
                     {error && (
-                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded flex items-start">
+                        <div 
+                            ref={errorRef}
+                            className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded flex items-start"
+                        >
                             <HiExclamationTriangle className="h-5 w-5 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
                             <div>
                                 <p className="font-medium">Error</p>
@@ -565,7 +594,10 @@ export default function EditEventPage() {
                                 placeholder="Enter event title"
                             />
                             {fieldErrors.title && (
-                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
+                                <p 
+                                    ref={firstFieldErrorRef}
+                                    className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center"
+                                >
                                     <HiExclamationCircle className="h-4 w-4 mr-1" />
                                     {fieldErrors.title}
                                 </p>
@@ -721,6 +753,34 @@ export default function EditEventPage() {
                                 </p>
                             )}
                             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">If set, entries will close automatically after this date/time.</p>
+                        </div>
+
+                        <div>
+                            <label htmlFor="timezone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Event Timezone <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                id="timezone"
+                                name="timezone"
+                                value={formData.timezone}
+                                onChange={handleChange}
+                                className={getFieldClasses('timezone')}
+                            >
+                                {TIMEZONE_OPTIONS.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                            {fieldErrors.timezone && (
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
+                                    <HiExclamationCircle className="h-4 w-4 mr-1" />
+                                    {fieldErrors.timezone}
+                                </p>
+                            )}
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                All event times will be displayed in this timezone.
+                            </p>
                         </div>
 
                         <div className="md:col-span-2">
