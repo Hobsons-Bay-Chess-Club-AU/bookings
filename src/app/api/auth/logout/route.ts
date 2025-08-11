@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
-import { authApi } from '@/lib/rate-limit/api-wrapper'
+import { NextRequest } from 'next/server'
+import { rateLimitMiddleware } from '@/lib/rate-limit/middleware'
+import { successResponse, serverErrorResponse } from '@/lib/security/api-utils'
 
 async function logoutHandler() {
     try {
@@ -9,8 +10,8 @@ async function logoutHandler() {
         // Sign out from server-side
         await supabase.auth.signOut()
 
-        // Create response
-        const response = NextResponse.json({ success: true, message: 'Logged out successfully' })
+        // Create secure response
+        const response = successResponse({ message: 'Logged out successfully' })
 
         // Clear all auth-related cookies
         const cookiesToClear = [
@@ -35,11 +36,16 @@ async function logoutHandler() {
         return response
     } catch (error) {
         console.error('Server-side logout error:', error)
-        return NextResponse.json(
-            { success: false, error: 'Logout failed' },
-            { status: 500 }
-        )
+        return serverErrorResponse('Logout failed')
     }
 }
 
-export const POST = authApi(logoutHandler)
+export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = await rateLimitMiddleware(request)
+  if (rateLimitResult) {
+    return rateLimitResult
+  }
+  
+  return logoutHandler()
+}

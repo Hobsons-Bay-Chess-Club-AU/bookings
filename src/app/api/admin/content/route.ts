@@ -1,6 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import { adminApi } from '@/lib/rate-limit/api-wrapper'
+import { rateLimitMiddleware } from '@/lib/rate-limit/middleware'
+import { 
+    successResponse, 
+    errorResponse, 
+    serverErrorResponse 
+} from '@/lib/security/api-utils'
 
 // GET /api/admin/content - List all content
 async function getContentHandler(request: NextRequest) {
@@ -69,10 +74,10 @@ async function getContentHandler(request: NextRequest) {
 
         if (error) {
             console.error('Database error:', error)
-            return NextResponse.json({ error: 'Failed to fetch content' }, { status: 500 })
+            return serverErrorResponse('Failed to fetch content')
         }
 
-        return NextResponse.json({
+        return successResponse({
             content,
             pagination: {
                 page,
@@ -84,7 +89,7 @@ async function getContentHandler(request: NextRequest) {
 
     } catch (error) {
         console.error('API error:', error)
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+        return serverErrorResponse()
     }
 }
 
@@ -114,9 +119,7 @@ async function createContentHandler(request: NextRequest) {
 
         // Validate required fields
         if (!title || !slug || !content) {
-            return NextResponse.json({
-                error: 'Title, slug, and body are required'
-            }, { status: 400 })
+            return errorResponse('Title, slug, and body are required', 400)
         }
 
         // Create content
@@ -137,21 +140,36 @@ async function createContentHandler(request: NextRequest) {
 
         if (error) {
             if (error.code === '23505') { // Unique constraint violation
-                return NextResponse.json({
-                    error: 'Slug already exists. Please choose a different slug.'
-                }, { status: 400 })
+                return errorResponse('Slug already exists. Please choose a different slug.', 400)
             }
             console.error('Database error:', error)
-            return NextResponse.json({ error: 'Failed to create content' }, { status: 500 })
+            return serverErrorResponse('Failed to create content')
         }
 
-        return NextResponse.json(data, { status: 201 })
+        return successResponse(data, 201)
 
     } catch (error) {
         console.error('API error:', error)
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+        return serverErrorResponse()
     }
 }
 
-export const GET = adminApi(getContentHandler)
-export const POST = adminApi(createContentHandler)
+export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = await rateLimitMiddleware(request)
+  if (rateLimitResult) {
+    return rateLimitResult
+  }
+  
+  return getContentHandler(request)
+}
+
+export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = await rateLimitMiddleware(request)
+  if (rateLimitResult) {
+    return rateLimitResult
+  }
+  
+  return createContentHandler(request)
+}

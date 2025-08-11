@@ -21,6 +21,8 @@ A full-stack event booking system built with Next.js, Supabase, and Stripe. This
 - **Version Control**: Track content changes with automatic versioning
 - **SEO Management**: Built-in meta tag and keyword management
 - **Rate Limiting**: Comprehensive API protection with Upstash Redis
+- **Security Headers**: Advanced security headers and CSP protection
+- **Security Monitoring**: Real-time security event logging and metrics
 
 ## Tech Stack
 
@@ -30,6 +32,7 @@ A full-stack event booking system built with Next.js, Supabase, and Stripe. This
 - **Authentication**: Supabase Auth
 - **Payments**: Stripe
 - **Rate Limiting**: Upstash Redis
+- **Security**: Advanced security headers, CSP, input validation
 - **Deployment**: Vercel-ready
 
 ## Database Schema
@@ -87,9 +90,9 @@ UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_token
 - Quick fixes for infinite recursion errors
 - Manual cleanup options
 
-### 4. Rate Limiting Setup (Optional)
+### 4. Security & Rate Limiting Setup (Optional)
 
-For production deployments, set up rate limiting to protect your API:
+For production deployments, set up security features and rate limiting:
 
 1. **Create Upstash Redis Database:**
    - Go to [Upstash Console](https://console.upstash.com/)
@@ -102,7 +105,8 @@ For production deployments, set up rate limiting to protect your API:
 
 3. **Verify Setup:**
    - Check rate limiting status at `/api/rate-limit/status`
-   - Review the [RATE_LIMITING.md](RATE_LIMITING.md) guide for detailed configuration
+   - Check security status at `/api/security/status`
+   - Review the [RATE_LIMITING.md](RATE_LIMITING.md) and [SECURITY.md](SECURITY.md) guides
 
 ### 5. Test Users Setup (Optional)
 

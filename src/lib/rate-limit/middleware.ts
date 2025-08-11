@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getRateLimitConfig, getRateLimitIdentifier, createRateLimitError } from './config'
+import { getRateLimitConfig, getRateLimitIdentifier } from './config'
 
 export async function rateLimitMiddleware(request: NextRequest): Promise<NextResponse | null> {
   try {
@@ -18,7 +18,28 @@ export async function rateLimitMiddleware(request: NextRequest): Promise<NextRes
 
     if (!success) {
       console.warn(`Rate limit exceeded for ${identifier} on ${pathname}`)
-      return createRateLimitError(limit, reset)
+      const retryAfter = Math.ceil((reset - Date.now()) / 1000)
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          message: `Too many requests. Limit: ${limit} requests per minute.`,
+          retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Limit': limit.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': reset.toString(),
+            // Security headers
+            'X-Frame-Options': 'DENY',
+            'X-Content-Type-Options': 'nosniff',
+            'Referrer-Policy': 'strict-origin-when-cross-origin',
+            'X-XSS-Protection': '1; mode=block',
+          },
+        }
+      )
     }
 
     // Add rate limit headers to the response
@@ -74,7 +95,28 @@ export async function rateLimitWithUser(
 
     if (!success) {
       console.warn(`Rate limit exceeded for ${identifier} on ${pathname}`)
-      return createRateLimitError(limit, reset)
+      const retryAfter = Math.ceil((reset - Date.now()) / 1000)
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          message: `Too many requests. Limit: ${limit} requests per minute.`,
+          retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Limit': limit.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': reset.toString(),
+            // Security headers
+            'X-Frame-Options': 'DENY',
+            'X-Content-Type-Options': 'nosniff',
+            'Referrer-Policy': 'strict-origin-when-cross-origin',
+            'X-XSS-Protection': '1; mode=block',
+          },
+        }
+      )
     }
 
     // Add rate limit headers to the response

@@ -9,7 +9,7 @@ import {
     handlePaymentIntentPaymentFailed,
     handleChargeDisputeCreated
 } from './handlers'
-import { webhooksApi } from '@/lib/rate-limit/api-wrapper'
+import { rateLimitMiddleware } from '@/lib/rate-limit/middleware'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-06-30.basil',
@@ -125,4 +125,12 @@ async function stripeWebhookHandler(request: NextRequest) {
     }
 }
 
-export const POST = webhooksApi(stripeWebhookHandler)
+export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = await rateLimitMiddleware(request)
+  if (rateLimitResult) {
+    return rateLimitResult
+  }
+  
+  return stripeWebhookHandler(request)
+}

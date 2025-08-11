@@ -149,20 +149,27 @@ export function getRateLimitIdentifier(request: Request): string {
 
 // Rate limit error response
 export function createRateLimitError(limit: number, reset: number) {
+  const retryAfter = Math.ceil((reset - Date.now()) / 1000)
+  
   return new Response(
     JSON.stringify({
       error: 'Rate limit exceeded',
       message: `Too many requests. Limit: ${limit} requests per minute.`,
-      retryAfter: Math.ceil((reset - Date.now()) / 1000),
+      retryAfter,
     }),
     {
       status: 429,
       headers: {
         'Content-Type': 'application/json',
-        'Retry-After': Math.ceil((reset - Date.now()) / 1000).toString(),
+        'Retry-After': retryAfter.toString(),
         'X-RateLimit-Limit': limit.toString(),
         'X-RateLimit-Remaining': '0',
         'X-RateLimit-Reset': reset.toString(),
+        // Security headers
+        'X-Frame-Options': 'DENY',
+        'X-Content-Type-Options': 'nosniff',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'X-XSS-Protection': '1; mode=block',
       },
     }
   )

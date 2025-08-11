@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRateLimitStatus } from '@/lib/rate-limit/test'
-import { adminApi } from '@/lib/rate-limit/api-wrapper'
+import { rateLimitMiddleware } from '@/lib/rate-limit/middleware'
 
 async function getRateLimitStatusHandler(_request: NextRequest) {
   try {
@@ -20,4 +20,12 @@ async function getRateLimitStatusHandler(_request: NextRequest) {
   }
 }
 
-export const GET = adminApi(getRateLimitStatusHandler)
+export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = await rateLimitMiddleware(request)
+  if (rateLimitResult) {
+    return rateLimitResult
+  }
+  
+  return getRateLimitStatusHandler(request)
+}

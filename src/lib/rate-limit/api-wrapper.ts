@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withRateLimit, rateLimitMiddleware } from './middleware'
 
-// Type for API route handlers
+// Type for API route handlers - Next.js 15 compatible
 type ApiHandler = (
   request: NextRequest,
   context?: { params: Promise<Record<string, string>> }
@@ -22,7 +22,12 @@ export function createRateLimitedApi(_rateLimitType: 'auth' | 'booking' | 'event
         return rateLimitResult
       }
       
-      return handler(request, context)
+      // Call the original handler with the correct signature
+      if (context) {
+        return handler(request, context)
+      } else {
+        return handler(request)
+      }
     }
   }
 }

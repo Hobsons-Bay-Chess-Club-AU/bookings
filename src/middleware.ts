@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { rateLimitWithUser } from '@/lib/rate-limit/middleware'
+import { applySecurityHeaders } from '@/lib/security/headers'
 
 export async function middleware(request: NextRequest) {
     // Check if required environment variables are set
@@ -63,7 +64,8 @@ export async function middleware(request: NextRequest) {
         if (isProtectedRoute && !user) {
             const redirectUrl = new URL('/auth/login', request.url)
             redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
-            return NextResponse.redirect(redirectUrl)
+            const response = NextResponse.redirect(redirectUrl)
+            return applySecurityHeaders(response)
         }
         // Check role-based access
         if (user && (isAdminRoute || isOrganizerRoute)) {
@@ -74,20 +76,23 @@ export async function middleware(request: NextRequest) {
                 .single()
 
             if (isAdminRoute && profile?.role !== 'admin') {
-                return NextResponse.redirect(new URL('/unauthorized', request.url))
+                const response = NextResponse.redirect(new URL('/unauthorized', request.url))
+                return applySecurityHeaders(response)
             }
             if (isOrganizerRoute && !['admin', 'organizer'].includes(profile?.role || '')) {
-                return NextResponse.redirect(new URL('/unauthorized', request.url))
+                const response = NextResponse.redirect(new URL('/unauthorized', request.url))
+                return applySecurityHeaders(response)
             }
         }
 
         // Redirect authenticated users away from auth pages (except logout)
         if (user && request.nextUrl.pathname.startsWith('/auth/') &&
             !request.nextUrl.pathname.startsWith('/auth/logout')) {
-            return NextResponse.redirect(new URL('/dashboard', request.url))
+            const response = NextResponse.redirect(new URL('/dashboard', request.url))
+            return applySecurityHeaders(response)
         }
         // console.log('Middleware processed successfully')
-        return supabaseResponse
+        return applySecurityHeaders(supabaseResponse)
     } catch (error) {
         console.error('Middleware error:', error)
         return NextResponse.next()

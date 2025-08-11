@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@/lib/supabase/server'
-import { bookingApi } from '@/lib/rate-limit/api-wrapper'
+import { rateLimitMiddleware } from '@/lib/rate-limit/middleware'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2025-06-30.basil',
@@ -229,4 +229,12 @@ async function createCheckoutSessionHandler(request: NextRequest) {
     }
 }
 
-export const POST = bookingApi(createCheckoutSessionHandler)
+export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = await rateLimitMiddleware(request)
+  if (rateLimitResult) {
+    return rateLimitResult
+  }
+  
+  return createCheckoutSessionHandler(request)
+}

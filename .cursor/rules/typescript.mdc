@@ -9,3 +9,4 @@ globs: *.ts,*.tsx
 - Name functions and variables descriptively; prefer full words over abbreviations.
 - Keep components small; extract reusable parts into shared components, otherwise colocate within the page folder.
 - After edits, fix all ESLint warnings and type errors.
+- when there many changes make sure alway run npm run build and fix all error at the end task before report task done.
