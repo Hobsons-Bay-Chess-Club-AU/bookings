@@ -7,8 +7,8 @@ let redis: Redis | null = null
 
 if (validateRateLimitEnv()) {
   redis = new Redis({
-    url: process.env. KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL!,
-    token: process.env. KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN!,
+    url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL!,
+    token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN!,
   })
 }
 
@@ -18,7 +18,7 @@ export const rateLimitConfigs = redis ? {
   general: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(100, '1 m'),
-    analytics: true,
+    analytics: false, // Disable analytics to reduce Redis commands
     prefix: 'ratelimit:general',
   }),
 
@@ -26,7 +26,7 @@ export const rateLimitConfigs = redis ? {
   auth: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(60, '1 m'),
-    analytics: true,
+    analytics: false, // Disable analytics to reduce Redis commands
     prefix: 'ratelimit:auth',
   }),
 
@@ -34,7 +34,7 @@ export const rateLimitConfigs = redis ? {
   booking: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(100, '1 m'),
-    analytics: true,
+    analytics: false, // Disable analytics to reduce Redis commands
     prefix: 'ratelimit:booking',
   }),
 
@@ -42,7 +42,7 @@ export const rateLimitConfigs = redis ? {
   events: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(10, '1 m'),
-    analytics: true,
+    analytics: false, // Disable analytics to reduce Redis commands
     prefix: 'ratelimit:events',
   }),
 
@@ -50,7 +50,7 @@ export const rateLimitConfigs = redis ? {
   admin: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(50, '1 m'),
-    analytics: true,
+    analytics: false, // Disable analytics to reduce Redis commands
     prefix: 'ratelimit:admin',
   }),
 
@@ -58,7 +58,7 @@ export const rateLimitConfigs = redis ? {
   webhooks: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(100, '1 m'),
-    analytics: true,
+    analytics: false, // Disable analytics to reduce Redis commands
     prefix: 'ratelimit:webhooks',
   }),
 
@@ -66,7 +66,7 @@ export const rateLimitConfigs = redis ? {
   content: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(30, '1 m'),
-    analytics: true,
+    analytics: false, // Disable analytics to reduce Redis commands
     prefix: 'ratelimit:content',
   }),
 
@@ -74,7 +74,7 @@ export const rateLimitConfigs = redis ? {
   search: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(60, '1 m'),
-    analytics: true,
+    analytics: false, // Disable analytics to reduce Redis commands
     prefix: 'ratelimit:search',
   }),
 
@@ -82,10 +82,13 @@ export const rateLimitConfigs = redis ? {
   public: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(200, '1 m'),
-    analytics: true,
+    analytics: false, // Disable analytics to reduce Redis commands
     prefix: 'ratelimit:public',
   }),
 } : null
+
+// Cache for rate limit configs to avoid repeated lookups
+const rateLimitCache = new Map<string, Ratelimit | null>()
 
 // Helper function to get rate limit config based on path
 export function getRateLimitConfig(pathname: string): Ratelimit | null {
@@ -93,48 +96,66 @@ export function getRateLimitConfig(pathname: string): Ratelimit | null {
     return null
   }
 
+  // Check cache first
+  if (rateLimitCache.has(pathname)) {
+    return rateLimitCache.get(pathname)!
+  }
+
+  let config: Ratelimit | null = null
+
   // Authentication routes
   if (pathname.startsWith('/api/auth/')) {
-    return rateLimitConfigs.auth
+    config = rateLimitConfigs.auth
   }
-
   // Booking routes
-  if (pathname.startsWith('/api/bookings/') || pathname.startsWith('/api/create-checkout-session')) {
-    return rateLimitConfigs.booking
+  else if (pathname.startsWith('/api/bookings/') || pathname.startsWith('/api/create-checkout-session')) {
+    config = rateLimitConfigs.booking
   }
-
   // Event management routes
-  if (pathname.startsWith('/api/events/') || pathname.startsWith('/api/public/events/')) {
-    return rateLimitConfigs.events
+  else if (pathname.startsWith('/api/events/') || pathname.startsWith('/api/public/events/')) {
+    config = rateLimitConfigs.events
   }
-
   // Admin routes
-  if (pathname.startsWith('/api/admin/')) {
-    return rateLimitConfigs.admin
+  else if (pathname.startsWith('/api/admin/')) {
+    config = rateLimitConfigs.admin
   }
-
   // Webhook routes
-  if (pathname.startsWith('/api/webhooks/')) {
-    return rateLimitConfigs.webhooks
+  else if (pathname.startsWith('/api/webhooks/')) {
+    config = rateLimitConfigs.webhooks
   }
-
   // Content management routes
-  if (pathname.startsWith('/api/public/content/')) {
-    return rateLimitConfigs.content
+  else if (pathname.startsWith('/api/public/content/')) {
+    config = rateLimitConfigs.content
   }
-
   // Search routes
-  if (pathname.startsWith('/api/public/players/') || pathname.includes('search')) {
-    return rateLimitConfigs.search
+  else if (pathname.startsWith('/api/public/players/') || pathname.includes('search')) {
+    config = rateLimitConfigs.search
   }
-
   // Public API routes
-  if (pathname.startsWith('/api/')) {
-    return rateLimitConfigs.general
+  else if (pathname.startsWith('/api/')) {
+    config = rateLimitConfigs.general
+  }
+  // Public pages - only apply to specific high-traffic pages
+  else if (shouldRateLimitPublicPage(pathname)) {
+    config = rateLimitConfigs.public
   }
 
-  // Public pages
-  return rateLimitConfigs.public
+  // Cache the result
+  rateLimitCache.set(pathname, config)
+  return config
+}
+
+// Helper function to determine if a public page should be rate limited
+function shouldRateLimitPublicPage(pathname: string): boolean {
+  // Only rate limit specific high-traffic pages, not all public pages
+  const highTrafficPages = [
+    '/', // Home page
+    '/events', // Events listing
+    '/search', // Search page
+    '/past', // Past events
+  ]
+  
+  return highTrafficPages.includes(pathname)
 }
 
 // Helper function to get identifier for rate limiting

@@ -3,6 +3,25 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { rateLimitWithUser } from '@/lib/rate-limit/middleware'
 import { applySecurityHeaders } from '@/lib/security/headers'
 
+// Routes that should be rate limited
+const RATE_LIMITED_ROUTES = [
+  '/api/auth/',
+  '/api/bookings/',
+  '/api/create-checkout-session',
+  '/api/events/',
+  '/api/public/events/',
+  '/api/admin/',
+  '/api/webhooks/',
+  '/api/public/content/',
+  '/api/public/players/',
+  '/api/'
+]
+
+// Helper function to check if a route should be rate limited
+function shouldRateLimit(pathname: string): boolean {
+  return RATE_LIMITED_ROUTES.some(route => pathname.startsWith(route))
+}
+
 export async function middleware(request: NextRequest) {
     // Check if required environment variables are set
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -10,10 +29,14 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next()
     }
 
-    // Apply rate limiting first
-    const rateLimitResult = await rateLimitWithUser(request)
-    if (rateLimitResult) {
-        return rateLimitResult
+    const pathname = request.nextUrl.pathname
+
+    // Apply rate limiting only to specific routes
+    if (shouldRateLimit(pathname)) {
+        const rateLimitResult = await rateLimitWithUser(request)
+        if (rateLimitResult) {
+            return rateLimitResult
+        }
     }
 
     let supabaseResponse = NextResponse.next({

@@ -1,25 +1,22 @@
-// Environment variable validation for rate limiting
 export function validateRateLimitEnv() {
-  const requiredEnvVars = [
-    'UPSTASH_REDIS_REST_URL',
-    'UPSTASH_REDIS_REST_TOKEN'
-  ]
+  // Check for either KV or UPSTASH environment variables
+  const hasRedisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
+  const hasRedisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
 
-  const missingVars = requiredEnvVars.filter(varName => !process.env[varName])
-
-  if (missingVars.length > 0) {
-    console.warn('⚠️ Missing rate limiting environment variables:', missingVars)
-    console.warn('Rate limiting will be disabled. Please set the following environment variables:')
-    missingVars.forEach(varName => {
-      console.warn(`  - ${varName}`)
-    })
+  if (!hasRedisUrl || !hasRedisToken) {
+    console.warn('Missing rate limiting environment variables')
     return false
   }
 
   return true
 }
 
-// Check if rate limiting is enabled
 export function isRateLimitEnabled(): boolean {
+  // Allow disabling rate limiting entirely via environment variable
+  if (process.env.DISABLE_RATE_LIMITING === 'true') {
+    console.log('Rate limiting disabled via DISABLE_RATE_LIMITING environment variable')
+    return false
+  }
+
   return validateRateLimitEnv()
 }
