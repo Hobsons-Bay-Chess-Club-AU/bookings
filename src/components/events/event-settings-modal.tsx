@@ -28,6 +28,7 @@ export default function EventSettingsModal({ event, isOpen, onClose, onUpdate }:
         show_attendance_count: event.settings?.show_attendance_count || false,
         allow_participant_contact: event.settings?.allow_participant_contact || false,
         notify_organizer_on_booking: event.settings?.notify_organizer_on_booking || false,
+        whitelist_enabled: event.settings?.whitelist_enabled || false,
     })
 
     // Generate available fields dynamically from built-in fields and custom fields
@@ -224,6 +225,32 @@ export default function EventSettingsModal({ event, isOpen, onClose, onUpdate }:
                                     </div>
                                 </div>
                             )}
+                        </div>
+
+                        {/* Whitelist when full */}
+                        <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
+                            <div className="flex items-start space-x-3">
+                                <div className="flex-shrink-0">
+                                    <input
+                                        id="whitelist_enabled"
+                                        type="checkbox"
+                                        checked={settings.whitelist_enabled || false}
+                                        onChange={(e) => setSettings(prev => ({
+                                            ...prev,
+                                            whitelist_enabled: e.target.checked
+                                        }))}
+                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label htmlFor="whitelist_enabled" className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        Enable Whitelist When Full
+                                    </label>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                        When the event is full, new registrations will be captured as whitelisted. You can later release them in booking management for payment.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Attendance Count Display */}

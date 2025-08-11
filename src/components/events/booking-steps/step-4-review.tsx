@@ -43,6 +43,7 @@ interface Step4ReviewProps {
     onBack: () => void
     loading: boolean
     error: string
+    isResuming?: boolean
 }
 
 export default function Step4Review({
@@ -63,13 +64,19 @@ export default function Step4Review({
     onComplete,
     onBack,
     loading,
-    error
+    error,
+    isResuming
 }: Step4ReviewProps) {
     const isFreeEvent = totalAmount === 0 || selectedPricing?.price === 0
+    const isEventFull = event.max_attendees != null && event.current_attendees >= event.max_attendees
+    const whitelistEnabled = Boolean(event.settings?.whitelist_enabled)
+    const shouldWhitelist = isEventFull && whitelistEnabled && !isResuming
     return (
         <div className="space-y-6">
             <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Review Your Booking</h3>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                    {isResuming ? 'Complete Your Payment' : shouldWhitelist ? 'Whitelisted Review' : 'Review Your Booking'}
+                </h3>
 
                 {/* Event Info */}
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
@@ -86,7 +93,7 @@ export default function Step4Review({
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
                     <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Pricing</h4>
                     <div className="space-y-2">
-                        <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center">
                             <span className="text-gray-700 dark:text-gray-300">
                                 {selectedPricing?.name} × {quantity}
                             </span>
@@ -133,13 +140,13 @@ export default function Step4Review({
                         <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-900 dark:text-gray-100 font-medium">Total Amount</span>
-                                <span className={`font-bold text-lg ${isFreeEvent ? 'text-green-600 dark:text-green-300' : 'text-gray-900 dark:text-gray-100'}`}>
-                                    {isFreeEvent ? 'Free' : `$${totalAmount.toFixed(2)}`}
+                                <span className={`font-bold text-lg ${shouldWhitelist ? 'text-amber-700 dark:text-amber-300' : isFreeEvent ? 'text-green-600 dark:text-green-300' : 'text-gray-900 dark:text-gray-100'}`}>
+                                    {shouldWhitelist ? 'Whitelisted' : isFreeEvent ? 'Free' : `$${totalAmount.toFixed(2)}`}
                                 </span>
                             </div>
                         </div>
                         {/* Processing fee disclosure */}
-                        {!isFreeEvent && (
+                        {!isFreeEvent && !shouldWhitelist && (
                             <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                                 A processing fee of 1.7% + A$0.30 will be added at checkout.
                             </div>
@@ -164,9 +171,9 @@ export default function Step4Review({
                                 <p className="text-gray-700 dark:text-gray-300 font-medium">
                                     {index + 1}. {participant.first_name} {participant.last_name}
                                 </p>
-                                {participant.email && (
-                                    <p className="text-gray-600 dark:text-gray-400 text-sm">{participant.email}</p>
-                                )}
+                                                            {participant.contact_email && (
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">{participant.contact_email}</p>
+                            )}
                                 {participant.date_of_birth && (
                                     <p className="text-gray-600 dark:text-gray-400 text-sm">DOB: {participant.date_of_birth}</p>
                                 )}
@@ -300,8 +307,17 @@ export default function Step4Review({
                     {!isFreeEvent && (
                         <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md">
                             <p className="text-sm text-blue-700 dark:text-blue-200">
-                                <strong>Next Step:</strong> You will be redirected to our secure payment portal. 
-                                We do not capture or store any payment details on our system.
+                                {shouldWhitelist ? (
+                                    <>
+                                        <strong>Next Step:</strong> We will reserve your booking with one spot available. 
+                                        You will receive an email to review and pay the outstanding amount to secure your booking.
+                                    </>
+                                ) : (
+                                    <>
+                                        <strong>Next Step:</strong> You will be redirected to our secure payment portal. 
+                                        We do not capture or store any payment details on our system.
+                                    </>
+                                )}
                             </p>
                         </div>
                     )}
@@ -319,12 +335,14 @@ export default function Step4Review({
                             onClick={onComplete}
                             disabled={!agreedToTerms || loading}
                             className={`px-6 py-2 text-white rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
-                                isFreeEvent 
-                                    ? 'bg-green-600 hover:bg-green-700' 
-                                    : 'bg-indigo-600 hover:bg-indigo-700'
+                                shouldWhitelist
+                                    ? 'bg-amber-600 hover:bg-amber-700'
+                                    : isFreeEvent 
+                                        ? 'bg-green-600 hover:bg-green-700' 
+                                        : 'bg-indigo-600 hover:bg-indigo-700'
                             }`}
                         >
-                            {loading ? 'Processing...' : isFreeEvent ? 'Finish' : 'Proceed to Payment'}
+                            {loading ? 'Processing...' : shouldWhitelist ? 'Submit to Whitelist' : isFreeEvent ? 'Finish' : 'Proceed to Payment'}
                         </button>
                     </div>
                 </div>

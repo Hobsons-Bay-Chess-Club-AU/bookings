@@ -9,9 +9,11 @@ interface MobileBookingModalProps {
     user?: Profile
     isOpen: boolean
     onClose: () => void
+    initialStep?: string
+    resumeBookingId?: string
 }
 
-export default function MobileBookingModal({ event, user, isOpen, onClose }: MobileBookingModalProps) {
+export default function MobileBookingModal({ event, user, isOpen, onClose, initialStep, resumeBookingId }: MobileBookingModalProps) {
     const [isAnimating, setIsAnimating] = useState(false)
 
     useEffect(() => {
@@ -83,7 +85,12 @@ export default function MobileBookingModal({ event, user, isOpen, onClose }: Mob
 
                 {/* Content */}
                 <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(90vh - 80px)' }}>
-                    <BookingForm event={event} user={user} />
+                    <BookingForm 
+                        event={event} 
+                        user={user} 
+                        initialStep={initialStep}
+                        resumeBookingId={resumeBookingId}
+                    />
                 </div>
             </div>
         </div>

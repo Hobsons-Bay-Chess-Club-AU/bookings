@@ -596,10 +596,10 @@ export default function EventViewPage() {
                                                 {participant.first_name} {participant.last_name}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                                {participant.email || '-'}
+                                                {participant.contact_email || '-'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                                {participant.phone || '-'}
+                                                {participant.contact_phone || '-'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                 {participant.date_of_birth ? new Date(participant.date_of_birth).toLocaleDateString() : '-'}

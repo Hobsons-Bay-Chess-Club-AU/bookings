@@ -1,5 +1,5 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
-import { sendBookingConfirmationEmail, sendOrganizerBookingNotificationEmail } from '@/lib/email/service'
+import { sendBookingConfirmationEmail, sendWhitelistedBookingEmail, sendOrganizerBookingNotificationEmail } from '@/lib/email/service'
 import { PaymentEventData } from './types'
 
 // Create service role client for webhooks to bypass RLS
@@ -45,29 +45,36 @@ export const sendBookingConfirmationEmailWithLogging = async (booking: any, even
             bookingId: booking.id,
             userEmail: user.email,
             eventTitle: event.title,
+            bookingStatus: booking.status,
             timestamp: new Date().toISOString()
         })
 
-        const emailResult = await sendBookingConfirmationEmail({
+        // Choose the appropriate email function based on booking status
+        const emailFunction = booking.status === 'whitelisted' ? sendWhitelistedBookingEmail : sendBookingConfirmationEmail
+        const emailType = booking.status === 'whitelisted' ? 'whitelisted booking' : 'booking confirmation'
+
+        const emailResult = await emailFunction({
             booking: booking,
             event: event,
             user: user
         })
 
         if (emailResult.success) {
-            console.log('✅ [WEBHOOK] Booking confirmation email sent successfully:', {
+            console.log(`✅ [WEBHOOK] ${emailType} email sent successfully:`, {
                 bookingId: booking.id,
                 emailId: emailResult.data?.id,
                 userEmail: user.email,
                 eventTitle: event.title,
+                bookingStatus: booking.status,
                 timestamp: new Date().toISOString()
             })
         } else {
-            console.error('❌ [WEBHOOK] Booking confirmation email failed:', {
+            console.error(`❌ [WEBHOOK] ${emailType} email failed:`, {
                 bookingId: booking.id,
                 error: emailResult.error,
                 userEmail: user.email,
                 eventTitle: event.title,
+                bookingStatus: booking.status,
                 timestamp: new Date().toISOString()
             })
         }
@@ -80,6 +87,7 @@ export const sendBookingConfirmationEmailWithLogging = async (booking: any, even
             errorStack: emailError instanceof Error ? emailError.stack : undefined,
             userEmail: user.email,
             eventTitle: event.title,
+            bookingStatus: booking.status,
             timestamp: new Date().toISOString()
         })
         return { success: false, error: 'Exception occurred' }

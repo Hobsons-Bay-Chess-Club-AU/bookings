@@ -36,7 +36,7 @@ async function createCheckoutSessionHandler(request: NextRequest) {
                 user:profiles!bookings_user_id_fkey(email, full_name)
             `)
             .eq('id', bookingId)
-            .eq('status', 'pending')
+            .in('status', ['pending', 'whitelisted'])
             .single()
 
         if (bookingError || !booking) {
@@ -49,6 +49,17 @@ async function createCheckoutSessionHandler(request: NextRequest) {
                 { error: 'Invalid booking' },
                 { status: 400 }
             )
+        }
+
+        // If booking is whitelisted, allow checkout and implicitly move to pending for payment flow
+        if (booking.status === 'whitelisted') {
+            const { error: promoteError } = await supabase
+                .from('bookings')
+                .update({ status: 'pending', updated_at: new Date().toISOString() })
+                .eq('id', bookingId)
+            if (promoteError) {
+                console.warn('⚠️ [create-checkout-session] Could not promote whitelisted booking to pending:', promoteError)
+            }
         }
 
         // Get user email for prefilling
@@ -96,27 +107,38 @@ async function createCheckoutSessionHandler(request: NextRequest) {
             return NextResponse.json({ error: 'Event not found' }, { status: 400 })
         }
         
-        if (event.status !== 'published' || event.status === 'entry_closed') {
-            console.log('❌ [create-checkout-session] Event not open for booking:', {
-                eventId,
-                status: event.status
+        // For legitimate resumed bookings (status = 'pending'), bypass event validation checks
+        const isLegitimateResume = booking.status === 'pending'
+        
+        if (!isLegitimateResume) {
+            if (event.status !== 'published' || event.status === 'entry_closed') {
+                console.log('❌ [create-checkout-session] Event not open for booking:', {
+                    eventId,
+                    status: event.status
+                })
+                return NextResponse.json({ error: 'This event is not open for booking.' }, { status: 400 })
+            }
+            if (event.max_attendees != null && event.current_attendees >= event.max_attendees) {
+                console.log('❌ [create-checkout-session] Event is sold out:', {
+                    eventId,
+                    max: event.max_attendees,
+                    current: event.current_attendees
+                })
+                return NextResponse.json({ error: 'This event is sold out.' }, { status: 400 })
+            }
+            if (event.entry_close_date && new Date(event.entry_close_date) < new Date()) {
+                console.log('❌ [create-checkout-session] Entry close date has passed:', {
+                    eventId,
+                    entryCloseDate: event.entry_close_date
+                })
+                return NextResponse.json({ error: 'Entries for this event are now closed (entry close date has passed).' }, { status: 400 })
+            }
+        } else {
+            console.log('✅ [create-checkout-session] Bypassing event validation for legitimate resume booking:', {
+                bookingId,
+                bookingStatus: booking.status,
+                eventId
             })
-            return NextResponse.json({ error: 'This event is not open for booking.' }, { status: 400 })
-        }
-        if (event.max_attendees != null && event.current_attendees >= event.max_attendees) {
-            console.log('❌ [create-checkout-session] Event is sold out:', {
-                eventId,
-                max: event.max_attendees,
-                current: event.current_attendees
-            })
-            return NextResponse.json({ error: 'This event is sold out.' }, { status: 400 })
-        }
-        if (event.entry_close_date && new Date(event.entry_close_date) < new Date()) {
-            console.log('❌ [create-checkout-session] Entry close date has passed:', {
-                eventId,
-                entryCloseDate: event.entry_close_date
-            })
-            return NextResponse.json({ error: 'Entries for this event are now closed (entry close date has passed).' }, { status: 400 })
         }
 
         // Calculate processing fee (1.7% + $0.30) based on booking total amount (server-side trusted)

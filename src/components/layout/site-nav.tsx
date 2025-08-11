@@ -265,28 +265,24 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
                                                 </button>
                                             )}
 
-                                            {/* Dashboard for public users */}
-                                            {(!profile?.role || profile?.role === 'user') && (
-                                                <>
-                                                    {isActivePath('/dashboard') ? (
-                                                        <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 cursor-default">
-                                                            <span className="flex items-center">
-                                                                <HiHome className="w-4 h-4 mr-2" />
-                                                                Dashboard
-                                                            </span>
-                                                        </span>
-                                                    ) : (
-                                                        <button
-                                                            onClick={() => handleNavigate('/dashboard')}
-                                                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                                        >
-                                                            <span className="flex items-center">
-                                                                <HiHome className="w-4 h-4 mr-2" />
-                                                                Dashboard
-                                                            </span>
-                                                        </button>
-                                                    )}
-                                                </>
+                                            {/* Dashboard for all logged-in users */}
+                                            {isActivePath('/dashboard') ? (
+                                                <span className="block w-full text-left px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 cursor-default">
+                                                    <span className="flex items-center">
+                                                        <HiHome className="w-4 h-4 mr-2" />
+                                                        Dashboard
+                                                    </span>
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleNavigate('/dashboard')}
+                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                                >
+                                                    <span className="flex items-center">
+                                                        <HiHome className="w-4 h-4 mr-2" />
+                                                        Dashboard
+                                                    </span>
+                                                </button>
                                             )}
 
                                             {/* Admin/Organizer Menu Items */}

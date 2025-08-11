@@ -21,7 +21,8 @@ import {
     HiDocumentText,
     HiInformationCircle,
     HiArrowRight,
-    HiEye
+    HiEye,
+    HiArrowPath
 } from 'react-icons/hi2';
 
 interface BookingWithDetails extends Booking {
@@ -185,6 +186,11 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                 message = 'Are you sure you want to cancel this booking? This action cannot be undone.';
                 variant = 'danger';
                 break;
+            case 'release-whitelist':
+                title = 'Release Whitelist';
+                message = 'Are you sure you want to release this booking from the whitelist? This will allow the user to complete payment.';
+                variant = 'warning';
+                break;
             default:
                 title = 'Confirm Action';
                 message = 'Are you sure you want to perform this action?';
@@ -202,13 +208,27 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
         setShowConfirmDialog(false);
         
         try {
-            const response = await fetch(`/api/organizer/events/${eventId}/bookings/${booking.id}/status`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ status: confirmAction.status }),
-            });
+            let response;
+            
+            if (confirmAction.type === 'release-whitelist') {
+                // Call the release-whitelist API
+                response = await fetch('/api/admin/bookings/release-whitelist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ bookingId: booking.id }),
+                });
+            } else {
+                // Call the regular status update API
+                response = await fetch(`/api/organizer/events/${eventId}/bookings/${booking.id}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status: confirmAction.status }),
+                });
+            }
 
             if (!response.ok) {
                 throw new Error('Failed to update booking status');
@@ -435,18 +455,18 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="space-y-1">
-                                                        {participant.email && (
-                                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                                                <HiEnvelope className="h-3 w-3 mr-1" />
-                                                                {participant.email}
-                                                            </div>
-                                                        )}
-                                                        {participant.phone && (
-                                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                                                <HiPhone className="h-3 w-3 mr-1" />
-                                                                {participant.phone}
-                                                            </div>
-                                                        )}
+                                                                                {participant.contact_email && (
+                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                <HiEnvelope className="h-3 w-3 mr-1" />
+                                {participant.contact_email}
+                            </div>
+                        )}
+                                                                                {participant.contact_phone && (
+                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                <HiPhone className="h-3 w-3 mr-1" />
+                                {participant.contact_phone}
+                            </div>
+                        )}
                                                     </div>
                                                 </td>
                                                     <td className="px-6 py-4">
@@ -484,16 +504,16 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                                 </div>
                                                 
                                                 <div className="space-y-2">
-                                                    {participant.email && (
+                                                    {participant.contact_email && (
                                                         <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                                             <HiEnvelope className="h-4 w-4 mr-2" />
-                                                            {participant.email}
+                                                            {participant.contact_email}
                                                         </div>
                                                     )}
-                                                    {participant.phone && (
+                                                    {participant.contact_phone && (
                                                         <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                                             <HiPhone className="h-4 w-4 mr-2" />
-                                                            {participant.phone}
+                                                            {participant.contact_phone}
                                                         </div>
                                                     )}
                                                 </div>
@@ -743,6 +763,26 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                     >
                                         <HiCheckCircle className="h-4 w-4 mr-2" />
                                         Mark as Verified
+                                    </button>
+                                    <button
+                                        onClick={() => handleActionClick('cancel', 'cancelled')}
+                                        disabled={actionLoading}
+                                        className="w-full flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
+                                    >
+                                        <HiXCircle className="h-4 w-4 mr-2" />
+                                        Cancel Booking
+                                    </button>
+                                </>
+                            )}
+                            {booking.status === 'whitelisted' && (
+                                <>
+                                    <button
+                                        onClick={() => handleActionClick('release-whitelist', 'pending')}
+                                        disabled={actionLoading}
+                                        className="w-full flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50"
+                                    >
+                                        <HiArrowPath className="h-4 w-4 mr-2" />
+                                        Release Whitelist
                                     </button>
                                     <button
                                         onClick={() => handleActionClick('cancel', 'cancelled')}

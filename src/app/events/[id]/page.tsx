@@ -218,8 +218,9 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
     }
 }
 
-export default async function EventPage({ params }: EventPageProps) {
+export default async function EventPage({ params, searchParams }: EventPageProps & { searchParams: Promise<{ step?: string; resume?: string }> }) {
     const { id } = await params
+    const { step, resume } = await searchParams
     const event = await getEvent(id)
     // User information is fetched but used in child components
     await getCurrentUser()
@@ -262,7 +263,12 @@ export default async function EventPage({ params }: EventPageProps) {
             <EventStructuredData event={event} />
 
             <div className="max-w-7xl mx-auto py-2 md:py-12 px-2 md:px-4 sm:px-6 lg:px-8">
-                <EventLayout event={event} profile={profile || undefined}>
+                <EventLayout 
+                    event={event} 
+                    profile={profile || undefined}
+                    initialStep={step}
+                    resumeBookingId={resume}
+                >
                     {/* Event Details */}
                     <div>
                         {event.image_url && (
@@ -354,7 +360,15 @@ export default async function EventPage({ params }: EventPageProps) {
 
                                         {/* Mobile Book Now Button - Only visible on mobile */}
                                         <div className="md:hidden mt-4">
-                                            <EventBookingSection event={event} profile={profile || undefined} />
+                                            <EventBookingSection 
+                                                event={event} 
+                                                profile={profile || undefined} 
+                                                initialStep={step}
+                                                resumeBookingId={resume}
+                                            />
+                                            {event.max_attendees && event.current_attendees >= event.max_attendees && event.settings?.whitelist_enabled && (
+                                                <p className="mt-2 text-xs text-amber-700 dark:text-amber-300 text-center">Event is full. New registrations will be placed on the whitelist.</p>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

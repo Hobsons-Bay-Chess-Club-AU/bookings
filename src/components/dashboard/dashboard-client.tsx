@@ -17,7 +17,7 @@ import {
     HiIdentification
 } from 'react-icons/hi2'
 
-type FilterStatus = 'all' | 'confirmed' | 'pending' | 'cancelled'
+type FilterStatus = 'all' | 'confirmed' | 'pending' | 'cancelled' | 'whitelisted'
 
 interface DashboardClientProps {
     bookings: (Booking & { event: Event })[]
@@ -31,11 +31,12 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
         const confirmed = bookings.filter(b => b.status === 'confirmed' || b.status === 'verified').length
         const pending = bookings.filter(b => b.status === 'pending').length
         const cancelled = bookings.filter(b => b.status === 'cancelled').length
+        const whitelisted = bookings.filter(b => b.status === 'whitelisted').length
         const totalSpent = bookings
             .filter(b => b.status === 'confirmed' || b.status === 'verified')
             .reduce((sum, b) => sum + b.total_amount, 0)
 
-        return { confirmed, pending, cancelled, totalSpent }
+        return { confirmed, pending, cancelled, whitelisted, totalSpent }
     }, [bookings])
 
     const filteredBookings = useMemo(() => {
@@ -53,6 +54,8 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                 return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
             case 'pending':
                 return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+            case 'whitelisted':
+                return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
             case 'cancelled':
                 return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
             case 'refunded':
@@ -69,6 +72,8 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                 return <HiCheckCircle className="h-4 w-4 text-green-600" />
             case 'pending':
                 return <HiClock className="h-4 w-4 text-yellow-600" />
+            case 'whitelisted':
+                return <HiClock className="h-4 w-4 text-amber-600" />
             case 'cancelled':
                 return <HiXCircle className="h-4 w-4 text-red-600" />
             case 'refunded':

@@ -11,7 +11,11 @@ interface MobileBookingButtonProps {
 function isBookable(event: Event) {
     const now = new Date()
     if (event.entry_close_date && new Date(event.entry_close_date) < now) return false
-    return event.status === 'published' && (event.max_attendees == null || event.current_attendees < event.max_attendees)
+    const isBaseOpen = event.status === 'published'
+    if (!isBaseOpen) return false
+    const isFull = event.max_attendees != null && event.current_attendees >= event.max_attendees
+    if (isFull && event.settings?.whitelist_enabled) return true
+    return event.max_attendees == null || !isFull
 }
 
 export default function MobileBookingButton({ event, onClick, className = '' }: MobileBookingButtonProps) {
@@ -28,9 +32,15 @@ export default function MobileBookingButton({ event, onClick, className = '' }: 
         buttonClass = 'bg-gray-400 text-white cursor-not-allowed'
         disabled = true
     } else if (isEventFull) {
-        buttonText = 'Sold Out'
-        buttonClass = 'bg-red-400 text-white cursor-not-allowed'
-        disabled = true
+        if (event.settings?.whitelist_enabled) {
+            buttonText = 'Whitelisted'
+            buttonClass = 'bg-amber-600 hover:bg-amber-700 text-white'
+            disabled = false
+        } else {
+            buttonText = 'Sold Out'
+            buttonClass = 'bg-red-400 text-white cursor-not-allowed'
+            disabled = true
+        }
     } else if (!bookable) {
         buttonText = 'Booking Closed'
         buttonClass = 'bg-gray-400 text-white cursor-not-allowed'

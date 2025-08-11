@@ -16,6 +16,8 @@ interface BookingFormProps {
     event: Event
     user?: Profile // Make user optional
     onStepChange?: (step: number) => void // Callback for when booking step changes
+    initialStep?: string
+    resumeBookingId?: string
 }
 
 // Function removed as it was unused
@@ -25,7 +27,7 @@ interface BookingFormProps {
 //     return event.status === 'published' && (event.max_attendees == null || event.current_attendees < event.max_attendees)
 // }
 
-export default function BookingForm({ event, user, onStepChange }: BookingFormProps) {
+export default function BookingForm({ event, user, onStepChange, initialStep, resumeBookingId }: BookingFormProps) {
     const searchParams = useSearchParams()
     const [step, setStep] = useState(1) // 1: Pricing & Quantity, 2: Contact Info, 3: Participant Info, 4: Review, 5: Checkout
     const [quantity, setQuantity] = useState(1)
@@ -40,14 +42,16 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
         email: '',
         phone: ''
     })
-    const [participants, setParticipants] = useState<Partial<Participant>[]>([])
+    const [participants, setParticipants] = useState<Partial<Participant & { email?: string; phone?: string }>[]>([])
     const [formFields, setFormFields] = useState<FormField[]>([])
     const [currentBookingId, setCurrentBookingId] = useState<string | null>(null)
+    const [isLegitimateResume, setIsLegitimateResume] = useState(false)
+    const [wasCreatedAsWhitelisted, setWasCreatedAsWhitelisted] = useState(false)
     const [agreedToTerms, setAgreedToTerms] = useState(false)
     const [optInMarketing, setOptInMarketing] = useState(false)
     const [shouldRedirect, setShouldRedirect] = useState(false)
     const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-    const [isResuming, setIsResuming] = useState(false)
+
     const [discountInfo, setDiscountInfo] = useState<{
         totalDiscount: number
         appliedDiscounts: Array<{
@@ -77,8 +81,13 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
     const totalAmount = discountInfo?.finalAmount ?? baseAmount
     // Processing fee estimation for display (final fee calculated server-side)
     const processingFee = totalAmount > 0 ? totalAmount * 0.017 + 0.30 : 0
+    const isEventFull = event.max_attendees != null && event.current_attendees >= event.max_attendees
+    const whitelistEnabled = Boolean(event.settings?.whitelist_enabled)
+    // Treat any active resume context as bypass for whitelist/sold-out checks
+    const isResumeFlowActive = isLegitimateResume || Boolean(currentBookingId) || Boolean(resumeBookingId)
+    const shouldWhitelist = isEventFull && whitelistEnabled && !isResumeFlowActive
     const maxQuantity = event.max_attendees
-        ? Math.min(10, event.max_attendees - event.current_attendees)
+        ? Math.min(10, Math.max(0, event.max_attendees - event.current_attendees))
         : 10
 
     // Fetch available pricing options and form fields
@@ -170,22 +179,26 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
         }
     }, [step])
 
-    // Handle resuming from URL parameters
+    // Handle resuming from URL parameters or props
     useEffect(() => {
-        const urlStep = searchParams?.get('step')
-        const resumeBookingId = searchParams?.get('resume')
+        const urlStep = searchParams?.get('step') || initialStep
+        const urlResumeBookingId = searchParams?.get('resume') || resumeBookingId
         
-        if (urlStep && resumeBookingId) {
+        if (urlStep && urlResumeBookingId) {
             const stepNumber = parseInt(urlStep)
             if (stepNumber >= 1 && stepNumber <= 4) {
-                setIsResuming(true)
                 setStep(stepNumber)
                 
+                // Notify parent component about step change
+                if (onStepChange) {
+                    onStepChange(stepNumber)
+                }
+                
                 // Load existing booking data
-                loadResumedBookingData(resumeBookingId)
+                loadResumedBookingData(urlResumeBookingId)
             }
         }
-    }, [searchParams])
+    }, [searchParams, initialStep, resumeBookingId, onStepChange])
 
     const loadResumedBookingData = async (bookingId: string) => {
         try {
@@ -200,12 +213,19 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
             if (response.ok) {
                 const data = await response.json()
                 if (data.canResume) {
-                    // Set the existing booking ID
+                    // Set the existing booking ID and mark as legitimate resume
                     setCurrentBookingId(bookingId)
+                    setIsLegitimateResume(true)
                     
                     // Load participants data
                     if (data.booking.participants) {
-                        setParticipants(data.booking.participants)
+                        // Map database fields to form fields
+                        const mappedParticipants = data.booking.participants.map((p: { contact_email?: string; contact_phone?: string; [key: string]: unknown }) => ({
+                            ...p,
+                            email: p.contact_email,
+                            phone: p.contact_phone
+                        })) as Partial<Participant & { email?: string; phone?: string }>[]
+                        setParticipants(mappedParticipants)
                         setQuantity(data.booking.quantity)
                     }
                     
@@ -220,8 +240,6 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
         } catch (error) {
             console.error('Error loading resumed booking data:', error)
             setError('Failed to load booking data')
-        } finally {
-            setIsResuming(false)
         }
     }
 
@@ -308,6 +326,9 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
         }
 
         setStep(2)
+        if (onStepChange) {
+            onStepChange(2)
+        }
     }
 
     const handleContinueToParticipants = () => {
@@ -343,6 +364,9 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
         })
         setParticipants(initialParticipants)
         setStep(3)
+        if (onStepChange) {
+            onStepChange(3)
+        }
     }
 
     const calculateDiscounts = useCallback(async () => {
@@ -398,6 +422,9 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
         await calculateDiscounts()
 
         setStep(4)
+        if (onStepChange) {
+            onStepChange(4)
+        }
     }
 
     // Function removed as it was unused
@@ -492,6 +519,95 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                 isFreeEvent
             })
 
+            // If resuming a booking, always go to payment regardless of event status
+            if (currentBookingId) {
+                console.log('🔄 Resuming existing booking, proceeding to payment')
+                
+                // Update the existing booking with any changes
+                const { error: updateError } = await supabase
+                    .from('bookings')
+                    .update({
+                        quantity,
+                        unit_price: selectedPricing.price,
+                        total_amount: totalAmount,
+                        pricing_id: selectedPricing.id && selectedPricing.id !== 'default' ? selectedPricing.id : null,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', currentBookingId)
+
+                if (updateError) {
+                    throw new Error(updateError.message)
+                }
+
+                // Update participants if needed
+                // Delete existing participants and recreate them
+                await supabase
+                    .from('participants')
+                    .delete()
+                    .eq('booking_id', currentBookingId)
+
+                for (let i = 0; i < participants.length; i++) {
+                    const participant = participants[i]
+                    if (participant.first_name && participant.last_name) {
+                        const { error: participantError } = await supabase
+                            .from('participants')
+                            .insert({
+                                booking_id: currentBookingId,
+                                first_name: participant.first_name,
+                                last_name: participant.last_name,
+                                contact_email: participant.email,
+                                contact_phone: participant.phone,
+                                date_of_birth: participant.date_of_birth,
+                                custom_data: participant.custom_data || {},
+                                status: 'active'
+                            })
+
+                        if (participantError) {
+                            console.error('Error updating participant:', participantError)
+                        }
+                    }
+                }
+
+                // Proceed to payment
+                const checkoutResponse = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bookingId: currentBookingId,
+                        eventId: event.id,
+                        quantity: quantity,
+                        amount: totalAmount,
+                        eventTitle: event.title,
+                        optInMarketing: optInMarketing
+                    })
+                })
+
+                if (!checkoutResponse.ok) {
+                    const errorData = await checkoutResponse.json()
+                    throw new Error(errorData.error || 'Failed to create checkout session')
+                }
+
+                const { sessionId } = await checkoutResponse.json()
+
+                // Redirect to Stripe checkout
+                const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+                if (stripe) {
+                    const { error } = await stripe.redirectToCheckout({ sessionId })
+                    if (error) {
+                        throw new Error(error.message)
+                    }
+                } else {
+                    throw new Error('Failed to load Stripe')
+                }
+
+                return
+            }
+
+            // Determine whitelist flow: if event is full and whitelist enabled, create whitelisted booking
+            const shouldWhitelist = isEventFull && whitelistEnabled && !isLegitimateResume
+
             // Create booking record with pricing information
             const bookingData: {
                 event_id: string
@@ -499,7 +615,7 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                 quantity: number
                 unit_price: number
                 total_amount: number
-                status: 'confirmed' | 'pending'
+                status: 'confirmed' | 'pending' | 'whitelisted'
                 pricing_id?: string
             } = {
                 event_id: event.id,
@@ -507,7 +623,7 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                 quantity,
                 unit_price: selectedPricing.price,
                 total_amount: totalAmount,
-                status: isFreeEvent ? 'confirmed' : 'pending'
+                status: shouldWhitelist ? 'whitelisted' : (isFreeEvent ? 'confirmed' : 'pending')
             }
             
             // Only set pricing_id if it's not a free event and we have a valid UUID pricing ID
@@ -558,7 +674,8 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                             contact_email: participant.email,
                             contact_phone: participant.phone,
                             date_of_birth: participant.date_of_birth,
-                            custom_data: participant.custom_data || {}
+                            custom_data: participant.custom_data || {},
+                            status: shouldWhitelist ? 'whitelisted' : 'active'
                         })
 
                     if (participantError) {
@@ -590,7 +707,16 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                 }
             }
 
-            if (isFreeEvent) {
+            if (shouldWhitelist) {
+                // Whitelisted path: show success-like message without redirecting to payment
+                setCurrentBookingId(booking.id)
+                setWasCreatedAsWhitelisted(true)
+                setStep(5)
+                if (onStepChange) {
+                    onStepChange(5)
+                }
+                setShouldRedirect(false)
+            } else if (isFreeEvent) {
                 console.log('🎉 Free event detected, setting up redirect')
                 console.log('📝 Setting currentBookingId:', booking.id)
                 console.log('📝 Setting step to 5')
@@ -599,6 +725,9 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                 // For free events, redirect to success page directly
                 setCurrentBookingId(booking.id)
                 setStep(5)
+                if (onStepChange) {
+                    onStepChange(5)
+                }
                 setShouldRedirect(true)
                 
                 console.log('✅ Free event setup complete')
@@ -637,9 +766,6 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                     throw new Error('Failed to load Stripe')
                 }
             }
-
-            setCurrentBookingId(booking.id)
-            setStep(5)
         } catch (err: unknown) {
             setError((err as Error).message || 'Failed to complete booking')
         } finally {
@@ -647,21 +773,27 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
         }
     }
 
-    if (event.entry_close_date && new Date(event.entry_close_date) < new Date()) {
+    // Skip entry close date check when resuming a booking
+    if (!isResumeFlowActive && event.entry_close_date && new Date(event.entry_close_date) < new Date()) {
         return (
             <div className="text-center py-12">
                 <p className="text-xl text-gray-800 dark:text-gray-200 font-semibold">Entries for this event are now closed (entry close date has passed).</p>
             </div>
         )
     }
-    if (event.max_attendees != null && event.current_attendees >= event.max_attendees) {
-        return (
-            <div className="text-center py-12">
-                <p className="text-xl text-gray-800 dark:text-gray-200 font-semibold">This event is sold out.</p>
-            </div>
-        )
+    // Skip sold out check when resuming a booking
+    if (!isResumeFlowActive && event.max_attendees != null && event.current_attendees >= event.max_attendees) {
+        if (!whitelistEnabled) {
+            return (
+                <div className="text-center py-12">
+                    <p className="text-xl text-gray-800 dark:text-gray-200 font-semibold">This event is sold out.</p>
+                </div>
+            )
+        }
+        // If whitelist enabled, allow booking UI to proceed as whitelist
     }
-    if (event.status !== 'published') {
+    // Skip event status check when resuming a booking
+    if (!isResumeFlowActive && event.status !== 'published') {
         return (
             <div className="text-center py-12">
                 <p className="text-xl text-gray-800 dark:text-gray-200 font-semibold">This event is not open for booking.</p>
@@ -669,7 +801,8 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
         )
     }
 
-    if (maxQuantity <= 0) {
+    // Skip quantity check when resuming a booking
+    if (!isResumeFlowActive && maxQuantity <= 0 && !whitelistEnabled) {
         return (
             <div className="text-center">
                 <p className="text-gray-600 dark:text-gray-400">This event is sold out.</p>
@@ -724,19 +857,19 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                 </div>
                 <div className={`w-3 md:w-6 h-0.5 ${step >= 4 ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
                 <div className={`flex flex-col md:flex-row md:items-center ${step >= 4 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= 4 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 dark:border-gray-600'
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= 4 ? (shouldWhitelist && !isLegitimateResume ? 'border-amber-600 bg-amber-600 text-white' : 'border-indigo-600 bg-indigo-600 text-white') : 'border-gray-300 dark:border-gray-600'
                         }`}>
                         4
                     </div>
                     <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">
-                        {(totalAmount === 0 || selectedPricing?.price === 0) ? 'Review' : 'Payment'}
+                        {shouldWhitelist && !isLegitimateResume ? 'Whitelisted' : (totalAmount === 0 || selectedPricing?.price === 0) ? 'Review' : 'Payment'}
                     </span>
                 </div>
 
             </div>
 
             {/* Booking in Progress Warning */}
-            {currentBookingId && currentBookingId.trim() !== '' && (
+            {step === 5 && currentBookingId && currentBookingId.trim() !== '' && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex">
                         <div className="flex-shrink-0">
@@ -744,14 +877,11 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                         </div>
                         <div className="ml-3">
                             <h3 className="text-sm font-medium text-blue-800">
-                                {isResuming ? 'Resuming Previous Booking' : 'Booking in Progress'}
+                                Booking in Progress
                             </h3>
                             <div className="mt-2 text-sm text-blue-700">
                                 <p>
-                                    {isResuming 
-                                        ? 'Your previous booking data has been loaded. You can review and complete your payment.'
-                                        : 'Your booking is being processed. Please don\'t close this page or navigate away.'
-                                    }
+                                    Your booking is being processed. Please don&apos;t close this page or navigate away.
                                 </p>
                             </div>
                         </div>
@@ -782,7 +912,12 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                     contactInfo={contactInfo}
                     setContactInfo={setContactInfo}
                     onContinue={handleContinueToParticipants}
-                    onBack={() => setStep(1)}
+                    onBack={() => {
+                        setStep(1)
+                        if (onStepChange) {
+                            onStepChange(1)
+                        }
+                    }}
                     loading={loading}
                     error={error}
                 />
@@ -796,7 +931,12 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                     setParticipants={setParticipants}
                     formFields={formFields}
                     onComplete={handleContinueToReview}
-                    onBack={() => setStep(2)}
+                    onBack={() => {
+                        setStep(2)
+                        if (onStepChange) {
+                            onStepChange(2)
+                        }
+                    }}
                     loading={loading}
                     error={error}
                     userId={user?.id}
@@ -822,16 +962,39 @@ export default function BookingForm({ event, user, onStepChange }: BookingFormPr
                     optInMarketing={optInMarketing}
                     setOptInMarketing={setOptInMarketing}
                     onComplete={handleCompleteBooking}
-                    onBack={() => setStep(3)}
+                    onBack={() => {
+                        setStep(3)
+                        if (onStepChange) {
+                            onStepChange(3)
+                        }
+                    }}
                     loading={loading}
                     error={error}
+                    isResuming={isLegitimateResume}
                 />
             )}
 
             {/* Step 5: Processing Payment or Success */}
             {step === 5 && (
                 <div className="space-y-6">
-                    {(totalAmount === 0 || selectedPricing?.price === 0) ? (
+                    {wasCreatedAsWhitelisted ? (
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <div className="h-6 w-6 rounded-full bg-amber-600" />
+                                </div>
+                                <div className="ml-3">
+                                    <h3 className="text-sm font-medium text-amber-800">
+                                        Whitelisted Registration Submitted
+                                    </h3>
+                                    <div className="mt-2 text-sm text-amber-700">
+                                        <p>Your details have been captured on the whitelist. The organizer will release your spot when available. You will receive an email and can complete payment from your dashboard at that time.</p>
+                                        <p className="mt-2">Booking ID: {currentBookingId}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (totalAmount === 0 || selectedPricing?.price === 0) ? (
                         // Free event success
                         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                             <div className="flex">

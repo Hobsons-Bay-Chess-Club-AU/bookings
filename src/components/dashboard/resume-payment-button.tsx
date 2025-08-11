@@ -39,7 +39,7 @@ export default function ResumePaymentButton({
                 
                 if (checkData.canResume) {
                     // Redirect to booking form step 4 with existing data
-                    window.location.href = `/events/${checkData.booking.eventId}/book?step=4&resume=${bookingId}`
+                    window.location.href = `/events/${checkData.booking.eventId}?step=4&resume=${bookingId}`
                     return
                 }
             }

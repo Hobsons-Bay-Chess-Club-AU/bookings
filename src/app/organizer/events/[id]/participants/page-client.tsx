@@ -131,7 +131,7 @@ export default function EventParticipantsPageClient({
         return (
             participant.first_name.toLowerCase().includes(searchLower) ||
             participant.last_name.toLowerCase().includes(searchLower) ||
-            participant.email?.toLowerCase().includes(searchLower) ||
+            participant.contact_email?.toLowerCase().includes(searchLower) ||
             participant.bookings.profiles.email.toLowerCase().includes(searchLower)
         )
     })
@@ -185,8 +185,8 @@ export default function EventParticipantsPageClient({
             p.first_name,
             p.last_name,
             p.date_of_birth || '',
-            p.email || '',
-            p.phone || '',
+            p.contact_email || '',
+            p.contact_phone || '',
             `${new Date(p.bookings.created_at).toLocaleDateString()} at ${new Date(p.bookings.created_at).toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit'
@@ -269,7 +269,7 @@ export default function EventParticipantsPageClient({
                                         With Contact Email
                                     </dt>
                                     <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                        {participants.filter(p => p.email).length}
+                                        {participants.filter(p => p.contact_email).length}
                                     </dd>
                                 </dl>
                             </div>
@@ -289,7 +289,7 @@ export default function EventParticipantsPageClient({
                                         With Phone Number
                                     </dt>
                                     <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                        {participants.filter(p => p.phone).length}
+                                        {participants.filter(p => p.contact_phone).length}
                                     </dd>
                                 </dl>
                             </div>
@@ -478,13 +478,13 @@ export default function EventParticipantsPageClient({
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="text-sm text-gray-900 dark:text-gray-100">
-                                                {participant.email && (
-                                                    <div>{participant.email}</div>
+                                                {participant.contact_email && (
+                                                    <div>{participant.contact_email}</div>
                                                 )}
-                                                {participant.phone && (
-                                                    <div className="text-gray-500 dark:text-gray-400">{participant.phone}</div>
+                                                {participant.contact_phone && (
+                                                    <div className="text-gray-500 dark:text-gray-400">{participant.contact_phone}</div>
                                                 )}
-                                                {!participant.email && !participant.phone && (
+                                                {!participant.contact_email && !participant.contact_phone && (
                                                     <span className="text-gray-400 dark:text-gray-500">No contact info</span>
                                                 )}
                                             </div>
@@ -623,16 +623,16 @@ export default function EventParticipantsPageClient({
                                                 </p>
                                             </div>
                                         )}
-                                        {selectedParticipant.email && (
+                                        {selectedParticipant.contact_email && (
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contact Email</label>
-                                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">{selectedParticipant.email}</p>
+                                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">{selectedParticipant.contact_email}</p>
                                             </div>
                                         )}
-                                        {selectedParticipant.phone && (
+                                        {selectedParticipant.contact_phone && (
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contact Phone</label>
-                                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">{selectedParticipant.phone}</p>
+                                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">{selectedParticipant.contact_phone}</p>
                                             </div>
                                         )}
                                     </div>

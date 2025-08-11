@@ -8,7 +8,7 @@ import { HiCalendarDays, HiClock, HiMapPin } from 'react-icons/hi2'
 import { BookingWithProfile } from '@/lib/types/ui'
 import BookingTransferModal from '@/components/events/booking-transfer-modal'
 
-type FilterStatus = 'all' | 'confirmed' | 'pending' | 'cancelled' | 'refunded'
+type FilterStatus = 'all' | 'confirmed' | 'pending' | 'cancelled' | 'refunded' | 'whitelisted'
 
 interface EventBookingsClientProps {
     event: Event
@@ -43,6 +43,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
     const confirmedBookings = bookings.filter(b => b.status === 'confirmed' || b.status === 'verified').length
     const pendingBookings = bookings.filter(b => b.status === 'pending').length
     const cancelledBookings = bookings.filter(b => b.status === 'cancelled').length
+    const whitelistedBookings = bookings.filter(b => b.status === 'whitelisted').length
     const refundedBookings = bookings.filter(b => b.refund_status === 'completed').length
     const totalRevenue = bookings
         .filter(b => b.status === 'confirmed' || b.status === 'verified')
@@ -58,6 +59,8 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                 return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
             case 'pending':
                 return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+            case 'whitelisted':
+                return 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300'
             case 'cancelled':
                 return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
             case 'refunded':
@@ -74,6 +77,8 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                 return '✓'
             case 'pending':
                 return '⏳'
+            case 'whitelisted':
+                return '⏱'
             case 'cancelled':
                 return '❌'
             case 'refunded':
@@ -644,10 +649,35 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                     </button>
                                                     {booking.status === 'pending' && (
                                                         <button
-                                                            className="flex items-center w-full px-4 py-2 text-sm text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
                                                             title="Manual confirmation (if needed)"
                                                         >
                                                             ✓ Mark Confirmed
+                                                        </button>
+                                                    )}
+                                                    {booking.status === 'whitelisted' && (
+                                                        <button
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const res = await fetch('/api/admin/bookings/release-whitelist', {
+                                                                        method: 'POST',
+                                                                        headers: { 'Content-Type': 'application/json' },
+                                                                        body: JSON.stringify({ bookingId: booking.id })
+                                                                    })
+                                                                    if (!res.ok) {
+                                                                        const data = await res.json()
+                                                                        alert(data.error || 'Failed to release whitelist')
+                                                                        return
+                                                                    }
+                                                                    window.location.reload()
+                                                                } catch (e) {
+                                                                    console.error(e)
+                                                                    alert('Failed to release whitelist')
+                                                                }
+                                                            }}
+                                                            className="flex items-center w-full px-4 py-2 text-sm text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                                                        >
+                                                            ⏱ Release Whitelisted
                                                         </button>
                                                     )}
                                                     {(booking.status === 'confirmed' || booking.status === 'verified') && (

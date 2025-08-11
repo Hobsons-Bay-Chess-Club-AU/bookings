@@ -8,11 +8,13 @@ interface EventLayoutProps {
     event: Event
     profile?: Profile
     children: React.ReactNode // Event details content
+    initialStep?: string
+    resumeBookingId?: string
 }
 
-export default function EventLayout({ event, profile, children }: EventLayoutProps) {
-    const [bookingStep, setBookingStep] = useState(1)
-    const isBookingActive = bookingStep > 1
+export default function EventLayout({ event, profile, children, initialStep, resumeBookingId }: EventLayoutProps) {
+    const [bookingStep, setBookingStep] = useState(initialStep ? parseInt(initialStep) : 1)
+    const isBookingActive =  bookingStep > 1 || !!resumeBookingId
 
     return (
         <div className={`lg:grid lg:gap-8 lg:grid-cols-12`}>
@@ -31,12 +33,16 @@ export default function EventLayout({ event, profile, children }: EventLayoutPro
                 }`}>
                 <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 sticky top-8">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">
-                        Book Your Spot
+                        {event.max_attendees != null && event.current_attendees >= event.max_attendees && event.settings?.whitelist_enabled
+                            ? 'Whitelist Your Spot'
+                            : 'Book Your Spot'}
                     </h2>
                     <BookingForm
                         event={event}
                         user={profile}
                         onStepChange={setBookingStep}
+                        initialStep={initialStep}
+                        resumeBookingId={resumeBookingId}
                     />
                 </div>
             </div>

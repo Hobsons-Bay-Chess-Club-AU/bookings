@@ -120,8 +120,8 @@ export default function ParticipantSearchPopup({
             first_name: participant.first_name,
             last_name: participant.last_name,
             date_of_birth: participant.date_of_birth,
-            email: participant.contact_email,
-            phone: participant.contact_phone,
+            contact_email: participant.contact_email,
+            contact_phone: participant.contact_phone,
             custom_data: participant.custom_data
         })
         onClose()

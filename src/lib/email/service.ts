@@ -105,7 +105,8 @@ import {
     renderEventUpdateEmail, 
     renderWelcomeEmail, 
     renderPasswordResetEmail,
-    renderOrganizerBookingNotificationEmail
+    renderOrganizerBookingNotificationEmail,
+    renderWhitelistedBookingEmail
 } from './templates/index'
 import { resend } from './client'
 import { createClient } from '@/lib/supabase/server'
@@ -283,6 +284,139 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
     }
 }
 
+export async function sendWhitelistedBookingEmail(data: EmailData) {
+    const { booking, event, user } = data
+
+    console.log('📧 [WHITELISTED BOOKING] Starting email send:', {
+        bookingId: booking.id,
+        eventId: event.id,
+        eventTitle: event.title,
+        userEmail: user.email,
+        userName: user.full_name,
+        timestamp: new Date().toISOString()
+    })
+
+    // Validate required data
+    if (!user.email) {
+        console.error('❌ [WHITELISTED BOOKING] Missing user email:', {
+            bookingId: booking.id,
+            userId: user.id,
+            timestamp: new Date().toISOString()
+        })
+        return { success: false, error: 'Missing user email' }
+    }
+
+    if (!event.title) {
+        console.error('❌ [WHITELISTED BOOKING] Missing event title:', {
+            bookingId: booking.id,
+            eventId: event.id,
+            timestamp: new Date().toISOString()
+        })
+        return { success: false, error: 'Missing event title' }
+    }
+
+    // Fetch participants for this booking
+    const supabase = await createClient()
+    console.log('🔍 [WHITELISTED BOOKING] Fetching participants for booking:', {
+        bookingId: booking.id,
+        timestamp: new Date().toISOString()
+    })
+
+    const { data: participants, error: participantsError } = await supabase
+        .from('participants')
+        .select('*')
+        .eq('booking_id', booking.id)
+        .order('created_at', { ascending: true })
+
+    if (participantsError) {
+        console.error('❌ [WHITELISTED BOOKING] Failed to fetch participants:', {
+            bookingId: booking.id,
+            error: participantsError.message,
+            timestamp: new Date().toISOString()
+        })
+    } else {
+        console.log('✅ [WHITELISTED BOOKING] Participants fetched:', {
+            bookingId: booking.id,
+            participantCount: participants?.length || 0,
+            timestamp: new Date().toISOString()
+        })
+    }
+
+    try {
+        console.log('🎨 [WHITELISTED BOOKING] Rendering email template:', {
+            bookingId: booking.id,
+            timestamp: new Date().toISOString()
+        })
+
+        const { html, text } = await renderWhitelistedBookingEmail({
+            bookingId: booking.booking_id || booking.id,
+            eventName: event.title,
+            eventDate: event.start_date,
+            eventLocation: event.location,
+            eventEndDate: event.end_date,
+            participantCount: booking.quantity,
+            totalAmount: booking.total_amount,
+            organizerName: (event && 'organizer_name' in event ? (event as Event & { organizer_name?: string }).organizer_name : undefined) || 'Event Organizer',
+            organizerEmail: (event && 'organizer_email' in event ? (event as Event & { organizer_email?: string }).organizer_email : undefined) || '',
+            organizerPhone: (event && 'organizer_phone' in event ? (event as Event & { organizer_phone?: string }).organizer_phone : undefined) || '',
+            eventDescription: event.description,
+            participants: participants || [],
+            dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard`
+        })
+
+        console.log('✅ [WHITELISTED BOOKING] Email template rendered:', {
+            bookingId: booking.id,
+            htmlLength: html.length,
+            textLength: text.length,
+            timestamp: new Date().toISOString()
+        })
+
+        console.log('📤 [WHITELISTED BOOKING] Sending email via Resend:', {
+            bookingId: booking.id,
+            from: process.env.RESEND_FROM_EMAIL || "",
+            to: user.email,
+            subject: `Booking Reserved: ${event.title}`,
+            timestamp: new Date().toISOString()
+        })
+
+        const { data: emailData, error } = await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL || "",
+            to: user.email,
+            subject: `Booking Reserved: ${event.title}`,
+            html,
+            text
+        })
+
+        if (error) {
+            console.error('❌ [WHITELISTED BOOKING] Resend API error:', {
+                bookingId: booking.id,
+                error: error.message,
+                errorDetails: error,
+                timestamp: new Date().toISOString()
+            })
+            return { success: false, error: error.message }
+        }
+
+        console.log('✅ [WHITELISTED BOOKING] Email sent successfully:', {
+            bookingId: booking.id,
+            emailId: emailData?.id,
+            userEmail: user.email,
+            eventTitle: event.title,
+            timestamp: new Date().toISOString()
+        })
+
+        return { success: true, data: emailData }
+    } catch (error: unknown) {
+        console.error('💥 [WHITELISTED BOOKING] Exception during email send:', {
+            bookingId: booking.id,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            errorStack: error instanceof Error ? error.stack : undefined,
+            timestamp: new Date().toISOString()
+        })
+        return { success: false, error: 'Failed to send whitelisted booking email' }
+    }
+}
+
 
 export async function sendWelcomeEmail(userEmail: string, userName: string) {
     try {
@@ -374,4 +508,25 @@ export async function sendOrganizerBookingNotificationEmail(data: {
         console.error('Error sending organizer booking notification email:', error)
         return { success: false, error: 'Failed to send organizer booking notification email' }
     }
+}
+
+export async function sendWhitelistReleasedEmail(params: {
+    userEmail: string
+    userName?: string
+    eventTitle: string
+    bookingId: string
+    dashboardUrl: string
+}) {
+    const { userEmail, userName, eventTitle, bookingId, dashboardUrl } = params
+    const subject = `Your booking for ${eventTitle} is now available`
+    const html = `
+        <div>
+            <p>Hi ${userName || 'there'},</p>
+            <p>Good news! Your whitelisted booking (<strong>${bookingId}</strong>) for <strong>${eventTitle}</strong> has been released. You can now complete payment to secure your spot.</p>
+            <p><a href="${dashboardUrl}" target="_blank" style="display:inline-block;padding:10px 16px;background:#4f46e5;color:#fff;border-radius:6px;text-decoration:none">Go to Dashboard</a></p>
+            <p>If the button does not work, copy and paste this URL into your browser: ${dashboardUrl}</p>
+            <p>Thank you.</p>
+        </div>
+    `
+    return sendEmail({ to: userEmail, subject, html })
 }

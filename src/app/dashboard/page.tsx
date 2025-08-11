@@ -10,13 +10,7 @@ import LoadingSpinner from '@/components/ui/loading-spinner'
 // Loading component for dashboard
 function DashboardLoading() {
     return (
-        <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
-            {/* Page Header */}
-            <div className="bg-white dark:bg-gray-800 shadow">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                </div>
-            </div>
-
+        <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
             <div className="max-w-7xl mx-auto py-2 md:py-12 px-2 md:px-4 sm:px-6 lg:px-8">
                 <div className="text-center py-12">
                     <LoadingSpinner size="lg" text="Loading dashboard..." />
@@ -65,13 +59,7 @@ async function DashboardContent({ profile }: { profile: Profile }) {
     const bookings = await getUserBookings(profile.id)
 
     return (
-        <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
-            {/* Page Header */}
-            <div className="bg-white dark:bg-gray-800 shadow">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                </div>
-            </div>
-
+        <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
             <div className="max-w-7xl mx-auto py-2 md:py-12 px-2 md:px-4 sm:px-6 lg:px-8">
                 <DashboardClient bookings={bookings} />
             </div>

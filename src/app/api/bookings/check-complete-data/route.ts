@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
                     id,
                     first_name,
                     last_name,
-                    email,
+                    contact_email,
                     date_of_birth,
                     custom_data
                 )
@@ -64,10 +64,10 @@ export async function POST(request: NextRequest) {
         // Check if we have complete data for resumption
         const hasCompleteData = booking.participants && 
                                booking.participants.length === booking.quantity &&
-                               booking.participants.every((p: { first_name?: string; last_name?: string; email?: string }) => 
+                               booking.participants.every((p: { first_name?: string; last_name?: string; contact_email?: string }) => 
                                    p.first_name && 
                                    p.last_name && 
-                                   p.email
+                                   p.contact_email
                                )
 
         // Check if event form fields are satisfied

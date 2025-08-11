@@ -47,7 +47,7 @@ export async function PATCH(
         }
 
         // Validate status
-        const validStatuses = ['pending', 'confirmed', 'cancelled', 'refunded', 'verified']
+        const validStatuses = ['pending', 'confirmed', 'cancelled', 'refunded', 'verified', 'whitelisted']
         if (!validStatuses.includes(status)) {
             return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
         }
@@ -100,6 +100,12 @@ export async function PATCH(
                     .update({ current_attendees: newCount })
                     .eq('id', eventId)
             }
+            // If previously whitelisted, set participants to active
+            await supabase
+                .from('participants')
+                .update({ status: 'active' })
+                .eq('booking_id', bookingId)
+                .eq('status', 'whitelisted')
         }
 
         return NextResponse.json({ message: 'Booking status updated successfully', booking: updatedBooking })

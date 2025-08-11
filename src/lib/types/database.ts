@@ -1,7 +1,7 @@
 import { FieldOption } from "@stripe/stripe-js"
 
 export type UserRole = 'user' | 'admin' | 'organizer' | 'customer_support'
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'refunded' | 'verified'
+export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'refunded' | 'verified' | 'whitelisted'
 export type RefundStatus = 'none' | 'requested' | 'processing' | 'completed' | 'failed'
 export type EventStatus = 'draft' | 'published' | 'cancelled' | 'completed' | 'entry_closed'
 export type MembershipType = 'member' | 'non_member' | 'all'
@@ -84,6 +84,7 @@ export interface EventSettings {
     allow_participant_contact?: boolean
     notify_organizer_on_booking?: boolean
     terms_conditions?: string
+    whitelist_enabled?: boolean
 }
 
 export interface LocationSettings {
@@ -177,10 +178,11 @@ export interface Participant {
     booking_id?: string
     first_name: string
     last_name: string
-    email?: string
-    phone?: string
+    contact_email?: string
+    contact_phone?: string
     date_of_birth?: string
     custom_data?: Record<string, CustomDataValue>
+    status?: 'active' | 'whitelisted' | 'cancelled'
     created_at?: string
     updated_at?: string
 }

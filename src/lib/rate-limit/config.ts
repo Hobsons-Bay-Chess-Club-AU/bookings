@@ -46,6 +46,14 @@ export const rateLimitConfigs = redis ? {
     prefix: 'ratelimit:events',
   }),
 
+  // Public events API (read-only) - higher throughput e.g., 300 requests per minute
+  publicEvents: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(300, '1 m'),
+    analytics: false,
+    prefix: 'ratelimit:public_events',
+  }),
+
   // Admin endpoints - 50 requests per minute
   admin: new Ratelimit({
     redis,
@@ -111,9 +119,13 @@ export function getRateLimitConfig(pathname: string): Ratelimit | null {
   else if (pathname.startsWith('/api/bookings/') || pathname.startsWith('/api/create-checkout-session')) {
     config = rateLimitConfigs.booking
   }
-  // Event management routes
-  else if (pathname.startsWith('/api/events/') || pathname.startsWith('/api/public/events/')) {
+  // Event management routes (organizer)
+  else if (pathname.startsWith('/api/events/')) {
     config = rateLimitConfigs.events
+  }
+  // Public events routes (read-only)
+  else if (pathname.startsWith('/api/public/events/')) {
+    config = rateLimitConfigs.publicEvents
   }
   // Admin routes
   else if (pathname.startsWith('/api/admin/')) {

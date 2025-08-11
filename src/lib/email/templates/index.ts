@@ -11,6 +11,7 @@ export { default as OrganizerReplyEmail } from './organizer-reply'
 export { default as UserProfileUpdateEmail } from './user-profile-update'
 export { default as BookingTransferNotificationEmail } from './booking-transfer-notification'
 export { default as OrganizerBookingNotificationEmail } from './organizer-booking-notification'
+export { default as WhitelistedBookingEmail } from './whitelisted-booking'
 
 // Render Functions
 export { renderBookingConfirmationEmail } from './booking-confirmation'
@@ -21,6 +22,7 @@ export { renderOrganizerReplyEmail } from './organizer-reply'
 export { renderUserProfileUpdateEmail } from './user-profile-update'
 export { renderBookingTransferNotificationEmail } from './booking-transfer-notification'
 export { renderOrganizerBookingNotificationEmail } from './organizer-booking-notification'
+export { renderWhitelistedBookingEmail } from './whitelisted-booking'
 
 // Legacy exports for backward compatibility
 export { BookingConfirmationEmail as BookingConfirmationEmailLegacy } from '../templates'
