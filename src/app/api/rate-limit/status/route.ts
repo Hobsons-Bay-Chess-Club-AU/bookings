@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getRateLimitStatus } from '@/lib/rate-limit/test'
 import { rateLimitMiddleware } from '@/lib/rate-limit/middleware'
 
-async function getRateLimitStatusHandler(_request: NextRequest) {
+async function getRateLimitStatusHandler() {
   try {
     const status = getRateLimitStatus()
     
@@ -27,5 +27,5 @@ export async function GET(request: NextRequest) {
     return rateLimitResult
   }
   
-  return getRateLimitStatusHandler(request)
+  return getRateLimitStatusHandler()
 }

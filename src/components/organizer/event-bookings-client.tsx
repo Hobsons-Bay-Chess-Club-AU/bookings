@@ -7,6 +7,7 @@ import { FiSettings, FiEye, FiCreditCard, FiMail, FiPhone, FiUser, FiArrowRight 
 import { HiCalendarDays, HiClock, HiMapPin } from 'react-icons/hi2'
 import { BookingWithProfile } from '@/lib/types/ui'
 import BookingTransferModal from '@/components/events/booking-transfer-modal'
+import ReleaseWhitelistModal from '@/components/ui/release-whitelist-modal'
 
 type FilterStatus = 'all' | 'confirmed' | 'pending' | 'cancelled' | 'refunded' | 'whitelisted'
 
@@ -37,13 +38,14 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
     const [searchTerm, setSearchTerm] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
+    const [showReleaseModal, setShowReleaseModal] = useState(false)
+    const [selectedBooking, setSelectedBooking] = useState<BookingWithProfile | null>(null)
 
     // Calculate stats
     const totalBookings = bookings.length
     const confirmedBookings = bookings.filter(b => b.status === 'confirmed' || b.status === 'verified').length
     const pendingBookings = bookings.filter(b => b.status === 'pending').length
     const cancelledBookings = bookings.filter(b => b.status === 'cancelled').length
-    const whitelistedBookings = bookings.filter(b => b.status === 'whitelisted').length
     const refundedBookings = bookings.filter(b => b.refund_status === 'completed').length
     const totalRevenue = bookings
         .filter(b => b.status === 'confirmed' || b.status === 'verified')
@@ -219,6 +221,30 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
             window.location.reload()
         } catch (error) {
             throw error
+        }
+    }
+
+    const handleReleaseConfirm = async () => {
+        if (!selectedBooking) return
+        
+        try {
+            const res = await fetch('/api/admin/bookings/release-whitelist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookingId: selectedBooking.id })
+            })
+            
+            if (!res.ok) {
+                const data = await res.json()
+                throw new Error(data.error || 'Failed to release booking')
+            }
+            
+            // Close modal and reload page
+            setShowReleaseModal(false)
+            setSelectedBooking(null)
+            window.location.reload()
+        } catch (error) {
+            throw error // Re-throw to be handled by the modal
         }
     }
 
@@ -657,23 +683,10 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                     )}
                                                     {booking.status === 'whitelisted' && (
                                                         <button
-                                                            onClick={async () => {
-                                                                try {
-                                                                    const res = await fetch('/api/admin/bookings/release-whitelist', {
-                                                                        method: 'POST',
-                                                                        headers: { 'Content-Type': 'application/json' },
-                                                                        body: JSON.stringify({ bookingId: booking.id })
-                                                                    })
-                                                                    if (!res.ok) {
-                                                                        const data = await res.json()
-                                                                        alert(data.error || 'Failed to release whitelist')
-                                                                        return
-                                                                    }
-                                                                    window.location.reload()
-                                                                } catch (e) {
-                                                                    console.error(e)
-                                                                    alert('Failed to release whitelist')
-                                                                }
+                                                            onClick={() => {
+                                                                setSelectedBooking(booking)
+                                                                setShowReleaseModal(true)
+                                                                setOpenMenus({ ...openMenus, [booking.id]: false })
                                                             }}
                                                             className="flex items-center w-full px-4 py-2 text-sm text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20"
                                                         >
@@ -941,6 +954,30 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                     quantity={transferModal.booking.quantity}
                 />
             )}
+
+            {/* Release Whitelist Modal */}
+            <ReleaseWhitelistModal
+                isOpen={showReleaseModal}
+                onClose={() => {
+                    setShowReleaseModal(false)
+                    setSelectedBooking(null)
+                }}
+                booking={selectedBooking ? {
+                    id: selectedBooking.id,
+                    booking_id: selectedBooking.booking_id || selectedBooking.id.slice(0, 8),
+                    user: {
+                        full_name: selectedBooking.profile.full_name,
+                        email: selectedBooking.profile.email
+                    },
+                    quantity: selectedBooking.quantity,
+                    total_amount: selectedBooking.total_amount,
+                    booking_date: selectedBooking.booking_date || selectedBooking.created_at,
+                    event: {
+                        title: event.title
+                    }
+                } : null}
+                onConfirm={handleReleaseConfirm}
+            />
         </>
     )
 }

@@ -4,7 +4,7 @@ import { successResponse } from '@/lib/security/api-utils'
 import { getSecurityMetrics } from '@/lib/security/audit'
 import { getEnvironmentSecurityHeaders } from '@/lib/security/headers'
 
-async function getSecurityStatusHandler(_request: NextRequest) {
+async function getSecurityStatusHandler() {
   try {
     const metrics = getSecurityMetrics()
     const securityHeaders = getEnvironmentSecurityHeaders()
@@ -120,5 +120,5 @@ export async function GET(request: NextRequest) {
     return rateLimitResult
   }
   
-  return getSecurityStatusHandler(request)
+  return getSecurityStatusHandler()
 }

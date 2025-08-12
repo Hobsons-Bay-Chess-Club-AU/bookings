@@ -42,7 +42,7 @@ export function logSecurityEvent(event: Omit<SecurityEvent, 'timestamp'>): void 
 }
 
 // Extract request information for security logging
-export function extractRequestInfo(request: NextRequest, _userId?: string): {
+export function extractRequestInfo(request: NextRequest): {
   ip: string
   userAgent: string
   path: string
@@ -74,7 +74,7 @@ export function auditRateLimit(
   reset: number,
   userId?: string
 ): void {
-  const requestInfo = extractRequestInfo(request, userId)
+  const requestInfo = extractRequestInfo(request)
   
   logSecurityEvent({
     eventType: 'rate_limit',
@@ -97,7 +97,7 @@ export function auditSuspiciousActivity(
   details: Record<string, unknown>,
   userId?: string
 ): void {
-  const requestInfo = extractRequestInfo(request, userId)
+  const requestInfo = extractRequestInfo(request)
   
   logSecurityEvent({
     eventType: 'suspicious_activity',
@@ -138,7 +138,7 @@ export function auditAuthzFailure(
   requiredRole: string,
   actualRole: string
 ): void {
-  const requestInfo = extractRequestInfo(request, userId)
+  const requestInfo = extractRequestInfo(request)
   
   logSecurityEvent({
     eventType: 'authorization_failure',
@@ -161,7 +161,7 @@ export function auditInputValidation(
   validationType: string,
   userId?: string
 ): void {
-  const requestInfo = extractRequestInfo(request, userId)
+  const requestInfo = extractRequestInfo(request)
   
   logSecurityEvent({
     eventType: 'input_validation',
@@ -186,7 +186,7 @@ export function auditFileUpload(
   validationResult: { isValid: boolean; error?: string },
   userId?: string
 ): void {
-  const requestInfo = extractRequestInfo(request, userId)
+  const requestInfo = extractRequestInfo(request)
   
   logSecurityEvent({
     eventType: 'file_upload',
@@ -211,7 +211,7 @@ export function auditApiAccess(
   responseTime: number,
   userId?: string
 ): void {
-  const requestInfo = extractRequestInfo(request, userId)
+  const requestInfo = extractRequestInfo(request)
   
   logSecurityEvent({
     eventType: 'api_access',

@@ -62,7 +62,7 @@ export default async function WhitelistedManagerPage({ params }: PageProps) {
       quantity,
       total_amount,
       booking_date,
-      profiles:profiles!bookings_user_id_fkey (id, email, full_name, phone)
+      profiles!bookings_user_id_fkey (id, email, full_name)
     `)
     .eq('event_id', eventId)
     .eq('status', 'whitelisted')
@@ -92,7 +92,6 @@ export default async function WhitelistedManagerPage({ params }: PageProps) {
               id: b.profiles?.[0]?.id,
               full_name: b.profiles?.[0]?.full_name,
               email: b.profiles?.[0]?.email,
-              phone: b.profiles?.[0]?.phone,
             }
           }))}
         />

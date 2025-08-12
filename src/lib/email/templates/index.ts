@@ -12,6 +12,7 @@ export { default as UserProfileUpdateEmail } from './user-profile-update'
 export { default as BookingTransferNotificationEmail } from './booking-transfer-notification'
 export { default as OrganizerBookingNotificationEmail } from './organizer-booking-notification'
 export { default as WhitelistedBookingEmail } from './whitelisted-booking'
+export { default as WhitelistReleasedEmail } from './whitelist-released'
 
 // Render Functions
 export { renderBookingConfirmationEmail } from './booking-confirmation'
@@ -23,6 +24,7 @@ export { renderUserProfileUpdateEmail } from './user-profile-update'
 export { renderBookingTransferNotificationEmail } from './booking-transfer-notification'
 export { renderOrganizerBookingNotificationEmail } from './organizer-booking-notification'
 export { renderWhitelistedBookingEmail } from './whitelisted-booking'
+export { renderWhitelistReleasedEmail } from './whitelist-released'
 
 // Legacy exports for backward compatibility
 export { BookingConfirmationEmail as BookingConfirmationEmailLegacy } from '../templates'

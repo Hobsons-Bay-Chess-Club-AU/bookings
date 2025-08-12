@@ -13,7 +13,7 @@ export function rateLimitedApi(handler: ApiHandler): ApiHandler {
 }
 
 // Higher-order function for API routes with custom rate limit config
-export function createRateLimitedApi(_rateLimitType: 'auth' | 'booking' | 'events' | 'admin' | 'content' | 'search' | 'webhooks' | 'general') {
+export function createRateLimitedApi() {
   return function(handler: ApiHandler): ApiHandler {
     return async (request: NextRequest, context?: { params: Promise<Record<string, string>> }) => {
       // Apply rate limiting
@@ -33,11 +33,11 @@ export function createRateLimitedApi(_rateLimitType: 'auth' | 'booking' | 'event
 }
 
 // Pre-configured rate limit wrappers for common use cases
-export const authApi = createRateLimitedApi('auth')
-export const bookingApi = createRateLimitedApi('booking')
-export const eventsApi = createRateLimitedApi('events')
-export const adminApi = createRateLimitedApi('admin')
-export const contentApi = createRateLimitedApi('content')
-export const searchApi = createRateLimitedApi('search')
-export const webhooksApi = createRateLimitedApi('webhooks')
-export const generalApi = createRateLimitedApi('general')
+export const authApi = createRateLimitedApi()
+export const bookingApi = createRateLimitedApi()
+export const eventsApi = createRateLimitedApi()
+export const adminApi = createRateLimitedApi()
+export const contentApi = createRateLimitedApi()
+export const searchApi = createRateLimitedApi()
+export const webhooksApi = createRateLimitedApi()
+export const generalApi = createRateLimitedApi()

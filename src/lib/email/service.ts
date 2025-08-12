@@ -106,7 +106,8 @@ import {
     renderWelcomeEmail, 
     renderPasswordResetEmail,
     renderOrganizerBookingNotificationEmail,
-    renderWhitelistedBookingEmail
+    renderWhitelistedBookingEmail,
+    renderWhitelistReleasedEmail
 } from './templates/index'
 import { resend } from './client'
 import { createClient } from '@/lib/supabase/server'
@@ -127,6 +128,7 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
         eventTitle: event.title,
         userEmail: user.email,
         userName: user.full_name,
+        status: booking.status,
         timestamp: new Date().toISOString()
     })
 
@@ -516,17 +518,124 @@ export async function sendWhitelistReleasedEmail(params: {
     eventTitle: string
     bookingId: string
     dashboardUrl: string
+    completePaymentUrl: string
+    eventDate?: string
+    eventLocation?: string
+    eventEndDate?: string
+    eventTimezone?: string
+    participantCount?: number
+    totalAmount?: number
+    organizerName?: string
+    organizerEmail?: string
+    eventDescription?: string
+    organizerPhone?: string
+    participants?: Array<{
+        first_name: string
+        last_name: string
+        date_of_birth?: string
+        contact_email?: string
+        contact_phone?: string
+        custom_data?: Record<string, unknown>
+    }>
 }) {
-    const { userEmail, userName, eventTitle, bookingId, dashboardUrl } = params
-    const subject = `Your booking for ${eventTitle} is now available`
-    const html = `
-        <div>
-            <p>Hi ${userName || 'there'},</p>
-            <p>Good news! Your whitelisted booking (<strong>${bookingId}</strong>) for <strong>${eventTitle}</strong> has been released. You can now complete payment to secure your spot.</p>
-            <p><a href="${dashboardUrl}" target="_blank" style="display:inline-block;padding:10px 16px;background:#4f46e5;color:#fff;border-radius:6px;text-decoration:none">Go to Dashboard</a></p>
-            <p>If the button does not work, copy and paste this URL into your browser: ${dashboardUrl}</p>
-            <p>Thank you.</p>
-        </div>
-    `
-    return sendEmail({ to: userEmail, subject, html })
+    const { 
+        userEmail, 
+        userName, 
+        eventTitle, 
+        bookingId, 
+        dashboardUrl,
+        completePaymentUrl,
+        eventDate,
+        eventLocation,
+        eventEndDate,
+        eventTimezone,
+        participantCount,
+        totalAmount,
+        organizerName,
+        organizerEmail,
+        eventDescription,
+        organizerPhone,
+        participants
+    } = params
+
+    console.log('📧 [WHITELIST RELEASED] Starting email send:', {
+        bookingId,
+        eventTitle,
+        userEmail,
+        userName,
+        timestamp: new Date().toISOString()
+    })
+
+    try {
+        console.log('🎨 [WHITELIST RELEASED] Rendering email template:', {
+            bookingId,
+            timestamp: new Date().toISOString()
+        })
+
+        const { html, text } = await renderWhitelistReleasedEmail({
+            bookingId,
+            eventName: eventTitle,
+            eventDate: eventDate || new Date().toISOString(),
+            eventLocation: eventLocation || 'TBD',
+            eventEndDate,
+            eventTimezone,
+            participantCount: participantCount || 1,
+            totalAmount: totalAmount || 0,
+            organizerName: organizerName || 'Event Organizer',
+            organizerEmail: organizerEmail || '',
+            organizerPhone,
+            eventDescription,
+            participants: participants || [],
+            dashboardUrl,
+            completePaymentUrl
+        })
+
+        console.log('✅ [WHITELIST RELEASED] Email template rendered:', {
+            bookingId,
+            htmlLength: html.length,
+            textLength: text.length,
+            timestamp: new Date().toISOString()
+        })
+
+        console.log('📤 [WHITELIST RELEASED] Sending email via Resend:', {
+            bookingId,
+            from: process.env.RESEND_FROM_EMAIL || "",
+            to: userEmail,
+            subject: `Your booking for ${eventTitle} is now available`,
+            timestamp: new Date().toISOString()
+        })
+
+        const { data: emailData, error } = await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL || "",
+            to: userEmail,
+            subject: `Your booking for ${eventTitle} is now available`,
+            html,
+            text
+        })
+
+        if (error) {
+            console.error('❌ [WHITELIST RELEASED] Failed to send email:', {
+                bookingId,
+                error: error.message,
+                timestamp: new Date().toISOString()
+            })
+            return { success: false, error: error.message }
+        }
+
+        console.log('✅ [WHITELIST RELEASED] Email sent successfully:', {
+            bookingId,
+            emailId: emailData?.id,
+            timestamp: new Date().toISOString()
+        })
+
+        return { success: true, data: emailData }
+    } catch (error) {
+        console.error('💥 [WHITELIST RELEASED] Exception during email send:', {
+            bookingId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            errorStack: error instanceof Error ? error.stack : undefined,
+            timestamp: new Date().toISOString()
+        })
+        return { success: false, error: 'Failed to send whitelist released email' }
+    }
 }

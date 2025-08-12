@@ -102,11 +102,13 @@ export async function GET(request: Request) {
           </div>
           <div tw="flex flex-col items-center">
             {/* Using <img> intentionally in OG image rendering context; Next Image is not supported here. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={qrApi} alt="QR" height={260} width={260} style={{ borderRadius: 12, background: '#ffffff', padding: 12 }} />
             <div tw="text-slate-300 mt-3 text-[16px]">Scan to view</div>
             {qrMapApi && (
               <div tw="flex flex-col items-center mt-6">
                 {/* Using <img> intentionally in OG image rendering context; Next Image is not supported here. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={qrMapApi} alt="Map QR" height={220} width={220} style={{ borderRadius: 12, background: '#ffffff', padding: 10 }} />
                 <div tw="text-slate-300 mt-2 text-[16px]">Directions</div>
               </div>

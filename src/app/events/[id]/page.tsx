@@ -366,14 +366,16 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                                                 initialStep={step}
                                                 resumeBookingId={resume}
                                             />
-                                            {event.max_attendees && event.current_attendees >= event.max_attendees && event.settings?.whitelist_enabled && (
-                                                <p className="mt-2 text-xs text-amber-700 dark:text-amber-300 text-center">Event is full. New registrations will be placed on the whitelist.</p>
-                                            )}
+                                            
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
+                            {event.max_attendees && event.current_attendees >= event.max_attendees && event.settings?.whitelist_enabled && (
+                                                <div className="py-3 w-full text-xs text-amber-700 dark:text-amber-300 text-center px-2 leading-relaxed break-words">
+                                                    Event is full. New registrations will be placed on the whitelist.
+                                                </div>
+                                            )}
                             {event.description && (
                                 <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                                     <MarkdownContent

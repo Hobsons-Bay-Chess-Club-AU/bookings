@@ -716,6 +716,25 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                     onStepChange(5)
                 }
                 setShouldRedirect(false)
+                
+                // Send whitelisted booking email
+                try {
+                    const emailResponse = await fetch('/api/bookings/send-whitelisted-email', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ bookingId: booking.id })
+                    })
+                    
+                    if (emailResponse.ok) {
+                        console.log('✅ [BOOKING-FORM] Whitelisted booking email sent successfully')
+                    } else {
+                        console.error('❌ [BOOKING-FORM] Failed to send whitelisted booking email')
+                    }
+                } catch (emailError) {
+                    console.error('❌ [BOOKING-FORM] Error sending whitelisted booking email:', emailError)
+                }
             } else if (isFreeEvent) {
                 console.log('🎉 Free event detected, setting up redirect')
                 console.log('📝 Setting currentBookingId:', booking.id)
@@ -869,7 +888,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
             </div>
 
             {/* Booking in Progress Warning */}
-            {step === 5 && currentBookingId && currentBookingId.trim() !== '' && (
+            {step === 5 && currentBookingId && currentBookingId.trim() !== '' &&  !whitelistEnabled &&(
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex">
                         <div className="flex-shrink-0">

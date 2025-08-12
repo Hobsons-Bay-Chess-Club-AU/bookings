@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import ReleaseWhitelistModal from '@/components/ui/release-whitelist-modal'
 
 type BookingRow = {
   id: string
@@ -10,7 +11,7 @@ type BookingRow = {
   quantity: number
   total_amount: number
   booking_date: string
-  user: { id?: string; full_name?: string; email?: string; phone?: string }
+  user: { id?: string; full_name?: string; email?: string }
 }
 
 interface WhitelistedManagerClientProps {
@@ -20,9 +21,10 @@ interface WhitelistedManagerClientProps {
 
 export default function WhitelistedManagerClient({ eventId, bookings }: WhitelistedManagerClientProps) {
   const [selected, setSelected] = useState<Record<string, boolean>>({})
-  const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({})
   const [bulkLoading, setBulkLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showReleaseModal, setShowReleaseModal] = useState(false)
+  const [selectedBooking, setSelectedBooking] = useState<BookingRow | null>(null)
 
   const rows = useMemo(() => bookings, [bookings])
   const allSelected = rows.length > 0 && rows.every((r) => selected[r.id])
@@ -41,24 +43,34 @@ export default function WhitelistedManagerClient({ eventId, bookings }: Whitelis
   const toggleOne = (id: string) => setSelected((s) => ({ ...s, [id]: !s[id] }))
 
   const releaseOne = async (id: string) => {
-    setError(null)
-    setLoadingIds((s) => ({ ...s, [id]: true }))
+    const booking = rows.find(r => r.id === id)
+    if (booking) {
+      setSelectedBooking(booking)
+      setShowReleaseModal(true)
+    }
+  }
+
+  const handleReleaseConfirm = async () => {
+    if (!selectedBooking) return
+    
     try {
       const res = await fetch('/api/admin/bookings/release-whitelist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookingId: id })
+        body: JSON.stringify({ bookingId: selectedBooking.id })
       })
+      
       if (!res.ok) {
         const data = await res.json()
-        setError(data.error || 'Failed to release')
-        return
+        throw new Error(data.error || 'Failed to release booking')
       }
+      
+      // Close modal and reload page
+      setShowReleaseModal(false)
+      setSelectedBooking(null)
       window.location.reload()
-    } catch (e) {
-      setError('Failed to release')
-    } finally {
-      setLoadingIds((s) => ({ ...s, [id]: false }))
+    } catch (error) {
+      throw error // Re-throw to be handled by the modal
     }
   }
 
@@ -80,7 +92,7 @@ export default function WhitelistedManagerClient({ eventId, bookings }: Whitelis
         }
       }
       window.location.reload()
-    } catch (e) {
+    } catch {
       setError('Failed during bulk release')
     } finally {
       setBulkLoading(false)
@@ -138,7 +150,6 @@ export default function WhitelistedManagerClient({ eventId, bookings }: Whitelis
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                     <div>{r.user.email}</div>
-                    {r.user.phone && <div className="text-xs text-gray-500">{r.user.phone}</div>}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                     <div>Qty: {r.quantity}</div>
@@ -148,10 +159,9 @@ export default function WhitelistedManagerClient({ eventId, bookings }: Whitelis
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => releaseOne(r.id)}
-                      disabled={!!loadingIds[r.id]}
-                      className="px-3 py-1.5 text-sm bg-amber-600 text-white rounded disabled:opacity-50"
+                      className="px-3 py-1.5 text-sm bg-amber-600 text-white rounded hover:bg-amber-700"
                     >
-                      {loadingIds[r.id] ? 'Releasing...' : 'Release'}
+                      Release
                     </button>
                   </td>
                 </tr>
@@ -160,6 +170,27 @@ export default function WhitelistedManagerClient({ eventId, bookings }: Whitelis
           </table>
         </div>
       )}
+
+      {/* Release Whitelist Modal */}
+      <ReleaseWhitelistModal
+        isOpen={showReleaseModal}
+        onClose={() => {
+          setShowReleaseModal(false)
+          setSelectedBooking(null)
+        }}
+        booking={selectedBooking ? {
+          id: selectedBooking.id,
+          booking_id: selectedBooking.booking_id || selectedBooking.id.slice(0, 8),
+          user: {
+            full_name: selectedBooking.user.full_name,
+            email: selectedBooking.user.email
+          },
+          quantity: selectedBooking.quantity,
+          total_amount: selectedBooking.total_amount,
+          booking_date: selectedBooking.booking_date
+        } : null}
+        onConfirm={handleReleaseConfirm}
+      />
     </div>
   )
 }

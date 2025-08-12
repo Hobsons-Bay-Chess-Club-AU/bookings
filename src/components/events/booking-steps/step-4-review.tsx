@@ -113,15 +113,15 @@ export default function Step4Review({
                         {discountInfo && discountInfo.totalDiscount > 0 && (
                             <>
                                 {discountInfo.appliedDiscounts.map((appliedDiscount, index) => (
-                                    <div key={index} className="flex justify-between items-center text-sm">
-                                        <span className="text-green-600 dark:text-green-300">
-                                            {appliedDiscount.discount.name}
+                                    <div key={index} className="flex justify-between items-start text-sm gap-2">
+                                        <span className="text-green-600 dark:text-green-300 text-left flex-1 min-w-0">
+                                            <span className="break-words">{appliedDiscount.discount.name}</span>
                                             {appliedDiscount.type === 'participant_based' && 
-                                                ` (${appliedDiscount.eligibleParticipants} eligible)`}
+                                                <span className="block text-xs">({appliedDiscount.eligibleParticipants} eligible)</span>}
                                             {appliedDiscount.discount.rules && appliedDiscount.discount.rules.some((rule) => rule.rule_type === 'previous_event') && 
-                                                ` (Previous event discount)`}
+                                                <span className="block text-xs">(Previous event discount)</span>}
                                         </span>
-                                        <span className="text-green-600 dark:text-green-300 font-medium">
+                                        <span className="text-green-600 dark:text-green-300 font-medium flex-shrink-0">
                                             -${appliedDiscount.amount.toFixed(2)}
                                         </span>
                                     </div>
@@ -168,12 +168,12 @@ export default function Step4Review({
                     <div className="space-y-3">
                         {participants.map((participant, index) => (
                             <div key={index} className="border-b border-gray-200 dark:border-gray-700 pb-2 last:border-b-0">
-                                <p className="text-gray-700 dark:text-gray-300 font-medium">
+                                <p className="text-gray-700 dark:text-gray-300 font-medium break-words">
                                     {index + 1}. {participant.first_name} {participant.last_name}
                                 </p>
-                                                            {participant.contact_email && (
-                                <p className="text-gray-600 dark:text-gray-400 text-sm">{participant.contact_email}</p>
-                            )}
+                                {participant.contact_email && (
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm break-all">{participant.contact_email}</p>
+                                )}
                                 {participant.date_of_birth && (
                                     <p className="text-gray-600 dark:text-gray-400 text-sm">DOB: {participant.date_of_birth}</p>
                                 )}
@@ -200,7 +200,8 @@ export default function Step4Review({
 
                                     return (
                                         <div key={field.id} className="text-sm text-gray-600 dark:text-gray-400">
-                                            <span className="font-medium">{field.label}:</span> {displayValue as string}
+                                            <span className="font-medium">{field.label}:</span> 
+                                            <span className="break-words ml-1">{displayValue as string}</span>
                                         </div>
                                     )
                                 })}
@@ -212,15 +213,15 @@ export default function Step4Review({
                 {/* Terms and Marketing */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                     <div className="space-y-4">
-                        <div className="flex items-start">
+                        <div className="flex items-start space-x-3">
                             <input
                                 type="checkbox"
                                 id="terms"
                                 checked={agreedToTerms}
                                 onChange={(e) => setAgreedToTerms(e.target.checked)}
-                                className="mt-1 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 dark:bg-gray-800 dark:checked:bg-indigo-600"
+                                className="mt-1 h-4 w-4 flex-shrink-0 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 dark:bg-gray-800 dark:checked:bg-indigo-600"
                             />
-                            <label htmlFor="terms" className="ml-3 text-sm text-gray-700 dark:text-gray-200">
+                            <label htmlFor="terms" className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
                                 I agree to the{' '}
                                 <a href="/content/terms-of-use" target="_blank" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
                                     Terms and Conditions
@@ -253,12 +254,12 @@ export default function Step4Review({
                         {/* Event Terms & Conditions Modal */}
                         {event.settings?.terms_conditions && (
                             <dialog id="event-terms-modal" className="modal">
-                                <div className="modal-box max-w-2xl bg-white dark:bg-gray-800">
+                                <div className="modal-box max-w-2xl w-full mx-4 bg-white dark:bg-gray-800">
                                     <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-4">
                                         Event Terms & Conditions
                                     </h3>
-                                    <div className="prose dark:prose-invert max-w-none">
-                                        <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 text-sm">
+                                    <div className="prose dark:prose-invert max-w-none overflow-y-auto max-h-96">
+                                        <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 text-sm break-words">
                                             {event.settings.terms_conditions}
                                         </div>
                                     </div>
@@ -283,15 +284,15 @@ export default function Step4Review({
                             </dialog>
                         )}
 
-                        <div className="flex items-start">
+                        <div className="flex items-start space-x-3">
                             <input
                                 type="checkbox"
                                 id="marketing"
                                 checked={optInMarketing}
                                 onChange={(e) => setOptInMarketing(e.target.checked)}
-                                className="mt-1 h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 dark:bg-gray-800 dark:checked:bg-indigo-600"
+                                className="mt-1 h-4 w-4 flex-shrink-0 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 dark:bg-gray-800 dark:checked:bg-indigo-600"
                             />
-                            <label htmlFor="marketing" className="ml-3 text-sm text-gray-700 dark:text-gray-200">
+                            <label htmlFor="marketing" className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
                                 I would like to receive marketing emails about future events and updates
                             </label>
                         </div>
@@ -306,7 +307,7 @@ export default function Step4Review({
                     {/* Payment Warning for Paid Events */}
                     {!isFreeEvent && (
                         <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md">
-                            <p className="text-sm text-blue-700 dark:text-blue-200">
+                            <p className="text-sm text-blue-700 dark:text-blue-200 leading-relaxed">
                                 {shouldWhitelist ? (
                                     <>
                                         <strong>Next Step:</strong> We will reserve your booking with one spot available. 
@@ -322,7 +323,7 @@ export default function Step4Review({
                         </div>
                     )}
 
-                    <div className="flex justify-between mt-6">
+                    <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
                         <button
                             type="button"
                             onClick={onBack}

@@ -13,14 +13,26 @@ export async function POST(request: NextRequest) {
     }
 
     const { bookingId } = await request.json()
+    
     if (!bookingId) {
       return NextResponse.json({ error: 'bookingId is required' }, { status: 400 })
     }
-
-    // Load booking with event and user
+    
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
-      .select(`*, events!bookings_event_id_fkey (id, title), profiles!bookings_user_id_fkey (id, email, full_name)`) // alias path may vary
+      .select(`
+        *,
+        events!bookings_event_id_fkey (
+          id, 
+          title, 
+          start_date, 
+          end_date, 
+          location, 
+          description,
+          organizer:profiles!events_organizer_id_fkey (full_name, email)
+        ), 
+        profiles!bookings_user_id_fkey (id, email, full_name)
+      `)
       .eq('id', bookingId)
       .single()
 
@@ -55,15 +67,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to update booking' }, { status: 500 })
     }
 
+    // Fetch participants for this booking
+    const { data: participants } = await supabase
+      .from('participants')
+      .select('*')
+      .eq('booking_id', bookingId)
+      .order('created_at', { ascending: true })
+
     // Email user
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/dashboard`
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const dashboardUrl = `${baseUrl}/dashboard`
+    const completePaymentUrl = `${baseUrl}/events/${booking.event_id}?step=4&resume=${booking.id}`
+    
     if (booking.profiles?.email) {
       await sendWhitelistReleasedEmail({
         userEmail: booking.profiles.email,
         userName: booking.profiles.full_name || undefined,
         eventTitle: booking.events?.title || 'Event',
         bookingId: booking.booking_id || booking.id,
-        dashboardUrl
+        dashboardUrl,
+        completePaymentUrl,
+        eventDate: booking.events?.start_date,
+        eventLocation: booking.events?.location,
+        eventEndDate: booking.events?.end_date,
+        participantCount: booking.quantity,
+        totalAmount: booking.total_amount,
+        organizerName: booking.events?.organizer?.full_name || 'Event Organizer',
+        organizerEmail: booking.events?.organizer?.email || '',
+        organizerPhone: undefined, // Phone field doesn't exist in profiles table
+        eventDescription: booking.events?.description,
+        participants: participants || []
       })
     }
 
