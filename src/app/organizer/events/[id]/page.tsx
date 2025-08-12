@@ -23,6 +23,18 @@ import {
 } from 'react-icons/hi2'
 import { Event, EventPricing, EventDiscount, Booking, Participant, FormField, EventSection } from '@/lib/types/database'
 
+interface ParticipantWithSection extends Participant {
+    section?: EventSection
+}
+
+interface BookingWithSections extends Booking {
+    participants?: Array<{
+        id: string
+        section_id?: string
+        section?: EventSection
+    }>
+}
+
 interface TabData {
     id: string
     name: string
@@ -35,10 +47,10 @@ export default function EventViewPage() {
     const [activeTab, setActiveTab] = useState('overview')
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
-    const [bookings, setBookings] = useState<Booking[]>([])
+    const [bookings, setBookings] = useState<BookingWithSections[]>([])
     const [pricing, setPricing] = useState<EventPricing[]>([])
     const [discounts, setDiscounts] = useState<EventDiscount[]>([])
-    const [participants, setParticipants] = useState<Participant[]>([])
+    const [participants, setParticipants] = useState<ParticipantWithSection[]>([])
     const [customFields, setCustomFields] = useState<FormField[]>([])
     const [sections, setSections] = useState<EventSection[]>([])
     const [stats, setStats] = useState({
@@ -60,7 +72,6 @@ export default function EventViewPage() {
         { id: 'discounts', name: 'Discounts', icon: <HiTag className="h-5 w-5" />, count: discounts.length },
         { id: 'sections', name: 'Sections', icon: <HiDocumentDuplicate className="h-5 w-5" />, count: sections.length },
         { id: 'custom-fields', name: 'Custom Fields', icon: <HiDocumentText className="h-5 w-5" />, count: customFields.length },
-        { id: 'location', name: 'Location', icon: <HiMapPin className="h-5 w-5" /> },
         { id: 'settings', name: 'Settings', icon: <HiCog8Tooth className="h-5 w-5" /> }
     ]
 
@@ -87,7 +98,18 @@ export default function EventViewPage() {
             // Fetch bookings
             const { data: bookingsData, error: bookingsError } = await supabase
                 .from('bookings')
-                .select('*')
+                .select(`
+                    *,
+                    participants (
+                        id,
+                        section_id,
+                        section:event_sections!participants_section_id_fkey (
+                            id,
+                            title,
+                            description
+                        )
+                    )
+                `)
                 .eq('event_id', eventId)
                 .order('created_at', { ascending: false })
 
@@ -144,11 +166,18 @@ export default function EventViewPage() {
 
             // Fetch participants (from all bookings)
             if (bookingsData) {
-                const allParticipants: Participant[] = []
+                const allParticipants: ParticipantWithSection[] = []
                 for (const booking of bookingsData) {
                     const { data: participantsData } = await supabase
                         .from('participants')
-                        .select('*')
+                        .select(`
+                            *,
+                            section:event_sections!participants_section_id_fkey (
+                                id,
+                                title,
+                                description
+                            )
+                        `)
                         .eq('booking_id', booking.id)
                     
                     if (participantsData) {
@@ -443,55 +472,152 @@ export default function EventViewPage() {
                             </div>
                         </div>
 
-                        {/* Location Summary */}
+                        {/* Location Information */}
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
                             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Location Information</h3>
                                 <Link
-                                    href={`/organizer/events/${eventId}?tab=location`}
+                                    href={`/organizer/events/${eventId}/edit`}
                                     className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm font-medium"
                                 >
-                                    View Details →
+                                    Edit Event →
                                 </Link>
                             </div>
                             <div className="p-6">
                                 {!event.location ? (
-                                    <p className="text-gray-500 dark:text-gray-400 text-center py-4">No location information available for this event.</p>
+                                    <div className="text-center py-8">
+                                        <HiMapPin className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                                        <p className="text-gray-500 dark:text-gray-400 mb-4">No location information available for this event.</p>
+                                        <p className="text-sm text-gray-400 dark:text-gray-500">Add location details when editing the event.</p>
+                                    </div>
                                 ) : (
-                                    <div className="space-y-3">
-                                        <div className="flex items-start">
-                                            <HiMapPin className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5 mr-3 flex-shrink-0" />
-                                            <div>
-                                                <p className="text-gray-900 dark:text-gray-100 font-medium">{event.location}</p>
-                                                {event.location_settings?.details && (
-                                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{event.location_settings.details}</p>
+                                    <div className="space-y-6">
+                                        {/* Location Details */}
+                                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">Location Information</h4>
+                                            <div className="space-y-2">
+                                                <div className="flex items-start">
+                                                    <HiMapPin className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5 mr-3 flex-shrink-0" />
+                                                    <div>
+                                                        <p className="text-gray-900 dark:text-gray-100 font-medium">{event.location}</p>
+                                                        {event.location_settings?.details && (
+                                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{event.location_settings.details}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                {event.location_settings?.url && (
+                                                    <div className="flex items-center mt-3">
+                                                        <HiArrowTopRightOnSquare className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-2" />
+                                                        <a
+                                                            href={event.location_settings.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm font-medium"
+                                                        >
+                                                            View on Google Maps
+                                                        </a>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
-                                        {event.location_settings?.url && (
-                                            <div className="flex items-center">
-                                                <HiArrowTopRightOnSquare className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-2" />
-                                                <a
-                                                    href={event.location_settings.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm font-medium"
-                                                >
-                                                    View on Google Maps
-                                                </a>
+
+                                        {/* Map */}
+                                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">Map</h4>
+                                            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+                                                {event.location_settings?.url ? (
+                                                    <iframe
+                                                        src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(event.location)}`}
+                                                        width="100%"
+                                                        height="300"
+                                                        style={{ border: 0 }}
+                                                        allowFullScreen
+                                                        loading="lazy"
+                                                        referrerPolicy="no-referrer-when-downgrade"
+                                                        title="Event Location"
+                                                    />
+                                                ) : (
+                                                    <div className="h-64 flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+                                                        <div className="text-center">
+                                                            <HiMapPin className="h-8 w-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
+                                                            <p className="text-gray-500 dark:text-gray-400">Map preview not available</p>
+                                                            <p className="text-sm text-gray-400 dark:text-gray-500">Add a location URL to enable map preview</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Directions */}
+                                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">Get Directions</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                                                    <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">From Your Location</h5>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Get directions from your current location to the event venue.</p>
+                                                    <button
+                                                        onClick={() => {
+                                                            const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.location)}`;
+                                                            window.open(url, '_blank');
+                                                        }}
+                                                        className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 text-sm font-medium"
+                                                    >
+                                                        Get Directions
+                                                    </button>
+                                                </div>
+                                                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                                                    <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Share Location</h5>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Share the event location with participants and attendees.</p>
+                                                    <button
+                                                        onClick={() => {
+                                                            const shareText = `Join me at: ${event.title}\nLocation: ${event.location}\nDate: ${new Date(event.start_date).toLocaleDateString()}`;
+                                                            if (navigator.share) {
+                                                                navigator.share({
+                                                                    title: event.title,
+                                                                    text: shareText,
+                                                                    url: window.location.href
+                                                                });
+                                                            } else {
+                                                                navigator.clipboard.writeText(shareText);
+                                                                alert('Location copied to clipboard!');
+                                                            }
+                                                        }}
+                                                        className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm font-medium"
+                                                    >
+                                                        Share Location
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Additional Location Info */}
+                                        {(event.location_settings?.details || event.location_settings?.url) && (
+                                            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">Additional Information</h4>
+                                                <div className="space-y-3">
+                                                    {event.location_settings?.details && (
+                                                        <div>
+                                                            <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Venue Details</h5>
+                                                            <p className="text-sm text-gray-600 dark:text-gray-400">{event.location_settings.details}</p>
+                                                        </div>
+                                                    )}
+                                                    {event.location_settings?.url && (
+                                                        <div>
+                                                            <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">External Links</h5>
+                                                            <a
+                                                                href={event.location_settings.url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm font-medium flex items-center"
+                                                            >
+                                                                <HiArrowTopRightOnSquare className="h-4 w-4 mr-1" />
+                                                                Venue Website
+                                                            </a>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         )}
-                                        <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-                                            <button
-                                                onClick={() => {
-                                                    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.location)}`;
-                                                    window.open(url, '_blank');
-                                                }}
-                                                className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 text-sm font-medium"
-                                            >
-                                                Get Directions
-                                            </button>
-                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -556,6 +682,9 @@ export default function EventViewPage() {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Booking ID</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customer</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quantity</th>
+                                        {event?.has_sections && (
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Section</th>
+                                        )}
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
@@ -573,6 +702,32 @@ export default function EventViewPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                 {booking.quantity}
                                             </td>
+                                            {event?.has_sections && (
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                                    {booking.participants && booking.participants.length > 0 ? (
+                                                        <div className="space-y-1">
+                                                            {booking.participants.map((participant) => (
+                                                                <div key={participant.id}>
+                                                                    {participant.section ? (
+                                                                        <div className="text-xs">
+                                                                            <div className="font-medium">{participant.section.title}</div>
+                                                                            {participant.section.description && (
+                                                                                <div className="text-gray-500 dark:text-gray-400">
+                                                                                    {participant.section.description}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="text-xs text-gray-400 dark:text-gray-500 italic">No section</span>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-gray-400 dark:text-gray-500 italic">No participants</span>
+                                                    )}
+                                                </td>
+                                            )}
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                 {formatCurrency(booking.total_amount)}
                                             </td>
@@ -611,6 +766,9 @@ export default function EventViewPage() {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Phone</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date of Birth</th>
+                                        {event?.has_sections && (
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Section</th>
+                                        )}
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Booking ID</th>
                                     </tr>
                                 </thead>
@@ -629,6 +787,22 @@ export default function EventViewPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                 {participant.date_of_birth ? new Date(participant.date_of_birth).toLocaleDateString() : '-'}
                                             </td>
+                                            {event?.has_sections && (
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                                    {participant.section ? (
+                                                        <div>
+                                                            <div className="font-medium">{participant.section.title}</div>
+                                                            {participant.section.description && (
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                                    {participant.section.description}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-gray-400 dark:text-gray-500 italic">No section assigned</span>
+                                                    )}
+                                                </td>
+                                            )}
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                 {participant.booking_id?.slice(0, 8) || '-'}
                                             </td>
@@ -880,157 +1054,7 @@ export default function EventViewPage() {
                     </div>
                 )}
 
-                {activeTab === 'location' && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Event Location</h3>
-                            <Link
-                                href={`/organizer/events/${eventId}/edit`}
-                                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm font-medium"
-                            >
-                                Edit Event →
-                            </Link>
-                        </div>
-                        <div className="p-6">
-                            {!event?.location ? (
-                                <div className="text-center py-8">
-                                    <HiMapPin className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-                                    <p className="text-gray-500 dark:text-gray-400 mb-4">No location information available for this event.</p>
-                                    <p className="text-sm text-gray-400 dark:text-gray-500">Add location details when editing the event.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-6">
-                                    {/* Location Details */}
-                                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                                        <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">Location Information</h4>
-                                        <div className="space-y-2">
-                                            <div className="flex items-start">
-                                                <HiMapPin className="h-5 w-5 text-gray-400 dark:text-gray-500 mt-0.5 mr-3 flex-shrink-0" />
-                                                <div>
-                                                    <p className="text-gray-900 dark:text-gray-100 font-medium">{event.location}</p>
-                                                                            {event.location_settings?.details && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{event.location_settings.details}</p>
-                        )}
-                                                </div>
-                                            </div>
-                                            {event.location_settings?.url && (
-                                                <div className="flex items-center mt-3">
-                                                    <HiArrowTopRightOnSquare className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-2" />
-                                                    <a
-                                                        href={event.location_settings.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm font-medium"
-                                                    >
-                                                        View on Google Maps
-                                                    </a>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Map */}
-                                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                                        <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">Map</h4>
-                                        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
-                                            {event.location_settings?.url ? (
-                                                <iframe
-                                                    src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(event.location)}`}
-                                                    width="100%"
-                                                    height="400"
-                                                    style={{ border: 0 }}
-                                                    allowFullScreen
-                                                    loading="lazy"
-                                                    referrerPolicy="no-referrer-when-downgrade"
-                                                    title="Event Location"
-                                                />
-                                            ) : (
-                                                <div className="h-96 flex items-center justify-center bg-gray-100 dark:bg-gray-700">
-                                                    <div className="text-center">
-                                                        <HiMapPin className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
-                                                        <p className="text-gray-500 dark:text-gray-400">Map preview not available</p>
-                                                        <p className="text-sm text-gray-400 dark:text-gray-500">Add a location URL to enable map preview</p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Directions */}
-                                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                                        <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">Get Directions</h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                                                <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">From Your Location</h5>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Get directions from your current location to the event venue.</p>
-                                                <button
-                                                    onClick={() => {
-                                                        const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.location)}`;
-                                                        window.open(url, '_blank');
-                                                    }}
-                                                    className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 text-sm font-medium"
-                                                >
-                                                    Get Directions
-                                                </button>
-                                            </div>
-                                            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                                                <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Share Location</h5>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Share the event location with participants and attendees.</p>
-                                                <button
-                                                    onClick={() => {
-                                                        const shareText = `Join me at: ${event.title}\nLocation: ${event.location}\nDate: ${new Date(event.start_date).toLocaleDateString()}`;
-                                                        if (navigator.share) {
-                                                            navigator.share({
-                                                                title: event.title,
-                                                                text: shareText,
-                                                                url: window.location.href
-                                                            });
-                                                        } else {
-                                                            navigator.clipboard.writeText(shareText);
-                                                            alert('Location copied to clipboard!');
-                                                        }
-                                                    }}
-                                                    className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm font-medium"
-                                                >
-                                                    Share Location
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Additional Location Info */}
-                                    {(event.location_settings?.details || event.location_settings?.url) && (
-                                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                                            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">Additional Information</h4>
-                                            <div className="space-y-3">
-                                                {event.location_settings?.details && (
-                                                    <div>
-                                                        <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Venue Details</h5>
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400">{event.location_settings.details}</p>
-                                                    </div>
-                                                )}
-                                                {event.location_settings?.url && (
-                                                    <div>
-                                                        <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">External Links</h5>
-                                                        <a
-                                                            href={event.location_settings.url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm font-medium flex items-center"
-                                                        >
-                                                            <HiArrowTopRightOnSquare className="h-4 w-4 mr-1" />
-                                                            Venue Website
-                                                        </a>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
+                
 
                 {activeTab === 'settings' && (
                     <div className="space-y-6">

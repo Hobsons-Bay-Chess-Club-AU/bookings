@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { EventSection, SectionPricing, PricingType, MembershipType } from '@/lib/types/database'
-import { HiPlus, HiTrash } from 'react-icons/hi2'
+import { HiPlus, HiTrash, HiPencil } from 'react-icons/hi2'
 
 interface SectionPricingModalProps {
     section: EventSection
@@ -13,6 +13,7 @@ interface SectionPricingModalProps {
 export default function SectionPricingModal({ section, onClose, onPricingUpdated }: SectionPricingModalProps) {
     const [pricingOptions, setPricingOptions] = useState<SectionPricing[]>([])
     const [showAddForm, setShowAddForm] = useState(false)
+    const [editingPricing, setEditingPricing] = useState<SectionPricing | null>(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
 
@@ -82,6 +83,34 @@ export default function SectionPricingModal({ section, onClose, onPricingUpdated
         } catch (error) {
             console.error('Error deleting pricing:', error)
             setError('Failed to delete pricing option')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleEditPricing = async (pricingData: Partial<SectionPricing>) => {
+        if (!editingPricing) return
+
+        setLoading(true)
+        try {
+            const response = await fetch(`/api/sections/${section.id}/pricing/${editingPricing.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(pricingData),
+            })
+
+            if (!response.ok) {
+                throw new Error('Failed to update pricing option')
+            }
+
+            await fetchPricing()
+            setEditingPricing(null)
+            onPricingUpdated()
+        } catch (error) {
+            console.error('Error updating pricing:', error)
+            setError('Failed to update pricing option')
         } finally {
             setLoading(false)
         }
@@ -168,6 +197,14 @@ export default function SectionPricingModal({ section, onClose, onPricingUpdated
                                                 </div>
                                             </div>
                                             <button
+                                                onClick={() => setEditingPricing(pricing)}
+                                                disabled={loading}
+                                                className="inline-flex items-center px-2 py-1 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                                                title="Edit pricing option"
+                                            >
+                                                <HiPencil className="h-4 w-4" />
+                                            </button>
+                                            <button
                                                 onClick={() => handleDeletePricing(pricing.id)}
                                                 disabled={loading}
                                                 className="inline-flex items-center px-2 py-1 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
@@ -192,6 +229,16 @@ export default function SectionPricingModal({ section, onClose, onPricingUpdated
                     />
                 )}
 
+                {/* Edit Pricing Form */}
+                {editingPricing && (
+                    <EditPricingForm
+                        pricing={editingPricing}
+                        onSubmit={handleEditPricing}
+                        onCancel={() => setEditingPricing(null)}
+                        loading={loading}
+                    />
+                )}
+
                 <div className="flex justify-end">
                     <button
                         onClick={onClose}
@@ -201,6 +248,180 @@ export default function SectionPricingModal({ section, onClose, onPricingUpdated
                     </button>
                 </div>
             </div>
+        </div>
+    )
+}
+
+interface EditPricingFormProps {
+    pricing: SectionPricing
+    onSubmit: (pricingData: Partial<SectionPricing>) => void
+    onCancel: () => void
+    loading: boolean
+}
+
+function EditPricingForm({ pricing, onSubmit, onCancel, loading }: EditPricingFormProps) {
+    const [formData, setFormData] = useState({
+        name: pricing.name,
+        description: pricing.description || '',
+        pricing_type: pricing.pricing_type as string,
+        membership_type: pricing.membership_type as string,
+        price: pricing.price.toString(),
+        start_date: new Date(pricing.start_date).toISOString().slice(0, 16),
+        end_date: new Date(pricing.end_date).toISOString().slice(0, 16),
+        max_tickets: pricing.max_tickets ? pricing.max_tickets.toString() : ''
+    })
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        onSubmit({
+            ...formData,
+            price: parseFloat(formData.price),
+            pricing_type: formData.pricing_type as PricingType,
+            membership_type: formData.membership_type as MembershipType,
+            max_tickets: formData.max_tickets ? parseInt(formData.max_tickets) : undefined
+        })
+    }
+
+    return (
+        <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
+            <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                Edit Pricing Option: {pricing.name}
+            </h4>
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Name *
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.name}
+                            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="e.g., Regular Admission"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Price *
+                        </label>
+                        <input
+                            type="number"
+                            required
+                            min="0"
+                            step="0.01"
+                            value={formData.price}
+                            onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="25.00"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Description
+                    </label>
+                    <textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                        rows={2}
+                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Optional description"
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Pricing Type
+                        </label>
+                        <select
+                            value={formData.pricing_type}
+                            onChange={(e) => setFormData(prev => ({ ...prev, pricing_type: e.target.value }))}
+                            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            <option value="regular">Regular</option>
+                            <option value="early_bird">Early Bird</option>
+                            <option value="late_bird">Late Bird</option>
+                            <option value="special">Special</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Membership Type
+                        </label>
+                        <select
+                            value={formData.membership_type}
+                            onChange={(e) => setFormData(prev => ({ ...prev, membership_type: e.target.value }))}
+                            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            <option value="all">All Members</option>
+                            <option value="member">Members Only</option>
+                            <option value="non_member">Non-Members Only</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Max Tickets
+                        </label>
+                        <input
+                            type="number"
+                            min="1"
+                            value={formData.max_tickets}
+                            onChange={(e) => setFormData(prev => ({ ...prev, max_tickets: e.target.value }))}
+                            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="Leave empty for unlimited"
+                        />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Start Date *
+                        </label>
+                        <input
+                            type="datetime-local"
+                            required
+                            value={formData.start_date}
+                            onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            End Date *
+                        </label>
+                        <input
+                            type="datetime-local"
+                            required
+                            value={formData.end_date}
+                            onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
+                            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                    </div>
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        disabled={loading}
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                    >
+                        {loading ? 'Updating...' : 'Update Pricing'}
+                    </button>
+                </div>
+            </form>
         </div>
     )
 }

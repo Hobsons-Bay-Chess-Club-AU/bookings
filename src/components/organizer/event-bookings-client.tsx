@@ -560,6 +560,11 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Booking Details
                                     </th>
+                                    {event.has_sections && (
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            Section
+                                        </th>
+                                    )}
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Status
                                     </th>
@@ -618,6 +623,32 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                 )}
                                             </div>
                                         </td>
+                                        {event.has_sections && (
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="space-y-1">
+                                                    {booking.participants && booking.participants.length > 0 ? (
+                                                        booking.participants.map((participant, index) => (
+                                                            <div key={participant.id || index} className="text-xs">
+                                                                {participant.section ? (
+                                                                    <div>
+                                                                        <div className="font-medium">{participant.section.title}</div>
+                                                                        {participant.section.description && (
+                                                                            <div className="text-gray-500 dark:text-gray-400">
+                                                                                {participant.section.description}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-gray-400 dark:text-gray-500 italic">No section</span>
+                                                                )}
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <span className="text-gray-400 dark:text-gray-500 italic">No participants</span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        )}
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="space-y-1">
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>

@@ -5,6 +5,7 @@ import { Event, EventSection } from '@/lib/types/database'
 import { HiPlus, HiPencil, HiTrash, HiCalendarDays, HiClock, HiUsers, HiCurrencyDollar, HiCog6Tooth } from 'react-icons/hi2'
 import { formatInTimezone } from '@/lib/utils/timezone'
 import SectionPricingModal from '@/components/organizer/section-pricing-modal'
+import ConfirmationModal from '@/components/ui/confirmation-modal'
 
 interface SectionsManagerClientProps {
     event: Event
@@ -17,6 +18,14 @@ export default function SectionsManagerClient({ event }: SectionsManagerClientPr
     const [loading, setLoading] = useState(false)
     const [showPricingModal, setShowPricingModal] = useState(false)
     const [selectedSection, setSelectedSection] = useState<EventSection | null>(null)
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [sectionToDelete, setSectionToDelete] = useState<EventSection | null>(null)
+    const [deleteValidation, setDeleteValidation] = useState<{
+        canDelete: boolean
+        message: string
+        participantCount: number
+        bookingCount: number
+    } | null>(null)
 
     const handleAddSection = async (sectionData: Partial<EventSection>) => {
         setLoading(true)
@@ -44,14 +53,14 @@ export default function SectionsManagerClient({ event }: SectionsManagerClientPr
         }
     }
 
-    const handleDeleteSection = async (sectionId: string) => {
-        if (!confirm('Are you sure you want to delete this section? This action cannot be undone.')) {
+    const handleDeleteSection = async () => {
+        if (!sectionToDelete || !deleteValidation?.canDelete) {
             return
         }
 
         setLoading(true)
         try {
-            const response = await fetch(`/api/events/${event.id}/sections/${sectionId}`, {
+            const response = await fetch(`/api/events/${event.id}/sections/${sectionToDelete.id}`, {
                 method: 'DELETE',
             })
 
@@ -59,7 +68,10 @@ export default function SectionsManagerClient({ event }: SectionsManagerClientPr
                 throw new Error('Failed to delete section')
             }
 
-            setSections(prev => prev.filter(section => section.id !== sectionId))
+            setSections(prev => prev.filter(section => section.id !== sectionToDelete.id))
+            setShowDeleteModal(false)
+            setSectionToDelete(null)
+            setDeleteValidation(null)
         } catch (error) {
             console.error('Error deleting section:', error)
             alert('Failed to delete section')
@@ -73,18 +85,50 @@ export default function SectionsManagerClient({ event }: SectionsManagerClientPr
         setShowPricingModal(true)
     }
 
+    const validateSectionDeletion = async (section: EventSection) => {
+        setLoading(true)
+        try {
+            // Check for participants in this section
+            const participantsResponse = await fetch(`/api/events/${event.id}/participants?section_id=${section.id}`)
+            const participantsData = await participantsResponse.json()
+            const participantCount = participantsData.length || 0
+
+            // Check for bookings in this section
+            const bookingsResponse = await fetch(`/api/events/${event.id}/bookings?section_id=${section.id}`)
+            const bookingsData = await bookingsResponse.json()
+            const bookingCount = bookingsData.length || 0
+
+            const canDelete = participantCount === 0 && bookingCount === 0
+            let message = ''
+
+            if (canDelete) {
+                message = `Are you sure you want to delete the section "${section.title}"? This action cannot be undone.`
+            } else {
+                message = `Cannot delete section "${section.title}" because it has ${participantCount} participant${participantCount !== 1 ? 's' : ''} and ${bookingCount} booking${bookingCount !== 1 ? 's' : ''}. Please move all participants and bookings to other sections before deleting.`
+            }
+
+            setDeleteValidation({
+                canDelete,
+                message,
+                participantCount,
+                bookingCount
+            })
+
+            setSectionToDelete(section)
+            setShowDeleteModal(true)
+        } catch (error) {
+            console.error('Error validating section deletion:', error)
+            alert('Failed to validate section deletion. Please try again.')
+        } finally {
+            setLoading(false)
+        }
+    }
+
     return (
         <div className="space-y-6">
             {/* Header with Add Button */}
             <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                        Event Sections ({sections.length})
-                    </h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Manage different sections of your event with separate pricing and capacity
-                    </p>
-                </div>
+                
                 <button
                     onClick={() => setShowAddForm(true)}
                     disabled={loading}
@@ -136,7 +180,7 @@ export default function SectionsManagerClient({ event }: SectionsManagerClientPr
                             section={section}
                             eventTimezone={event.timezone}
                             onEdit={() => setEditingSection(section)}
-                            onDelete={() => handleDeleteSection(section.id)}
+                            onDelete={() => validateSectionDeletion(section)}
                             onManagePricing={() => handleManagePricing(section)}
                             loading={loading}
                         />
@@ -158,6 +202,23 @@ export default function SectionsManagerClient({ event }: SectionsManagerClientPr
                     }}
                 />
             )}
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={showDeleteModal}
+                onClose={() => {
+                    setShowDeleteModal(false)
+                    setSectionToDelete(null)
+                    setDeleteValidation(null)
+                }}
+                onConfirm={handleDeleteSection}
+                title={deleteValidation?.canDelete ? "Delete Section" : "Cannot Delete Section"}
+                message={deleteValidation?.message || ""}
+                confirmText={deleteValidation?.canDelete ? "Delete Section" : undefined}
+                cancelText="Close"
+                variant={deleteValidation?.canDelete ? "danger" : "warning"}
+                loading={loading}
+            />
         </div>
     )
 }

@@ -16,6 +16,12 @@ interface ParticipantFromDB {
     contact_email?: string
     contact_phone?: string
     custom_data?: Record<string, unknown>
+    section_id?: string
+    section?: {
+        id: string
+        title: string
+        description?: string
+    }
 }
 
 export default function EventBookingsPage() {
@@ -72,7 +78,13 @@ export default function EventBookingsPage() {
                             date_of_birth,
                             contact_email,
                             contact_phone,
-                            custom_data
+                            custom_data,
+                            section_id,
+                            section:event_sections!participants_section_id_fkey (
+                                id,
+                                title,
+                                description
+                            )
                         )
                     `)
                     .eq('event_id', eventId)
@@ -91,7 +103,8 @@ export default function EventBookingsPage() {
                         participants: (booking.participants || []).map((participant: ParticipantFromDB) => ({
                             ...participant,
                             email: participant.contact_email,
-                            phone: participant.contact_phone
+                            phone: participant.contact_phone,
+                            section: participant.section
                         }))
                     }))
                     setBookings(transformedBookings)
