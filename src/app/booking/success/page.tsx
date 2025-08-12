@@ -3,12 +3,26 @@ import { HiCalendar, HiClock, HiMapPin } from 'react-icons/hi2'
 import { getCurrentUser } from '@/lib/utils/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Booking, Event, DiscountApplication } from '@/lib/types/database'
+import { Booking, Event, DiscountApplication, EventSection, SectionPricing } from '@/lib/types/database'
+
+interface SectionBooking {
+    id: string
+    booking_id: string
+    section_id: string
+    pricing_id: string
+    quantity: number
+    unit_price: number
+    total_amount: number
+    section?: EventSection
+    pricing?: SectionPricing
+}
 import AddToCalendar from '@/components/calendar/add-to-calendar'
 import { CalendarEvent } from '@/lib/utils/calendar'
 
-async function getBookingFromSession(sessionId: string): Promise<(Booking & { event: Event; discount_applications?: DiscountApplication[] }) | null> {
+async function getBookingFromSession(sessionId: string): Promise<(Booking & { event: Event; discount_applications?: DiscountApplication[]; section_bookings?: SectionBooking[] }) | null> {
     const supabase = await createClient()
+
+    console.log('🔍 [BOOKING-SUCCESS] Looking for booking with session ID:', sessionId)
 
     const { data: booking, error } = await supabase
         .from('bookings')
@@ -23,11 +37,52 @@ async function getBookingFromSession(sessionId: string): Promise<(Booking & { ev
         .eq('stripe_session_id', sessionId)
         .single()
 
-    if (error || !booking) {
+    if (error) {
+        console.error('❌ [BOOKING-SUCCESS] Error fetching booking:', {
+            sessionId,
+            error: error.message,
+            code: error.code,
+            details: error.details
+        })
         return null
     }
 
-    return booking as Booking & { event: Event; discount_applications?: DiscountApplication[] }
+    if (!booking) {
+        console.log('❌ [BOOKING-SUCCESS] No booking found for session ID:', sessionId)
+        return null
+    }
+
+    console.log('✅ [BOOKING-SUCCESS] Found booking:', {
+        bookingId: booking.id,
+        eventTitle: booking.event?.title,
+        sessionId: booking.stripe_session_id
+    })
+
+            // Fetch section bookings separately if this is a multi-section event
+        let sectionBookings: SectionBooking[] = []
+        if (booking.is_multi_section) {
+            console.log('🔍 [BOOKING-SUCCESS] Fetching section bookings for multi-section event')
+            const { data: sectionBookingsData, error: sectionBookingsError } = await supabase
+                .from('section_bookings')
+                .select(`
+                    *,
+                    section:event_sections!section_bookings_section_id_fkey(*),
+                    pricing:section_pricing!section_bookings_pricing_id_fkey(*)
+                `)
+                .eq('booking_id', booking.id)
+
+            if (sectionBookingsError) {
+                console.error('❌ [BOOKING-SUCCESS] Error fetching section bookings:', sectionBookingsError)
+            } else {
+                sectionBookings = sectionBookingsData || []
+                console.log('✅ [BOOKING-SUCCESS] Found section bookings:', sectionBookings.length)
+            }
+        }
+
+    return {
+        ...booking,
+        section_bookings: sectionBookings
+    } as Booking & { event: Event; discount_applications?: DiscountApplication[]; section_bookings?: SectionBooking[] }
 }
 
 interface SuccessPageProps {
@@ -38,15 +93,23 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
     const { session_id, booking_id } = await searchParams
     const user = await getCurrentUser()
 
+    console.log('🔍 [BOOKING-SUCCESS] Page loaded with params:', {
+        session_id,
+        booking_id,
+        hasUser: !!user,
+        userId: user?.id
+    })
+
     if (!user) {
         redirect('/auth/login')
     }
 
     if (!session_id && !booking_id) {
+        console.log('❌ [BOOKING-SUCCESS] No session_id or booking_id provided')
         redirect('/')
     }
 
-    let booking: (Booking & { event: Event; discount_applications?: DiscountApplication[] }) | null = null
+    let booking: (Booking & { event: Event; discount_applications?: DiscountApplication[]; section_bookings?: SectionBooking[] }) | null = null
 
     if (session_id) {
         // For paid events with Stripe session
@@ -68,7 +131,31 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
             .single()
         
         if (!error && data) {
-            booking = data as Booking & { event: Event; discount_applications?: DiscountApplication[] }
+            // Fetch section bookings separately if this is a multi-section event
+            let sectionBookings: SectionBooking[] = []
+            if (data.is_multi_section) {
+                console.log('🔍 [BOOKING-SUCCESS] Fetching section bookings for multi-section event (booking_id)')
+                const { data: sectionBookingsData, error: sectionBookingsError } = await supabase
+                    .from('section_bookings')
+                    .select(`
+                        *,
+                        section:event_sections!section_bookings_section_id_fkey(*),
+                        pricing:section_pricing!section_bookings_pricing_id_fkey(*)
+                    `)
+                    .eq('booking_id', data.id)
+
+                if (sectionBookingsError) {
+                    console.error('❌ [BOOKING-SUCCESS] Error fetching section bookings:', sectionBookingsError)
+                } else {
+                    sectionBookings = sectionBookingsData || []
+                    console.log('✅ [BOOKING-SUCCESS] Found section bookings:', sectionBookings.length)
+                }
+            }
+
+            booking = {
+                ...data,
+                section_bookings: sectionBookings
+            } as Booking & { event: Event; discount_applications?: DiscountApplication[]; section_bookings?: SectionBooking[] }
         }
     }
 
@@ -191,13 +278,52 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                                         <span className="font-mono text-sm font-bold text-gray-900 dark:text-gray-100">{booking.booking_id || booking.id.slice(0, 8)}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-gray-800 dark:text-gray-300">Tickets:</span>
+                                        <span className="text-gray-800 dark:text-gray-300">Total Tickets:</span>
                                         <span className="text-gray-900 dark:text-gray-100">{booking.quantity}</span>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-800 dark:text-gray-300">Price per ticket:</span>
-                                        <span className="text-gray-900 dark:text-gray-100">{booking.total_amount === 0 ? 'Free' : `AUD $${(booking.total_amount / booking.quantity).toFixed(2)}`}</span>
-                                    </div>
+                                    
+                                    {/* Multi-section tickets */}
+                                    {booking.is_multi_section && booking.section_bookings && booking.section_bookings.length > 0 && (
+                                        <div className="space-y-2">
+                                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Section Tickets:</div>
+                                            {booking.section_bookings.map((sectionBooking, index) => (
+                                                <div key={index} className="pl-4 border-l-2 border-gray-200 dark:border-gray-700 space-y-1">
+                                                    <div className="flex justify-between text-sm">
+                                                        <span className="text-gray-800 dark:text-gray-300">
+                                                            {sectionBooking.section?.title || 'Unknown Section'}
+                                                        </span>
+                                                        <span className="text-gray-900 dark:text-gray-100">
+                                                            x{sectionBooking.quantity}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between text-sm">
+                                                        <span className="text-gray-600 dark:text-gray-400">
+                                                            Price per ticket:
+                                                        </span>
+                                                        <span className="text-gray-900 dark:text-gray-100">
+                                                            {sectionBooking.pricing?.price === 0 ? 'Free' : `AUD $${sectionBooking.pricing?.price?.toFixed(2) || '0.00'}`}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between text-sm font-medium">
+                                                        <span className="text-gray-800 dark:text-gray-300">
+                                                            Section total:
+                                                        </span>
+                                                        <span className="text-gray-900 dark:text-gray-100">
+                                                            {sectionBooking.total_amount === 0 ? 'Free' : `AUD $${sectionBooking.total_amount?.toFixed(2) || '0.00'}`}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    
+                                    {/* Single event price per ticket */}
+                                    {!booking.is_multi_section && (
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-800 dark:text-gray-300">Price per ticket:</span>
+                                            <span className="text-gray-900 dark:text-gray-100">{booking.total_amount === 0 ? 'Free' : `AUD $${(booking.total_amount / booking.quantity).toFixed(2)}`}</span>
+                                        </div>
+                                    )}
                                     
                                     {/* Discount Information */}
                                     {booking.discount_applications && booking.discount_applications.length > 0 && (

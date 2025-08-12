@@ -47,6 +47,11 @@ export async function GET(
                         full_name,
                         email
                     )
+                ),
+                section:event_sections!participants_section_id_fkey (
+                    id,
+                    title,
+                    description
                 )
             `)
             .eq('bookings.event_id', eventId)

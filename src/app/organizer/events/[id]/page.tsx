@@ -21,7 +21,7 @@ import {
     HiDocumentText,
     HiArrowTopRightOnSquare
 } from 'react-icons/hi2'
-import { Event, EventPricing, EventDiscount, Booking, Participant, FormField } from '@/lib/types/database'
+import { Event, EventPricing, EventDiscount, Booking, Participant, FormField, EventSection } from '@/lib/types/database'
 
 interface TabData {
     id: string
@@ -40,6 +40,7 @@ export default function EventViewPage() {
     const [discounts, setDiscounts] = useState<EventDiscount[]>([])
     const [participants, setParticipants] = useState<Participant[]>([])
     const [customFields, setCustomFields] = useState<FormField[]>([])
+    const [sections, setSections] = useState<EventSection[]>([])
     const [stats, setStats] = useState({
         totalBookings: 0,
         confirmedBookings: 0,
@@ -57,6 +58,7 @@ export default function EventViewPage() {
         { id: 'participants', name: 'Participants', icon: <HiUsers className="h-5 w-5" />, count: stats.totalParticipants },
         { id: 'pricing', name: 'Pricing', icon: <HiCurrencyDollar className="h-5 w-5" />, count: pricing.length },
         { id: 'discounts', name: 'Discounts', icon: <HiTag className="h-5 w-5" />, count: discounts.length },
+        { id: 'sections', name: 'Sections', icon: <HiDocumentDuplicate className="h-5 w-5" />, count: sections.length },
         { id: 'custom-fields', name: 'Custom Fields', icon: <HiDocumentText className="h-5 w-5" />, count: customFields.length },
         { id: 'location', name: 'Location', icon: <HiMapPin className="h-5 w-5" /> },
         { id: 'settings', name: 'Settings', icon: <HiCog8Tooth className="h-5 w-5" /> }
@@ -124,6 +126,20 @@ export default function EventViewPage() {
 
             if (!discountsError && discountsData) {
                 setDiscounts(discountsData)
+            }
+
+            // Fetch sections
+            const { data: sectionsData, error: sectionsError } = await supabase
+                .from('event_sections')
+                .select(`
+                    *,
+                    pricing:section_pricing(*)
+                `)
+                .eq('event_id', eventId)
+                .order('created_at', { ascending: false })
+
+            if (!sectionsError && sectionsData) {
+                setSections(sectionsData)
             }
 
             // Fetch participants (from all bookings)
@@ -236,6 +252,15 @@ export default function EventViewPage() {
                         </div>
                     </div>
                     <div className="flex space-x-3">
+                        {event.has_sections && (
+                            <Link
+                                href={`/organizer/events/${eventId}/sections`}
+                                className="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 flex items-center"
+                            >
+                                <HiDocumentDuplicate className="h-4 w-4 mr-2" />
+                                Manage Sections
+                            </Link>
+                        )}
                         <Link
                             href={`/organizer/events/${eventId}/edit`}
                             className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 flex items-center"
@@ -771,6 +796,79 @@ export default function EventViewPage() {
                                                                 <li>Pattern: {field.validation.regex}</li>
                                                             )}
                                                         </ul>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'sections' && (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Event Sections</h3>
+                            <Link
+                                href={`/organizer/events/${eventId}/sections`}
+                                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm font-medium"
+                            >
+                                Manage Sections →
+                            </Link>
+                        </div>
+                        <div className="p-6">
+                            {sections.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <HiDocumentDuplicate className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                                    <p className="text-gray-500 dark:text-gray-400 mb-4">No sections configured for this event.</p>
+                                    <p className="text-sm text-gray-400 dark:text-gray-500 mb-4">Create sections to organize your event into different divisions or categories.</p>
+                                    <Link
+                                        href={`/organizer/events/${eventId}/sections`}
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    >
+                                        Create First Section
+                                    </Link>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {sections.map((section) => (
+                                        <div key={section.id} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h4 className="font-medium text-gray-900 dark:text-gray-100">{section.title}</h4>
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                    section.status === 'published' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
+                                                    section.status === 'draft' ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300' :
+                                                    section.status === 'cancelled' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
+                                                    'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+                                                }`}>
+                                                    {section.status}
+                                                </span>
+                                            </div>
+                                            {section.description && (
+                                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{section.description}</p>
+                                            )}
+                                            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                                                <div className="flex items-center">
+                                                    <HiCalendarDays className="h-4 w-4 mr-2" />
+                                                    <span>{new Date(section.start_date).toLocaleDateString()}</span>
+                                                </div>
+                                                <div className="flex items-center">
+                                                    <HiClock className="h-4 w-4 mr-2" />
+                                                    <span>
+                                                        {new Date(section.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
+                                                        {new Date(section.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center">
+                                                    <HiUsers className="h-4 w-4 mr-2" />
+                                                    <span>{section.current_seats} / {section.max_seats} seats</span>
+                                                </div>
+                                                {section.pricing && section.pricing.length > 0 && (
+                                                    <div className="flex items-center">
+                                                        <HiCurrencyDollar className="h-4 w-4 mr-2" />
+                                                        <span>From {formatCurrency(section.pricing[0].price)}</span>
                                                     </div>
                                                 )}
                                             </div>

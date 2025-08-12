@@ -23,8 +23,16 @@ interface WhitelistedBookingEmailData {
     contact_email?: string
     contact_phone?: string
     custom_data?: Record<string, unknown>
+    section?: {
+      id: string
+      title: string
+      start_date: string
+      end_date?: string
+      description?: string
+    }
   }>
   dashboardUrl: string
+  isMultiSectionEvent?: boolean
 }
 
 function WhitelistedBookingEmail({
@@ -41,7 +49,8 @@ function WhitelistedBookingEmail({
   organizerPhone,
   eventDescription,
   participants,
-  dashboardUrl
+  dashboardUrl,
+  isMultiSectionEvent
 }: WhitelistedBookingEmailData) {
   const formattedStart = new Date(eventDate)
   const formattedEnd = eventEndDate ? new Date(eventEndDate) : undefined
@@ -125,12 +134,47 @@ function WhitelistedBookingEmail({
 
       {participants && participants.length > 0 && (
         <EmailSection>
-          <EmailHeading level={3}>Participant Information</EmailHeading>
+          <EmailHeading level={3}>
+            {isMultiSectionEvent ? 'Participant & Section Information' : 'Participant Information'}
+          </EmailHeading>
           {participants.map((participant, index) => (
             <EmailCard key={index} backgroundColor="#f7fafc" borderColor="#3b82f6">
               <EmailText style={{ marginBottom: '10px' }}>
                 <strong>Participant {index + 1}:</strong> {participant.first_name} {participant.last_name}
+                {participant.section && (
+                  <span style={{ color: '#059669', fontWeight: 'bold' }}>
+                    {' '}- {participant.section.title}
+                  </span>
+                )}
               </EmailText>
+              
+              {participant.section && (
+                <>
+                  <EmailText style={{ marginBottom: '10px' }}>
+                    <strong>Section:</strong> {participant.section.title}
+                  </EmailText>
+                  <EmailText style={{ marginBottom: '10px' }}>
+                    <strong>Section Schedule:</strong> {new Date(participant.section.start_date).toLocaleString('en-AU', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                    {participant.section.end_date && ` - ${new Date(participant.section.end_date).toLocaleTimeString('en-AU', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}`}
+                  </EmailText>
+                  {participant.section.description && (
+                    <EmailText style={{ marginBottom: '10px' }}>
+                      <strong>Section Description:</strong> {participant.section.description}
+                    </EmailText>
+                  )}
+                </>
+              )}
+              
               {participant.date_of_birth && (
                 <EmailText style={{ marginBottom: '10px' }}>
                   <strong>Date of Birth:</strong> {participant.date_of_birth}

@@ -181,10 +181,49 @@ export interface Participant {
     contact_email?: string
     contact_phone?: string
     date_of_birth?: string
+    section_id?: string
     custom_data?: Record<string, CustomDataValue>
     status?: 'active' | 'whitelisted' | 'cancelled'
     created_at?: string
     updated_at?: string
+    section?: EventSection
+}
+
+export interface EventSection {
+    id: string
+    event_id: string
+    title: string
+    description?: string
+    start_date: string
+    end_date: string
+    max_seats: number
+    current_seats: number
+    status: EventStatus
+    section_type?: string
+    section_config?: Record<string, unknown>
+    custom_form_fields?: FormField[]
+    created_at: string
+    updated_at: string
+    pricing?: SectionPricing[]
+    available_seats?: number
+}
+
+export interface SectionPricing {
+    id: string
+    section_id: string
+    name: string
+    description?: string
+    pricing_type: PricingType
+    membership_type: MembershipType
+    price: number
+    start_date: string
+    end_date: string
+    is_active: boolean
+    max_tickets?: number
+    tickets_sold: number
+    available_tickets: number
+    created_at: string
+    updated_at: string
 }
 
 export interface Event {
@@ -211,10 +250,13 @@ export interface Event {
     is_promoted?: boolean
     settings?: EventSettings
     location_settings?: LocationSettings
+    has_sections?: boolean
+    section_settings?: Record<string, unknown>
     created_at: string
     updated_at: string
     organizer?: Profile
     alias?: string
+    sections?: EventSection[]
 }
 
 export interface Booking {
@@ -237,6 +279,7 @@ export interface Booking {
     transferred_from_event_id?: string
     transferred_at?: string
     transferred_by?: string
+    is_multi_section: boolean
     created_at: string
     updated_at: string
     event?: Event

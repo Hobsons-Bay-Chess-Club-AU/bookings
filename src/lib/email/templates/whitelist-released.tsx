@@ -50,7 +50,7 @@ function WhitelistReleasedEmail({
   
   return (
     <EmailLayout
-      title="Whitelist Released"
+      title="Your whitelisted booking is now available for payment!"
       subtitle="Your booking is now available for payment!"
       headerColor="#059669"
     >

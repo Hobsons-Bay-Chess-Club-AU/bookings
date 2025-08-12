@@ -1,0 +1,284 @@
+'use client'
+
+import { EventSection, SectionPricing } from '@/lib/types/database'
+import { HiUsers } from 'react-icons/hi2'
+
+interface SectionSelection {
+    sectionId: string
+    section: EventSection
+    pricingId: string
+    pricing: SectionPricing
+    quantity: number
+}
+
+interface Step0SectionsProps {
+    sections: EventSection[]
+    selectedSections: SectionSelection[]
+    setSelectedSections: (sections: SectionSelection[]) => void
+    onContinue: () => void
+    loading: boolean
+    error: string
+}
+
+export default function Step0Sections({
+    sections,
+    selectedSections,
+    setSelectedSections,
+    onContinue,
+    loading,
+    error
+}: Step0SectionsProps) {
+    const handleSectionToggle = (section: EventSection, pricing: SectionPricing) => {
+        const existingIndex = selectedSections.findIndex(
+            s => s.sectionId === section.id && s.pricingId === pricing.id
+        )
+
+        if (existingIndex >= 0) {
+            // Remove section
+            setSelectedSections(selectedSections.filter((_, index) => index !== existingIndex))
+        } else {
+            // Add section with quantity 1
+            setSelectedSections([
+                ...selectedSections,
+                {
+                    sectionId: section.id,
+                    section,
+                    pricingId: pricing.id,
+                    pricing,
+                    quantity: 1
+                }
+            ])
+        }
+    }
+
+    const handleQuantityChange = (sectionId: string, pricingId: string, quantity: number) => {
+        setSelectedSections(selectedSections.map(s => 
+            s.sectionId === sectionId && s.pricingId === pricingId
+                ? { ...s, quantity }
+                : s
+        ))
+    }
+
+    const getSelectedQuantity = (sectionId: string, pricingId: string) => {
+        const selection = selectedSections.find(
+            s => s.sectionId === sectionId && s.pricingId === pricingId
+        )
+        return selection?.quantity || 0
+    }
+
+    const isSelected = (sectionId: string, pricingId: string) => {
+        return selectedSections.some(
+            s => s.sectionId === sectionId && s.pricingId === pricingId
+        )
+    }
+
+    const totalAmount = selectedSections.reduce((sum, selection) => {
+        return sum + (selection.pricing.price * selection.quantity)
+    }, 0)
+
+    const totalQuantity = selectedSections.reduce((sum, selection) => {
+        return sum + selection.quantity
+    }, 0)
+
+    // Get all unique pricing options across all sections
+    const allPricingOptions = sections.flatMap(section => 
+        section.pricing?.map(pricing => ({
+            section,
+            pricing,
+            availableSeats: section.available_seats ?? 0,
+            availableTickets: pricing.available_tickets ?? 999
+        })) || []
+    ).filter(option => {
+        // Show sections that have available seats OR unlimited tickets
+        const hasAvailableSeats = option.availableSeats > 0
+        const hasAvailableTickets = option.availableTickets > 0 || option.availableTickets === null
+        return hasAvailableSeats && hasAvailableTickets
+    })
+
+    return (
+        <form onSubmit={(e) => { e.preventDefault(); onContinue(); }} className="space-y-6">
+            {error && (
+                <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-600 dark:text-red-300 px-4 py-3 rounded">
+                    {error}
+                </div>
+            )}
+
+            <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                    Select Event Sections
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                    Choose which sections you&apos;d like to register for and how many tickets for each.
+                </p>
+            </div>
+
+            {/* Section Selection */}
+            <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                    Available Sections
+                </label>
+                
+
+                
+                <div className="space-y-3">
+                    {allPricingOptions.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                            <p>No sections available for booking.</p>
+                            <p className="text-sm mt-2">Please contact the organizer if you believe this is an error.</p>
+                        </div>
+                    ) : (
+                        allPricingOptions.map(({ section, pricing, availableSeats, availableTickets }) => {
+                        const isPricingSelected = isSelected(section.id, pricing.id)
+                        const selectedQuantity = getSelectedQuantity(section.id, pricing.id)
+                        const maxAvailable = Math.min(availableSeats, availableTickets)
+
+                        return (
+                            <div
+                                key={`${section.id}-${pricing.id}`}
+                                className={`relative rounded-lg border p-4 cursor-pointer ${
+                                    isPricingSelected
+                                        ? 'border-indigo-600 ring-2 ring-indigo-600 bg-indigo-50 dark:bg-indigo-900/20'
+                                        : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-gray-800'
+                                }`}
+                                onClick={() => handleSectionToggle(section, pricing)}
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={isPricingSelected}
+                                            onChange={() => handleSectionToggle(section, pricing)}
+                                            className="h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-700 focus:ring-indigo-500 dark:bg-gray-800 dark:checked:bg-indigo-600"
+                                        />
+                                        <div className="ml-3">
+                                            <div className="flex items-center space-x-2">
+                                                <span className="font-medium text-gray-900 dark:text-gray-100">
+                                                    {section.title}
+                                                </span>
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                    pricing.pricing_type === 'early_bird' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                                                    pricing.pricing_type === 'regular' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
+                                                    pricing.pricing_type === 'late_bird' ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' :
+                                                    'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
+                                                }`}>
+                                                    {pricing.pricing_type === 'early_bird' ? 'Early Bird' :
+                                                     pricing.pricing_type === 'regular' ? 'Regular' :
+                                                     pricing.pricing_type === 'late_bird' ? 'Late Bird' :
+                                                     'Special'}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                {pricing.name}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className={`text-2xl font-bold ${pricing.price === 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-gray-100'}`}>
+                                            {pricing.price === 0 ? 'Free' : `$${pricing.price}`}
+                                        </div>
+                                        <div className="flex items-center justify-end text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                            <HiUsers className="h-4 w-4 mr-1" />
+                                            <span>{maxAvailable} available</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Quantity selector for selected pricing */}
+                                {isPricingSelected && (
+                                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Number of Tickets
+                                            </label>
+                                            <div className="flex items-center space-x-4">
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        if (selectedQuantity > 1) {
+                                                            handleQuantityChange(section.id, pricing.id, selectedQuantity - 1)
+                                                        }
+                                                    }}
+                                                    disabled={selectedQuantity <= 1}
+                                                    className="w-10 h-10 rounded-full border border-gray-300 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    -
+                                                </button>
+                                                <span className="text-lg font-medium text-gray-900 dark:text-gray-100 min-w-[3rem] text-center">
+                                                    {selectedQuantity}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        if (selectedQuantity < maxAvailable) {
+                                                            handleQuantityChange(section.id, pricing.id, selectedQuantity + 1)
+                                                        }
+                                                    }}
+                                                    disabled={selectedQuantity >= maxAvailable}
+                                                    className="w-10 h-10 rounded-full border border-gray-300 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                            Maximum {maxAvailable} tickets for this section
+                                        </div>
+                                        <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                            Subtotal: ${(pricing.price * selectedQuantity).toFixed(2)}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    })
+                    )}
+                </div>
+            </div>
+
+            {/* Summary */}
+            {selectedSections.length > 0 && (
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">
+                        Selection Summary
+                    </h3>
+                    <div className="space-y-2">
+                        {selectedSections.map((selection, index) => (
+                            <div key={index} className="flex justify-between text-sm">
+                                <span className="text-gray-600 dark:text-gray-400">
+                                    {selection.section.title} - {selection.pricing.name} (x{selection.quantity})
+                                </span>
+                                <span className="text-gray-900 dark:text-gray-100 font-medium">
+                                    ${(selection.pricing.price * selection.quantity).toFixed(2)}
+                                </span>
+                            </div>
+                        ))}
+                        <div className="border-t border-gray-200 dark:border-gray-600 pt-2 mt-2">
+                            <div className="flex justify-between text-base font-medium">
+                                <span className="text-gray-900 dark:text-gray-100">
+                                    Total ({totalQuantity} tickets)
+                                </span>
+                                <span className="text-gray-900 dark:text-gray-100">
+                                    ${totalAmount.toFixed(2)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Continue Button */}
+            <div className="flex space-x-4 mt-8">
+                <button
+                    type="submit"
+                    disabled={loading || selectedSections.length === 0}
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+
+                >
+                    {loading ? 'Loading...' : 'Continue'}
+                </button>
+            </div>
+        </form>
+    )
+}

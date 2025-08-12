@@ -250,6 +250,28 @@ export class TicketGenerator {
         const bookingDate = new Date(booking.created_at)
 
         pdf.setFontSize(12)
+        // Section (if available)
+        if ((participant as unknown as { section?: { title?: string; start_date?: string; end_date?: string } }).section) {
+            const sec = (participant as unknown as { section: { title?: string; start_date?: string; end_date?: string } }).section
+            if (sec.title) {
+                pdf.setFont('helvetica', 'bold')
+                pdf.text('Section:', margin, yPosition)
+                pdf.setFont('helvetica', 'normal')
+                pdf.text(sec.title, margin + 50, yPosition)
+                yPosition += lineHeight
+            }
+            if (sec.start_date) {
+                pdf.setFont('helvetica', 'bold')
+                pdf.text('Section Time:', margin, yPosition)
+                pdf.setFont('helvetica', 'normal')
+                const secStart = new Date(sec.start_date)
+                const secEnd = sec.end_date ? new Date(sec.end_date) : null
+                const timeText = `${this.formatDate(secStart)} at ${this.formatTime(secStart)}${secEnd ? ` - ${this.formatTime(secEnd)}` : ''}`
+                pdf.text(timeText, margin + 50, yPosition)
+                yPosition += lineHeight
+            }
+        }
+
         pdf.setFont('helvetica', 'bold')
         pdf.text('Event Date & Time:', margin, yPosition)
         pdf.setFont('helvetica', 'normal')

@@ -1,25 +1,35 @@
 'use client'
 
 import { useState } from 'react'
-import { Event, Participant, Booking, Profile } from '@/lib/types/database'
-import { HiUsers } from 'react-icons/hi2'
+import { Event, Participant, Booking, Profile, EventSection } from '@/lib/types/database'
+import { HiUsers, HiArrowPath } from 'react-icons/hi2'
 import Breadcrumb from '@/components/ui/breadcrumb'
+import SectionTransferModal from '@/components/events/section-transfer-modal'
 
 interface ParticipantWithBooking extends Participant {
     bookings: (Booking & {
         profiles: Profile
     })
+    section?: EventSection
 }
 
 interface EventParticipantsPageClientProps {
     event: Event
     participants: ParticipantWithBooking[]
+    sections?: EventSection[]
 }
 
 export default function EventParticipantsPageClient({
     event,
-    participants
+    participants,
+    sections = []
 }: EventParticipantsPageClientProps) {
+    const [showTransferModal, setShowTransferModal] = useState(false)
+    const [selectedSectionFilter, setSelectedSectionFilter] = useState<string>('all')
+    const [selectedParticipant, setSelectedParticipant] = useState<ParticipantWithBooking | null>(null)
+    const [showTransferConfirmation, setShowTransferConfirmation] = useState(false)
+    const [transferToSection, setTransferToSection] = useState<string>('')
+    const [isTransferring, setIsTransferring] = useState(false)
     // Helper function to render custom field values
     const renderCustomFieldValue = (value: unknown): React.ReactNode => {
         // Handle null/undefined values
@@ -120,11 +130,21 @@ export default function EventParticipantsPageClient({
         return <span className="text-gray-500 dark:text-gray-400 italic">Unknown data type</span>
     }
     const [searchTerm, setSearchTerm] = useState('')
-    const [selectedParticipant, setSelectedParticipant] = useState<ParticipantWithBooking | null>(null)
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
 
     const filteredParticipants = participants.filter(participant => {
+        // Section filter
+        if (event.has_sections && selectedSectionFilter !== 'all') {
+            if (selectedSectionFilter === 'no-section' && participant.section) {
+                return false
+            }
+            if (selectedSectionFilter !== 'no-section' && (!participant.section || participant.section.id !== selectedSectionFilter)) {
+                return false
+            }
+        }
+
+        // Search filter
         if (!searchTerm) return true
 
         const searchLower = searchTerm.toLowerCase()
@@ -155,6 +175,40 @@ export default function EventParticipantsPageClient({
         document.getElementById('participants-list')?.scrollIntoView({ behavior: 'smooth' })
     }
 
+    const handleTransfer = async () => {
+        if (!selectedParticipant || !transferToSection) return
+
+        setIsTransferring(true)
+        try {
+            const response = await fetch(`/api/events/${event.id}/participants/transfer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    participantId: selectedParticipant.id,
+                    newSectionId: transferToSection,
+                }),
+            })
+
+            if (response.ok) {
+                // Refresh the page to show updated data
+                window.location.reload()
+            } else {
+                const error = await response.json()
+                alert(`Transfer failed: ${error.error}`)
+            }
+        } catch (error) {
+            console.error('Transfer error:', error)
+            alert('Transfer failed. Please try again.')
+        } finally {
+            setIsTransferring(false)
+            setShowTransferConfirmation(false)
+            setSelectedParticipant(null)
+            setTransferToSection('')
+        }
+    }
+
     const exportToCsv = () => {
         if (filteredParticipants.length === 0) return
 
@@ -171,6 +225,7 @@ export default function EventParticipantsPageClient({
             'Date of Birth',
             'Contact Email',
             'Contact Phone',
+            ...(event.has_sections ? ['Section', 'Section Description'] : []),
             'Booking Date',
             'Booking Status',
             'Ticket Quantity',
@@ -187,6 +242,10 @@ export default function EventParticipantsPageClient({
             p.date_of_birth || '',
             p.contact_email || '',
             p.contact_phone || '',
+            ...(event.has_sections ? [
+                p.section?.title || 'No section assigned',
+                p.section?.description || ''
+            ] : []),
             `${new Date(p.bookings.created_at).toLocaleDateString()} at ${new Date(p.bookings.created_at).toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit'
@@ -231,8 +290,21 @@ export default function EventParticipantsPageClient({
 
             {/* Page Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Event Participants</h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-2">{event?.title}</p>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Event Participants</h1>
+                        <p className="text-gray-600 dark:text-gray-400 mt-2">{event?.title}</p>
+                    </div>
+                    {event.has_sections && sections.length > 0 && (
+                        <button
+                            onClick={() => setShowTransferModal(true)}
+                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                            <HiArrowPath className="h-4 w-4 mr-2" />
+                            Transfer Between Sections
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Stats */}
@@ -364,6 +436,28 @@ export default function EventParticipantsPageClient({
                                 )}
                             </div>
                         </div>
+                        {event.has_sections && sections.length > 0 && (
+                            <div className="flex items-center space-x-2">
+                                <label htmlFor="sectionFilter" className="text-sm text-gray-700 dark:text-gray-300">Section:</label>
+                                <select
+                                    id="sectionFilter"
+                                    value={selectedSectionFilter}
+                                    onChange={(e) => {
+                                        setSelectedSectionFilter(e.target.value)
+                                        setCurrentPage(1)
+                                    }}
+                                    className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                >
+                                    <option value="all">All Sections</option>
+                                    <option value="no-section">No Section Assigned</option>
+                                    {sections.map((section) => (
+                                        <option key={section.id} value={section.id}>
+                                            {section.title}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         <div className="flex items-center space-x-4">
                             <div className="flex items-center space-x-2">
                                 <label htmlFor="itemsPerPage" className="text-sm text-gray-700 dark:text-gray-300">Show:</label>
@@ -441,6 +535,11 @@ export default function EventParticipantsPageClient({
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Contact
                                     </th>
+                                    {event.has_sections && (
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            Section
+                                        </th>
+                                    )}
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Booking Info
                                     </th>
@@ -489,6 +588,24 @@ export default function EventParticipantsPageClient({
                                                 )}
                                             </div>
                                         </td>
+                                        {event.has_sections && (
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm text-gray-900 dark:text-gray-100">
+                                                    {participant.section ? (
+                                                        <div>
+                                                            <div className="font-medium">{participant.section.title}</div>
+                                                            {participant.section.description && (
+                                                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                                    {participant.section.description}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-gray-400 dark:text-gray-500 italic">No section assigned</span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        )}
                                         <td className="px-6 py-4">
                                             <div className="text-sm text-gray-900 dark:text-gray-100">
                                                 <div className="flex items-center space-x-2">
@@ -515,12 +632,25 @@ export default function EventParticipantsPageClient({
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-right text-sm font-medium">
-                                            <button
-                                                onClick={() => setSelectedParticipant(participant)}
-                                                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
-                                            >
-                                                View Details
-                                            </button>
+                                            <div className="flex items-center justify-end space-x-2">
+                                                {event.has_sections && sections.length > 1 && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedParticipant(participant)
+                                                            setShowTransferConfirmation(true)
+                                                        }}
+                                                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
+                                                    >
+                                                        Transfer
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => setSelectedParticipant(participant)}
+                                                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
+                                                >
+                                                    View Details
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -705,6 +835,101 @@ export default function EventParticipantsPageClient({
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Transfer Confirmation Modal */}
+            {showTransferConfirmation && selectedParticipant && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+                        <div className="mt-3">
+                            <div className="flex items-center justify-center w-12 h-12 mx-auto bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                            </div>
+                            <div className="mt-2 text-center">
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Transfer Participant</h3>
+                                <div className="mt-2 px-7 py-3">
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        Transfer <strong>{selectedParticipant.first_name} {selectedParticipant.last_name}</strong> to a different section?
+                                    </p>
+                                    <div className="mt-4">
+                                        <label htmlFor="transferSection" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Select New Section:
+                                        </label>
+                                        <select
+                                            id="transferSection"
+                                            value={transferToSection}
+                                            onChange={(e) => setTransferToSection(e.target.value)}
+                                            className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                        >
+                                            <option value="">Select a section...</option>
+                                            {sections
+                                                .filter(section => section.id !== selectedParticipant.section?.id)
+                                                .map((section) => (
+                                                    <option key={section.id} value={section.id}>
+                                                        {section.title}
+                                                    </option>
+                                                ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-end space-x-3 mt-4">
+                                <button
+                                    onClick={() => {
+                                        setShowTransferConfirmation(false)
+                                        setSelectedParticipant(null)
+                                        setTransferToSection('')
+                                    }}
+                                    className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-400 dark:hover:bg-gray-500"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleTransfer}
+                                    disabled={!transferToSection || isTransferring}
+                                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isTransferring ? 'Transferring...' : 'Transfer'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Section Transfer Modal */}
+            {event.has_sections && sections.length > 0 && (
+                <SectionTransferModal
+                    isOpen={showTransferModal}
+                    onClose={() => setShowTransferModal(false)}
+                    eventId={event.id}
+                    sections={sections}
+                    participants={participants}
+                    onTransfer={async (transfers) => {
+                        try {
+                            const response = await fetch(`/api/events/${event.id}/participants/transfer`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ transfers }),
+                            })
+
+                            if (!response.ok) {
+                                const errorData = await response.json()
+                                throw new Error(errorData.error || 'Failed to transfer participants')
+                            }
+
+                            // Refresh the page to show updated data
+                            window.location.reload()
+                        } catch (error) {
+                            console.error('Error transferring participants:', error)
+                            alert(error instanceof Error ? error.message : 'Failed to transfer participants')
+                        }
+                    }}
+                />
             )}
         </>
     )

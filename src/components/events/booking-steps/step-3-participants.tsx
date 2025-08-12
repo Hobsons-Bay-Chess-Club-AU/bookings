@@ -1,9 +1,17 @@
 "use client"
 
-import { useState } from 'react'
-import { Participant, FormField, CustomDataValue } from '@/lib/types/database'
+import { useMemo, useState } from 'react'
+import { Participant, FormField, CustomDataValue, EventSection } from '@/lib/types/database'
 import ParticipantSearchPopup from '../participant-search-popup'
 import { DynamicFormFieldset, isFieldValid } from '@/components/forms'
+// import ParticipantSectionAssignment from '../participant-section-assignment'
+
+interface SelectedSectionItem {
+    sectionId: string
+    section: EventSection
+    pricingId: string
+    quantity: number
+}
 
 interface Step3ParticipantsProps {
     quantity: number
@@ -15,6 +23,11 @@ interface Step3ParticipantsProps {
     loading: boolean
     error: string
     userId?: string
+    // Multi-section props
+    sections?: EventSection[]
+    isMultiSectionEvent?: boolean
+
+    selectedSections?: SelectedSectionItem[]
 }
 
 export default function Step3Participants({
@@ -26,14 +39,39 @@ export default function Step3Participants({
     onBack,
     loading,
     error,
-    userId
+    userId,
+
+    isMultiSectionEvent = false,
+
+    selectedSections = []
 }: Step3ParticipantsProps) {
     const [currentParticipantIndex, setCurrentParticipantIndex] = useState(0)
     const [showSearchPopup, setShowSearchPopup] = useState(false)
+    // const [showSectionAssignment, setShowSectionAssignment] = useState(false)
+
 
     const currentParticipant = participants[currentParticipantIndex] || {}
     const isLastParticipant = currentParticipantIndex === quantity - 1
     const isFirstParticipant = currentParticipantIndex === 0
+
+    // Build auto allocation order once based on selected section quantities
+    const autoAllocationOrder = useMemo(() => {
+        if (!isMultiSectionEvent || !selectedSections || selectedSections.length === 0) {
+            return [] as { sectionId: string; sectionTitle: string }[]
+        }
+        const order: { sectionId: string; sectionTitle: string }[] = []
+        selectedSections.forEach((sel) => {
+            for (let i = 0; i < sel.quantity; i += 1) {
+                order.push({ sectionId: sel.sectionId, sectionTitle: sel.section.title })
+            }
+        })
+        return order
+    }, [isMultiSectionEvent, selectedSections])
+
+    const getAssignedSectionTitleForIndex = (index: number): string | undefined => {
+        if (!isMultiSectionEvent || autoAllocationOrder.length === 0) return undefined
+        return autoAllocationOrder[index]?.sectionTitle
+    }
 
     const isCurrentParticipantValid = (): boolean => {
         const participant = currentParticipant
@@ -123,10 +161,10 @@ export default function Step3Participants({
                             <div
                                 key={index}
                                 className={`w-3 h-3 rounded-full ${index < currentParticipantIndex
-                                    ? 'bg-green-500' // Completed
+                                    ? 'bg-green-500'
                                     : index === currentParticipantIndex
-                                        ? 'bg-blue-500' // Current
-                                        : 'bg-gray-300 dark:bg-gray-700' // Pending
+                                        ? 'bg-blue-500'
+                                        : 'bg-gray-300 dark:bg-gray-700'
                                     }`}
                             />
                         ))}
@@ -138,7 +176,10 @@ export default function Step3Participants({
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-white dark:bg-gray-800">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-xl font-medium text-gray-900 dark:text-gray-100">
-                        Participant {currentParticipantIndex + 1}
+                        {(() => {
+                            const assigned = getAssignedSectionTitleForIndex(currentParticipantIndex)
+                            return assigned ? `Participant ${currentParticipantIndex + 1} - ${assigned}` : `Participant ${currentParticipantIndex + 1}`
+                        })()}
                     </h3>
                     {userId && (
                         <button
@@ -216,6 +257,14 @@ export default function Step3Participants({
                     />
                 </div>
             </div>
+
+            {/* Section Assignment for Multi-Section Events (hidden for now) */}
+            {/* We keep the code scaffold but don't render it to simplify UX as requested */}
+            {false && isMultiSectionEvent && participants.length > 0 && (
+                <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+                    {/* Manual assignment UI intentionally hidden */}
+                </div>
+            )}
 
             {/* Navigation Buttons */}
             <div className="flex space-x-4 mt-8">

@@ -13,6 +13,15 @@ function isBookable(event: Event) {
     if (event.entry_close_date && new Date(event.entry_close_date) < now) return false
     const isBaseOpen = event.status === 'published'
     if (!isBaseOpen) return false
+    
+    // For multi-section events, check if any section has available seats
+    if (event.has_sections && event.sections && event.sections.length > 0) {
+        const hasAvailableSeats = event.sections.some(section => (section.available_seats ?? 0) > 0)
+        if (!hasAvailableSeats && event.settings?.whitelist_enabled) return true
+        return hasAvailableSeats
+    }
+    
+    // For single events, check main event capacity
     const isFull = event.max_attendees != null && event.current_attendees >= event.max_attendees
     if (isFull && event.settings?.whitelist_enabled) return true
     return event.max_attendees == null || !isFull
@@ -20,7 +29,12 @@ function isBookable(event: Event) {
 
 export default function MobileBookingButton({ event, onClick, className = '' }: MobileBookingButtonProps) {
     const bookable = isBookable(event)
-    const isEventFull = event.max_attendees ? event.current_attendees >= event.max_attendees : false
+    
+    // For multi-section events, check if all sections are full
+    const isEventFull = event.has_sections && event.sections && event.sections.length > 0
+        ? event.sections.every(section => (section.available_seats ?? 0) === 0)
+        : (event.max_attendees ? event.current_attendees >= event.max_attendees : false)
+    
     const isEventPast = new Date(event.start_date) < new Date()
 
     let buttonText = 'Book Now'

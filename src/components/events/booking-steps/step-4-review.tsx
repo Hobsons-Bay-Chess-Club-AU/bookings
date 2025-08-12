@@ -1,14 +1,21 @@
 'use client'
 
-import { Event, EventPricing, Participant, FormField } from '@/lib/types/database'
+import { Event, EventPricing, Participant, FormField, EventSection, SectionPricing } from '@/lib/types/database'
 
 interface Step4ReviewProps {
     event: Event
-    selectedPricing: EventPricing | null
-    quantity: number
+    selectedPricing?: EventPricing | null
+    quantity?: number
     totalAmount: number
-    baseAmount: number
+    baseAmount?: number
     processingFee?: number
+    selectedSections?: Array<{
+        sectionId: string
+        section: EventSection
+        pricingId: string
+        pricing: SectionPricing
+        quantity: number
+    }>
     discountInfo?: {
         totalDiscount: number
         appliedDiscounts: Array<{
@@ -34,7 +41,7 @@ interface Step4ReviewProps {
         phone: string
     }
     participants: Partial<Participant>[]
-    formFields: FormField[]
+    formFields?: FormField[]
     agreedToTerms: boolean
     setAgreedToTerms: (agreed: boolean) => void
     optInMarketing: boolean
@@ -44,19 +51,23 @@ interface Step4ReviewProps {
     loading: boolean
     error: string
     isResuming?: boolean
+    shouldWhitelist?: boolean
+    isLegitimateResume?: boolean
+    isMultiSectionEvent?: boolean
 }
 
 export default function Step4Review({
     event,
     selectedPricing,
-    quantity,
+    quantity = 1,
     totalAmount,
-    baseAmount,
+    baseAmount = totalAmount,
+    selectedSections = [],
     discountInfo,
     discountLoading,
     contactInfo,
     participants,
-    formFields,
+    formFields = [],
     agreedToTerms,
     setAgreedToTerms,
     optInMarketing,
@@ -65,12 +76,13 @@ export default function Step4Review({
     onBack,
     loading,
     error,
-    isResuming
+    isResuming = false,
+    shouldWhitelist = false,
+    isMultiSectionEvent = false
 }: Step4ReviewProps) {
-    const isFreeEvent = totalAmount === 0 || selectedPricing?.price === 0
-    const isEventFull = event.max_attendees != null && event.current_attendees >= event.max_attendees
-    const whitelistEnabled = Boolean(event.settings?.whitelist_enabled)
-    const shouldWhitelist = isEventFull && whitelistEnabled && !isResuming
+    const isFreeEvent = isMultiSectionEvent 
+        ? (selectedSections.length === 0 || selectedSections.every(selection => selection.pricing.price === 0))
+        : (totalAmount === 0 || selectedPricing?.price === 0)
     return (
         <div className="space-y-6">
             <div>
@@ -91,16 +103,33 @@ export default function Step4Review({
 
                 {/* Pricing Info */}
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
-                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Pricing</h4>
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                        {isMultiSectionEvent ? 'Section Pricing' : 'Pricing'}
+                    </h4>
                     <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                            <span className="text-gray-700 dark:text-gray-300">
-                                {selectedPricing?.name} × {quantity}
-                            </span>
-                            <span className="text-gray-700 dark:text-gray-300">
-                                ${baseAmount.toFixed(2)}
-                            </span>
-                        </div>
+                        {isMultiSectionEvent ? (
+                            // Multi-section pricing display
+                            selectedSections.map((selection, index) => (
+                                <div key={index} className="flex justify-between items-center">
+                                    <span className="text-gray-700 dark:text-gray-300">
+                                        {selection.section.title} - {selection.pricing.name} × {selection.quantity}
+                                    </span>
+                                    <span className="text-gray-700 dark:text-gray-300">
+                                        ${(selection.pricing.price * selection.quantity).toFixed(2)}
+                                    </span>
+                                </div>
+                            ))
+                        ) : (
+                            // Single event pricing display
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-700 dark:text-gray-300">
+                                    {selectedPricing?.name} × {quantity}
+                                </span>
+                                <span className="text-gray-700 dark:text-gray-300">
+                                    ${baseAmount.toFixed(2)}
+                                </span>
+                            </div>
+                        )}
                         
                         {/* Discount Information */}
                         {discountLoading && (

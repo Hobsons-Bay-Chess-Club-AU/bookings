@@ -9,6 +9,7 @@ import EventBookingSection from '@/components/events/event-booking-section'
 import EventLayout from '@/components/events/event-layout'
 import RefundPolicyDisplay from '@/components/events/refund-policy-display'
 import EventLocationMap from '@/components/events/event-location-map'
+import EventSectionsDisplay from '@/components/events/event-sections-display'
 import EventChatClient from './event-chat-client'
 import { Event } from '@/lib/types/database'
 import MarkdownContent from '@/components/ui/html-content'
@@ -48,7 +49,13 @@ async function getEvent(id: string): Promise<Event | null> {
     const fetchQuery = () =>
         supabase
             .from('events')
-            .select('*')
+            .select(`
+                *,
+                sections:event_sections(
+                    *,
+                    pricing:section_pricing(*)
+                )
+            `)
             .eq('id', id)
             .single()
 
@@ -60,7 +67,17 @@ async function getEvent(id: string): Promise<Event | null> {
         if (!resp || resp.error || !resp.data) {
             return null
         }
-        return resp.data
+        
+        // Calculate available seats for each section
+        const event = resp.data
+        if (event.sections) {
+            event.sections = event.sections.map(section => ({
+                ...section,
+                available_seats: section.max_seats - section.current_seats
+            }))
+        }
+        
+        return event
     } catch (err) {
         if (err instanceof TimeoutError) {
             try {
@@ -68,7 +85,17 @@ async function getEvent(id: string): Promise<Event | null> {
                 if (!resp || resp.error || !resp.data) {
                     return null
                 }
-                return resp.data
+                
+                // Calculate available seats for each section
+                const event = resp.data
+                if (event.sections) {
+                    event.sections = event.sections.map(section => ({
+                        ...section,
+                        available_seats: section.max_seats - section.current_seats
+                    }))
+                }
+                
+                return event
             } catch {
                 return null
             }
@@ -254,7 +281,10 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     if (!priceDisplay) {
         priceDisplay = event.price === 0 ? 'Contact organizer' : `AUD $${event.price.toFixed(2)}`
     }
-    const isEventFull = event.max_attendees ? event.current_attendees >= event.max_attendees : false
+    // For multi-section events, check if all sections are full
+    const isEventFull = event.has_sections && event.sections && event.sections.length > 0
+        ? event.sections.every(section => (section.available_seats ?? 0) === 0)
+        : (event.max_attendees ? event.current_attendees >= event.max_attendees : false)
     const isEventPast = new Date(event.start_date) < new Date()
 
     return (
@@ -371,11 +401,11 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                                     </div>
                                 </div>
                             </div>
-                            {event.max_attendees && event.current_attendees >= event.max_attendees && event.settings?.whitelist_enabled && (
-                                                <div className="py-3 w-full text-xs text-amber-700 dark:text-amber-300 text-center px-2 leading-relaxed break-words">
-                                                    Event is full. New registrations will be placed on the whitelist.
-                                                </div>
-                                            )}
+                            {isEventFull && event.settings?.whitelist_enabled && (
+                                <div className="py-3 w-full text-xs text-amber-700 dark:text-amber-300 text-center px-2 leading-relaxed break-words">
+                                    Event is full. New registrations will be placed on the whitelist.
+                                </div>
+                            )}
                             {event.description && (
                                 <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                                     <MarkdownContent
@@ -383,6 +413,14 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                                         className="text-gray-700 dark:text-gray-300"
                                     />
                                 </div>
+                            )}
+
+                            {/* Event Sections */}
+                            {event.has_sections && event.sections && (
+                                <EventSectionsDisplay 
+                                    sections={event.sections} 
+                                    eventTimezone={event.timezone}
+                                />
                             )}
 
                             {/* Location Map */}

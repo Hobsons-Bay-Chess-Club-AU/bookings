@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Event, Profile, EventPricing, Participant, FormField } from '@/lib/types/database'
+import { Event, Profile, EventPricing, Participant, FormField, EventSection, SectionPricing } from '@/lib/types/database'
 import { loadStripe } from '@stripe/stripe-js'
+import Step0Sections from './booking-steps/step-0-sections'
 import Step1Pricing from './booking-steps/step-1-pricing'
 import Step2Contact from './booking-steps/step-2-contact'
 import Step3Participants from './booking-steps/step-3-participants'
@@ -29,7 +30,7 @@ interface BookingFormProps {
 
 export default function BookingForm({ event, user, onStepChange, initialStep, resumeBookingId }: BookingFormProps) {
     const searchParams = useSearchParams()
-    const [step, setStep] = useState(1) // 1: Pricing & Quantity, 2: Contact Info, 3: Participant Info, 4: Review, 5: Checkout
+    const [step, setStep] = useState(1) // 0: Section Selection (multi-section only), 1: Pricing & Quantity, 2: Contact Info, 3: Participant Info, 4: Review, 5: Checkout
     const [quantity, setQuantity] = useState(1)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
@@ -51,6 +52,17 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
     const [optInMarketing, setOptInMarketing] = useState(false)
     const [shouldRedirect, setShouldRedirect] = useState(false)
     const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+    // Multi-section booking state
+    const [selectedSections, setSelectedSections] = useState<Array<{
+        sectionId: string
+        section: EventSection
+        pricingId: string
+        pricing: SectionPricing
+        quantity: number
+    }>>([])
+
+
 
     const [discountInfo, setDiscountInfo] = useState<{
         totalDiscount: number
@@ -77,18 +89,60 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
     // Use booking journey context
     const { setIsInBookingJourney, setBookingStep } = useBookingJourney()
 
-    const baseAmount = selectedPricing ? selectedPricing.price * quantity : (event.price * quantity)
+    // Determine if this is a multi-section event
+    const isMultiSectionEvent = event.has_sections && event.sections && event.sections.length > 0
+    
+    // Calculate total amount based on event type
+    const baseAmount = isMultiSectionEvent 
+        ? selectedSections.reduce((sum, selection) => sum + (selection.pricing.price * selection.quantity), 0)
+        : (selectedPricing ? selectedPricing.price * quantity : (event.price * quantity))
     const totalAmount = discountInfo?.finalAmount ?? baseAmount
+    
+    // For multi-section events, check if selected sections have pricing
+    const isFreeEvent = isMultiSectionEvent 
+        ? (selectedSections.length === 0 || selectedSections.every(selection => selection.pricing.price === 0))
+        : (totalAmount === 0 || selectedPricing?.price === 0)
+    
     // Processing fee estimation for display (final fee calculated server-side)
     const processingFee = totalAmount > 0 ? totalAmount * 0.017 + 0.30 : 0
-    const isEventFull = event.max_attendees != null && event.current_attendees >= event.max_attendees
+    
+    // For multi-section events, check availability based on selected sections or all sections if none selected
+    const isEventFull = isMultiSectionEvent
+        ? (() => {
+            // If sections are selected, check if those specific sections are full
+            if (selectedSections.length > 0) {
+                return selectedSections.every(selection => {
+                    const section = event.sections?.find(s => s.id === selection.sectionId)
+                    return section && (section.available_seats ?? 0) === 0
+                })
+            }
+            // If no sections selected yet, check if ALL sections are full
+            return event.sections?.every(section => (section.available_seats ?? 0) === 0) ?? false
+        })()
+        : (event.max_attendees != null && event.current_attendees >= event.max_attendees)
+    
     const whitelistEnabled = Boolean(event.settings?.whitelist_enabled)
     // Treat any active resume context as bypass for whitelist/sold-out checks
     const isResumeFlowActive = isLegitimateResume || Boolean(currentBookingId) || Boolean(resumeBookingId)
     const shouldWhitelist = isEventFull && whitelistEnabled && !isResumeFlowActive
-    const maxQuantity = event.max_attendees
-        ? Math.min(10, Math.max(0, event.max_attendees - event.current_attendees))
-        : 10
+    
+    // For multi-section events, calculate max quantity based on selected sections' availability
+    const maxQuantity = isMultiSectionEvent
+        ? (() => {
+            if (selectedSections.length === 0) {
+                // If no sections selected, return 0 to prevent booking
+                return 0
+            }
+            // Calculate total available seats across all selected sections
+            const totalAvailableSeats = selectedSections.reduce((sum, selection) => {
+                const section = event.sections?.find(s => s.id === selection.sectionId)
+                return sum + (section?.available_seats ?? 0)
+            }, 0)
+            return Math.min(10, Math.max(0, totalAvailableSeats))
+        })()
+        : (event.max_attendees
+            ? Math.min(10, Math.max(0, event.max_attendees - event.current_attendees))
+            : 10)
 
     // Fetch available pricing options and form fields
     useEffect(() => {
@@ -179,6 +233,13 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
         }
     }, [step])
 
+    // Set initial step based on event type (only on mount)
+    useEffect(() => {
+        if (isMultiSectionEvent && step === 1 && !initialStep && !resumeBookingId) {
+            setStep(0) // Start with section selection for multi-section events
+        }
+    }, [isMultiSectionEvent]) // Remove step from dependencies to prevent infinite loop
+
     // Handle resuming from URL parameters or props
     useEffect(() => {
         const urlStep = searchParams?.get('step') || initialStep
@@ -245,16 +306,22 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
 
     // Handle redirect for free events
     useEffect(() => {
+        // For multi-section events, check if selected sections have pricing
+        const isFreeEvent = isMultiSectionEvent 
+            ? (selectedSections.length === 0 || selectedSections.every(selection => selection.pricing.price === 0))
+            : (totalAmount === 0 || selectedPricing?.price === 0)
+
         console.log('🔍 Redirect useEffect triggered:', {
             step,
             currentBookingId,
             shouldRedirect,
             totalAmount,
             selectedPricingPrice: selectedPricing?.price,
-            isFreeEvent: totalAmount === 0 || selectedPricing?.price === 0
+            isFreeEvent,
+            selectedSections: selectedSections.map(s => ({ sectionId: s.sectionId, price: s.pricing.price }))
         })
 
-        if (shouldRedirect && currentBookingId && (totalAmount === 0 || selectedPricing?.price === 0)) {
+        if (shouldRedirect && currentBookingId && isFreeEvent) {
             console.log('✅ Conditions met for redirect, setting timeout...')
             
             // Clear any existing timeout
@@ -274,7 +341,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
             console.log('❌ Redirect conditions not met:', {
                 shouldRedirect,
                 hasBookingId: !!currentBookingId,
-                isFreeEvent: totalAmount === 0 || selectedPricing?.price === 0
+                isFreeEvent
             })
         }
 
@@ -512,7 +579,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
             }
 
             // Check if this is a free event
-            const isFreeEvent = totalAmount === 0 || selectedPricing?.price === 0
+        
             console.log('💰 Event pricing check:', {
                 totalAmount,
                 selectedPricingPrice: selectedPricing?.price,
@@ -568,20 +635,40 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                     }
                 }
 
+                // Calculate quantity for multi-section events
+                const checkoutQuantity = isMultiSectionEvent 
+                    ? (selectedSections.length > 0 
+                        ? selectedSections.reduce((sum, selection) => sum + selection.quantity, 0) 
+                        : 0) // If no sections selected, quantity should be 0
+                    : quantity
+                
+                // Validate that we have selected sections for multi-section events
+                if (isMultiSectionEvent && selectedSections.length === 0) {
+                    throw new Error('No sections selected for multi-section event')
+                }
+
+                // Prepare request body
+                const requestBody = {
+                    bookingId: currentBookingId,
+                    eventId: event.id,
+                    quantity: checkoutQuantity,
+                    amount: totalAmount,
+                    eventTitle: isMultiSectionEvent 
+                        ? `${event.title} - ${selectedSections.map(selection => `${selection.section.title} (${selection.quantity})`).join(', ')}`
+                        : event.title,
+                    optInMarketing: optInMarketing,
+                    isMultiSectionEvent: isMultiSectionEvent
+                }
+                
+
+                
                 // Proceed to payment
                 const checkoutResponse = await fetch('/api/create-checkout-session', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        bookingId: currentBookingId,
-                        eventId: event.id,
-                        quantity: quantity,
-                        amount: totalAmount,
-                        eventTitle: event.title,
-                        optInMarketing: optInMarketing
-                    })
+                    body: JSON.stringify(requestBody)
                 })
 
                 if (!checkoutResponse.ok) {
@@ -590,6 +677,8 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                 }
 
                 const { sessionId } = await checkoutResponse.json()
+
+
 
                 // Redirect to Stripe checkout
                 const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
@@ -608,7 +697,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
             // Determine whitelist flow: if event is full and whitelist enabled, create whitelisted booking
             const shouldWhitelist = isEventFull && whitelistEnabled && !isLegitimateResume
 
-            // Create booking record with pricing information
+            // Create booking record
             const bookingData: {
                 event_id: string
                 user_id: string
@@ -617,17 +706,19 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                 total_amount: number
                 status: 'confirmed' | 'pending' | 'whitelisted'
                 pricing_id?: string
+                is_multi_section?: boolean
             } = {
                 event_id: event.id,
                 user_id: user.id,
-                quantity,
-                unit_price: selectedPricing.price,
+                quantity: isMultiSectionEvent ? selectedSections.reduce((sum, selection) => sum + selection.quantity, 0) : quantity,
+                unit_price: isMultiSectionEvent ? 0 : selectedPricing.price, // Will be calculated from sections
                 total_amount: totalAmount,
-                status: shouldWhitelist ? 'whitelisted' : (isFreeEvent ? 'confirmed' : 'pending')
+                status: shouldWhitelist ? 'whitelisted' : (isFreeEvent ? 'confirmed' : 'pending'),
+                is_multi_section: isMultiSectionEvent
             }
             
-            // Only set pricing_id if it's not a free event and we have a valid UUID pricing ID
-            if (!isFreeEvent && selectedPricing.id && selectedPricing.id !== 'default') {
+            // Only set pricing_id for single events if it's not a free event and we have a valid UUID pricing ID
+            if (!isMultiSectionEvent && !isFreeEvent && selectedPricing.id && selectedPricing.id !== 'default') {
                 bookingData.pricing_id = selectedPricing.id
             }
             
@@ -639,6 +730,27 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
 
             if (bookingError) {
                 throw new Error(bookingError.message)
+            }
+
+            // For multi-section events, create section booking records
+            if (isMultiSectionEvent && selectedSections.length > 0) {
+                for (const selection of selectedSections) {
+                    try {
+                        await supabase
+                            .from('section_bookings')
+                            .insert({
+                                booking_id: booking.id,
+                                section_id: selection.sectionId,
+                                pricing_id: selection.pricingId,
+                                quantity: selection.quantity,
+                                unit_price: selection.pricing.price,
+                                total_amount: selection.pricing.price * selection.quantity
+                            })
+                    } catch (sectionBookingError) {
+                        console.error('Error creating section booking:', sectionBookingError)
+                        throw new Error('Failed to create section booking')
+                    }
+                }
             }
 
             // Create discount application records if discounts were applied
@@ -662,10 +774,58 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
             }
 
             // Create participants records
+            console.log('🔍 [BOOKING-FORM] Creating participants for booking:', booking.id)
+            console.log('🔍 [BOOKING-FORM] Participants to create:', participants.length)
+            console.log('🔍 [BOOKING-FORM] Is multi-section event:', isMultiSectionEvent)
+            console.log('🔍 [BOOKING-FORM] Selected sections:', selectedSections)
+            console.log('🔍 [BOOKING-FORM] Participants data:', participants.map(p => ({
+                first_name: p.first_name,
+                last_name: p.last_name,
+                email: p.email,
+                phone: p.phone,
+                has_first_name: !!p.first_name,
+                has_last_name: !!p.last_name
+            })))
+            
+            console.log('🔍 [BOOKING-FORM] Starting participant creation loop for', participants.length, 'participants')
+            
+            const participantCreationErrors: string[] = []
+            let successfulParticipants = 0
+            
             for (let i = 0; i < participants.length; i++) {
                 const participant = participants[i]
+                console.log('🔍 [BOOKING-FORM] Processing participant', i + 1, ':', {
+                    first_name: participant.first_name,
+                    last_name: participant.last_name,
+                    has_first_name: !!participant.first_name,
+                    has_last_name: !!participant.last_name
+                })
+                
                 if (participant.first_name && participant.last_name) {
-                    const { error: participantError } = await supabase
+                    console.log('✅ [BOOKING-FORM] Participant', i + 1, 'meets criteria, proceeding with creation')
+                    // For multi-section events, assign participants to sections automatically
+                    let sectionId = null
+                    if (isMultiSectionEvent && selectedSections.length > 0) {
+                        // Logic to automatically assign participants to sections based on selectedSections quantities
+                        // This will distribute participants across sections as per the quantities selected in step 0
+                        let assignedCount = 0
+                        for (const sectionSelection of selectedSections) {
+                            if (i >= assignedCount && i < assignedCount + sectionSelection.quantity) {
+                                sectionId = sectionSelection.sectionId
+                                break
+                            }
+                            assignedCount += sectionSelection.quantity
+                        }
+                    }
+                    
+                    console.log('🔍 [BOOKING-FORM] Creating participant', i + 1, ':', {
+                        first_name: participant.first_name,
+                        last_name: participant.last_name,
+                        sectionId: sectionId,
+                        isMultiSectionEvent: isMultiSectionEvent
+                    })
+
+                    const { data: createdParticipant, error: participantError } = await supabase
                         .from('participants')
                         .insert({
                             booking_id: booking.id,
@@ -675,14 +835,45 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                             contact_phone: participant.phone,
                             date_of_birth: participant.date_of_birth,
                             custom_data: participant.custom_data || {},
+                            section_id: sectionId,
                             status: shouldWhitelist ? 'whitelisted' : 'active'
                         })
+                        .select()
+                        .single()
 
                     if (participantError) {
-                        console.error('Error creating participant:', participantError)
+                        console.error('❌ [BOOKING-FORM] Error creating participant:', participantError)
+                        participantCreationErrors.push(`Participant ${i + 1}: ${participantError.message}`)
+                    } else {
+                        console.log('✅ [BOOKING-FORM] Successfully created participant:', createdParticipant?.id)
+                        successfulParticipants++
+                        
+                        // Section assignment is already handled via section_id field in participants table
+                        if (isMultiSectionEvent && createdParticipant && sectionId) {
+                            console.log('✅ [BOOKING-FORM] Participant assigned to section:', sectionId)
+                        }
                     }
+                } else {
+                    console.log('❌ [BOOKING-FORM] Participant', i + 1, 'does not meet criteria:', {
+                        first_name: participant.first_name,
+                        last_name: participant.last_name,
+                        missing_first_name: !participant.first_name,
+                        missing_last_name: !participant.last_name
+                    })
+                    participantCreationErrors.push(`Participant ${i + 1}: Missing first_name or last_name`)
                 }
             }
+            
+            // Check if we had any participant creation errors
+            if (participantCreationErrors.length > 0) {
+                console.error('❌ [BOOKING-FORM] Participant creation failed with errors:', participantCreationErrors)
+                console.error('❌ [BOOKING-FORM] Successful participants:', successfulParticipants, 'out of', participants.length)
+                setError(`Failed to create participants: ${participantCreationErrors.join(', ')}`)
+                setLoading(false)
+                return
+            }
+            
+            console.log('✅ [BOOKING-FORM] All participants created successfully:', successfulParticipants, 'participants')
 
             // Handle mailing list opt-in for free events
             if (optInMarketing && user.email) {
@@ -752,6 +943,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                 console.log('✅ Free event setup complete')
             } else {
                 // For paid events, proceed with Stripe checkout
+                
                 const checkoutResponse = await fetch('/api/create-checkout-session', {
                     method: 'POST',
                     headers: {
@@ -760,10 +952,12 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                     body: JSON.stringify({
                         bookingId: booking.id,
                         eventId: event.id,
-                        quantity: quantity,
+                        quantity: isMultiSectionEvent ? selectedSections.reduce((sum, selection) => sum + selection.quantity, 0) : quantity,
                         amount: totalAmount,
                         eventTitle: event.title,
-                        optInMarketing: optInMarketing
+                        optInMarketing: optInMarketing,
+                        isMultiSectionEvent: isMultiSectionEvent,
+                        selectedSections: isMultiSectionEvent ? selectedSections : undefined
                     })
                 })
 
@@ -820,8 +1014,8 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
         )
     }
 
-    // Skip quantity check when resuming a booking
-    if (!isResumeFlowActive && maxQuantity <= 0 && !whitelistEnabled) {
+    // Skip quantity check when resuming a booking or when on step 0 for multi-section events
+    if (!isResumeFlowActive && maxQuantity <= 0 && !whitelistEnabled && !(isMultiSectionEvent && step === 0)) {
         return (
             <div className="text-center">
                 <p className="text-gray-600 dark:text-gray-400">This event is sold out.</p>
@@ -851,40 +1045,61 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
         <div className="space-y-6 text-gray-900 dark:text-gray-100">
             {/* Progress Steps */}
             <div className="flex items-center justify-between mb-8">
-                <div className={`flex flex-col md:flex-row md:items-center ${step >= 1 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= 1 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 dark:border-gray-600'
-                        }`}>
-                        1
-                    </div>
-                    <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">Book</span>
-                </div>
-                <div className={`w-3 md:w-6 h-0.5 ${step >= 2 ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
-                <div className={`flex flex-col md:flex-row md:items-center ${step >= 2 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= 2 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 dark:border-gray-600'
-                        }`}>
-                        2
-                    </div>
-                    <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">Contact</span>
-                </div>
-                <div className={`w-3 md:w-6 h-0.5 ${step >= 3 ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
-                <div className={`flex flex-col md:flex-row md:items-center ${step >= 3 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= 3 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 dark:border-gray-600'
-                        }`}>
-                        3
-                    </div>
-                    <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">Participants</span>
-                </div>
-                <div className={`w-3 md:w-6 h-0.5 ${step >= 4 ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
-                <div className={`flex flex-col md:flex-row md:items-center ${step >= 4 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= 4 ? (shouldWhitelist && !isLegitimateResume ? 'border-amber-600 bg-amber-600 text-white' : 'border-indigo-600 bg-indigo-600 text-white') : 'border-gray-300 dark:border-gray-600'
-                        }`}>
-                        4
+                {/* Step 0: Sections (only for multi-section events) */}
+                {isMultiSectionEvent && (
+                    <>
+                        <div className={`flex flex-col md:flex-row md:items-center ${step >= 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                            <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= 0 ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
+                                1
+                            </div>
+                            <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">Sections</span>
+                        </div>
+                        <div className={`w-3 md:w-6 h-0.5 ${step >= 1 ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+                    </>
+                )}
+
+                {/* Step 1: Pricing & Quantity (or Contact for multi-section) */}
+                <div className={`flex flex-col md:flex-row md:items-center ${step >= (isMultiSectionEvent ? 1 : 1) ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= (isMultiSectionEvent ? 1 : 1) ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
+                        {isMultiSectionEvent ? 2 : 1}
                     </div>
                     <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">
-                        {shouldWhitelist && !isLegitimateResume ? 'Whitelisted' : (totalAmount === 0 || selectedPricing?.price === 0) ? 'Review' : 'Payment'}
+                        {isMultiSectionEvent ? 'Contact' : 'Book'}
                     </span>
                 </div>
+                <div className={`w-3 md:w-6 h-0.5 ${step >= (isMultiSectionEvent ? 2 : 2) ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
 
+                {/* Step 2: Contact (or Participants for multi-section) */}
+                <div className={`flex flex-col md:flex-row md:items-center ${step >= (isMultiSectionEvent ? 2 : 2) ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= (isMultiSectionEvent ? 2 : 2) ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
+                        {isMultiSectionEvent ? 3 : 2}
+                    </div>
+                    <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">
+                        {isMultiSectionEvent ? 'Participants' : 'Contact'}
+                    </span>
+                </div>
+                <div className={`w-3 md:w-6 h-0.5 ${step >= (isMultiSectionEvent ? 3 : 3) ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+
+                {/* Step 3: Participants (or Review for multi-section) */}
+                <div className={`flex flex-col md:flex-row md:items-center ${step >= (isMultiSectionEvent ? 3 : 3) ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= (isMultiSectionEvent ? 3 : 3) ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
+                        {isMultiSectionEvent ? 4 : 3}
+                    </div>
+                    <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">
+                        {isMultiSectionEvent ? 'Review' : 'Participants'}
+                    </span>
+                </div>
+                <div className={`w-3 md:w-6 h-0.5 ${step >= (isMultiSectionEvent ? 4 : 4) ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+
+                {/* Step 4: Review & Payment */}
+                <div className={`flex flex-col md:flex-row md:items-center ${step >= (isMultiSectionEvent ? 4 : 4) ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= (isMultiSectionEvent ? 4 : 4) ? (shouldWhitelist && !isLegitimateResume ? 'border-amber-600 bg-amber-600 text-white' : 'border-indigo-600 bg-indigo-600 text-white') : 'border-gray-300 dark:border-gray-600'}`}>
+                        {isMultiSectionEvent ? 5 : 4}
+                    </div>
+                    <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">
+                        {shouldWhitelist && !isLegitimateResume ? 'Whitelisted' : isFreeEvent ? 'Review' : 'Payment'}
+                    </span>
+                </div>
             </div>
 
             {/* Booking in Progress Warning */}
@@ -908,8 +1123,25 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                 </div>
             )}
 
-            {/* Step 1: Pricing & Quantity */}
-            {step === 1 && (
+            {/* Step 0: Section Selection (multi-section events only) */}
+            {step === 0 && isMultiSectionEvent && (
+                <Step0Sections
+                    sections={event.sections || []}
+                    selectedSections={selectedSections}
+                    setSelectedSections={setSelectedSections}
+                    onContinue={() => {
+                        setStep(1)
+                        if (onStepChange) {
+                            onStepChange(1)
+                        }
+                    }}
+                    loading={loading}
+                    error={error}
+                />
+            )}
+
+            {/* Step 1: Pricing & Quantity (single events) or Contact (multi-section events) */}
+            {step === 1 && !isMultiSectionEvent && (
                 <Step1Pricing
                     availablePricing={availablePricing}
                     selectedPricing={selectedPricing}
@@ -925,8 +1157,49 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                 />
             )}
 
-            {/* Step 2: Contact Information */}
-            {step === 2 && (
+            {/* Step 1: Contact Information (multi-section events) */}
+            {step === 1 && isMultiSectionEvent && (
+                <Step2Contact
+                    contactInfo={contactInfo}
+                    setContactInfo={setContactInfo}
+                    onContinue={() => {
+                        // Pre-fill contact info with user data if available
+                        if (user) {
+                            const userFullName = user.full_name || ''
+                            const nameParts = userFullName.split(' ')
+                            const firstName = nameParts[0] || ''
+                            const lastName = nameParts.slice(1).join(' ') || ''
+
+                            setContactInfo({
+                                first_name: firstName,
+                                last_name: lastName,
+                                email: user.email || '',
+                                phone: user.phone || ''
+                            })
+                        }
+
+                        // Calculate quantity based on selected sections
+                        const totalQuantity = selectedSections.reduce((sum, selection) => sum + selection.quantity, 0)
+                        setQuantity(totalQuantity)
+
+                        setStep(2)
+                        if (onStepChange) {
+                            onStepChange(2)
+                        }
+                    }}
+                    onBack={() => {
+                        setStep(0)
+                        if (onStepChange) {
+                            onStepChange(0)
+                        }
+                    }}
+                    loading={loading}
+                    error={error}
+                />
+            )}
+
+            {/* Step 2: Contact Information (single events) or Participants (multi-section events) */}
+            {step === 2 && !isMultiSectionEvent && (
                 <Step2Contact
                     contactInfo={contactInfo}
                     setContactInfo={setContactInfo}
@@ -942,8 +1215,36 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                 />
             )}
 
-            {/* Step 3: Participant Information */}
-            {step === 3 && (
+            {/* Step 2: Participant Information (multi-section events) */}
+            {step === 2 && isMultiSectionEvent && (
+                <Step3Participants
+                    quantity={quantity}
+                    participants={participants}
+                    setParticipants={setParticipants}
+                    formFields={formFields}
+                    onComplete={() => {
+                        setStep(3)
+                        if (onStepChange) {
+                            onStepChange(3)
+                        }
+                    }}
+                    onBack={() => {
+                        setStep(1)
+                        if (onStepChange) {
+                            onStepChange(1)
+                        }
+                    }}
+                    loading={loading}
+                    error={error}
+                    userId={user?.id}
+                    sections={event.sections || []}
+                    isMultiSectionEvent={true}
+                    selectedSections={selectedSections}
+                />
+            )}
+
+            {/* Step 3: Participant Information (single events) or Review (multi-section events) */}
+            {step === 3 && !isMultiSectionEvent && (
                 <Step3Participants
                     quantity={quantity}
                     participants={participants}
@@ -959,6 +1260,35 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                     loading={loading}
                     error={error}
                     userId={user?.id}
+                />
+            )}
+
+            {/* Step 3: Review (multi-section events) */}
+            {step === 3 && isMultiSectionEvent && (
+                <Step4Review
+                    event={event}
+                    contactInfo={contactInfo}
+                    participants={participants}
+                    selectedSections={selectedSections}
+                    totalAmount={totalAmount}
+                    processingFee={processingFee}
+                    agreedToTerms={agreedToTerms}
+                    setAgreedToTerms={setAgreedToTerms}
+                    optInMarketing={optInMarketing}
+                    setOptInMarketing={setOptInMarketing}
+                    onComplete={handleCompleteBooking}
+                    onBack={() => {
+                        setStep(2)
+                        if (onStepChange) {
+                            onStepChange(2)
+                        }
+                    }}
+                    loading={loading}
+                    error={error}
+                    shouldWhitelist={shouldWhitelist}
+                    isLegitimateResume={isLegitimateResume}
+                    discountInfo={discountInfo}
+                    isMultiSectionEvent={true}
                 />
             )}
 
@@ -990,6 +1320,10 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                     loading={loading}
                     error={error}
                     isResuming={isLegitimateResume}
+                    shouldWhitelist={shouldWhitelist}
+                    isLegitimateResume={isLegitimateResume}
+                    isMultiSectionEvent={isMultiSectionEvent}
+                    selectedSections={selectedSections}
                 />
             )}
 
@@ -1013,7 +1347,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                                 </div>
                             </div>
                         </div>
-                    ) : (totalAmount === 0 || selectedPricing?.price === 0) ? (
+                    ) : isFreeEvent ? (
                         // Free event success
                         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                             <div className="flex">

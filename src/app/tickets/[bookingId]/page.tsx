@@ -59,14 +59,57 @@ export default async function TicketPage({ params }: TicketPageProps) {
     })
 
     // Get participants for this booking
+    console.log('🔍 [TICKET-PAGE] Fetching participants for booking:', booking.id)
+    console.log('🔍 [TICKET-PAGE] Booking details:', {
+        id: booking.id,
+        booking_id: booking.booking_id,
+        status: booking.status,
+        is_multi_section: booking.is_multi_section,
+        quantity: booking.quantity
+    })
+    
     const { data: participants, error: participantsError } = await supabase
         .from('participants')
-        .select('*')
+        .select(`
+            *,
+            section:event_sections(*)
+        `)
         .eq('booking_id', booking.id)
         .order('created_at', { ascending: true })
 
+    console.log('🔍 [TICKET-PAGE] Participants query result:', {
+        data: participants,
+        error: participantsError,
+        count: participants?.length || 0
+    })
+
     if (participantsError) {
-        console.error('Error fetching participants:', participantsError)
+        console.error('❌ [TICKET-PAGE] Error fetching participants:', participantsError)
+    }
+    
+    if (!participants || participants.length === 0) {
+        console.log('❌ [TICKET-PAGE] No participants found, checking all participants...')
+        
+        // Let's also check if there are any participants at all for this booking
+        const { data: allParticipants, error: allParticipantsError } = await supabase
+            .from('participants')
+            .select('*')
+            .eq('booking_id', booking.id)
+        
+        console.log('🔍 [TICKET-PAGE] All participants check:', {
+            allParticipants: allParticipants,
+            allParticipantsError: allParticipantsError,
+            count: allParticipants?.length || 0
+        })
+    } else {
+        console.log('✅ [TICKET-PAGE] Found participants:', participants.length)
+        console.log('🔍 [TICKET-PAGE] Participant details:', participants.map(p => ({
+            id: p.id,
+            first_name: p.first_name,
+            last_name: p.last_name,
+            section_id: p.section_id,
+            section: p.section
+        })))
     }
 
     // Allow access if user is the booking owner, event organizer, or admin
@@ -173,10 +216,17 @@ export default async function TicketPage({ params }: TicketPageProps) {
                                         <div>
                                             <p className="font-medium text-gray-900 dark:text-gray-100">
                                                 {participant.first_name} {participant.last_name}
+                                                {participant.section ? ` - ${participant.section.title}` : ''}
                                             </p>
                                             {participant.date_of_birth && (
                                                 <p className="text-sm text-gray-500 dark:text-gray-400">
                                                     DOB: {participant.date_of_birth}
+                                                </p>
+                                            )}
+                                            {participant.section && (
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                    {new Date(participant.section.start_date).toLocaleString([], { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                    {participant.section.end_date ? ` - ${new Date(participant.section.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
                                                 </p>
                                             )}
                                         </div>

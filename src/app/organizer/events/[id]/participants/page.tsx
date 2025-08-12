@@ -3,18 +3,20 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Event, Participant, Booking, Profile } from '@/lib/types/database'
+import { Event, Participant, Booking, Profile, EventSection } from '@/lib/types/database'
 import EventParticipantsPageClient from './page-client'
 
 interface ParticipantWithBooking extends Participant {
     bookings: (Booking & {
         profiles: Profile
     })
+    section?: EventSection
 }
 
 export default function EventParticipantsPage() {
     const [event, setEvent] = useState<Event | null>(null)
     const [participants, setParticipants] = useState<ParticipantWithBooking[]>([])
+    const [sections, setSections] = useState<EventSection[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const params = useParams()
@@ -61,6 +63,23 @@ export default function EventParticipantsPage() {
                     console.error('Error fetching participants:', apiError)
                     setParticipants([])
                 }
+
+                // Get sections for this event if it's a multi-section event
+                if (eventData.has_sections) {
+                    try {
+                        const sectionsResponse = await fetch(`/api/events/${eventId}/sections`)
+                        if (sectionsResponse.ok) {
+                            const sectionsData = await sectionsResponse.json()
+                            setSections(sectionsData || [])
+                        } else {
+                            console.error('Failed to fetch sections')
+                            setSections([])
+                        }
+                    } catch (sectionsError) {
+                        console.error('Error fetching sections:', sectionsError)
+                        setSections([])
+                    }
+                }
             } catch (err) {
                 console.error('Error fetching data:', err)
                 setError(err instanceof Error ? err.message : 'An error occurred')
@@ -102,6 +121,7 @@ export default function EventParticipantsPage() {
         <EventParticipantsPageClient
             event={event}
             participants={participants}
+            sections={sections}
         />
     )
 }

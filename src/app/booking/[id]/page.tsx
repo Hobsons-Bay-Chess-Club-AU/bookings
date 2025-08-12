@@ -114,7 +114,10 @@ export default async function BookingDetailsPage({ params, searchParams }: Booki
     const supabase = await createClient()
     const { data: participants } = await supabase
         .from('participants')
-        .select('*')
+        .select(`
+            *,
+            section:event_sections(*)
+        `)
         .eq('booking_id', booking.id)
         .order('created_at', { ascending: true })
 
@@ -380,7 +383,7 @@ export default async function BookingDetailsPage({ params, searchParams }: Booki
                                         {participants.map((p, idx) => (
                                             <div key={p.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
                                                 <div className="flex items-center mb-2">
-                                                    <span className="font-semibold text-gray-800 dark:text-gray-200 mr-2">Participant {idx + 1}</span>
+                                                    <span className="font-semibold text-gray-800 dark:text-gray-200 mr-2">Participant {idx + 1}{p.section ? ` - ${p.section.title}` : ''}</span>
                                                 </div>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800 dark:text-gray-200">
                                                     <div><span className="font-medium">First Name:</span> {p.first_name}</div>
@@ -388,6 +391,17 @@ export default async function BookingDetailsPage({ params, searchParams }: Booki
                                                     {p.date_of_birth && <div><span className="font-medium">Date of Birth:</span> {p.date_of_birth}</div>}
                                                     {p.contact_email && <div><span className="font-medium">Contact Email:</span> {p.contact_email}</div>}
                                                     {p.contact_phone && <div><span className="font-medium">Contact Phone:</span> {p.contact_phone}</div>}
+                                                    {p.section && (
+                                                        <>
+                                                            <div className="md:col-span-2">
+                                                                <span className="font-medium">Section:</span> {p.section.title}
+                                                            </div>
+                                                            <div className="md:col-span-2">
+                                                                <span className="font-medium">Section Schedule:</span> {new Date(p.section.start_date).toLocaleString([], { hour: '2-digit', minute: '2-digit', year: 'numeric', month: 'long', day: 'numeric' })}
+                                                                {p.section.end_date ? ` - ${new Date(p.section.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+                                                            </div>
+                                                        </>
+                                                    )}
                                                     {/* Custom fields */}
                                                     {p.custom_data && Object.entries(p.custom_data).map(([key, value]) => {
                                                         let displayValue: string

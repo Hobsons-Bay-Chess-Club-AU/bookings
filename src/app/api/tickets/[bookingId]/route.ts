@@ -87,24 +87,73 @@ export async function GET(
         }
 
         // Get participants for this booking
+        console.log('🔍 [TICKET-API] Fetching participants for booking:', booking.id)
+        console.log('🔍 [TICKET-API] Booking details:', {
+            id: booking.id,
+            booking_id: booking.booking_id,
+            status: booking.status,
+            is_multi_section: booking.is_multi_section,
+            quantity: booking.quantity
+        })
+        
         const { data: participants, error: participantsError } = await supabase
             .from('participants')
-            .select('*')
+            .select(`
+                *,
+                section:event_sections(*)
+            `)
             .eq('booking_id', booking.id)
             .order('created_at', { ascending: true })
 
-        if (participantsError || !participants) {
+        console.log('🔍 [TICKET-API] Participants query result:', {
+            data: participants,
+            error: participantsError,
+            count: participants?.length || 0
+        })
+
+        if (participantsError) {
+            console.error('❌ [TICKET-API] Error fetching participants:', participantsError)
             return NextResponse.json(
                 { error: 'Failed to fetch participants' },
                 { status: 500 }
             )
         }
         
+        if (!participants || participants.length === 0) {
+            console.log('❌ [TICKET-API] No participants found for booking:', booking.id)
+            
+            // Let's also check if there are any participants at all for this booking
+            const { data: allParticipants, error: allParticipantsError } = await supabase
+                .from('participants')
+                .select('*')
+                .eq('booking_id', booking.id)
+            
+            console.log('🔍 [TICKET-API] All participants check:', {
+                allParticipants: allParticipants,
+                allParticipantsError: allParticipantsError,
+                count: allParticipants?.length || 0
+            })
+            
+            return NextResponse.json(
+                { error: 'No participants found for this booking' },
+                { status: 404 }
+            )
+        }
+        
+        console.log('✅ [TICKET-API] Found participants:', participants.length, 'for booking:', booking.id)
+        console.log('🔍 [TICKET-API] Participant details:', participants.map(p => ({
+            id: p.id,
+            first_name: p.first_name,
+            last_name: p.last_name,
+            section_id: p.section_id,
+            section: p.section
+        })))
+        
         // Generate PDF with all tickets
         const pdfBuffer = await TicketGenerator.generateAllTicketsPDF(
             booking.events,
             booking,
-            participants || [],
+            participants,
             {
                 includeTermsConditions: true,
                 signatureLine: true

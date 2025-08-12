@@ -14,7 +14,7 @@ interface EventLayoutProps {
 
 export default function EventLayout({ event, profile, children, initialStep, resumeBookingId }: EventLayoutProps) {
     const [bookingStep, setBookingStep] = useState(initialStep ? parseInt(initialStep) : 1)
-    const isBookingActive =  bookingStep > 1 || !!resumeBookingId
+    const isBookingActive = bookingStep > 0 || !!resumeBookingId
 
     return (
         <div className={`lg:grid lg:gap-8 lg:grid-cols-12`}>

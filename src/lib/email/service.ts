@@ -160,7 +160,10 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
 
     const { data: participants, error: participantsError } = await supabase
         .from('participants')
-        .select('*')
+        .select(`
+            *,
+            section:event_sections(*)
+        `)
         .eq('booking_id', booking.id)
         .order('created_at', { ascending: true })
 
@@ -201,6 +204,9 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
         const googleCalendarUrl = generateGoogleCalendarUrl(calendarEvent)
         const outlookCalendarUrl = generateOutlookCalendarUrl(calendarEvent)
 
+        // Determine if this is a multi-section event
+        const isMultiSectionEvent = Boolean(booking.is_multi_section) || (participants && participants.some(p => p.section)) || false
+
         const { html, text } = await renderBookingConfirmationEmail({
             bookingId: booking.booking_id || booking.id,
             eventName: event.title,
@@ -218,7 +224,8 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
                 google: googleCalendarUrl,
                 outlook: outlookCalendarUrl
             },
-            hasIcsAttachment: true
+            hasIcsAttachment: true,
+            isMultiSectionEvent
         })
 
         console.log('✅ [BOOKING CONFIRMATION] Email template rendered:', {
@@ -326,7 +333,10 @@ export async function sendWhitelistedBookingEmail(data: EmailData) {
 
     const { data: participants, error: participantsError } = await supabase
         .from('participants')
-        .select('*')
+        .select(`
+            *,
+            section:event_sections(*)
+        `)
         .eq('booking_id', booking.id)
         .order('created_at', { ascending: true })
 
@@ -350,6 +360,9 @@ export async function sendWhitelistedBookingEmail(data: EmailData) {
             timestamp: new Date().toISOString()
         })
 
+        // Determine if this is a multi-section event
+        const isMultiSectionEvent = Boolean(booking.is_multi_section) || (participants && participants.some(p => p.section)) || false
+
         const { html, text } = await renderWhitelistedBookingEmail({
             bookingId: booking.booking_id || booking.id,
             eventName: event.title,
@@ -363,7 +376,8 @@ export async function sendWhitelistedBookingEmail(data: EmailData) {
             organizerPhone: (event && 'organizer_phone' in event ? (event as Event & { organizer_phone?: string }).organizer_phone : undefined) || '',
             eventDescription: event.description,
             participants: participants || [],
-            dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard`
+            dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard`,
+            isMultiSectionEvent
         })
 
         console.log('✅ [WHITELISTED BOOKING] Email template rendered:', {

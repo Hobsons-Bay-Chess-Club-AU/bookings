@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { HiExclamationTriangle } from 'react-icons/hi2';
 
-const TAB_KEY = 'single-tab-guard-active-tab3';
+const TAB_KEY = 'single-tab-guard-active-tab5';
 
 function generateTabId() {
   return `${Date.now()}-${Math.random()}`;

@@ -10,7 +10,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 async function createCheckoutSessionHandler(request: NextRequest) {
     try {
         const requestBody = await request.json()
-        const { bookingId, eventId, quantity, amount: _clientAmount, eventTitle, optInMarketing } = requestBody
+        const { bookingId, eventId, quantity, amount: _clientAmount, eventTitle, optInMarketing, isMultiSectionEvent, selectedSections } = requestBody
+
+
 
         if (!bookingId || !eventId || !quantity || !_clientAmount || !eventTitle) {
             console.log('❌ [create-checkout-session] Missing required fields:', {
@@ -146,36 +148,56 @@ async function createCheckoutSessionHandler(request: NextRequest) {
         const processingFeeAud = bookingTotalAud > 0 ? (bookingTotalAud * 0.017 + 0.30) : 0
         const processingFeeCents = Math.round(processingFeeAud * 100)
 
+        // Create line items for Stripe checkout session
+        let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
+
+        if (isMultiSectionEvent && selectedSections && selectedSections.length > 0) {
+            // For multi-section events, create separate line items for each section
+            lineItems = selectedSections.map((selection: { section: { title: string }, pricing: { price: number }, quantity: number }) => ({
+                price_data: {
+                    currency: 'aud',
+                    product_data: {
+                        name: `${eventTitle} - ${selection.section.title}`,
+                        description: `${selection.section.title} section ticket`,
+                    },
+                    unit_amount: Math.round(selection.pricing.price * 100), // Convert to cents
+                },
+                quantity: selection.quantity,
+            }))
+        } else {
+            // For single events, create a single line item
+            lineItems = [{
+                price_data: {
+                    currency: 'aud',
+                    product_data: {
+                        name: eventTitle,
+                        description: `${quantity} ticket${quantity > 1 ? 's' : ''}`,
+                    },
+                    unit_amount: Math.round((bookingTotalAud / quantity) * 100), // Convert to cents
+                },
+                quantity: quantity,
+            }]
+        }
+
+        // Add processing fee as a transparent line item if applicable
+        if (processingFeeCents > 0) {
+            lineItems.push({
+                price_data: {
+                    currency: 'aud',
+                    product_data: {
+                        name: 'Processing fee',
+                        description: '1.7% + A$0.30'
+                    },
+                    unit_amount: processingFeeCents,
+                },
+                quantity: 1,
+            })
+        }
+
         // Create Stripe checkout session (server-trusted amounts)
         const sessionConfig: Stripe.Checkout.SessionCreateParams = {
             payment_method_types: ['card'],
-            line_items: [
-                {
-                    price_data: {
-                        currency: 'aud',
-                        product_data: {
-                            name: eventTitle,
-                            description: `${quantity} ticket${quantity > 1 ? 's' : ''}`,
-                        },
-                        unit_amount: Math.round((bookingTotalAud / quantity) * 100), // Convert to cents
-                    },
-                    quantity: quantity,
-                },
-                // Add processing fee as a transparent line item if applicable
-                ...(processingFeeCents > 0
-                    ? [{
-                        price_data: {
-                            currency: 'aud',
-                            product_data: {
-                                name: 'Processing fee',
-                                description: '1.7% + A$0.30'
-                            },
-                            unit_amount: processingFeeCents,
-                        },
-                        quantity: 1,
-                    } as Stripe.Checkout.SessionCreateParams.LineItem]
-                    : []),
-            ],
+            line_items: lineItems,
             mode: 'payment',
             success_url: `${process.env.NEXT_PUBLIC_APP_URL}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/bookings/cancel-checkout?booking_id={CHECKOUT_SESSION_ID}`,

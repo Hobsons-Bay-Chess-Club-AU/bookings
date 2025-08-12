@@ -7,7 +7,6 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import "./globals.css";
-import SingleTabGuard from "@/components/SingleTabGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,7 +34,6 @@ export default function RootLayout({
         cz-shortcut-listen="true"
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SingleTabGuard>
         <ThemeProvider>
           <CookieConsentWrapper>
               <BookingJourneyProvider>
@@ -48,7 +46,6 @@ export default function RootLayout({
           <Analytics />
           <SpeedInsights />
         </ThemeProvider>
-        </SingleTabGuard>
       </body>
     </html>
   );
