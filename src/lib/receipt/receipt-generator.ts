@@ -106,7 +106,7 @@ export class ReceiptGenerator {
             const pageHeight = pdf.internal.pageSize.getHeight()
             const margin = 20
             const contentWidth = pageWidth - margin * 2
-
+            const lineHeight = 8
             const receiptNumber = this.generateReceiptNumber(booking.booking_id || booking.id)
             const paymentDate = new Date(booking.created_at)
             const receiptItems = this.buildReceiptItems(event, booking, participants)
@@ -128,7 +128,7 @@ export class ReceiptGenerator {
             pdf.setTextColor(0, 0, 0)
 
             // Receipt details section
-            let yPosition = 70
+            let yPosition = 65
 
             // Receipt number and date
             pdf.setFontSize(12)
@@ -138,10 +138,10 @@ export class ReceiptGenerator {
             pdf.text(receiptNumber, margin + 50, yPosition)
             
             pdf.setFont('helvetica', 'bold')
-            pdf.text('Date:', pageWidth - margin - 80, yPosition)
+            pdf.text('Date:', pageWidth - margin - 40, yPosition)
             pdf.setFont('helvetica', 'normal')
             pdf.text(this.formatDate(paymentDate), pageWidth - margin - 30, yPosition)
-            yPosition += 15
+            yPosition +=lineHeight
 
             // Customer information
             pdf.setFont('helvetica', 'bold')
@@ -151,43 +151,43 @@ export class ReceiptGenerator {
                 ? `${participants[0].first_name} ${participants[0].last_name}`
                 : 'Event Participant'
             pdf.text(customerName, margin + 50, yPosition)
-            yPosition += 15
+            yPosition +=lineHeight
 
             // Event information
             pdf.setFont('helvetica', 'bold')
             pdf.text('Event:', margin, yPosition)
             pdf.setFont('helvetica', 'normal')
             pdf.text(event.title, margin + 50, yPosition)
-            yPosition += 15
+            yPosition +=lineHeight
 
             pdf.setFont('helvetica', 'bold')
             pdf.text('Event Date:', margin, yPosition)
             pdf.setFont('helvetica', 'normal')
             const eventDate = new Date(event.start_date)
             pdf.text(this.formatDateTime(eventDate), margin + 50, yPosition)
-            yPosition += 15
+            yPosition +=lineHeight
 
             pdf.setFont('helvetica', 'bold')
             pdf.text('Location:', margin, yPosition)
             pdf.setFont('helvetica', 'normal')
             pdf.text(event.location, margin + 50, yPosition)
-            yPosition += 15
+            yPosition +=lineHeight
 
             pdf.setFont('helvetica', 'bold')
             pdf.text('Booking ID:', margin, yPosition)
             pdf.setFont('helvetica', 'normal')
             pdf.text(booking.booking_id || booking.id, margin + 50, yPosition)
-            yPosition += 15
+            yPosition +=lineHeight
 
             pdf.setFont('helvetica', 'bold')
             pdf.text('Payment Method:', margin, yPosition)
             pdf.setFont('helvetica', 'normal')
             pdf.text(paymentMethod, margin + 50, yPosition)
-            yPosition += 25
+            yPosition += 20
 
             // Items table header
             pdf.setFillColor(243, 244, 246) // Light gray background
-            pdf.rect(margin, yPosition - 5, contentWidth, 15, 'F')
+            pdf.rect(margin, yPosition - 5, contentWidth+5, 15, 'F')
             
             pdf.setFontSize(12)
             pdf.setFont('helvetica', 'bold')
@@ -213,12 +213,12 @@ export class ReceiptGenerator {
                 pdf.text(this.formatCurrency(item.unitPrice), margin + 150, yPosition)
                 pdf.text(this.formatCurrency(item.total), margin + 200, yPosition)
                 
-                yPosition += 12
+                yPosition +=lineHeight
             }
 
             // Total section
             yPosition += 10
-            pdf.line(margin, yPosition, pageWidth - margin, yPosition)
+            pdf.line(margin, yPosition, pageWidth - margin +5, yPosition)
             yPosition += 15
 
             pdf.setFontSize(14)
