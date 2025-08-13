@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { Event, EventSection } from '@/lib/types/database'
-import { HiPlus, HiPencil, HiTrash, HiCalendarDays, HiClock, HiUsers, HiCurrencyDollar, HiCog6Tooth } from 'react-icons/hi2'
+import { HiPlus, HiPencil, HiTrash, HiCalendarDays, HiClock, HiUsers, HiCurrencyDollar, HiCog6Tooth, HiShieldCheck } from 'react-icons/hi2'
 import { formatInTimezone } from '@/lib/utils/timezone'
 import SectionPricingModal from '@/components/organizer/section-pricing-modal'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
+import SectionWhitelistSettings from '@/components/organizer/section-whitelist-settings'
 
 interface SectionsManagerClientProps {
     event: Event
@@ -26,6 +27,7 @@ export default function SectionsManagerClient({ event }: SectionsManagerClientPr
         participantCount: number
         bookingCount: number
     } | null>(null)
+    const [showWhitelistSettings, setShowWhitelistSettings] = useState(false)
 
     const handleAddSection = async (sectionData: Partial<EventSection>) => {
         setLoading(true)
@@ -85,6 +87,35 @@ export default function SectionsManagerClient({ event }: SectionsManagerClientPr
         setShowPricingModal(true)
     }
 
+    const handleUpdateWhitelistSetting = async (sectionId: string, whitelistEnabled: boolean) => {
+        setLoading(true)
+        try {
+            const response = await fetch(`/api/sections/${sectionId}/whitelist-settings`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ whitelist_enabled: whitelistEnabled }),
+            })
+
+            if (!response.ok) {
+                throw new Error('Failed to update whitelist setting')
+            }
+
+            const updatedSection = await response.json()
+            setSections(prev => prev.map(section => 
+                section.id === sectionId 
+                    ? { ...section, whitelist_enabled: updatedSection.whitelist_enabled }
+                    : section
+            ))
+        } catch (error) {
+            console.error('Error updating whitelist setting:', error)
+            alert('Failed to update whitelist setting')
+        } finally {
+            setLoading(false)
+        }
+    }
+
     const validateSectionDeletion = async (section: EventSection) => {
         setLoading(true)
         try {
@@ -128,15 +159,30 @@ export default function SectionsManagerClient({ event }: SectionsManagerClientPr
         <div className="space-y-6">
             {/* Header with Add Button */}
             <div className="flex justify-between items-center">
-                
-                <button
-                    onClick={() => setShowAddForm(true)}
-                    disabled={loading}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-                >
-                    <HiPlus className="h-4 w-4 mr-2" />
-                    Add Section
-                </button>
+                <div className="flex space-x-3">
+                    <button
+                        onClick={() => setShowAddForm(true)}
+                        disabled={loading}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                    >
+                        <HiPlus className="h-4 w-4 mr-2" />
+                        Add Section
+                    </button>
+                    {sections.length > 0 && (
+                        <button
+                            onClick={() => setShowWhitelistSettings(!showWhitelistSettings)}
+                            disabled={loading}
+                            className={`inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 ${
+                                showWhitelistSettings
+                                    ? 'border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100 focus:ring-amber-500'
+                                    : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-indigo-500'
+                            }`}
+                        >
+                            <HiShieldCheck className="h-4 w-4 mr-2" />
+                            Whitelist Settings
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Add Section Form */}
@@ -161,6 +207,17 @@ export default function SectionsManagerClient({ event }: SectionsManagerClientPr
                     onCancel={() => setEditingSection(null)}
                     loading={loading}
                 />
+            )}
+
+            {/* Whitelist Settings */}
+            {showWhitelistSettings && sections.length > 0 && (
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-gray-50 dark:bg-gray-800">
+                    <SectionWhitelistSettings
+                        sections={sections}
+                        onUpdate={handleUpdateWhitelistSetting}
+                        loading={loading}
+                    />
+                </div>
             )}
 
             {/* Sections List */}

@@ -543,6 +543,7 @@ export async function sendWhitelistReleasedEmail(params: {
     organizerEmail?: string
     eventDescription?: string
     organizerPhone?: string
+    sectionName?: string
     participants?: Array<{
         first_name: string
         last_name: string
@@ -601,7 +602,8 @@ export async function sendWhitelistReleasedEmail(params: {
             eventDescription,
             participants: participants || [],
             dashboardUrl,
-            completePaymentUrl
+            completePaymentUrl,
+            sectionName: params.sectionName
         })
 
         console.log('✅ [WHITELIST RELEASED] Email template rendered:', {

@@ -16,6 +16,7 @@ interface WhitelistReleasedEmailData {
   organizerEmail: string
   eventDescription?: string
   organizerPhone?: string
+  sectionName?: string
   participants?: Array<{
     first_name: string
     last_name: string
@@ -41,6 +42,7 @@ function WhitelistReleasedEmail({
   organizerEmail,
   organizerPhone,
   eventDescription,
+  sectionName,
   participants,
   dashboardUrl,
   completePaymentUrl
@@ -71,6 +73,7 @@ function WhitelistReleasedEmail({
         <EmailHeading level={3}>Event Details</EmailHeading>
         <EmailText style={{ marginBottom: '10px' }}>
           <strong>Event:</strong> {eventName}
+          {sectionName && ` - ${sectionName}`}
         </EmailText>
         <EmailText style={{ marginBottom: '10px' }}>
           <strong>Starts:</strong> {formattedStart.toLocaleDateString('en-AU', {

@@ -28,6 +28,24 @@ export default function Step0Sections({
     loading,
     error
 }: Step0SectionsProps) {
+    const getSectionStatus = (section: EventSection) => {
+        const availableSeats = section.available_seats ?? 0
+        const isFull = availableSeats <= 0  // Changed from === 0 to <= 0 to include negative values
+        const whitelistEnabled = section.whitelist_enabled || false
+        const shouldWhitelist = isFull && whitelistEnabled
+        return { isFull, whitelistEnabled, shouldWhitelist, availableSeats }
+    }
+
+    const hasWhitelistSections = selectedSections.some(selection => {
+        const section = sections.find(s => s.id === selection.sectionId)
+        return section && getSectionStatus(section).shouldWhitelist
+    })
+
+    const hasAvailableSections = selectedSections.some(selection => {
+        const section = sections.find(s => s.id === selection.sectionId)
+        return section && (section.available_seats ?? 0) > 0
+    })
+
     const handleSectionToggle = (section: EventSection, pricing: SectionPricing) => {
         const existingIndex = selectedSections.findIndex(
             s => s.sectionId === section.id && s.pricingId === pricing.id
@@ -37,6 +55,16 @@ export default function Step0Sections({
             // Remove section
             setSelectedSections(selectedSections.filter((_, index) => index !== existingIndex))
         } else {
+            // Check if this would create a mixed booking
+            const sectionStatus = getSectionStatus(section)
+            const wouldBeWhitelist = sectionStatus.shouldWhitelist
+            const wouldBeAvailable = !sectionStatus.isFull
+
+            // If we already have whitelist sections and this is available, or vice versa, prevent selection
+            if ((hasWhitelistSections && wouldBeAvailable) || (hasAvailableSections && wouldBeWhitelist)) {
+                return // Don't allow mixed bookings
+            }
+
             // Add section with quantity 1
             setSelectedSections([
                 ...selectedSections,
@@ -89,10 +117,27 @@ export default function Step0Sections({
             availableTickets: pricing.available_tickets ?? 999
         })) || []
     ).filter(option => {
-        // Show sections that have available seats OR unlimited tickets
+        const sectionStatus = getSectionStatus(option.section)
+        const isWhitelistSection = sectionStatus.shouldWhitelist
+        
+        // Show sections that have available seats OR are whitelist sections
         const hasAvailableSeats = option.availableSeats > 0
         const hasAvailableTickets = option.availableTickets > 0 || option.availableTickets === null
-        return hasAvailableSeats && hasAvailableTickets
+        
+        // Debug logging for section filtering
+        console.log('🔍 Section filtering debug:', {
+            sectionTitle: option.section.title,
+            availableSeats: option.availableSeats,
+            availableTickets: option.availableTickets,
+            hasAvailableSeats,
+            hasAvailableTickets,
+            isWhitelistSection,
+            sectionStatus,
+            shouldShow: (hasAvailableSeats && hasAvailableTickets) || isWhitelistSection
+        })
+        
+        // Include sections with available seats OR whitelist sections
+        return (hasAvailableSeats && hasAvailableTickets) || isWhitelistSection
     })
 
     return (
@@ -110,6 +155,14 @@ export default function Step0Sections({
                 <p className="text-gray-600 dark:text-gray-400">
                     Choose which sections you&apos;d like to register for and how many tickets for each.
                 </p>
+                {(hasWhitelistSections || hasAvailableSections) && (
+                    <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                        <p className="text-sm text-amber-800 dark:text-amber-200">
+                            <strong>Note:</strong> You cannot mix whitelist sections (full sections with whitelist enabled) with available sections in the same booking. 
+                            Please select either all whitelist sections or all available sections.
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* Section Selection */}
@@ -130,25 +183,43 @@ export default function Step0Sections({
                         allPricingOptions.map(({ section, pricing, availableSeats, availableTickets }) => {
                         const isPricingSelected = isSelected(section.id, pricing.id)
                         const selectedQuantity = getSelectedQuantity(section.id, pricing.id)
-                        const maxAvailable = Math.min(availableSeats, availableTickets)
+                        const sectionStatus = getSectionStatus(section)
+                        const isWhitelistSection = sectionStatus.shouldWhitelist
+                        
+                        // For whitelist sections, allow up to 10 tickets (reasonable limit for whitelist)
+                        // For available sections, use the actual available seats/tickets
+                        const maxAvailable = isWhitelistSection 
+                            ? Math.min(10, availableTickets || 10) 
+                            : Math.min(availableSeats, availableTickets)
+                        const isAvailableSection = !sectionStatus.isFull
+
+                        // Check if this section would create a mixed booking
+                        const wouldCreateMixedBooking = 
+                            (hasWhitelistSections && isAvailableSection) || 
+                            (hasAvailableSections && isWhitelistSection)
+
+                        const isDisabled = wouldCreateMixedBooking && !isPricingSelected
 
                         return (
                             <div
                                 key={`${section.id}-${pricing.id}`}
-                                className={`relative rounded-lg border p-4 cursor-pointer ${
-                                    isPricingSelected
-                                        ? 'border-indigo-600 ring-2 ring-indigo-600 bg-indigo-50 dark:bg-indigo-900/20'
-                                        : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-gray-800'
+                                className={`relative rounded-lg border p-4 ${
+                                    isDisabled 
+                                        ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700'
+                                        : isPricingSelected
+                                            ? 'border-indigo-600 ring-2 ring-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 cursor-pointer'
+                                            : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-gray-800 cursor-pointer'
                                 }`}
-                                onClick={() => handleSectionToggle(section, pricing)}
+                                onClick={() => !isDisabled && handleSectionToggle(section, pricing)}
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center">
                                         <input
                                             type="checkbox"
                                             checked={isPricingSelected}
-                                            onChange={() => handleSectionToggle(section, pricing)}
-                                            className="h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-700 focus:ring-indigo-500 dark:bg-gray-800 dark:checked:bg-indigo-600"
+                                            onChange={() => !isDisabled && handleSectionToggle(section, pricing)}
+                                            disabled={isDisabled}
+                                            className="h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-700 focus:ring-indigo-500 dark:bg-gray-800 dark:checked:bg-indigo-600 disabled:opacity-50"
                                         />
                                         <div className="ml-3">
                                             <div className="flex items-center space-x-2">
@@ -166,6 +237,16 @@ export default function Step0Sections({
                                                      pricing.pricing_type === 'late_bird' ? 'Late Bird' :
                                                      'Special'}
                                                 </span>
+                                                {isWhitelistSection && (
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                                                        Whitelist
+                                                    </span>
+                                                )}
+                                                {isDisabled && (
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                                        Mixed booking not allowed
+                                                    </span>
+                                                )}
                                             </div>
                                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                                 {pricing.name}
@@ -178,7 +259,12 @@ export default function Step0Sections({
                                         </div>
                                         <div className="flex items-center justify-end text-sm text-gray-500 dark:text-gray-400 mt-1">
                                             <HiUsers className="h-4 w-4 mr-1" />
-                                            <span>{maxAvailable} available</span>
+                                            <span>
+                                                {isWhitelistSection 
+                                                    ? `${maxAvailable} whitelist spots` 
+                                                    : `${maxAvailable} available`
+                                                }
+                                            </span>
                                         </div>
                                     </div>
                                 </div>

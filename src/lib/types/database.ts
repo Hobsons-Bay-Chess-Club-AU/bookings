@@ -202,6 +202,8 @@ export interface EventSection {
     section_type?: string
     section_config?: Record<string, unknown>
     custom_form_fields?: FormField[]
+    whitelist_enabled?: boolean
+    whitelist_settings?: Record<string, unknown>
     created_at: string
     updated_at: string
     pricing?: SectionPricing[]
@@ -224,6 +226,25 @@ export interface SectionPricing {
     available_tickets: number
     created_at: string
     updated_at: string
+}
+
+export interface SectionBooking {
+    id: string
+    booking_id: string
+    section_id: string
+    pricing_id: string
+    quantity: number
+    unit_price: number
+    total_amount: number
+    status: BookingStatus
+    whitelist_reason?: string
+    is_whitelisted: boolean
+    whitelisted_at?: string
+    released_from_whitelist_at?: string
+    created_at: string
+    updated_at: string
+    section?: EventSection
+    pricing?: SectionPricing
 }
 
 export interface Event {

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { loadStripe } from '@stripe/stripe-js'
 import { HiCreditCard } from 'react-icons/hi2'
 
 interface ResumePaymentButtonProps {
@@ -25,7 +24,7 @@ export default function ResumePaymentButton({
         setError(null)
 
         try {
-            // First check if we have complete data to resume to step 4
+            // Always check for booking data first to get the event ID
             const checkResponse = await fetch('/api/bookings/check-complete-data', {
                 method: 'POST',
                 headers: {
@@ -37,37 +36,14 @@ export default function ResumePaymentButton({
             if (checkResponse.ok) {
                 const checkData = await checkResponse.json()
                 
-                if (checkData.canResume) {
-                    // Redirect to booking form step 4 with existing data
-                    window.location.href = `/events/${checkData.booking.eventId}?step=4&resume=${bookingId}`
-                    return
-                }
+                // Always redirect to booking form step 4, regardless of canResume status
+                // This ensures consistent behavior and allows users to review before payment
+                window.location.href = `/events/${checkData.booking.eventId}?step=4&resume=${bookingId}`
+                return
             }
 
-            // If we don't have complete data, proceed with direct payment
-            const response = await fetch('/api/bookings/resume-payment', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ bookingId })
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.error || 'Failed to resume payment')
-            }
-
-            const { url } = await response.json()
-
-            // Redirect to Stripe checkout
-            const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
-            if (stripe) {
-                await stripe.redirectToCheckout({ sessionId: url.split('/').pop()! })
-            } else {
-                // Fallback: redirect directly to the URL
-                window.location.href = url
-            }
+            // Fallback: if we can't get booking data, show error
+            throw new Error('Unable to load booking data')
 
         } catch (err) {
             console.error('Error resuming payment:', err)

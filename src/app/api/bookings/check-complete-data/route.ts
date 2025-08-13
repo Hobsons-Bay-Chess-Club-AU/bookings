@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
                     start_date,
                     end_date,
                     location,
-                    custom_form_fields
+                    custom_form_fields,
+                    has_sections
                 ),
                 profiles!bookings_user_id_fkey (
                     id,
@@ -52,6 +53,8 @@ export async function POST(request: NextRequest) {
             )
         }
 
+
+
         // Check if booking is older than 7 days
         const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
         if (new Date(booking.created_at) < sevenDaysAgo) {
@@ -77,8 +80,61 @@ export async function POST(request: NextRequest) {
                                !p.custom_data || 
                                Object.keys(p.custom_data).length >= formFields.length
                            )
+        
+        // Debug logging for data completeness check
+        console.log('🔍 Data completeness check:', {
+            participantsCount: booking.participants?.length,
+            bookingQuantity: booking.quantity,
+            participants: booking.participants?.map((p: { first_name?: string; last_name?: string; contact_email?: string }) => ({
+                first_name: p.first_name,
+                last_name: p.last_name,
+                contact_email: p.contact_email,
+                hasRequiredFields: !!(p.first_name && p.last_name && p.contact_email)
+            })),
+            hasCompleteData,
+            hasFormData
+        })
 
         const canResume = hasCompleteData && hasFormData
+
+        // Get section bookings for multi-section events
+        let sectionBookings = null
+        console.log('🔍 API Debug - Event has sections:', booking.events.has_sections)
+        
+        if (booking.events.has_sections) {
+            console.log('🔍 API Debug - Fetching section bookings for booking ID:', bookingId)
+            
+            const { data: sectionBookingsData, error: sectionBookingsError } = await supabase
+                .from('section_bookings')
+                .select(`
+                    *,
+                    section:event_sections!section_bookings_section_id_fkey (
+                        id,
+                        title,
+                        description,
+                        max_seats,
+                        current_seats
+                    ),
+                    pricing:section_pricing!section_bookings_pricing_id_fkey (
+                        id,
+                        name,
+                        description,
+                        price,
+                        pricing_type,
+                        membership_type
+                    )
+                `)
+                .eq('booking_id', bookingId)
+            
+            if (sectionBookingsError) {
+                console.error('❌ API Error fetching section bookings:', sectionBookingsError)
+            }
+            
+            sectionBookings = sectionBookingsData || []
+            console.log('🔍 API Debug - Section bookings found:', sectionBookings.length, sectionBookings)
+        } else {
+            console.log('🔍 API Debug - Event does not have sections, skipping section bookings fetch')
+        }
 
         return NextResponse.json({
             canResume,
@@ -92,7 +148,8 @@ export async function POST(request: NextRequest) {
                 totalAmount: booking.total_amount,
                 participants: booking.participants,
                 formFields: formFields,
-                created_at: booking.created_at
+                created_at: booking.created_at,
+                section_bookings: sectionBookings
             }
         })
 

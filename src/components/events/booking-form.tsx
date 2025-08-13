@@ -47,6 +47,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
     const [formFields, setFormFields] = useState<FormField[]>([])
     const [currentBookingId, setCurrentBookingId] = useState<string | null>(null)
     const [isLegitimateResume, setIsLegitimateResume] = useState(false)
+    const [originalBookingAmount, setOriginalBookingAmount] = useState<number | null>(null)
     const [wasCreatedAsWhitelisted, setWasCreatedAsWhitelisted] = useState(false)
     const [agreedToTerms, setAgreedToTerms] = useState(false)
     const [optInMarketing, setOptInMarketing] = useState(false)
@@ -96,35 +97,108 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
     const baseAmount = isMultiSectionEvent 
         ? selectedSections.reduce((sum, selection) => sum + (selection.pricing.price * selection.quantity), 0)
         : (selectedPricing ? selectedPricing.price * quantity : (event.price * quantity))
-    const totalAmount = discountInfo?.finalAmount ?? baseAmount
+    
+    // If we're resuming a booking that can't be resumed but has pricing info, use that for display
+    const displayAmount = originalBookingAmount !== null && baseAmount === 0 
+        ? originalBookingAmount 
+        : baseAmount
+    
+    const totalAmount = discountInfo?.finalAmount ?? displayAmount
+    
+    // Debug logging for amount calculations
+    console.log('🔍 Amount calculations debug:', {
+        isMultiSectionEvent,
+        selectedSectionsCount: selectedSections.length,
+        selectedSections: selectedSections.map(s => ({ 
+            sectionTitle: s.section.title, 
+            price: s.pricing.price, 
+            quantity: s.quantity,
+            subtotal: s.pricing.price * s.quantity 
+        })),
+        selectedPricingPrice: selectedPricing?.price,
+        quantity,
+        eventPrice: event.price,
+        baseAmount,
+        displayAmount,
+        originalBookingAmount,
+        totalAmount,
+        discountInfo: discountInfo ? { finalAmount: discountInfo.finalAmount } : null
+    })
     
     // For multi-section events, check if selected sections have pricing
     const isFreeEvent = isMultiSectionEvent 
         ? (selectedSections.length === 0 || selectedSections.every(selection => selection.pricing.price === 0))
-        : (totalAmount === 0 || selectedPricing?.price === 0)
+        : (displayAmount === 0 || selectedPricing?.price === 0)
     
     // Processing fee estimation for display (final fee calculated server-side)
     const processingFee = totalAmount > 0 ? totalAmount * 0.017 + 0.30 : 0
     
-    // For multi-section events, check availability based on selected sections or all sections if none selected
+    // For multi-section events, check availability and whitelist status
+    const getSectionStatus = (section: EventSection) => {
+        const availableSeats = section.available_seats ?? 0
+        const isFull = availableSeats <= 0  // Use same logic as Step 0
+        const whitelistEnabled = section.whitelist_enabled || false
+        const shouldWhitelist = isFull && whitelistEnabled
+        return { isFull, whitelistEnabled, shouldWhitelist, availableSeats }
+    }
+
     const isEventFull = isMultiSectionEvent
         ? (() => {
             // If sections are selected, check if those specific sections are full
             if (selectedSections.length > 0) {
                 return selectedSections.every(selection => {
                     const section = event.sections?.find(s => s.id === selection.sectionId)
-                    return section && (section.available_seats ?? 0) === 0
+                    return section && (section.available_seats ?? 0) <= 0
                 })
             }
             // If no sections selected yet, check if ALL sections are full
-            return event.sections?.every(section => (section.available_seats ?? 0) === 0) ?? false
+            return event.sections?.every(section => (section.available_seats ?? 0) <= 0) ?? false
         })()
         : (event.max_attendees != null && event.current_attendees >= event.max_attendees)
     
     const whitelistEnabled = Boolean(event.settings?.whitelist_enabled)
     // Treat any active resume context as bypass for whitelist/sold-out checks
     const isResumeFlowActive = isLegitimateResume || Boolean(currentBookingId) || Boolean(resumeBookingId)
-    const shouldWhitelist = isEventFull && whitelistEnabled && !isResumeFlowActive
+    
+    // Determine if booking should be whitelisted based on section-level or event-level logic
+    const shouldWhitelist = (() => {
+        if (isResumeFlowActive) {
+            return false // Don't whitelist if resuming a booking
+        }
+        
+        if (isMultiSectionEvent) {
+            // For multi-section events, check if any selected section requires whitelist
+            if (selectedSections.length > 0) {
+                const result = selectedSections.some(selection => {
+                    const section = event.sections?.find(s => s.id === selection.sectionId)
+                    const sectionStatus = section ? getSectionStatus(section) : null
+                    console.log('🔍 Whitelist check for section:', {
+                        sectionTitle: section?.title,
+                        sectionStatus,
+                        shouldWhitelist: sectionStatus?.shouldWhitelist
+                    })
+                    return section && sectionStatus?.shouldWhitelist
+                })
+                console.log('🔍 Final shouldWhitelist result:', result)
+                return result
+            }
+            // If no sections selected yet, check if all sections are full and any have whitelist enabled
+            const allSectionsFull = event.sections?.every(section => (section.available_seats ?? 0) <= 0) ?? false
+            const hasWhitelistSections = event.sections?.some(section => {
+                const availableSeats = section.available_seats ?? 0
+                const isFull = availableSeats <= 0
+                const whitelistEnabled = section.whitelist_enabled || false
+                return isFull && whitelistEnabled
+            }) ?? false
+            return allSectionsFull && hasWhitelistSections
+        } else {
+            // For single events, use the existing logic
+            return isEventFull && whitelistEnabled
+        }
+    })()
+
+    // Note: Mixed bookings are not allowed - users must select either all whitelist sections or all available sections
+    // This is enforced in the UI by disabling incompatible sections in the section selection component
     
     // For multi-section events, calculate max quantity based on selected sections' availability
     const maxQuantity = isMultiSectionEvent
@@ -263,6 +337,8 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
 
     const loadResumedBookingData = async (bookingId: string) => {
         try {
+            console.log('🔍 Loading resumed booking data for:', bookingId)
+            
             const response = await fetch('/api/bookings/check-complete-data', {
                 method: 'POST',
                 headers: {
@@ -273,22 +349,49 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
 
             if (response.ok) {
                 const data = await response.json()
+                console.log('🔍 API response data:', data)
+                console.log('🔍 Section bookings from API:', data.booking.section_bookings)
+                console.log('🔍 Can resume:', data.canResume)
+                console.log('🔍 Has complete data:', data.hasCompleteData)
+                
+                // Always load section data if available, regardless of canResume status
+                if (data.booking.section_bookings && data.booking.section_bookings.length > 0) {
+                    const sectionSelections = data.booking.section_bookings.map((sb: {
+                        section_id: string
+                        section: EventSection
+                        pricing_id: string
+                        pricing: SectionPricing
+                        quantity: number
+                    }) => ({
+                        sectionId: sb.section_id,
+                        section: sb.section,
+                        pricingId: sb.pricing_id,
+                        pricing: sb.pricing,
+                        quantity: sb.quantity
+                    }))
+                    setSelectedSections(sectionSelections)
+                    console.log('🔍 Loaded section selections:', sectionSelections)
+                } else {
+                    console.log('🔍 No section bookings found in API response')
+                }
+                
+                // Always load participant data if available, regardless of canResume status
+                if (data.booking.participants) {
+                    // Map database fields to form fields
+                    const mappedParticipants = data.booking.participants.map((p: { contact_email?: string; contact_phone?: string; [key: string]: unknown }) => ({
+                        ...p,
+                        email: p.contact_email,
+                        phone: p.contact_phone
+                    })) as Partial<Participant & { email?: string; phone?: string }>[]
+                    setParticipants(mappedParticipants)
+                    setQuantity(data.booking.quantity)
+                    console.log('🔍 Loaded participants:', mappedParticipants.length, 'quantity:', data.booking.quantity)
+                }
+                
                 if (data.canResume) {
                     // Set the existing booking ID and mark as legitimate resume
                     setCurrentBookingId(bookingId)
                     setIsLegitimateResume(true)
-                    
-                    // Load participants data
-                    if (data.booking.participants) {
-                        // Map database fields to form fields
-                        const mappedParticipants = data.booking.participants.map((p: { contact_email?: string; contact_phone?: string; [key: string]: unknown }) => ({
-                            ...p,
-                            email: p.contact_email,
-                            phone: p.contact_phone
-                        })) as Partial<Participant & { email?: string; phone?: string }>[]
-                        setParticipants(mappedParticipants)
-                        setQuantity(data.booking.quantity)
-                    }
                     
                     // Set form fields
                     if (data.booking.formFields) {
@@ -296,7 +399,20 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                     }
                     
                     console.log('✅ Resumed booking data loaded:', data.booking)
+                } else {
+                    console.log('❌ Cannot resume booking:', data)
+                    
+                    // For display purposes, load the total amount from the booking
+                    // This helps show the correct pricing even when the booking can't be resumed
+                    if (data.booking.totalAmount && data.booking.totalAmount > 0) {
+                        console.log('🔍 Setting display amount from booking:', data.booking.totalAmount)
+                        setOriginalBookingAmount(data.booking.totalAmount)
+                        // Set resume flag for display purposes even if booking can't be resumed
+                        setIsLegitimateResume(true)
+                    }
                 }
+            } else {
+                console.log('❌ API response not ok:', response.status)
             }
         } catch (error) {
             console.error('Error loading resumed booking data:', error)
@@ -694,8 +810,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                 return
             }
 
-            // Determine whitelist flow: if event is full and whitelist enabled, create whitelisted booking
-            const shouldWhitelist = isEventFull && whitelistEnabled && !isLegitimateResume
+            // Use the existing shouldWhitelist logic that's already calculated above
 
             // Create booking record
             const bookingData: {
@@ -734,9 +849,26 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
 
             // For multi-section events, create section booking records
             if (isMultiSectionEvent && selectedSections.length > 0) {
+                console.log('🔍 [BOOKING-FORM] Creating section bookings for:', selectedSections.length, 'sections')
+                
                 for (const selection of selectedSections) {
                     try {
-                        await supabase
+                        const section = event.sections?.find(s => s.id === selection.sectionId)
+                        const sectionStatus = section ? getSectionStatus(section) : null
+                        const isWhitelistSection = sectionStatus?.shouldWhitelist || false
+                        
+                        console.log('🔍 [BOOKING-FORM] Creating section booking:', {
+                            booking_id: booking.id,
+                            section_id: selection.sectionId,
+                            pricing_id: selection.pricingId,
+                            quantity: selection.quantity,
+                            unit_price: selection.pricing.price,
+                            total_amount: selection.pricing.price * selection.quantity,
+                            isWhitelistSection,
+                            sectionStatus
+                        })
+                        
+                        const { data: sectionBookingData, error: sectionBookingError } = await supabase
                             .from('section_bookings')
                             .insert({
                                 booking_id: booking.id,
@@ -744,13 +876,30 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                                 pricing_id: selection.pricingId,
                                 quantity: selection.quantity,
                                 unit_price: selection.pricing.price,
-                                total_amount: selection.pricing.price * selection.quantity
+                                total_amount: selection.pricing.price * selection.quantity,
+                                status: isWhitelistSection ? 'whitelisted' : 'pending',
+                                is_whitelisted: isWhitelistSection,
+                                whitelisted_at: isWhitelistSection ? new Date().toISOString() : null,
+                                whitelist_reason: isWhitelistSection ? 'Section is full and whitelist is enabled' : null
                             })
+                            .select()
+                        
+                        if (sectionBookingError) {
+                            console.error('❌ [BOOKING-FORM] Error creating section booking:', sectionBookingError)
+                            throw new Error(`Failed to create section booking: ${sectionBookingError.message}`)
+                        }
+                        
+                        console.log('✅ [BOOKING-FORM] Section booking created successfully:', sectionBookingData)
                     } catch (sectionBookingError) {
-                        console.error('Error creating section booking:', sectionBookingError)
+                        console.error('❌ [BOOKING-FORM] Error creating section booking:', sectionBookingError)
                         throw new Error('Failed to create section booking')
                     }
                 }
+            } else {
+                console.log('🔍 [BOOKING-FORM] No section bookings to create:', {
+                    isMultiSectionEvent,
+                    selectedSectionsLength: selectedSections.length
+                })
             }
 
             // Create discount application records if discounts were applied
@@ -995,15 +1144,38 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
         )
     }
     // Skip sold out check when resuming a booking
-    if (!isResumeFlowActive && event.max_attendees != null && event.current_attendees >= event.max_attendees) {
-        if (!whitelistEnabled) {
-            return (
-                <div className="text-center py-12">
-                    <p className="text-xl text-gray-800 dark:text-gray-200 font-semibold">This event is sold out.</p>
-                </div>
-            )
+    if (!isResumeFlowActive) {
+        if (isMultiSectionEvent) {
+            // For multi-section events, check if any sections have whitelist enabled
+            const hasWhitelistSections = event.sections?.some(section => {
+                const availableSeats = section.available_seats ?? 0
+                const isFull = availableSeats <= 0  // Use same logic as getSectionStatus
+                const whitelistEnabled = section.whitelist_enabled || false
+                return isFull && whitelistEnabled
+            }) ?? false
+
+            // If all sections are full and none have whitelist enabled, show sold out
+            const allSectionsFull = event.sections?.every(section => (section.available_seats ?? 0) <= 0) ?? false
+            if (allSectionsFull && !hasWhitelistSections) {
+                return (
+                    <div className="text-center py-12">
+                        <p className="text-xl text-gray-800 dark:text-gray-200 font-semibold">This event is sold out.</p>
+                    </div>
+                )
+            }
+        } else {
+            // For single events, use the existing logic
+            if (event.max_attendees != null && event.current_attendees >= event.max_attendees) {
+                if (!whitelistEnabled) {
+                    return (
+                        <div className="text-center py-12">
+                            <p className="text-xl text-gray-800 dark:text-gray-200 font-semibold">This event is sold out.</p>
+                        </div>
+                    )
+                }
+                // If whitelist enabled, allow booking UI to proceed as whitelist
+            }
         }
-        // If whitelist enabled, allow booking UI to proceed as whitelist
     }
     // Skip event status check when resuming a booking
     if (!isResumeFlowActive && event.status !== 'published') {
@@ -1015,12 +1187,34 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
     }
 
     // Skip quantity check when resuming a booking or when on step 0 for multi-section events
-    if (!isResumeFlowActive && maxQuantity <= 0 && !whitelistEnabled && !(isMultiSectionEvent && step === 0)) {
-        return (
-            <div className="text-center">
-                <p className="text-gray-600 dark:text-gray-400">This event is sold out.</p>
-            </div>
-        )
+    if (!isResumeFlowActive && maxQuantity <= 0) {
+        if (isMultiSectionEvent) {
+            // For multi-section events, check if any sections have whitelist enabled
+            const hasWhitelistSections = event.sections?.some(section => {
+                const availableSeats = section.available_seats ?? 0
+                const isFull = availableSeats <= 0  // Use same logic as getSectionStatus
+                const whitelistEnabled = section.whitelist_enabled || false
+                return isFull && whitelistEnabled
+            }) ?? false
+
+            // Only show sold out if no whitelist sections are available and we're not on step 0
+            if (!hasWhitelistSections && step !== 0) {
+                return (
+                    <div className="text-center">
+                        <p className="text-gray-600 dark:text-gray-400">This event is sold out.</p>
+                    </div>
+                )
+            }
+        } else {
+            // For single events, use the existing logic
+            if (!whitelistEnabled) {
+                return (
+                    <div className="text-center">
+                        <p className="text-gray-600 dark:text-gray-400">This event is sold out.</p>
+                    </div>
+                )
+            }
+        }
     }
 
     if (pricingLoading) {
@@ -1093,11 +1287,11 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
 
                 {/* Step 4: Review & Payment */}
                 <div className={`flex flex-col md:flex-row md:items-center ${step >= (isMultiSectionEvent ? 4 : 4) ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= (isMultiSectionEvent ? 4 : 4) ? (shouldWhitelist && !isLegitimateResume ? 'border-amber-600 bg-amber-600 text-white' : 'border-indigo-600 bg-indigo-600 text-white') : 'border-gray-300 dark:border-gray-600'}`}>
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium mx-auto md:mx-0 ${step >= (isMultiSectionEvent ? 4 : 4) ? (shouldWhitelist ? 'border-amber-600 bg-amber-600 text-white' : 'border-indigo-600 bg-indigo-600 text-white') : 'border-gray-300 dark:border-gray-600'}`}>
                         {isMultiSectionEvent ? 5 : 4}
                     </div>
                     <span className="text-xs md:text-sm font-medium mt-1 md:mt-0 md:ml-2 text-center md:text-left">
-                        {shouldWhitelist && !isLegitimateResume ? 'Whitelisted' : isFreeEvent ? 'Review' : 'Payment'}
+                        {shouldWhitelist ? 'Whitelisted' : isFreeEvent ? 'Review' : 'Payment'}
                     </span>
                 </div>
             </div>
@@ -1285,6 +1479,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                     }}
                     loading={loading}
                     error={error}
+                    isResuming={isLegitimateResume}
                     shouldWhitelist={shouldWhitelist}
                     isLegitimateResume={isLegitimateResume}
                     discountInfo={discountInfo}

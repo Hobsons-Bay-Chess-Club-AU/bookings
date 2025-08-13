@@ -33,9 +33,28 @@ export default function EventLayout({ event, profile, children, initialStep, res
                 }`}>
                 <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 sticky top-8">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">
-                        {event.max_attendees != null && event.current_attendees >= event.max_attendees && event.settings?.whitelist_enabled
-                            ? 'Whitelist Your Spot'
-                            : 'Book Your Spot'}
+                        {(() => {
+                            if (event.has_sections && event.sections && event.sections.length > 0) {
+                                // For multi-section events, check if any sections have whitelist enabled
+                                const hasWhitelistSections = event.sections.some(section => {
+                                    const isFull = (section.available_seats ?? 0) === 0
+                                    const whitelistEnabled = section.whitelist_enabled || false
+                                    return isFull && whitelistEnabled
+                                })
+                                
+                                const allSectionsFull = event.sections.every(section => (section.available_seats ?? 0) === 0)
+                                
+                                if (allSectionsFull && hasWhitelistSections) {
+                                    return 'Whitelist Your Spot'
+                                }
+                            } else {
+                                // For single events, use the existing logic
+                                if (event.max_attendees != null && event.current_attendees >= event.max_attendees && event.settings?.whitelist_enabled) {
+                                    return 'Whitelist Your Spot'
+                                }
+                            }
+                            return 'Book Your Spot'
+                        })()}
                     </h2>
                     <BookingForm
                         event={event}

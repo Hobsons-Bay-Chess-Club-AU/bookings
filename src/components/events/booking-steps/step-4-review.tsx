@@ -83,6 +83,25 @@ export default function Step4Review({
     const isFreeEvent = isMultiSectionEvent 
         ? (selectedSections.length === 0 || selectedSections.every(selection => selection.pricing.price === 0))
         : (totalAmount === 0 || selectedPricing?.price === 0)
+    
+    // Debug logging for button text and pricing
+    console.log('🔍 Step4Review Debug:', {
+        isResuming,
+        shouldWhitelist,
+        isFreeEvent,
+        isMultiSectionEvent,
+        selectedSections: selectedSections.length,
+        totalAmount,
+        baseAmount,
+        selectedPricingPrice: selectedPricing?.price,
+        selectedSectionsPricing: selectedSections.map(s => ({ 
+            sectionTitle: s.section.title, 
+            pricingPrice: s.pricing.price,
+            quantity: s.quantity 
+        }))
+    })
+    
+
     return (
         <div className="space-y-6">
             <div>
@@ -372,7 +391,7 @@ export default function Step4Review({
                                         : 'bg-indigo-600 hover:bg-indigo-700'
                             }`}
                         >
-                            {loading ? 'Processing...' : shouldWhitelist ? 'Submit to Whitelist' : isFreeEvent ? 'Finish' : 'Proceed to Payment'}
+                            {loading ? 'Processing...' : shouldWhitelist ? 'Submit to Whitelist' : isFreeEvent ? 'Finish' : (isResuming ? 'Payment' : 'Proceed to Payment')}
                         </button>
                     </div>
                 </div>
