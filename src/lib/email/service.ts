@@ -112,6 +112,7 @@ import {
 import { resend } from './client'
 import { createClient } from '@/lib/supabase/server'
 import { CalendarEvent, generateGoogleCalendarUrl, generateOutlookCalendarUrl, generateIcsFile } from '@/lib/utils/calendar'
+import { ReceiptGenerator } from '@/lib/receipt/receipt-generator'
 
 interface EmailData {
     booking: Booking
@@ -248,19 +249,81 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
             .toISOString()
             .slice(0, 10)}.ics`
 
+        // Generate receipt PDF
+        let receiptBuffer: Buffer | Uint8Array | null = null
+        let receiptFilename = ''
+        try {
+            console.log('📄 [BOOKING CONFIRMATION] Generating receipt PDF:', {
+                bookingId: booking.id,
+                eventTitle: event.title,
+                participantCount: participants?.length || 0,
+                timestamp: new Date().toISOString()
+            })
+            
+            receiptBuffer = await ReceiptGenerator.generateReceiptPDF(
+                event,
+                booking,
+                participants || [],
+                'Credit Card'
+            )
+            receiptFilename = `receipt_${booking.booking_id || booking.id}_${startDate
+                .toISOString()
+                .slice(0, 10)}.pdf`
+            
+            console.log('✅ [BOOKING CONFIRMATION] Receipt PDF generated successfully:', {
+                bookingId: booking.id,
+                receiptSize: receiptBuffer.length,
+                receiptFilename,
+                timestamp: new Date().toISOString()
+            })
+        } catch (receiptError) {
+            console.error('❌ [BOOKING CONFIRMATION] Failed to generate receipt PDF:', {
+                bookingId: booking.id,
+                error: receiptError instanceof Error ? receiptError.message : 'Unknown error',
+                errorStack: receiptError instanceof Error ? receiptError.stack : undefined,
+                timestamp: new Date().toISOString()
+            })
+            // Continue without receipt attachment
+        }
+
+        // Prepare attachments
+        const attachments = [
+            {
+                filename: icsFilename,
+                content: Buffer.from(icsContent).toString('base64'),
+                contentType: 'text/calendar; charset=utf-8'
+            }
+        ]
+
+        // Add receipt attachment if generated successfully
+        if (receiptBuffer) {
+            // Convert to base64 for Resend API
+            const base64Content = receiptBuffer instanceof Buffer 
+                ? receiptBuffer.toString('base64')
+                : Buffer.from(receiptBuffer).toString('base64')
+            
+            attachments.push({
+                filename: receiptFilename,
+                content: base64Content,
+                contentType: 'application/pdf'
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any)
+        }
+
+        console.log('📎 [BOOKING CONFIRMATION] Preparing attachments:', {
+            bookingId: booking.id,
+            attachmentCount: attachments.length,
+            attachments: attachments.map(a => ({ filename: a.filename, contentType: a.contentType, contentLength: a.content.length })),
+            timestamp: new Date().toISOString()
+        })
+
         const { data: emailData, error } = await resend.emails.send({
             from: process.env.RESEND_FROM_EMAIL || "",
             to: user.email,
             subject: `Booking Confirmed: ${event.title}`,
             html,
             text,
-            attachments: [
-                {
-                    filename: icsFilename,
-                    content: Buffer.from(icsContent),
-                    contentType: 'text/calendar; charset=utf-8'
-                }
-            ]
+            attachments
         })
 
         if (error) {
