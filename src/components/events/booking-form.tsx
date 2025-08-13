@@ -1140,7 +1140,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
     if (!isResumeFlowActive && event.entry_close_date && new Date(event.entry_close_date) < new Date()) {
         return (
             <div className="text-center py-12">
-                <p className="text-xl text-gray-800 dark:text-gray-200 font-semibold">Entries for this event are now closed (entry close date has passed).</p>
+                <p className="text-xl text-gray-800 dark:text-gray-200 font-semibold">Entries closed.</p>
             </div>
         )
     }

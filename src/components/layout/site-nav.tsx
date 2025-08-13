@@ -4,8 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import { Profile } from '@/lib/types/database'
+import { useAuth } from '@/contexts/AuthContext'
 import LogoutButton from '@/components/auth/logout-button'
 import { 
     HiUser, 
@@ -19,7 +18,6 @@ import {
     HiMagnifyingGlass,
     HiHome
 } from 'react-icons/hi2'
-import type { User } from '@supabase/supabase-js'
 
 interface SiteNavProps {
     className?: string
@@ -27,8 +25,7 @@ interface SiteNavProps {
 }
 
 export default function SiteNav({ className = '', showTitle = true }: SiteNavProps) {
-    const [user, setUser] = useState<User | null>(null)
-    const [profile, setProfile] = useState<Profile | null>(null)
+    const { user, profile } = useAuth()
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [userMenuOpen, setUserMenuOpen] = useState(false)
     const [searchOpen, setSearchOpen] = useState(false)
@@ -36,7 +33,6 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
     const [searchAnimating, setSearchAnimating] = useState(false)
     const pathname = usePathname()
     const router = useRouter()
-    const supabase = createClient()
 
     const mobileMenuRef = useRef<HTMLDivElement>(null)
     const mobileMenuButtonRef = useRef<HTMLButtonElement>(null)
@@ -72,43 +68,7 @@ export default function SiteNav({ className = '', showTitle = true }: SiteNavPro
         setTimeout(() => setSearchOpen(false), 200)
     }
 
-    useEffect(() => {
-        const getUser = async () => {
-            try {
-                const { data: { user } } = await supabase.auth.getUser()
-                setUser(user)
 
-                if (user) {
-                    const { data: profileData } = await supabase
-                        .from('profiles')
-                        .select('*')
-                        .eq('id', user.id)
-                        .single()
-                    setProfile(profileData)
-                }
-            } catch (error) {
-                console.error('Error fetching user:', error)
-            }
-        }
-
-        getUser()
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            setUser(session?.user ?? null)
-            if (session?.user) {
-                const { data: profileData } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .single()
-                setProfile(profileData)
-            } else {
-                setProfile(null)
-            }
-        })
-
-        return () => subscription.unsubscribe()
-    }, [supabase])
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

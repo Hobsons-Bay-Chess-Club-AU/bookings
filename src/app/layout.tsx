@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import CookieConsentWrapper from "@/components/ui/cookie-consent-wrapper";
 import ConditionalLayout from "@/components/layout/conditional-nav";
+import AuthReadyLayout from "@/components/layout/auth-ready-layout";
+import { AuthProvider } from '@/contexts/AuthContext';
 import { BookingJourneyProvider } from '@/contexts/BookingJourneyContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Analytics } from '@vercel/analytics/react';
@@ -35,13 +37,17 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider>
-          <CookieConsentWrapper>
-              <BookingJourneyProvider>
-                <ConditionalLayout>
-                  {children}
-                </ConditionalLayout>
-              </BookingJourneyProvider>
-          </CookieConsentWrapper>
+          <AuthProvider>
+            <AuthReadyLayout>
+              <CookieConsentWrapper>
+                <BookingJourneyProvider>
+                  <ConditionalLayout>
+                    {children}
+                  </ConditionalLayout>
+                </BookingJourneyProvider>
+              </CookieConsentWrapper>
+            </AuthReadyLayout>
+          </AuthProvider>
           {/* Vercel Analytics */}
           <Analytics />
           <SpeedInsights />
