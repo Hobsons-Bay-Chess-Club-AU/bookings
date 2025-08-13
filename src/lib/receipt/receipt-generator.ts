@@ -53,8 +53,23 @@ export class ReceiptGenerator {
     private static buildReceiptItems(event: Event, booking: Booking, participants: Participant[]): ReceiptItem[] {
         const items: ReceiptItem[] = []
 
-        // Group participants by section if it's a multi-section event
-        if (booking.is_multi_section && participants.length > 0) {
+        // Check if we have section_bookings data (for multi-section events with actual pricing)
+        if (booking.is_multi_section && 'section_bookings' in booking && Array.isArray(booking.section_bookings)) {
+            // Use actual section booking data with real pricing
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (booking.section_bookings as any[]).forEach((sectionBooking: any) => {
+                const sectionName = sectionBooking.section?.title || 'Unknown Section'
+                
+                items.push({
+                    description: `${event.title} - ${sectionName}`,
+                    quantity: sectionBooking.quantity,
+                    unitPrice: sectionBooking.unit_price,
+                    total: sectionBooking.total_amount,
+                    sectionName
+                })
+            })
+        } else if (booking.is_multi_section && participants.length > 0) {
+            // Fallback: Group participants by section if section_bookings not available
             const sectionGroups = new Map<string, Participant[]>()
             
             participants.forEach(participant => {
@@ -65,21 +80,35 @@ export class ReceiptGenerator {
                 sectionGroups.get(sectionName)!.push(participant)
             })
 
-            // Calculate price per participant
-            const pricePerParticipant = booking.total_amount / booking.quantity
+            // For multi-section events, we need to calculate the total correctly
+            // Since we don't have individual pricing, we'll distribute the total amount proportionally
+            const totalParticipants = participants.length
+            const basePricePerParticipant = booking.total_amount / totalParticipants
 
             sectionGroups.forEach((sectionParticipants, sectionName) => {
                 const quantity = sectionParticipants.length
-                const total = quantity * pricePerParticipant
+                const total = quantity * basePricePerParticipant
                 
                 items.push({
                     description: `${event.title} - ${sectionName}`,
                     quantity,
-                    unitPrice: pricePerParticipant,
+                    unitPrice: basePricePerParticipant,
                     total,
                     sectionName
                 })
             })
+
+            // Ensure the total matches exactly by adjusting the last item if needed
+            if (items.length > 0) {
+                const calculatedTotal = items.reduce((sum, item) => sum + item.total, 0)
+                const difference = booking.total_amount - calculatedTotal
+                
+                if (Math.abs(difference) > 0.01) { // If there's a rounding difference
+                    const lastItem = items[items.length - 1]
+                    lastItem.total += difference
+                    lastItem.unitPrice = lastItem.total / lastItem.quantity
+                }
+            }
         } else {
             // Single section or simple event
             const pricePerParticipant = booking.total_amount / booking.quantity
@@ -140,7 +169,7 @@ export class ReceiptGenerator {
             pdf.setFont('helvetica', 'bold')
             pdf.text('Date:', pageWidth - margin - 40, yPosition)
             pdf.setFont('helvetica', 'normal')
-            pdf.text(this.formatDate(paymentDate), pageWidth - margin - 30, yPosition)
+            pdf.text(this.formatDate(paymentDate), pageWidth - margin - 25, yPosition)
             yPosition +=lineHeight
 
             // Customer information
@@ -221,21 +250,59 @@ export class ReceiptGenerator {
             pdf.line(margin, yPosition, pageWidth - margin +5, yPosition)
             yPosition += 15
 
-            pdf.setFontSize(14)
-            pdf.setFont('helvetica', 'bold')
-            pdf.text('Total Amount:', margin + 120, yPosition)
-            pdf.text(this.formatCurrency(booking.total_amount), margin + 200, yPosition)
-            yPosition += 20
+            // Check if we need a new page for the total
+            if (yPosition > pageHeight - 60) {
+                pdf.addPage()
+                yPosition = 20
+            }
 
-            // Payment status
+            // Debug: Log the total amount being displayed
+            console.log('📄 [RECEIPT] Total amount to display:', {
+                totalAmount: booking.total_amount,
+                formattedAmount: this.formatCurrency(booking.total_amount),
+                yPosition,
+                pageHeight
+            })
+
+            // Add background highlight and border for total amount
+            pdf.setFillColor(248, 250, 252) // Light gray background
+            pdf.rect(margin, yPosition - 10, pageWidth - margin * 2 + 5, 18, 'F')
+            
+            // Add border around total amount
+            pdf.setDrawColor(0, 0, 0) // Black border
+            pdf.setLineWidth(0.5)
+            pdf.rect(margin, yPosition - 10, pageWidth - margin * 2 + 5, 18, 'S')
+            
             pdf.setFontSize(12)
             pdf.setFont('helvetica', 'bold')
-            pdf.text('Payment Status:', margin, yPosition)
+            pdf.setTextColor(0, 0, 0) // Ensure black color
+            pdf.text('Total Amount:', margin + 70, yPosition)
+            pdf.text(this.formatCurrency(booking.total_amount), margin + 150, yPosition)
+            yPosition += 20
+
+            // Add PAID watermark to the page
+            // Save current graphics state
+            const currentTextColor = pdf.getTextColor()
+            const currentFontSize = pdf.getFontSize()
+            
+            // Set watermark properties - make it more subtle
+            pdf.setTextColor(34, 197, 94) // Green color
+            pdf.setFontSize(76)
+            pdf.setFont('helvetica', 'bold')
+            
+            // Calculate center position for watermark
+            const watermarkX = pageWidth / 2 + 10 
+            const watermarkY = pageHeight / 2 + 20
+            
+            // Draw the watermark as a subtle background element
+            pdf.text('PAID', watermarkX, watermarkY, { align: 'center', angle:45 })
+            
+            // Restore graphics state
+            pdf.setTextColor(currentTextColor)
+            pdf.setFontSize(currentFontSize)
             pdf.setFont('helvetica', 'normal')
-            pdf.setTextColor(34, 197, 94) // Green color for confirmed
-            pdf.text('PAID', margin + 50, yPosition)
-            pdf.setTextColor(0, 0, 0) // Reset color
-            yPosition += 25
+            
+            yPosition += 15
 
             // Terms and conditions
             if (event.settings?.terms_conditions) {

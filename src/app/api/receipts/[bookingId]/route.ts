@@ -65,10 +65,36 @@ export async function GET(
             return NextResponse.json({ error: 'Failed to fetch participants' }, { status: 500 })
         }
 
+        // Get section_bookings for multi-section events
+        let sectionBookings = null
+        if (booking.is_multi_section) {
+            const { data: sectionBookingsData, error: sectionBookingsError } = await supabase
+                .from('section_bookings')
+                .select(`
+                    *,
+                    section:event_sections(*),
+                    pricing:section_pricing(*)
+                `)
+                .eq('booking_id', booking.id)
+
+            if (sectionBookingsError) {
+                console.error('Error fetching section_bookings:', sectionBookingsError)
+                // Continue without section_bookings data
+            } else {
+                sectionBookings = sectionBookingsData
+            }
+        }
+
+        // Add section_bookings to booking object for receipt generation
+        const bookingWithSectionBookings = {
+            ...booking,
+            section_bookings: sectionBookings || []
+        }
+
         // Generate receipt
         const receiptBuffer = await ReceiptGenerator.generateReceiptPDF(
             booking.event,
-            booking,
+            bookingWithSectionBookings,
             participants || [],
             'Credit Card'
         )

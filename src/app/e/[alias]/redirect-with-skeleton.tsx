@@ -94,7 +94,7 @@ export default function RedirectWithSkeleton({ targetUrl }: RedirectWithSkeleton
     // Show skeleton for 1 second, then redirect
     const timer = setTimeout(() => {
       router.push(targetUrl)
-    }, 1000)
+    }, 400)
 
     return () => clearTimeout(timer)
   }, [targetUrl, router])

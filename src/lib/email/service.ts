@@ -168,6 +168,39 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
         .eq('booking_id', booking.id)
         .order('created_at', { ascending: true })
 
+    // Fetch section_bookings for multi-section events
+    let sectionBookings = null
+    if (booking.is_multi_section) {
+        console.log('🔍 [BOOKING CONFIRMATION] Fetching section_bookings for multi-section booking:', {
+            bookingId: booking.id,
+            timestamp: new Date().toISOString()
+        })
+
+        const { data: sectionBookingsData, error: sectionBookingsError } = await supabase
+            .from('section_bookings')
+            .select(`
+                *,
+                section:event_sections(*),
+                pricing:section_pricing(*)
+            `)
+            .eq('booking_id', booking.id)
+
+        if (sectionBookingsError) {
+            console.error('❌ [BOOKING CONFIRMATION] Failed to fetch section_bookings:', {
+                bookingId: booking.id,
+                error: sectionBookingsError.message,
+                timestamp: new Date().toISOString()
+            })
+        } else {
+            sectionBookings = sectionBookingsData
+            console.log('✅ [BOOKING CONFIRMATION] Section_bookings fetched:', {
+                bookingId: booking.id,
+                sectionBookingsCount: sectionBookings?.length || 0,
+                timestamp: new Date().toISOString()
+            })
+        }
+    }
+
     if (participantsError) {
         console.error('❌ [BOOKING CONFIRMATION] Failed to fetch participants:', {
             bookingId: booking.id,
@@ -257,12 +290,19 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
                 bookingId: booking.id,
                 eventTitle: event.title,
                 participantCount: participants?.length || 0,
+                sectionBookingsCount: sectionBookings?.length || 0,
                 timestamp: new Date().toISOString()
             })
+
+            // Add section_bookings to booking object for receipt generation
+            const bookingWithSectionBookings = {
+                ...booking,
+                section_bookings: sectionBookings || []
+            }
             
             receiptBuffer = await ReceiptGenerator.generateReceiptPDF(
                 event,
-                booking,
+                bookingWithSectionBookings,
                 participants || [],
                 'Credit Card'
             )
