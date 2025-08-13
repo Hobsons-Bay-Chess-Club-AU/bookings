@@ -236,12 +236,39 @@ export default function Step3Participants({
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            Gender
+                        </label>
+                        <select
+                            value={currentParticipant.gender || ''}
+                            onChange={(e) => handleParticipantChange('gender', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        >
+                            <option value="">Select gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                            <option value="prefer_not_to_say">Prefer not to say</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                             Email
                         </label>
                         <input
                             type="email"
                             value={currentParticipant.contact_email || ''}
-                            onChange={(e) => handleParticipantChange('email', e.target.value)}
+                            onChange={(e) => handleParticipantChange('contact_email', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            Phone
+                        </label>
+                        <input
+                            type="tel"
+                            value={currentParticipant.contact_phone || ''}
+                            onChange={(e) => handleParticipantChange('contact_phone', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                         />
                     </div>

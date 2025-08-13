@@ -7,6 +7,7 @@ export interface BookingWithProfile extends Booking {
         first_name: string
         last_name: string
         date_of_birth?: string
+        gender?: string
         email?: string
         phone?: string
         custom_data?: Record<string, CustomDataValue>

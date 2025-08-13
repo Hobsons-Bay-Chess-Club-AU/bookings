@@ -983,6 +983,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                             contact_email: participant.email,
                             contact_phone: participant.phone,
                             date_of_birth: participant.date_of_birth,
+                            gender: participant.gender,
                             custom_data: participant.custom_data || {},
                             section_id: sectionId,
                             status: shouldWhitelist ? 'whitelisted' : 'active'

@@ -244,6 +244,7 @@ export default function EventParticipantsPageClient({
             'First Name',
             'Last Name',
             'Date of Birth',
+            'Gender',
             'Contact Email',
             'Contact Phone',
             ...(event.has_sections ? ['Section', 'Section Description'] : []),
@@ -261,6 +262,7 @@ export default function EventParticipantsPageClient({
             p.first_name,
             p.last_name,
             p.date_of_birth || '',
+            p.gender ? p.gender.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : '',
             p.contact_email || '',
             p.contact_phone || '',
             ...(event.has_sections ? [
@@ -556,6 +558,9 @@ export default function EventParticipantsPageClient({
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Contact
                                     </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Gender
+                                    </th>
                                     {event.has_sections && (
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Section
@@ -606,6 +611,15 @@ export default function EventParticipantsPageClient({
                                                 )}
                                                 {!participant.contact_email && !participant.contact_phone && (
                                                     <span className="text-gray-400 dark:text-gray-500">No contact info</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="text-sm text-gray-900 dark:text-gray-100">
+                                                {participant.gender ? (
+                                                    <span className="capitalize">{participant.gender.replace('_', ' ')}</span>
+                                                ) : (
+                                                    <span className="text-gray-400 dark:text-gray-500">Not specified</span>
                                                 )}
                                             </div>
                                         </td>
@@ -793,6 +807,14 @@ export default function EventParticipantsPageClient({
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date of Birth</label>
                                                 <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
                                                     {new Date(selectedParticipant.date_of_birth).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {selectedParticipant.gender && (
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Gender</label>
+                                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100 capitalize">
+                                                    {selectedParticipant.gender.replace('_', ' ')}
                                                 </p>
                                             </div>
                                         )}

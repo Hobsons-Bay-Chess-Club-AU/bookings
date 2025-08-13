@@ -126,6 +126,7 @@ export async function POST(
             date_of_birth: participant.date_of_birth || null,
             contact_email: participant.contact_email || null,
             contact_phone: participant.contact_phone || null,
+            gender: participant.gender || null,
             custom_data: participant.custom_data || {}
         }))
 

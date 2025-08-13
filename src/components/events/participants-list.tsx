@@ -212,6 +212,12 @@ export default function ParticipantsList({
                     return booking.participants[0].phone || booking.profile.phone || '-'
                 }
                 return booking.profile.phone || '-'
+            case 'gender':
+                if (booking.participants && booking.participants.length > 0) {
+                    return booking.participants[0].gender ? 
+                        booking.participants[0].gender.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : '-'
+                }
+                return '-'
             default:
                 return '-'
         }
@@ -297,6 +303,7 @@ export default function ParticipantsList({
             case 'first_name': return 'First Name'
             case 'last_name': return 'Last Name'
             case 'date_of_birth': return 'Date of Birth'
+            case 'gender': return 'Gender'
             case 'contact_email': return 'Email'
             case 'contact_phone': return 'Phone'
             default: return fieldId.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())

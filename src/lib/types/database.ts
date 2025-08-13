@@ -181,6 +181,7 @@ export interface Participant {
     contact_email?: string
     contact_phone?: string
     date_of_birth?: string
+    gender?: string
     section_id?: string
     custom_data?: Record<string, CustomDataValue>
     status?: 'active' | 'whitelisted' | 'cancelled'
