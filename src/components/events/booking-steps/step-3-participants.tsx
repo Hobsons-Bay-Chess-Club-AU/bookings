@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { Participant, FormField, CustomDataValue, EventSection } from '@/lib/types/database'
 import ParticipantSearchPopup from '../participant-search-popup'
 import { DynamicFormFieldset, isFieldValid } from '@/components/forms'
+import { validateSectionRules } from '@/lib/utils/section-rules'
 // import ParticipantSectionAssignment from '../participant-section-assignment'
 
 interface SelectedSectionItem {
@@ -90,7 +91,69 @@ export default function Step3Participants({
                 }
             }
         }
+
+        // Check section rules validation for multi-section events
+        if (isMultiSectionEvent && selectedSections && selectedSections.length > 0) {
+            const assignedSection = autoAllocationOrder[currentParticipantIndex]
+            if (assignedSection) {
+                const section = selectedSections.find(s => s.sectionId === assignedSection.sectionId)?.section
+                if (section && section.section_rules) {
+                    const validationResult = validateSectionRules(section.section_rules, {
+                        date_of_birth: participant.date_of_birth,
+                        gender: participant.gender
+                    })
+                    if (!validationResult.isValid) {
+                        return false
+                    }
+                }
+            }
+        }
+
         return true
+    }
+
+    const getCurrentParticipantValidationError = (): string | null => {
+        const participant = currentParticipant
+
+        // Check required fixed fields
+        if (!participant.first_name?.trim()) {
+            return 'First name is required'
+        }
+        if (!participant.last_name?.trim()) {
+            return 'Last name is required'
+        }
+        if (!participant.date_of_birth) {
+            return 'Date of birth is required'
+        }
+
+        // Check required custom fields
+        for (const field of formFields) {
+            if (field.required) {
+                const value = participant.custom_data?.[field.name]
+                if (!isFieldValid(field, value)) {
+                    return `${field.label || field.name} is required`
+                }
+            }
+        }
+
+        // Check section rules validation for multi-section events
+        if (isMultiSectionEvent && selectedSections && selectedSections.length > 0) {
+            const assignedSection = autoAllocationOrder[currentParticipantIndex]
+            if (assignedSection) {
+                const section = selectedSections.find(s => s.sectionId === assignedSection.sectionId)?.section
+                if (section && section.section_rules) {
+                    const validationResult = validateSectionRules(section.section_rules, {
+                        date_of_birth: participant.date_of_birth,
+                        gender: participant.gender
+                    })
+                    if (!validationResult.isValid) {
+                        return validationResult.error || 'Participant does not meet section requirements'
+                    }
+                }
+            }
+        }
+
+        return null
     }
 
     const handleParticipantChange = (field: string, value: string) => {
@@ -145,6 +208,22 @@ export default function Step3Participants({
                 </div>
             )}
 
+            {/* Section Rules Validation Error */}
+            {(() => {
+                const validationError = getCurrentParticipantValidationError()
+                return validationError ? (
+                    <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-600 dark:text-red-300 px-4 py-3 rounded">
+                        <div className="flex items-center">
+                            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            <span className="font-medium">Section Requirements:</span>
+                            <span className="ml-2">{validationError}</span>
+                        </div>
+                    </div>
+                ) : null
+            })()}
+
             {/* Progress Indicator */}
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
                 <div className="flex items-center justify-between">
@@ -195,6 +274,45 @@ export default function Step3Participants({
                         </button>
                     )}
                 </div>
+
+                {(() => {
+                    if (isMultiSectionEvent && selectedSections && selectedSections.length > 0) {
+                        const assignedSection = autoAllocationOrder[currentParticipantIndex]
+                        if (assignedSection) {
+                            const section = selectedSections.find(s => s.sectionId === assignedSection.sectionId)?.section
+                            if (section && section.section_rules) {
+                                const rules = section.section_rules
+                                const requirements: string[] = []
+
+                                if (rules.age_constraint?.enabled) {
+                                    if (rules.age_constraint.min_date && rules.age_constraint.max_date) {
+                                        requirements.push(`Age: Born between ${new Date(rules.age_constraint.min_date).toLocaleDateString()} and ${new Date(rules.age_constraint.max_date).toLocaleDateString()}`)
+                                    } else if (rules.age_constraint.min_date) {
+                                        requirements.push(`Age: Born on or before ${new Date(rules.age_constraint.min_date).toLocaleDateString()}`)
+                                    } else if (rules.age_constraint.max_date) {
+                                        requirements.push(`Age: Born on or after ${new Date(rules.age_constraint.max_date).toLocaleDateString()}`)
+                                    }
+                                }
+
+                                if (rules.gender_rules?.enabled && rules.gender_rules.allowed_genders?.length > 0) {
+                                    const allowedGenders = rules.gender_rules.allowed_genders
+                                        .map(g => g.charAt(0).toUpperCase() + g.slice(1))
+                                        .join(', ')
+                                    requirements.push(`Gender: ${allowedGenders}`)
+                                }
+
+                                if (requirements.length > 0) {
+                                    return (
+                                        <div className="text-sm text-blue-700 dark:text-blue-300 mb-4">
+                                            {requirements.join('. ')}
+                                        </div>
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    return null
+                })()}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Fixed Fields */}

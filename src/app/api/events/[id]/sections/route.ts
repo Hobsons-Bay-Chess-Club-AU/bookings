@@ -68,7 +68,7 @@ export async function POST(
         }
 
         const body = await request.json()
-        const { title, description, start_date, end_date, max_seats, section_type, section_config, custom_form_fields } = body
+        const { title, description, start_date, end_date, max_seats, section_type, section_config, custom_form_fields, section_rules } = body
 
         // Validate required fields
         if (!title || !start_date || !end_date || !max_seats) {
@@ -87,7 +87,8 @@ export async function POST(
                 max_seats,
                 section_type,
                 section_config: section_config || {},
-                custom_form_fields: custom_form_fields || []
+                custom_form_fields: custom_form_fields || [],
+                section_rules: section_rules || {}
             })
             .select()
             .single()

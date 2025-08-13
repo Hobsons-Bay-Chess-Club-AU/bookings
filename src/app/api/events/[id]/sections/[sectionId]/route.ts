@@ -31,7 +31,7 @@ export async function PUT(
         }
 
         const body = await request.json()
-        const { title, description, start_date, end_date, max_seats, section_type, section_config, custom_form_fields, status } = body
+        const { title, description, start_date, end_date, max_seats, section_type, section_config, custom_form_fields, section_rules, status } = body
 
         // Update the section
         const { data: section, error } = await supabase
@@ -45,6 +45,7 @@ export async function PUT(
                 section_type,
                 section_config: section_config || {},
                 custom_form_fields: custom_form_fields || [],
+                section_rules: section_rules || {},
                 status
             })
             .eq('id', sectionId)

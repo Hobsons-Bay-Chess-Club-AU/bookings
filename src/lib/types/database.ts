@@ -190,6 +190,20 @@ export interface Participant {
     section?: EventSection
 }
 
+export interface SectionRules {
+    age_constraint?: {
+        enabled: boolean
+        min_date?: string
+        max_date?: string
+        description?: string
+    }
+    gender_rules?: {
+        enabled: boolean
+        allowed_genders: string[]
+        description?: string
+    }
+}
+
 export interface EventSection {
     id: string
     event_id: string
@@ -205,6 +219,7 @@ export interface EventSection {
     custom_form_fields?: FormField[]
     whitelist_enabled?: boolean
     whitelist_settings?: Record<string, unknown>
+    section_rules?: SectionRules
     created_at: string
     updated_at: string
     pricing?: SectionPricing[]

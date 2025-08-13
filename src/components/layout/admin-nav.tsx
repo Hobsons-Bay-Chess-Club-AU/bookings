@@ -133,20 +133,22 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
 
         getUser()
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            setUser(session?.user ?? null)
-            if (session?.user) {
-                const { data: profileData } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .single()
-                setProfile(profileData)
-            } else {
-                setProfile(null)
-            }
+        const { data: { subscription } } = supabase.auth.onAuthStateChange( (event, session) => {
+            setTimeout(async () => {
+                setUser(session?.user ?? null)
+                if (session?.user) {
+                    const { data: profileData } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', session.user.id)
+                        .single()
+                    setProfile(profileData)
+                } else {
+                    setProfile(null)
+                }
+            }, 0)
         })
-
+    
         return () => subscription.unsubscribe()
     }, [supabase])
 

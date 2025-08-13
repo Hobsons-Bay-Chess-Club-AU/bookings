@@ -356,46 +356,6 @@ export default function EventParticipantsPageClient({
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <span className="text-2xl">📧</span>
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                                        With Contact Email
-                                    </dt>
-                                    <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                        {participants.filter(p => p.contact_email).length}
-                                    </dd>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-                    <div className="p-5">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <span className="text-2xl">📱</span>
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                                        With Phone Number
-                                    </dt>
-                                    <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                        {participants.filter(p => p.contact_phone).length}
-                                    </dd>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-                    <div className="p-5">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
                                 <span className="text-2xl">📋</span>
                             </div>
                             <div className="ml-5 w-0 flex-1">
@@ -411,7 +371,152 @@ export default function EventParticipantsPageClient({
                         </div>
                     </div>
                 </div>
+
+                {event.has_sections && sections.length > 0 ? (
+                    <>
+                        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                            <div className="p-5">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <span className="text-2xl">🏆</span>
+                                    </div>
+                                    <div className="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                                Sections
+                                            </dt>
+                                            <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                                {sections.length}
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                            <div className="p-5">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <span className="text-2xl">❓</span>
+                                    </div>
+                                    <div className="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                                Unassigned
+                                            </dt>
+                                            <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                                {participants.filter(p => !p.section).length}
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                            <div className="p-5">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <span className="text-2xl">✅</span>
+                                    </div>
+                                    <div className="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                                Confirmed
+                                            </dt>
+                                            <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                                {participants.filter(p => p.bookings.status === 'confirmed').length}
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                            <div className="p-5">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <span className="text-2xl">⏳</span>
+                                    </div>
+                                    <div className="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                                Pending
+                                            </dt>
+                                            <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                                {participants.filter(p => p.bookings.status === 'pending').length}
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
+
+            {/* Section Summary (only for multi-section events) */}
+            {event.has_sections && sections.length > 0 && (
+                <div className="bg-white dark:bg-gray-800 shadow rounded-lg mb-8">
+                    <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Section Summary</h3>
+                    </div>
+                    <div className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {sections.map((section) => {
+                                const sectionParticipants = participants.filter(p => p.section?.id === section.id)
+                                return (
+                                    <div key={section.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h4 className="font-medium text-gray-900 dark:text-gray-100">{section.title}</h4>
+                                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                                                {sectionParticipants.length} participant{sectionParticipants.length !== 1 ? 's' : ''}
+                                            </span>
+                                        </div>
+                                        {section.description && (
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                                {section.description}
+                                            </p>
+                                        )}
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            {sectionParticipants.length > 0 ? (
+                                                <div>
+                                                    <div>Confirmed: {sectionParticipants.filter(p => p.bookings.status === 'confirmed').length}</div>
+                                                    <div>Pending: {sectionParticipants.filter(p => p.bookings.status === 'pending').length}</div>
+                                                </div>
+                                            ) : (
+                                                <div className="italic">No participants assigned</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                            {/* Unassigned participants */}
+                            {participants.filter(p => !p.section).length > 0 && (
+                                <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h4 className="font-medium text-yellow-800 dark:text-yellow-200">No Section Assigned</h4>
+                                        <span className="text-sm text-yellow-600 dark:text-yellow-400">
+                                            {participants.filter(p => !p.section).length} participant{participants.filter(p => !p.section).length !== 1 ? 's' : ''}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-2">
+                                        These participants need to be assigned to a section
+                                    </p>
+                                    <div className="text-xs text-yellow-600 dark:text-yellow-400">
+                                        <div>Confirmed: {participants.filter(p => !p.section && p.bookings.status === 'confirmed').length}</div>
+                                        <div>Pending: {participants.filter(p => !p.section && p.bookings.status === 'pending').length}</div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Search and Filter Indicator */}
             {searchTerm && (

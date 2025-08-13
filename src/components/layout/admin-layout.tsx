@@ -58,11 +58,13 @@ export default function AdminLayout({
             }
         }
         checkAuth()
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            if (!session?.user) {
-                router.push('/auth/login')
-            }
-        })
+        const { data: { subscription } } = supabase.auth.onAuthStateChange ( (_event, session) => {
+            setTimeout(async () => {
+                if (!session?.user) {
+                    router.push('/auth/login')
+                }
+        }, 0)
+    })
         return () => subscription.unsubscribe()
     }, [supabase, router, requiredRole])
 

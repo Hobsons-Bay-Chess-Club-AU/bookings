@@ -7,6 +7,7 @@ import { formatInTimezone } from '@/lib/utils/timezone'
 import SectionPricingModal from '@/components/organizer/section-pricing-modal'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
 import SectionWhitelistSettings from '@/components/organizer/section-whitelist-settings'
+import SectionRulesEditor from '@/components/organizer/section-rules-editor'
 
 interface SectionsManagerClientProps {
     event: Event
@@ -404,7 +405,8 @@ function AddSectionForm({ event, onSubmit, onCancel, loading }: AddSectionFormPr
         end_date: formatDateForInput(event.end_date),
         max_seats: '',
         section_type: '',
-        section_config: {}
+        section_config: {},
+        section_rules: {}
     })
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -412,7 +414,8 @@ function AddSectionForm({ event, onSubmit, onCancel, loading }: AddSectionFormPr
         onSubmit({
             ...formData,
             max_seats: parseInt(formData.max_seats),
-            section_config: formData.section_config
+            section_config: formData.section_config,
+            section_rules: formData.section_rules
         })
     }
 
@@ -504,6 +507,12 @@ function AddSectionForm({ event, onSubmit, onCancel, loading }: AddSectionFormPr
                     </div>
                 </div>
 
+                {/* Section Rules Editor */}
+                <SectionRulesEditor
+                    rules={formData.section_rules}
+                    onChange={(rules) => setFormData(prev => ({ ...prev, section_rules: rules }))}
+                />
+
                 <div className="flex justify-end space-x-3">
                     <button
                         type="button"
@@ -543,6 +552,7 @@ function EditSectionForm({ eventId, section, onSubmit, onCancel, loading }: Edit
         max_seats: section.max_seats.toString(),
         section_type: section.section_type || '',
         section_config: section.section_config || {},
+        section_rules: section.section_rules || {},
         status: section.status
     })
 
@@ -558,7 +568,8 @@ function EditSectionForm({ eventId, section, onSubmit, onCancel, loading }: Edit
                 body: JSON.stringify({
                     ...formData,
                     max_seats: parseInt(formData.max_seats),
-                    section_config: formData.section_config
+                    section_config: formData.section_config,
+                    section_rules: formData.section_rules
                 }),
             })
 
@@ -677,6 +688,12 @@ function EditSectionForm({ eventId, section, onSubmit, onCancel, loading }: Edit
                         <option value="completed">Completed</option>
                     </select>
                 </div>
+
+                {/* Section Rules Editor */}
+                <SectionRulesEditor
+                    rules={formData.section_rules}
+                    onChange={(rules) => setFormData(prev => ({ ...prev, section_rules: rules }))}
+                />
 
                 <div className="flex justify-end space-x-3">
                     <button

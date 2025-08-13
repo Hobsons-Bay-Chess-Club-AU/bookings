@@ -1,8 +1,9 @@
 'use client'
 
 import { EventSection } from '@/lib/types/database'
-import { HiCalendarDays, HiClock, HiUsers, HiCurrencyDollar } from 'react-icons/hi2'
+import { HiCalendarDays, HiClock, HiUsers, HiCurrencyDollar, HiShieldCheck } from 'react-icons/hi2'
 import { formatInTimezone } from '@/lib/utils/timezone'
+ 
 
 interface EventSectionsDisplayProps {
     sections: EventSection[]
@@ -29,12 +30,42 @@ export default function EventSectionsDisplay({ sections, eventTimezone }: EventS
                             <div className="flex-1">
                                 <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                                     {section.title}
+                                    {(() => {
+                                        const rules = section.section_rules
+                                        if (!rules) return null
+                                        const parts: string[] = []
+                                        // Age short label
+                                        if (rules.age_constraint?.enabled) {
+                                            const minDate = rules.age_constraint.min_date ? new Date(rules.age_constraint.min_date) : null
+                                            const maxDate = rules.age_constraint.max_date ? new Date(rules.age_constraint.max_date) : null
+                                            if (minDate && maxDate) {
+                                                parts.push(`Born between ${minDate.getFullYear()}–${maxDate.getFullYear()}`)
+                                            } else if (minDate) {
+                                                parts.push(`Born on or before ${minDate.getFullYear()}`)
+                                            } else if (maxDate) {
+                                                parts.push(`Born on or after ${maxDate.getFullYear()}`)
+                                            }
+                                        }
+                                        // Gender short label
+                                        if (rules.gender_rules?.enabled && Array.isArray(rules.gender_rules.allowed_genders) && rules.gender_rules.allowed_genders.length > 0) {
+                                            const allowed = rules.gender_rules.allowed_genders
+                                                .map(g => g.charAt(0).toUpperCase() + g.slice(1))
+                                                .join('/');
+                                            parts.push(`Gender: ${allowed}`)
+                                        }
+                                        if (parts.length === 0) return null
+                                        return (
+                                            <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">({parts.join('; ')})</span>
+                                        )
+                                    })()}
                                 </h4>
                                 {section.description && (
                                     <p className="text-gray-600 dark:text-gray-400 mb-3">
                                         {section.description}
                                     </p>
                                 )}
+                                
+                                {/* Section rules summary is shown inline next to title when applicable */}
                                 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                                     <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
@@ -69,23 +100,32 @@ export default function EventSectionsDisplay({ sections, eventTimezone }: EventS
                                 {/* Available seats indicator */}
                                 <div className="mt-3">
                                     <div className="flex items-center gap-2">
-                                        <span className={`text-sm font-medium ${
-                                            (section.available_seats ?? 0) === 0 
-                                                ? 'text-red-600 dark:text-red-400' 
-                                                : (section.available_seats ?? 0) < 10 
+                                        {(() => {
+                                            const available = (section.available_seats ?? (section.max_seats - section.current_seats));
+                                            const isFullOrOver = (available ?? 0) <= 0;
+                                            const isLow = (available ?? 0) > 0 && (available ?? 0) < 10;
+                                            const colorClass = isFullOrOver
+                                                ? (section.whitelist_enabled ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400')
+                                                : isLow
                                                     ? 'text-amber-600 dark:text-amber-400'
-                                                    : 'text-green-600 dark:text-green-400'
-                                        }`}>
-                                            {(section.available_seats ?? 0) === 0 
-                                                ? 'Fully Booked' 
-                                                : `${section.available_seats ?? 0} seats available`
-                                            }
-                                        </span>
-                                        {(section.available_seats ?? 0) < 10 && (section.available_seats ?? 0) > 0 && (
-                                            <span className="text-xs text-amber-600 dark:text-amber-400">
-                                                • Limited availability
-                                            </span>
-                                        )}
+                                                    : 'text-green-600 dark:text-green-400';
+                                            const text = isFullOrOver
+                                                ? (section.whitelist_enabled ? 'Whitelist only' : 'Fully Booked')
+                                                : `${available} seats available`;
+                                            return (
+                                                <span className={`text-sm font-medium ${colorClass}`}>
+                                                    {text}
+                                                </span>
+                                            )
+                                        })()}
+                                        {(() => {
+                                            const available = (section.available_seats ?? (section.max_seats - section.current_seats));
+                                            return (available ?? 0) > 0 && (available ?? 0) < 10 ? (
+                                                <span className="text-xs text-amber-600 dark:text-amber-400">
+                                                    • Limited availability
+                                                </span>
+                                            ) : null
+                                        })()}
                                     </div>
                                 </div>
                             </div>
