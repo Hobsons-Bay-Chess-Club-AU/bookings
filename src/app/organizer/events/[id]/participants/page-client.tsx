@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import Link from 'next/link'
 import { Event, Participant, Booking, Profile, EventSection } from '@/lib/types/database'
 import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight } from 'react-icons/hi2'
 import Breadcrumb from '@/components/ui/breadcrumb'
@@ -749,6 +750,12 @@ export default function EventParticipantsPageClient({
                                         <td className="px-6 py-4">
                                             <div className="text-sm text-gray-900 dark:text-gray-100">
                                                 <div className="flex items-center space-x-2">
+                                                    <Link
+                                                        href={`/organizer/events/${event.id}/bookings/${participant.bookings.id}`}
+                                                        className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-mono"
+                                                    >
+                                                        {participant.bookings.booking_id || participant.bookings.id?.slice(0, 8)}
+                                                    </Link>
                                                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${participant.bookings.status === 'confirmed' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
                                                         participant.bookings.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' :
                                                             participant.bookings.status === 'cancelled' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
@@ -987,7 +994,7 @@ export default function EventParticipantsPageClient({
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Total Amount</label>
-                                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">$AUD {selectedParticipant.bookings.total_amount}</p>
+                                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">AUD ${selectedParticipant.bookings.total_amount}</p>
                                             </div>
                                         </div>
                                     </div>

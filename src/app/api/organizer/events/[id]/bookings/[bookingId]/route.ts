@@ -47,7 +47,10 @@ export async function GET(
                 *,
                 event:events!bookings_event_id_fkey(*),
                 user:profiles!bookings_user_id_fkey(*),
-                participants(*),
+                participants(
+                    *,
+                    section:event_sections(*)
+                ),
                 discount_applications(
                     *,
                     discount:event_discounts(*)
@@ -68,7 +71,10 @@ export async function GET(
                     *,
                     event:events!bookings_event_id_fkey(*),
                     user:profiles!bookings_user_id_fkey(*),
-                    participants(*),
+                    participants(
+                        *,
+                        section:event_sections(*)
+                    ),
                     discount_applications(
                         *,
                         discount:event_discounts(*)
