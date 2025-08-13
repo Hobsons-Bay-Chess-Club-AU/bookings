@@ -220,20 +220,34 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
 
     // Fetch available pricing options and form fields
     useEffect(() => {
+        console.log('🔍 [BOOKING-FORM] Pricing useEffect triggered - event.id:', event.id, 'user?.membership_type:', user?.membership_type)
         const fetchData = async () => {
             try {
+                console.log('🔍 [BOOKING-FORM] Starting pricing fetch for event:', event.id)
                 setPricingLoading(true)
 
-                // Fetch pricing options
+                // Fetch pricing options with timeout
                 const membershipType = user?.membership_type || 'non_member'
-                const pricingResponse = await fetch(`/api/public/events/${event.id}/pricing?membership_type=${membershipType}`)
+                console.log('🔍 [BOOKING-FORM] Fetching pricing with membership type:', membershipType)
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                
+                const pricingResponse = await fetch(`/api/public/events/${event.id}/pricing?membership_type=${membershipType}`, {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                console.log('🔍 [BOOKING-FORM] Pricing response status:', pricingResponse.status)
+                
                 if (!pricingResponse.ok) {
                     throw new Error('Failed to fetch pricing')
                 }
                 const pricing = await pricingResponse.json()
+                console.log('🔍 [BOOKING-FORM] Pricing data received:', pricing.length, 'options')
                 
                 // If no pricing options are available, create a default option using event's base price
                 if (pricing.length === 0) {
+                    console.log('🔍 [BOOKING-FORM] No pricing options found, creating default pricing')
                     const defaultPricing: EventPricing = {
                         id: 'default', // This is a virtual ID for UI purposes only
                         event_id: event.id,
@@ -254,6 +268,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                     setAvailablePricing([defaultPricing])
                     setSelectedPricing(defaultPricing)
                 } else {
+                    console.log('🔍 [BOOKING-FORM] Setting available pricing:', pricing.length, 'options')
                     setAvailablePricing(pricing)
                     // Auto-select the first (cheapest) available pricing
                     setSelectedPricing(pricing[0])
@@ -273,8 +288,14 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
 
             } catch (err: unknown) {
                 console.error('Error fetching data:', err)
-                setError((err as Error).message || 'Failed to load event data')
+                if (err instanceof Error && err.name === 'AbortError') {
+                    console.log('🔍 [BOOKING-FORM] Pricing fetch timed out')
+                    setError('Pricing fetch timed out. Please refresh the page.')
+                } else {
+                    setError((err as Error).message || 'Failed to load event data')
+                }
             } finally {
+                console.log('🔍 [BOOKING-FORM] Pricing fetch completed, setting loading to false')
                 setPricingLoading(false)
             }
         }

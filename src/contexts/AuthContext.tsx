@@ -36,16 +36,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [isReady, setIsReady] = useState(false)
+  const [tabId] = useState(() => `${Date.now()}-${Math.random()}`)
   const supabase = createClient()
+
+  console.log('🔍 [AUTH] AuthProvider initialized for tab:', tabId)
 
   useEffect(() => {
     let mounted = true
 
     // Set up auth state change listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return
+        setTimeout(async () => {
 
-      console.log('Auth state change:', event, session?.user?.email)
+      console.log('🔍 [AUTH] Auth state change for tab', tabId, ':', event, session?.user?.email)
 
       const currentUser = session?.user ?? null
       setUser(currentUser)
@@ -78,7 +82,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setLoading(false)
         setIsReady(true)
       }
-    })
+    }, 0)
+  })
 
     // Get initial session
     const getInitialSession = async () => {

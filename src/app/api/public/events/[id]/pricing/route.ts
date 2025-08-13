@@ -15,9 +15,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         const url = new URL(request.url)
         const membershipType = url.searchParams.get('membership_type') as MembershipType || 'all'
         
+        console.log('🔍 [PRICING-API] Fetching pricing for event:', id, 'membership type:', membershipType)
+        
         const supabase = await createClient()
 
         // Call the database function to get current pricing
+        console.log('🔍 [PRICING-API] Calling database function get_current_event_pricing')
         const { data: pricing, error } = await supabase
             .rpc('get_current_event_pricing', {
                 p_event_id: id,
@@ -25,11 +28,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
                 p_booking_date: new Date().toISOString()
             })
 
+        console.log('🔍 [PRICING-API] Database response - error:', error, 'pricing count:', pricing?.length || 0)
+
         if (error) {
             console.error('Error fetching current pricing:', error)
             return NextResponse.json({ error: 'Failed to fetch pricing' }, { status: 500 })
         }
 
+        console.log('🔍 [PRICING-API] Returning pricing data')
         return createCachedResponse(pricing || [], getCachePresets().DYNAMIC)
     } catch (error) {
         console.error('Error in /api/events/[id]/pricing GET:', error)

@@ -22,7 +22,9 @@ export default function Header() {
     getUser()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
+      setTimeout(() => {
+        setUser(session?.user ?? null)
+      }, 0)
     })
 
     return () => subscription.unsubscribe()
