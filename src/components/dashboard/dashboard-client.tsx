@@ -369,11 +369,11 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                         )}
                                         {(booking.status === 'confirmed' || booking.status === 'verified') && (
                                             <Link
-                                                href={`/tickets/${booking.id}`}
+                                                href={`/downloads/${booking.id}`}
                                                 className="flex-1 inline-flex justify-center items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
                                             >
                                                 <HiTicket className="h-4 w-4 mr-1" />
-                                                Tickets
+                                                Downloads
                                             </Link>
                                         )}
                                         <div className="flex-1">
@@ -452,11 +452,11 @@ export default function DashboardClient({ bookings }: DashboardClientProps) {
                                             )}
                                             {(booking.status === 'confirmed' || booking.status === 'verified') && (
                                                 <Link
-                                                    href={`/tickets/${booking.id}`}
+                                                    href={`/downloads/${booking.id}`}
                                                     className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
                                                 >
                                                     <HiTicket className="h-4 w-4 mr-1" />
-                                                    Tickets
+                                                    Downloads
                                                 </Link>
                                             )}
                                             <RefundRequestButton booking={booking} />
