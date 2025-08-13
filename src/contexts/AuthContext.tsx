@@ -39,8 +39,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [tabId] = useState(() => `${Date.now()}-${Math.random()}`)
   const supabase = createClient()
 
-  console.log('🔍 [AUTH] AuthProvider initialized for tab:', tabId)
-
   useEffect(() => {
     let mounted = true
 

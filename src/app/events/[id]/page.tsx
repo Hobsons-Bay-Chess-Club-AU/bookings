@@ -6,7 +6,6 @@ import SocialShare from '@/components/events/social-share'
 import EventStructuredData from '@/components/events/event-structured-data'
 import EventQRCode from '@/components/events/event-qr-code'
 import EventBookingSection from '@/components/events/event-booking-section'
-import EventLayout from '@/components/events/event-layout'
 import RefundPolicyDisplay from '@/components/events/refund-policy-display'
 import EventLocationMap from '@/components/events/event-location-map'
 import EventSectionsDisplay from '@/components/events/event-sections-display'
@@ -18,6 +17,7 @@ import { HiCalendarDays, HiMapPin, HiUsers, HiCurrencyDollar } from 'react-icons
 import Image from 'next/image'
 import { BookingWithProfile } from '@/lib/types/ui'
 import { formatInTimezone } from '@/lib/utils/timezone'
+import EventPageClient from './event-page-client'
 
 class TimeoutError extends Error {
     constructor(message: string) {
@@ -293,7 +293,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             <EventStructuredData event={event} />
 
             <div className="max-w-7xl mx-auto py-2 md:py-12 px-2 md:px-4 sm:px-6 lg:px-8">
-                <EventLayout 
+                <EventPageClient 
                     event={event} 
                     profile={profile || undefined}
                     initialStep={step}
@@ -396,7 +396,16 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                                                 initialStep={step}
                                                 resumeBookingId={resume}
                                             />
-                                            
+                                        </div>
+
+                                        {/* Desktop Book Now Button - Only visible on desktop */}
+                                        <div className="hidden md:block mt-4">
+                                            <EventBookingSection 
+                                                event={event} 
+                                                profile={profile || undefined} 
+                                                initialStep={step}
+                                                resumeBookingId={resume}
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -479,7 +488,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                         {/* Social Share Component */}
                         <SocialShare event={event} />
                     </div>
-                </EventLayout>
+                </EventPageClient>
             </div>
 
             {/* Chat Widget - Only visible when not in booking journey */}

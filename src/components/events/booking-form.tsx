@@ -17,8 +17,10 @@ interface BookingFormProps {
     event: Event
     user?: Profile // Make user optional
     onStepChange?: (step: number) => void // Callback for when booking step changes
+    onUserInteraction?: () => void // Callback for when user starts interacting with the form
     initialStep?: string
     resumeBookingId?: string
+    hasUserInteracted?: boolean // Receive context's hasUserInteracted state
 }
 
 // Function removed as it was unused
@@ -28,9 +30,9 @@ interface BookingFormProps {
 //     return event.status === 'published' && (event.max_attendees == null || event.current_attendees < event.max_attendees)
 // }
 
-export default function BookingForm({ event, user, onStepChange, initialStep, resumeBookingId }: BookingFormProps) {
+export default function BookingForm({ event, user, onStepChange, onUserInteraction, initialStep, resumeBookingId, hasUserInteracted: contextHasUserInteracted }: BookingFormProps) {
     const searchParams = useSearchParams()
-    const [step, setStep] = useState(1) // 0: Section Selection (multi-section only), 1: Pricing & Quantity, 2: Contact Info, 3: Participant Info, 4: Review, 5: Checkout
+    const [step, setStep] = useState(0) // 0: Start Booking (single events) or Section Selection (multi-section), 1: Pricing & Quantity, 2: Contact Info, 3: Participant Info, 4: Review, 5: Checkout
     const [quantity, setQuantity] = useState(1)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
@@ -84,14 +86,57 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
     } | null>(null)
     const [discountLoading, setDiscountLoading] = useState(false)
     const [hasDiscounts, setHasDiscounts] = useState(false)
+    const [localHasUserInteracted, setLocalHasUserInteracted] = useState(false)
+    
+    // Use context's hasUserInteracted if provided, otherwise use local state
+    const hasUserInteracted = contextHasUserInteracted ?? localHasUserInteracted
+    
+
 
     const supabase = createClient()
     
     // Use booking journey context
     const { setIsInBookingJourney, setBookingStep } = useBookingJourney()
 
+    // Handle user interaction
+    const handleUserInteraction = useCallback(() => {
+        if (!hasUserInteracted) {
+            setLocalHasUserInteracted(true)
+            onUserInteraction?.()
+        }
+    }, [hasUserInteracted, onUserInteraction])
+
+    // Wrapper functions to track user interaction
+    const handlePricingSelection = useCallback((pricing: EventPricing | null) => {
+        handleUserInteraction()
+        setSelectedPricing(pricing)
+    }, [handleUserInteraction])
+
+    const handleSectionSelection = useCallback((sections: Array<{
+        sectionId: string
+        section: EventSection
+        pricingId: string
+        pricing: SectionPricing
+        quantity: number
+    }>) => {
+        handleUserInteraction()
+        setSelectedSections(sections)
+    }, [handleUserInteraction])
+
+    const handleQuantityChange = useCallback((newQuantity: number) => {
+        handleUserInteraction()
+        setQuantity(newQuantity)
+    }, [handleUserInteraction])
+
+    const handleContactInfoChange = useCallback((newContactInfo: typeof contactInfo) => {
+        handleUserInteraction()
+        setContactInfo(newContactInfo)
+    }, [handleUserInteraction])
+
     // Determine if this is a multi-section event
     const isMultiSectionEvent = event.has_sections && event.sections && event.sections.length > 0
+    
+
     
     // Calculate total amount based on event type
     const baseAmount = isMultiSectionEvent 
@@ -105,25 +150,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
     
     const totalAmount = discountInfo?.finalAmount ?? displayAmount
     
-    // Debug logging for amount calculations
-    console.log('🔍 Amount calculations debug:', {
-        isMultiSectionEvent,
-        selectedSectionsCount: selectedSections.length,
-        selectedSections: selectedSections.map(s => ({ 
-            sectionTitle: s.section.title, 
-            price: s.pricing.price, 
-            quantity: s.quantity,
-            subtotal: s.pricing.price * s.quantity 
-        })),
-        selectedPricingPrice: selectedPricing?.price,
-        quantity,
-        eventPrice: event.price,
-        baseAmount,
-        displayAmount,
-        originalBookingAmount,
-        totalAmount,
-        discountInfo: discountInfo ? { finalAmount: discountInfo.finalAmount } : null
-    })
+
     
     // For multi-section events, check if selected sections have pricing
     const isFreeEvent = isMultiSectionEvent 
@@ -172,14 +199,10 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                 const result = selectedSections.some(selection => {
                     const section = event.sections?.find(s => s.id === selection.sectionId)
                     const sectionStatus = section ? getSectionStatus(section) : null
-                    console.log('🔍 Whitelist check for section:', {
-                        sectionTitle: section?.title,
-                        sectionStatus,
-                        shouldWhitelist: sectionStatus?.shouldWhitelist
-                    })
+
                     return section && sectionStatus?.shouldWhitelist
                 })
-                console.log('🔍 Final shouldWhitelist result:', result)
+
                 return result
             }
             // If no sections selected yet, check if all sections are full and any have whitelist enabled
@@ -220,15 +243,15 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
 
     // Fetch available pricing options and form fields
     useEffect(() => {
-        console.log('🔍 [BOOKING-FORM] Pricing useEffect triggered - event.id:', event.id, 'user?.membership_type:', user?.membership_type)
+
         const fetchData = async () => {
             try {
-                console.log('🔍 [BOOKING-FORM] Starting pricing fetch for event:', event.id)
+
                 setPricingLoading(true)
 
                 // Fetch pricing options with timeout
                 const membershipType = user?.membership_type || 'non_member'
-                console.log('🔍 [BOOKING-FORM] Fetching pricing with membership type:', membershipType)
+
                 
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
@@ -237,17 +260,16 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
-                console.log('🔍 [BOOKING-FORM] Pricing response status:', pricingResponse.status)
+
                 
                 if (!pricingResponse.ok) {
                     throw new Error('Failed to fetch pricing')
                 }
                 const pricing = await pricingResponse.json()
-                console.log('🔍 [BOOKING-FORM] Pricing data received:', pricing.length, 'options')
+
                 
                 // If no pricing options are available, create a default option using event's base price
                 if (pricing.length === 0) {
-                    console.log('🔍 [BOOKING-FORM] No pricing options found, creating default pricing')
                     const defaultPricing: EventPricing = {
                         id: 'default', // This is a virtual ID for UI purposes only
                         event_id: event.id,
@@ -268,7 +290,6 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                     setAvailablePricing([defaultPricing])
                     setSelectedPricing(defaultPricing)
                 } else {
-                    console.log('🔍 [BOOKING-FORM] Setting available pricing:', pricing.length, 'options')
                     setAvailablePricing(pricing)
                     // Auto-select the first (cheapest) available pricing
                     setSelectedPricing(pricing[0])
@@ -289,13 +310,11 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
             } catch (err: unknown) {
                 console.error('Error fetching data:', err)
                 if (err instanceof Error && err.name === 'AbortError') {
-                    console.log('🔍 [BOOKING-FORM] Pricing fetch timed out')
                     setError('Pricing fetch timed out. Please refresh the page.')
                 } else {
                     setError((err as Error).message || 'Failed to load event data')
                 }
             } finally {
-                console.log('🔍 [BOOKING-FORM] Pricing fetch completed, setting loading to false')
                 setPricingLoading(false)
             }
         }
@@ -305,14 +324,26 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
 
     // Notify parent component when step changes
     useEffect(() => {
-        onStepChange?.(step)
-    }, [step, onStepChange])
+        // Don't call onStepChange when step is 0 and user has interacted
+        // This prevents overriding the context state when user clicks "Start Booking"
+        if (step > 0 || !hasUserInteracted) {
+            onStepChange?.(step)
+        }
+    }, [step, onStepChange, hasUserInteracted])
 
     // Update booking journey context when step changes
     useEffect(() => {
         setIsInBookingJourney(step > 1)
-        setBookingStep(step)
-    }, [step, setIsInBookingJourney, setBookingStep])
+        // Don't override the context bookingStep - let the context manage the layout state
+        // The BookingForm should only manage its internal step state
+    }, [step, setIsInBookingJourney])
+
+    // Sync BookingForm step with context bookingStep when user has interacted
+    useEffect(() => {
+        if (hasUserInteracted && step === 0 && !isMultiSectionEvent) {
+            setStep(1)
+        }
+    }, [hasUserInteracted, step, isMultiSectionEvent])
 
     // Auto-select pricing when available pricing changes
     useEffect(() => {
@@ -320,6 +351,13 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
             setSelectedPricing(availablePricing[0])
         }
     }, [availablePricing, selectedPricing, step])
+
+    // Auto-advance to step 1 for single events when pricing loads
+    useEffect(() => {
+        if (!pricingLoading && !isMultiSectionEvent && step === 0 && hasUserInteracted) {
+            setStep(1)
+        }
+    }, [pricingLoading, isMultiSectionEvent, step, hasUserInteracted])
 
     // Reset redirect state when step changes
     useEffect(() => {
@@ -340,8 +378,12 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
         const urlStep = searchParams?.get('step') || initialStep
         const urlResumeBookingId = searchParams?.get('resume') || resumeBookingId
         
+
+        
+        // Only proceed if we have both step and resume booking ID
         if (urlStep && urlResumeBookingId) {
             const stepNumber = parseInt(urlStep)
+
             if (stepNumber >= 1 && stepNumber <= 4) {
                 setStep(stepNumber)
                 
@@ -358,7 +400,6 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
 
     const loadResumedBookingData = async (bookingId: string) => {
         try {
-            console.log('🔍 Loading resumed booking data for:', bookingId)
             
             const response = await fetch('/api/bookings/check-complete-data', {
                 method: 'POST',
@@ -370,10 +411,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
 
             if (response.ok) {
                 const data = await response.json()
-                console.log('🔍 API response data:', data)
-                console.log('🔍 Section bookings from API:', data.booking.section_bookings)
-                console.log('🔍 Can resume:', data.canResume)
-                console.log('🔍 Has complete data:', data.hasCompleteData)
+                
                 
                 // Always load section data if available, regardless of canResume status
                 if (data.booking.section_bookings && data.booking.section_bookings.length > 0) {
@@ -391,9 +429,6 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                         quantity: sb.quantity
                     }))
                     setSelectedSections(sectionSelections)
-                    console.log('🔍 Loaded section selections:', sectionSelections)
-                } else {
-                    console.log('🔍 No section bookings found in API response')
                 }
                 
                 // Always load participant data if available, regardless of canResume status
@@ -406,7 +441,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                     })) as Partial<Participant & { email?: string; phone?: string }>[]
                     setParticipants(mappedParticipants)
                     setQuantity(data.booking.quantity)
-                    console.log('🔍 Loaded participants:', mappedParticipants.length, 'quantity:', data.booking.quantity)
+
                 }
                 
                 if (data.canResume) {
@@ -426,7 +461,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                     // For display purposes, load the total amount from the booking
                     // This helps show the correct pricing even when the booking can't be resumed
                     if (data.booking.totalAmount && data.booking.totalAmount > 0) {
-                        console.log('🔍 Setting display amount from booking:', data.booking.totalAmount)
+    
                         setOriginalBookingAmount(data.booking.totalAmount)
                         // Set resume flag for display purposes even if booking can't be resumed
                         setIsLegitimateResume(true)
@@ -448,15 +483,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
             ? (selectedSections.length === 0 || selectedSections.every(selection => selection.pricing.price === 0))
             : (totalAmount === 0 || selectedPricing?.price === 0)
 
-        console.log('🔍 Redirect useEffect triggered:', {
-            step,
-            currentBookingId,
-            shouldRedirect,
-            totalAmount,
-            selectedPricingPrice: selectedPricing?.price,
-            isFreeEvent,
-            selectedSections: selectedSections.map(s => ({ sectionId: s.sectionId, price: s.pricing.price }))
-        })
+
 
         if (shouldRedirect && currentBookingId && isFreeEvent) {
             console.log('✅ Conditions met for redirect, setting timeout...')
@@ -870,7 +897,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
 
             // For multi-section events, create section booking records
             if (isMultiSectionEvent && selectedSections.length > 0) {
-                console.log('🔍 [BOOKING-FORM] Creating section bookings for:', selectedSections.length, 'sections')
+        
                 
                 for (const selection of selectedSections) {
                     try {
@@ -878,16 +905,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                         const sectionStatus = section ? getSectionStatus(section) : null
                         const isWhitelistSection = sectionStatus?.shouldWhitelist || false
                         
-                        console.log('🔍 [BOOKING-FORM] Creating section booking:', {
-                            booking_id: booking.id,
-                            section_id: selection.sectionId,
-                            pricing_id: selection.pricingId,
-                            quantity: selection.quantity,
-                            unit_price: selection.pricing.price,
-                            total_amount: selection.pricing.price * selection.quantity,
-                            isWhitelistSection,
-                            sectionStatus
-                        })
+
                         
                         const { data: sectionBookingData, error: sectionBookingError } = await supabase
                             .from('section_bookings')
@@ -917,10 +935,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                     }
                 }
             } else {
-                console.log('🔍 [BOOKING-FORM] No section bookings to create:', {
-                    isMultiSectionEvent,
-                    selectedSectionsLength: selectedSections.length
-                })
+
             }
 
             // Create discount application records if discounts were applied
@@ -944,32 +959,13 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
             }
 
             // Create participants records
-            console.log('🔍 [BOOKING-FORM] Creating participants for booking:', booking.id)
-            console.log('🔍 [BOOKING-FORM] Participants to create:', participants.length)
-            console.log('🔍 [BOOKING-FORM] Is multi-section event:', isMultiSectionEvent)
-            console.log('🔍 [BOOKING-FORM] Selected sections:', selectedSections)
-            console.log('🔍 [BOOKING-FORM] Participants data:', participants.map(p => ({
-                first_name: p.first_name,
-                last_name: p.last_name,
-                email: p.email,
-                phone: p.phone,
-                has_first_name: !!p.first_name,
-                has_last_name: !!p.last_name
-            })))
-            
-            console.log('🔍 [BOOKING-FORM] Starting participant creation loop for', participants.length, 'participants')
             
             const participantCreationErrors: string[] = []
             let successfulParticipants = 0
             
             for (let i = 0; i < participants.length; i++) {
                 const participant = participants[i]
-                console.log('🔍 [BOOKING-FORM] Processing participant', i + 1, ':', {
-                    first_name: participant.first_name,
-                    last_name: participant.last_name,
-                    has_first_name: !!participant.first_name,
-                    has_last_name: !!participant.last_name
-                })
+
                 
                 if (participant.first_name && participant.last_name) {
                     console.log('✅ [BOOKING-FORM] Participant', i + 1, 'meets criteria, proceeding with creation')
@@ -988,12 +984,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                         }
                     }
                     
-                    console.log('🔍 [BOOKING-FORM] Creating participant', i + 1, ':', {
-                        first_name: participant.first_name,
-                        last_name: participant.last_name,
-                        sectionId: sectionId,
-                        isMultiSectionEvent: isMultiSectionEvent
-                    })
+
 
                     const { data: createdParticipant, error: participantError } = await supabase
                         .from('participants')
@@ -1257,10 +1248,15 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
     //     )
     // }
 
+
+    
     const content = (
         <div className="space-y-6 text-gray-900 dark:text-gray-100">
-            {/* Progress Steps */}
-            <div className="flex items-center justify-between mb-8">
+
+
+            {/* Progress Steps - Only show when booking has started */}
+            {step > 0 && (
+                <div className="flex items-center justify-between mb-8">
                 {/* Step 0: Sections (only for multi-section events) */}
                 {isMultiSectionEvent && (
                     <>
@@ -1317,6 +1313,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                     </span>
                 </div>
             </div>
+            )}
 
             {/* Booking in Progress Warning */}
             {step === 5 && currentBookingId && currentBookingId.trim() !== '' &&  !whitelistEnabled &&(
@@ -1344,7 +1341,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                 <Step0Sections
                     sections={event.sections || []}
                     selectedSections={selectedSections}
-                    setSelectedSections={setSelectedSections}
+                    setSelectedSections={handleSectionSelection}
                     onContinue={() => {
                         setStep(1)
                         if (onStepChange) {
@@ -1361,9 +1358,9 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
                 <Step1Pricing
                     availablePricing={availablePricing}
                     selectedPricing={selectedPricing}
-                    setSelectedPricing={setSelectedPricing}
+                    setSelectedPricing={handlePricingSelection}
                     quantity={quantity}
-                    setQuantity={setQuantity}
+                    setQuantity={handleQuantityChange}
                     maxQuantity={maxQuantity}
                     totalAmount={totalAmount}
                     onContinue={handleContinueToContact}
@@ -1377,7 +1374,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
             {step === 1 && isMultiSectionEvent && (
                 <Step2Contact
                     contactInfo={contactInfo}
-                    setContactInfo={setContactInfo}
+                    setContactInfo={handleContactInfoChange}
                     onContinue={() => {
                         // Pre-fill contact info with user data if available
                         if (user) {
@@ -1418,7 +1415,7 @@ export default function BookingForm({ event, user, onStepChange, initialStep, re
             {step === 2 && !isMultiSectionEvent && (
                 <Step2Contact
                     contactInfo={contactInfo}
-                    setContactInfo={setContactInfo}
+                    setContactInfo={handleContactInfoChange}
                     onContinue={handleContinueToParticipants}
                     onBack={() => {
                         setStep(1)
