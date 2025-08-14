@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { HiExclamationTriangle } from 'react-icons/hi2'
 
 interface ConfirmationModalProps {
@@ -8,11 +8,12 @@ interface ConfirmationModalProps {
     onClose: () => void
     onConfirm: () => void
     title: string
-    message: string
+    message: string | React.ReactNode
     confirmText?: string
     cancelText?: string
     variant?: 'danger' | 'warning' | 'info'
     loading?: boolean
+    confirmDisabled?: boolean
 }
 
 export default function ConfirmationModal({
@@ -24,7 +25,8 @@ export default function ConfirmationModal({
     confirmText = 'Confirm',
     cancelText = 'Cancel',
     variant = 'danger',
-    loading = false
+    loading = false,
+    confirmDisabled = false
 }: ConfirmationModalProps) {
     const [isVisible, setIsVisible] = useState(false)
 
@@ -113,9 +115,15 @@ export default function ConfirmationModal({
                                     {title}
                                 </h3>
                                 <div className="mt-2">
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                                        {message}
-                                    </p>
+                                    {typeof message === 'string' ? (
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            {message}
+                                        </p>
+                                    ) : (
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                            {message}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -124,10 +132,10 @@ export default function ConfirmationModal({
                         <button
                             type="button"
                             className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-gray-800 sm:ml-3 sm:w-auto ${styles.button} ${
-                                loading ? 'opacity-50 cursor-not-allowed' : ''
+                                (loading || confirmDisabled) ? 'opacity-50 cursor-not-allowed' : ''
                             }`}
                             onClick={handleConfirm}
-                            disabled={loading}
+                            disabled={loading || confirmDisabled}
                         >
                             {loading ? (
                                 <div className="flex items-center">

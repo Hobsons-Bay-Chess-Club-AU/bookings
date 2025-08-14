@@ -3,9 +3,10 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { Event, Participant, Booking, Profile, EventSection } from '@/lib/types/database'
-import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight } from 'react-icons/hi2'
+import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight, HiXMark } from 'react-icons/hi2'
 import Breadcrumb from '@/components/ui/breadcrumb'
 import SectionTransferModal from '@/components/events/section-transfer-modal'
+import ConfirmationModal from '@/components/ui/confirmation-modal'
 
 interface ParticipantWithBooking extends Participant {
     bookings: (Booking & {
@@ -32,6 +33,10 @@ export default function EventParticipantsPageClient({
     const [transferToSection, setTransferToSection] = useState<string>('')
     const [isTransferring, setIsTransferring] = useState(false)
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
+    const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+    const [selectedParticipantForWithdrawal, setSelectedParticipantForWithdrawal] = useState<ParticipantWithBooking | null>(null)
+    const [withdrawalMessage, setWithdrawalMessage] = useState('')
+    const [isWithdrawing, setIsWithdrawing] = useState(false)
     const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
     // Close dropdown when clicking outside
@@ -51,6 +56,41 @@ export default function EventParticipantsPageClient({
 
     const toggleDropdown = (participantId: string) => {
         setOpenDropdownId(openDropdownId === participantId ? null : participantId)
+    }
+
+    const handleWithdrawParticipant = async () => {
+        if (!selectedParticipantForWithdrawal || !withdrawalMessage.trim()) {
+            return
+        }
+
+        setIsWithdrawing(true)
+        try {
+            const response = await fetch(`/api/organizer/events/${event.id}/participants/${selectedParticipantForWithdrawal.id}/withdraw`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: withdrawalMessage.trim()
+                }),
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Failed to withdraw participant')
+            }
+
+            // Refresh the page to show updated data
+            window.location.reload()
+        } catch (error) {
+            console.error('Error withdrawing participant:', error)
+            alert('Failed to withdraw participant. Please try again.')
+        } finally {
+            setIsWithdrawing(false)
+            setShowWithdrawModal(false)
+            setSelectedParticipantForWithdrawal(null)
+            setWithdrawalMessage('')
+        }
     }
     // Helper function to render custom field values
     const renderCustomFieldValue = (value: unknown): React.ReactNode => {
@@ -174,7 +214,10 @@ export default function EventParticipantsPageClient({
             participant.first_name.toLowerCase().includes(searchLower) ||
             participant.last_name.toLowerCase().includes(searchLower) ||
             participant.contact_email?.toLowerCase().includes(searchLower) ||
-            participant.bookings.profiles.email.toLowerCase().includes(searchLower)
+            participant.contact_phone?.toLowerCase().includes(searchLower) ||
+            participant.bookings.profiles.email.toLowerCase().includes(searchLower) ||
+            participant.bookings.profiles.phone?.toLowerCase().includes(searchLower) ||
+            participant.bookings.profiles.full_name?.toLowerCase().includes(searchLower)
         )
     })
 
@@ -246,6 +289,7 @@ export default function EventParticipantsPageClient({
             'Last Name',
             'Date of Birth',
             'Gender',
+            'Status',
             'Contact Email',
             'Contact Phone',
             ...(event.has_sections ? ['Section', 'Section Description'] : []),
@@ -264,8 +308,12 @@ export default function EventParticipantsPageClient({
             p.last_name,
             p.date_of_birth || '',
             p.gender ? p.gender.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : '',
-            p.contact_email || '',
-            p.contact_phone || '',
+            p.status === 'cancelled' ? 'Cancelled' : 
+             p.status === 'active' ? 'Active' :
+             p.status === 'whitelisted' ? 'Whitelisted' :
+             p.status || 'Active',
+            p.contact_email || p.bookings.profiles.email || '',
+            p.contact_phone || p.bookings.profiles.phone || '',
             ...(event.has_sections ? [
                 p.section?.title || 'No section assigned',
                 p.section?.description || ''
@@ -426,10 +474,10 @@ export default function EventParticipantsPageClient({
                                     <div className="ml-5 w-0 flex-1">
                                         <dl>
                                             <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                                                Confirmed
+                                                Active
                                             </dt>
                                             <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                                {participants.filter(p => p.bookings.status === 'confirmed').length}
+                                                {participants.filter(p => p.status === 'active' || !p.status).length}
                                             </dd>
                                         </dl>
                                     </div>
@@ -446,10 +494,30 @@ export default function EventParticipantsPageClient({
                                     <div className="ml-5 w-0 flex-1">
                                         <dl>
                                             <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                                                Pending
+                                                Whitelisted
                                             </dt>
                                             <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                                {participants.filter(p => p.bookings.status === 'pending').length}
+                                                {participants.filter(p => p.status === 'whitelisted').length}
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                            <div className="p-5">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <span className="text-2xl">❌</span>
+                                    </div>
+                                    <div className="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                                Cancelled
+                                            </dt>
+                                            <dd className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                                {participants.filter(p => p.status === 'cancelled').length}
                                             </dd>
                                         </dl>
                                     </div>
@@ -486,8 +554,9 @@ export default function EventParticipantsPageClient({
                                         <div className="text-xs text-gray-500 dark:text-gray-400">
                                             {sectionParticipants.length > 0 ? (
                                                 <div>
-                                                    <div>Confirmed: {sectionParticipants.filter(p => p.bookings.status === 'confirmed').length}</div>
-                                                    <div>Pending: {sectionParticipants.filter(p => p.bookings.status === 'pending').length}</div>
+                                                    <div>Active: {sectionParticipants.filter(p => p.status === 'active' || !p.status).length}</div>
+                                                    <div>Whitelisted: {sectionParticipants.filter(p => p.status === 'whitelisted').length}</div>
+                                                    <div>Cancelled: {sectionParticipants.filter(p => p.status === 'cancelled').length}</div>
                                                 </div>
                                             ) : (
                                                 <div className="italic">No participants assigned</div>
@@ -509,8 +578,9 @@ export default function EventParticipantsPageClient({
                                         These participants need to be assigned to a section
                                     </p>
                                     <div className="text-xs text-yellow-600 dark:text-yellow-400">
-                                        <div>Confirmed: {participants.filter(p => !p.section && p.bookings.status === 'confirmed').length}</div>
-                                        <div>Pending: {participants.filter(p => !p.section && p.bookings.status === 'pending').length}</div>
+                                        <div>Active: {participants.filter(p => !p.section && (p.status === 'active' || !p.status)).length}</div>
+                                        <div>Whitelisted: {participants.filter(p => !p.section && p.status === 'whitelisted').length}</div>
+                                        <div>Cancelled: {participants.filter(p => !p.section && p.status === 'cancelled').length}</div>
                                     </div>
                                 </div>
                             )}
@@ -673,6 +743,9 @@ export default function EventParticipantsPageClient({
                                         </th>
                                     )}
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Status
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Booking Info
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -717,13 +790,23 @@ export default function EventParticipantsPageClient({
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="text-sm text-gray-900 dark:text-gray-100">
-                                                {participant.contact_email && (
-                                                    <div>{participant.contact_email}</div>
+                                                {(participant.contact_email || participant.bookings.profiles.email) && (
+                                                    <div className="flex items-center">
+                                                        <span>{participant.contact_email || participant.bookings.profiles.email}</span>
+                                                        {!participant.contact_email && participant.bookings.profiles.email && (
+                                                            <span className="ml-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded">from booker</span>
+                                                        )}
+                                                    </div>
                                                 )}
-                                                {participant.contact_phone && (
-                                                    <div className="text-gray-500 dark:text-gray-400">{participant.contact_phone}</div>
+                                                {(participant.contact_phone || participant.bookings.profiles.phone) && (
+                                                    <div className="text-gray-500 dark:text-gray-400 flex items-center">
+                                                        <span>{participant.contact_phone || participant.bookings.profiles.phone}</span>
+                                                        {!participant.contact_phone && participant.bookings.profiles.phone && (
+                                                            <span className="ml-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded">from booker</span>
+                                                        )}
+                                                    </div>
                                                 )}
-                                                {!participant.contact_email && !participant.contact_phone && (
+                                                {!participant.contact_email && !participant.contact_phone && !participant.bookings.profiles.email && !participant.bookings.profiles.phone && (
                                                     <span className="text-gray-400 dark:text-gray-500">No contact info</span>
                                                 )}
                                             </div>
@@ -755,6 +838,24 @@ export default function EventParticipantsPageClient({
                                                 </div>
                                             </td>
                                         )}
+                                        <td className="px-6 py-4">
+                                            <div className="text-sm">
+                                                <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${
+                                                    participant.status === 'cancelled' 
+                                                        ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                                                        : participant.status === 'whitelisted'
+                                                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+                                                        : participant.status === 'active'
+                                                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                                                        : 'bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200'
+                                                }`}>
+                                                    {participant.status === 'cancelled' ? 'Cancelled' : 
+                                                     participant.status === 'whitelisted' ? 'Whitelisted' :
+                                                     participant.status === 'active' ? 'Active' :
+                                                     'Active'}
+                                                </span>
+                                            </div>
+                                        </td>
                                         <td className="px-6 py-4">
                                             <div className="text-sm text-gray-900 dark:text-gray-100">
                                                 <div className="flex items-center space-x-2">
@@ -833,6 +934,19 @@ export default function EventParticipantsPageClient({
                                                                 data-menu-item
                                                             >
                                                                 <HiArrowRight className="mr-2 h-4 w-4" /> Transfer
+                                                            </button>
+                                                        )}
+                                                        {participant.status !== 'cancelled' && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedParticipantForWithdrawal(participant)
+                                                                    setShowWithdrawModal(true)
+                                                                    setOpenDropdownId(null)
+                                                                }}
+                                                                className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-left"
+                                                                data-menu-item
+                                                            >
+                                                                <HiXMark className="mr-2 h-4 w-4" /> Withdraw
                                                             </button>
                                                         )}
                                                     </div>
@@ -948,16 +1062,30 @@ export default function EventParticipantsPageClient({
                                                 </p>
                                             </div>
                                         )}
-                                        {selectedParticipant.contact_email && (
+                                        {(selectedParticipant.contact_email || selectedParticipant.bookings.profiles.email) && (
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contact Email</label>
-                                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">{selectedParticipant.contact_email}</p>
+                                                <div className="mt-1 flex items-center">
+                                                    <p className="text-sm text-gray-900 dark:text-gray-100">
+                                                        {selectedParticipant.contact_email || selectedParticipant.bookings.profiles.email}
+                                                    </p>
+                                                    {!selectedParticipant.contact_email && selectedParticipant.bookings.profiles.email && (
+                                                        <span className="ml-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded">from booker</span>
+                                                    )}
+                                                </div>
                                             </div>
                                         )}
-                                        {selectedParticipant.contact_phone && (
+                                        {(selectedParticipant.contact_phone || selectedParticipant.bookings.profiles.phone) && (
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contact Phone</label>
-                                                <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">{selectedParticipant.contact_phone}</p>
+                                                <div className="mt-1 flex items-center">
+                                                    <p className="text-sm text-gray-900 dark:text-gray-100">
+                                                        {selectedParticipant.contact_phone || selectedParticipant.bookings.profiles.phone}
+                                                    </p>
+                                                    {!selectedParticipant.contact_phone && selectedParticipant.bookings.profiles.phone && (
+                                                        <span className="ml-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded">from booker</span>
+                                                    )}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -1156,6 +1284,50 @@ export default function EventParticipantsPageClient({
                             alert(error instanceof Error ? error.message : 'Failed to transfer participants')
                         }
                     }}
+                />
+            )}
+
+            {/* Withdrawal Modal */}
+            {showWithdrawModal && selectedParticipantForWithdrawal && (
+                <ConfirmationModal
+                    isOpen={showWithdrawModal}
+                    onClose={() => {
+                        if (!isWithdrawing) {
+                            setShowWithdrawModal(false)
+                            setSelectedParticipantForWithdrawal(null)
+                            setWithdrawalMessage('')
+                        }
+                    }}
+                    onConfirm={handleWithdrawParticipant}
+                    title="Withdraw Participant"
+                    message={
+                        <div className="space-y-4">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Are you sure you want to withdraw <span className="font-semibold">{selectedParticipantForWithdrawal.first_name} {selectedParticipantForWithdrawal.last_name}</span> from this event?
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                This action cannot be undone. The participant and booker will be notified via email.
+                            </p>
+                            <div>
+                                <label htmlFor="withdrawal-message" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                                    Reason for withdrawal <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
+                                    id="withdrawal-message"
+                                    rows={3}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 dark:bg-gray-700 dark:text-gray-100"
+                                    placeholder="Please provide a reason for withdrawing this participant..."
+                                    value={withdrawalMessage}
+                                    onChange={(e) => setWithdrawalMessage(e.target.value)}
+                                    disabled={isWithdrawing}
+                                />
+                            </div>
+                        </div>
+                    }
+                    confirmText={isWithdrawing ? "Withdrawing..." : "Withdraw Participant"}
+                    cancelText="Cancel"
+                    variant="danger"
+                    confirmDisabled={isWithdrawing || !withdrawalMessage.trim()}
                 />
             )}
         </>

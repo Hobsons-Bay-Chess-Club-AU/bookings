@@ -78,7 +78,7 @@ export default function Step3Participants({
         const participant = currentParticipant
 
         // Check required fixed fields
-        if (!participant.first_name?.trim() || !participant.last_name?.trim() || !participant.date_of_birth) {
+        if (!participant.first_name?.trim() || !participant.last_name?.trim() || !participant.date_of_birth || !participant.gender?.trim()) {
             return false
         }
 
@@ -124,6 +124,9 @@ export default function Step3Participants({
         }
         if (!participant.date_of_birth) {
             return 'Date of birth is required'
+        }
+        if (!participant.gender?.trim()) {
+            return 'Gender is required'
         }
 
         // Check required custom fields
@@ -354,12 +357,13 @@ export default function Step3Participants({
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                            Gender
+                            Gender *
                         </label>
                         <select
                             value={currentParticipant.gender || ''}
                             onChange={(e) => handleParticipantChange('gender', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                            required
                         >
                             <option value="">Select gender</option>
                             <option value="male">Male</option>

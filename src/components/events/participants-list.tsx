@@ -48,10 +48,10 @@ export default function ParticipantsList({
         )
     }
 
-    // Filter to only confirmed/verified participants
-    const confirmedBookings = bookings.filter(b =>
-        b.status === 'confirmed' || b.status === 'verified'
-    )
+    // Filter to only confirmed/verified participants for public view, show all for private view
+    const confirmedBookings = isPublic 
+        ? bookings.filter(b => b.status === 'confirmed' || b.status === 'verified')
+        : bookings.filter(b => ['confirmed', 'verified', 'cancelled'].includes(b.status))
 
     // Filter by search term
     const filteredBookings = confirmedBookings.filter(booking => {
@@ -348,6 +348,7 @@ export default function ParticipantsList({
 
     const totalParticipants = confirmedBookings.reduce((sum, booking) => sum + booking.quantity, 0)
     const totalBookings = confirmedBookings.length
+    const cancelledBookings = confirmedBookings.filter(b => b.status === 'cancelled').length
 
     return (
         <div id="participants-container" className="bg-white dark:bg-gray-800 shadow rounded-lg">
@@ -361,6 +362,11 @@ export default function ParticipantsList({
                         <div className="flex items-center justify-between">
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                 {totalParticipants} participant{totalParticipants !== 1 ? 's' : ''} from {totalBookings} booking{totalBookings !== 1 ? 's' : ''}
+                                {!isPublic && cancelledBookings > 0 && (
+                                    <span className="text-red-600 dark:text-red-400 ml-2">
+                                        ({cancelledBookings} cancelled)
+                                    </span>
+                                )}
                             </p>
                             {totalPages > 1 && (
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -507,7 +513,9 @@ export default function ParticipantsList({
                 // Private detailed card view
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
                     {paginatedBookings.map((booking, index) => (
-                        <div key={booking.id} className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <div key={booking.id} className={`p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                            booking.status === 'cancelled' ? 'opacity-60' : ''
+                        }`}>
                             {/* Desktop Layout */}
                             <div className="hidden md:flex items-center justify-between">
                                 <div className="flex items-center space-x-4">
@@ -526,8 +534,12 @@ export default function ParticipantsList({
                                             <p className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate">
                                                 {booking.profile.full_name || 'Unknown Participant'}
                                             </p>
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                                                Confirmed
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                booking.status === 'cancelled' 
+                                                    ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                                                    : 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                                            }`}>
+                                                {booking.status === 'cancelled' ? 'Cancelled' : 'Confirmed'}
                                             </span>
                                         </div>
 
@@ -581,8 +593,12 @@ export default function ParticipantsList({
                                             <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
                                                 {booking.profile.full_name || 'Unknown Participant'}
                                             </p>
-                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 mt-1">
-                                                Confirmed
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${
+                                                booking.status === 'cancelled' 
+                                                    ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                                                    : 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                                            }`}>
+                                                {booking.status === 'cancelled' ? 'Cancelled' : 'Confirmed'}
                                             </span>
                                         </div>
                                     </div>
@@ -685,6 +701,11 @@ export default function ParticipantsList({
                         </div>
                         <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             Total: {totalParticipants} participant{totalParticipants !== 1 ? 's' : ''}
+                            {!isPublic && cancelledBookings > 0 && (
+                                <span className="text-sm font-normal text-red-600 dark:text-red-400 ml-2">
+                                    ({cancelledBookings} cancelled)
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>

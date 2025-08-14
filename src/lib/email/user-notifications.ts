@@ -1,6 +1,7 @@
 import { sendEmail } from './service'
 import UserProfileUpdateEmail from './templates/user-profile-update'
 import BookingTransferNotificationEmail from './templates/booking-transfer-notification'
+import ParticipantWithdrawalNotificationEmail from './templates/participant-withdrawal-notification'
 import { render } from '@react-email/render'
 import React from 'react'
 
@@ -148,5 +149,47 @@ export async function sendBookingTransferNotification(data: BookingTransferNotif
     } catch (error) {
         console.error('Failed to send booking transfer notification:', error)
         // Don't throw the error to avoid breaking the main transfer flow
+    }
+}
+
+interface ParticipantWithdrawalNotificationData {
+    recipientEmail: string
+    recipientName: string
+    participantName: string
+    eventTitle: string
+    eventDate: string
+    eventLocation: string
+    withdrawalMessage: string
+    adminName: string
+    eventId: string
+}
+
+export async function sendParticipantWithdrawalNotification(data: ParticipantWithdrawalNotificationData) {
+    try {
+        // Render the email template to HTML
+        const emailHtml = await render(
+            React.createElement(ParticipantWithdrawalNotificationEmail, {
+                recipientName: data.recipientName,
+                participantName: data.participantName,
+                eventTitle: data.eventTitle,
+                eventDate: data.eventDate,
+                eventLocation: data.eventLocation,
+                withdrawalMessage: data.withdrawalMessage,
+                adminName: data.adminName,
+                eventId: data.eventId
+            })
+        )
+
+        // Send the email
+        await sendEmail({
+            to: data.recipientEmail,
+            subject: `Participant Withdrawal Notice - ${data.eventTitle}`,
+            html: emailHtml
+        })
+
+        console.log(`Participant withdrawal notification sent to ${data.recipientEmail}`)
+    } catch (error) {
+        console.error('Failed to send participant withdrawal notification:', error)
+        // Don't throw the error to avoid breaking the main withdrawal flow
     }
 } 

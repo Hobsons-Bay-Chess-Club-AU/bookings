@@ -29,6 +29,10 @@ interface ParticipantWithSection extends Participant {
 }
 
 interface BookingWithSections extends Booking {
+    profile?: {
+        full_name: string
+        email: string
+    }
     participants?: Array<{
         id: string
         section_id?: string
@@ -105,6 +109,10 @@ export default function EventViewPage() {
                 .from('bookings')
                 .select(`
                     *,
+                    profile:profiles!bookings_user_id_fkey (
+                        full_name,
+                        email
+                    ),
                     participants (
                         id,
                         section_id,
@@ -225,6 +233,15 @@ export default function EventViewPage() {
             case 'cancelled': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
             case 'refunded': return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
             default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
+        }
+    }
+
+    const getParticipantStatusColor = (status: string | undefined) => {
+        switch (status) {
+            case 'cancelled': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+            case 'whitelisted': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+            case 'active': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+            default: return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' // Default to active
         }
     }
 
@@ -390,6 +407,21 @@ export default function EventViewPage() {
                                     <div className="ml-4">
                                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Participants</p>
                                         <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{stats.totalParticipants}</p>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            <span className="text-green-600 dark:text-green-400">
+                                                {participants.filter(p => p.status === 'active' || !p.status).length} Active
+                                            </span>
+                                            {participants.filter(p => p.status === 'whitelisted').length > 0 && (
+                                                <span className="ml-2 text-blue-600 dark:text-blue-400">
+                                                    {participants.filter(p => p.status === 'whitelisted').length} Whitelisted
+                                                </span>
+                                            )}
+                                            {participants.filter(p => p.status === 'cancelled').length > 0 && (
+                                                <span className="ml-2 text-red-600 dark:text-red-400">
+                                                    {participants.filter(p => p.status === 'cancelled').length} Cancelled
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -437,45 +469,7 @@ export default function EventViewPage() {
                             </div>
                         </div>
 
-                        {/* Custom Fields Summary */}
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-                            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Custom Form Fields</h3>
-                                <Link
-                                    href={`/organizer/events/${eventId}/edit`}
-                                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm font-medium"
-                                >
-                                    Edit Event →
-                                </Link>
-                            </div>
-                            <div className="p-6">
-                                {customFields.length === 0 ? (
-                                    <p className="text-gray-500 dark:text-gray-400 text-center py-4">No custom form fields configured. Participants will only provide basic information.</p>
-                                ) : (
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-gray-600 dark:text-gray-400">Total Fields:</span>
-                                            <span className="font-medium text-gray-900 dark:text-gray-100">{customFields.length}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-gray-600 dark:text-gray-400">Required Fields:</span>
-                                            <span className="font-medium text-gray-900 dark:text-gray-100">{customFields.filter(f => f.required).length}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-gray-600 dark:text-gray-400">Field Types:</span>
-                                            <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                {Array.from(new Set(customFields.map(f => f.type))).join(', ')}
-                                            </span>
-                                        </div>
-                                        <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                <strong>Field Names:</strong> {customFields.map(f => f.name).join(', ')}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+
 
                         {/* Location Information */}
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
@@ -699,10 +693,18 @@ export default function EventViewPage() {
                                     {bookings.slice(0, 10).map((booking) => (
                                         <tr key={booking.id}>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                {booking.booking_id || booking.id.slice(0, 8)}
+                                                <Link
+                                                    href={`/organizer/events/${eventId}/bookings/${booking.id}`}
+                                                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-mono"
+                                                >
+                                                    {booking.booking_id || booking.id.slice(0, 8)}
+                                                </Link>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                                {booking.user?.full_name || 'Unknown'}
+                                                <div>
+                                                    <div className="font-medium">{booking.profile?.full_name || 'Unknown'}</div>
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400">{booking.profile?.email || ''}</div>
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                 {booking.quantity}
@@ -771,6 +773,7 @@ export default function EventViewPage() {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Phone</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date of Birth</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                                         {event?.has_sections && (
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Section</th>
                                         )}
@@ -792,6 +795,14 @@ export default function EventViewPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                 {participant.date_of_birth ? new Date(participant.date_of_birth).toLocaleDateString() : '-'}
                                             </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getParticipantStatusColor(participant.status)}`}>
+                                                    {participant.status === 'cancelled' ? 'Cancelled' : 
+                                                     participant.status === 'whitelisted' ? 'Whitelisted' :
+                                                     participant.status === 'active' ? 'Active' :
+                                                     'Active'}
+                                                </span>
+                                            </td>
                                             {event?.has_sections && (
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                     {participant.section ? (
@@ -809,7 +820,16 @@ export default function EventViewPage() {
                                                 </td>
                                             )}
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                                {participant.booking_id?.slice(0, 8) || '-'}
+                                                {participant.booking_id ? (
+                                                    <Link
+                                                        href={`/organizer/events/${eventId}/bookings/${participant.booking_id}`}
+                                                        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-mono"
+                                                    >
+                                                        {participant.booking_id.slice(0, 8)}
+                                                    </Link>
+                                                ) : (
+                                                    '-'
+                                                )}
                                             </td>
                                         </tr>
                                     ))}
