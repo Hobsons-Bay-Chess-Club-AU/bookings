@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { Event, Participant, Booking, Profile, EventSection } from '@/lib/types/database'
-import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight, HiXMark } from 'react-icons/hi2'
+import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight, HiXMark, HiEnvelope } from 'react-icons/hi2'
 import Breadcrumb from '@/components/ui/breadcrumb'
 import SectionTransferModal from '@/components/events/section-transfer-modal'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
@@ -923,6 +923,14 @@ export default function EventParticipantsPageClient({
                                                         >
                                                             <HiEye className="mr-2 h-4 w-4" /> View Details
                                                         </button>
+                                                        <Link
+                                                            href={`/organizer/email-manager?participantId=${participant.id}`}
+                                                            onClick={() => setOpenDropdownId(null)}
+                                                            className="flex items-center w-full px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-left"
+                                                            data-menu-item
+                                                        >
+                                                            <HiEnvelope className="mr-2 h-4 w-4" /> Email Contact
+                                                        </Link>
                                                         {event.has_sections && sections.length > 1 && (
                                                             <button
                                                                 onClick={() => {

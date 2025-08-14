@@ -690,6 +690,14 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                         <FiEye className="mr-2 w-4 h-4" />
                                                         View Details
                                                     </Link>
+                                                    <Link
+                                                        href={`/organizer/email-manager?bookingId=${booking.id}`}
+                                                        className="flex items-center px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                        onClick={() => setOpenMenus({})}
+                                                    >
+                                                        <FiMail className="mr-2 w-4 h-4" />
+                                                        Email Contact
+                                                    </Link>
                                                     <button
                                                         onClick={() => openPaymentModal(booking)}
                                                         className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
@@ -846,6 +854,14 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                     >
                                                         <FiEye className="mr-2 w-4 h-4" />
                                                         View Details
+                                                    </Link>
+                                                    <Link
+                                                        href={`/organizer/email-manager?bookingId=${booking.id}`}
+                                                        className="flex items-center px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                        onClick={() => setOpenMenus({})}
+                                                    >
+                                                        <FiMail className="mr-2 w-4 h-4" />
+                                                        Email Contact
                                                     </Link>
                                                     <button
                                                         onClick={() => openPaymentModal(booking)}

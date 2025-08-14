@@ -41,12 +41,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
     const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({})
     const [desktopMenuPos, setDesktopMenuPos] = useState<{ top: number; left: number } | null>(null)
-    const [showEmailModal, setShowEmailModal] = useState(false)
-    const [emailSubject, setEmailSubject] = useState('')
-    const [emailBody, setEmailBody] = useState('')
-    const [emailLoading, setEmailLoading] = useState(false)
-    const [emailError, setEmailError] = useState('')
-    const [emailSuccess, setEmailSuccess] = useState('')
+
     const [cloningEventId, setCloningEventId] = useState<string | null>(null)
 
     const handleOpenSettings = (event: Event) => {
@@ -65,44 +60,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
         handleCloseSettings()
     }
 
-    const handleSendMarketingEmail = async () => {
-        if (!emailSubject.trim() || !emailBody.trim()) {
-            setEmailError('Please fill in both subject and body')
-            return
-        }
 
-        setEmailLoading(true)
-        setEmailError('')
-        setEmailSuccess('')
-
-        try {
-            const response = await fetch('/api/admin/mailing-list/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    subject: emailSubject,
-                    body: emailBody
-                })
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.error || 'Failed to send email')
-            }
-
-            const result = await response.json()
-            setEmailSuccess(`Email sent successfully to ${result.successful} subscribers`)
-            setEmailSubject('')
-            setEmailBody('')
-            setShowEmailModal(false)
-        } catch (err) {
-            setEmailError(err instanceof Error ? err.message : 'An unexpected error occurred')
-        } finally {
-            setEmailLoading(false)
-        }
-    }
 
     const handleCloneEvent = async (eventId: string) => {
         setCloningEventId(eventId)
@@ -494,17 +452,17 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                             >
                                                                 <HiTag className="mr-2 h-4 w-4" /> Manage Discounts
                                                             </Link>
-                                                            <button
+                                                            <Link
+                                                                href={`/organizer/email-manager?eventId=${event.id}`}
+                                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    setShowEmailModal(true);
                                                                     setOpenDropdownId(null);
                                                                 }}
-                                                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
                                                                 data-menu-item
                                                             >
-                                                                <HiEnvelope className="mr-2 h-4 w-4" /> Send Marketing Email
-                                                            </button>
+                                                                <HiEnvelope className="mr-2 h-4 w-4" /> Email Contact
+                                                            </Link>
                                                             {event.alias && (
                                                                 <div className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                                     <span className="flex items-center">
@@ -664,16 +622,16 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                             >
                                                                 <HiTag className="mr-2 h-4 w-4" /> Manage Discounts
                                                             </Link>
-                                                            <button
+                                                            <Link
+                                                                href={`/organizer/email-manager?eventId=${event.id}`}
+                                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                                                                 onClick={() => {
-                                                                    setShowEmailModal(true)
                                                                     setOpenDropdownId(null)
                                                                 }}
-                                                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
                                                                 data-menu-item
                                                             >
-                                                                <HiEnvelope className="mr-2 h-4 w-4" /> Send Marketing Email
-                                                            </button>
+                                                                <HiEnvelope className="mr-2 h-4 w-4" /> Email Contact
+                                                            </Link>
                                                             {event.alias && (
                                                                 <div className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                                     <span className="flex items-center">
@@ -728,72 +686,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                 />
             )}
 
-            {/* Marketing Email Modal */}
-            {showEmailModal && (
-                <div className="fixed inset-0 bg-gray-600 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-75 overflow-y-auto h-full w-full z-50">
-                    <div className="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
-                        <div className="mt-3">
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Send Marketing Email</h3>
-                            
-                            {emailError && (
-                                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md">
-                                    <p className="text-sm text-red-600 dark:text-red-400">{emailError}</p>
-                                </div>
-                            )}
 
-                            {emailSuccess && (
-                                <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md">
-                                    <p className="text-sm text-green-600 dark:text-green-400">{emailSuccess}</p>
-                                </div>
-                            )}
-
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Subject</label>
-                                    <input
-                                        type="text"
-                                        value={emailSubject}
-                                        onChange={(e) => setEmailSubject(e.target.value)}
-                                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                                        placeholder="Enter email subject"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Message</label>
-                                    <textarea
-                                        value={emailBody}
-                                        onChange={(e) => setEmailBody(e.target.value)}
-                                        rows={6}
-                                        className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                                        placeholder="Enter your message here..."
-                                    />
-                                </div>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={handleSendMarketingEmail}
-                                        disabled={emailLoading}
-                                        className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
-                                    >
-                                        {emailLoading ? 'Sending...' : 'Send Email'}
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setShowEmailModal(false)
-                                            setEmailSubject('')
-                                            setEmailBody('')
-                                            setEmailError('')
-                                            setEmailSuccess('')
-                                        }}
-                                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </>
     )
 }

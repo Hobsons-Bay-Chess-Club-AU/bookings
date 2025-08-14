@@ -44,6 +44,12 @@ export default function OrganizerPageClient({
                     >
                         Custom Fields
                     </Link>
+                    <Link
+                        href="/organizer/email-manager"
+                        className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors"
+                    >
+                        Email Manager
+                    </Link>
                    
                 </div>
             </div>

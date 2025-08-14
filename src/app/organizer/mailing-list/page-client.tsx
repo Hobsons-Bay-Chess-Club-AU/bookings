@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { MailingList, UserRole } from '@/lib/types/database'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
@@ -17,9 +18,7 @@ export default function MailingListClient({ initialMailingList }: MailingListCli
     const [success, setSuccess] = useState('')
     const [showAddForm, setShowAddForm] = useState(false)
     const [newEmail, setNewEmail] = useState('')
-    const [showEmailForm, setShowEmailForm] = useState(false)
-    const [emailSubject, setEmailSubject] = useState('')
-    const [emailBody, setEmailBody] = useState('')
+
     const [showConfirmModal, setShowConfirmModal] = useState(false)
     const [subscriberToRemove, setSubscriberToRemove] = useState<string | null>(null)
 
@@ -99,42 +98,7 @@ export default function MailingListClient({ initialMailingList }: MailingListCli
         }
     }
 
-    const handleSendEmail = async () => {
-        if (!emailSubject.trim() || !emailBody.trim()) {
-            setError('Please fill in both subject and body')
-            return
-        }
 
-        setLoading(true)
-        setError('')
-
-        try {
-            const response = await fetch('/api/admin/mailing-list/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    subject: emailSubject,
-                    body: emailBody
-                })
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.error || 'Failed to send email')
-            }
-
-            setSuccess('Email sent successfully to all subscribers')
-            setEmailSubject('')
-            setEmailBody('')
-            setShowEmailForm(false)
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'An unexpected error occurred')
-        } finally {
-            setLoading(false)
-        }
-    }
 
     const subscribedCount = mailingList.filter(sub => sub.status === 'subscribed').length
     const unsubscribedCount = mailingList.filter(sub => sub.status === 'unsubscribed').length
@@ -165,13 +129,15 @@ export default function MailingListClient({ initialMailingList }: MailingListCli
                 >
                     Add Subscriber
                 </button>
-                <button
-                    onClick={() => setShowEmailForm(true)}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                    disabled={subscribedCount === 0}
+                <Link
+                    href="/organizer/email-manager?mailinglist=true"
+                    className={`px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 ${
+                        subscribedCount === 0 ? 'opacity-50 pointer-events-none' : ''
+                    }`}
+                    aria-disabled={subscribedCount === 0}
                 >
                     Send Marketing Email
-                </button>
+                </Link>
             </div>
 
             {/* Add Subscriber Form */}
@@ -212,54 +178,7 @@ export default function MailingListClient({ initialMailingList }: MailingListCli
                 </div>
             )}
 
-            {/* Send Email Form */}
-            {showEmailForm && (
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Send Marketing Email</h3>
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Subject</label>
-                            <input
-                                type="text"
-                                value={emailSubject}
-                                onChange={(e) => setEmailSubject(e.target.value)}
-                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                placeholder="Enter email subject"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Message</label>
-                            <textarea
-                                value={emailBody}
-                                onChange={(e) => setEmailBody(e.target.value)}
-                                rows={6}
-                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                placeholder="Enter your message here..."
-                            />
-                        </div>
-                        <div className="flex gap-4">
-                            <button
-                                onClick={handleSendEmail}
-                                disabled={loading}
-                                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
-                            >
-                                {loading ? 'Sending...' : `Send to ${subscribedCount} subscribers`}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setShowEmailForm(false)
-                                    setEmailSubject('')
-                                    setEmailBody('')
-                                    setError('')
-                                }}
-                                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+
 
             {/* Error and Success Messages */}
             {error && (

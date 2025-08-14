@@ -13,6 +13,7 @@ export { default as BookingTransferNotificationEmail } from './booking-transfer-
 export { default as OrganizerBookingNotificationEmail } from './organizer-booking-notification'
 export { default as WhitelistedBookingEmail } from './whitelisted-booking'
 export { default as WhitelistReleasedEmail } from './whitelist-released'
+export { default as OrganizerCustomEmail } from './organizer-custom-email'
 
 // Render Functions
 export { renderBookingConfirmationEmail } from './booking-confirmation'
@@ -25,6 +26,7 @@ export { renderBookingTransferNotificationEmail } from './booking-transfer-notif
 export { renderOrganizerBookingNotificationEmail } from './organizer-booking-notification'
 export { renderWhitelistedBookingEmail } from './whitelisted-booking'
 export { renderWhitelistReleasedEmail } from './whitelist-released'
+export { renderOrganizerCustomEmail } from './organizer-custom-email'
 
 // Legacy exports for backward compatibility
 export { BookingConfirmationEmail as BookingConfirmationEmailLegacy } from '../templates'

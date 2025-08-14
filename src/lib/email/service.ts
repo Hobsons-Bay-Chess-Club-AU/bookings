@@ -1,5 +1,19 @@
 // Send a generic email
-export async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
+export async function sendEmail({ 
+    to, 
+    subject, 
+    html, 
+    attachments 
+}: { 
+    to: string; 
+    subject: string; 
+    html: string;
+    attachments?: Array<{
+        filename: string;
+        content: string;
+        contentType: string;
+    }>;
+}) {
     console.log('📧 [EMAIL SERVICE] Starting generic email send:', {
         to,
         subject,
@@ -16,12 +30,33 @@ export async function sendEmail({ to, subject, html }: { to: string; subject: st
     })
 
     try {
-        const { data, error } = await resend.emails.send({
+        const emailPayload: {
+            from: string;
+            to: string;
+            subject: string;
+            html: string;
+            attachments?: Array<{
+                filename: string;
+                content: string;
+                contentType: string;
+            }>;
+        } = {
             from: process.env.RESEND_FROM_EMAIL || '',
             to,
             subject,
             html
-        })
+        }
+
+        if (attachments && attachments.length > 0) {
+            emailPayload.attachments = attachments
+            console.log('📎 [EMAIL SERVICE] Including attachments:', {
+                attachmentCount: attachments.length,
+                attachments: attachments.map(a => ({ filename: a.filename, contentType: a.contentType, contentLength: a.content.length })),
+                timestamp: new Date().toISOString()
+            })
+        }
+
+        const { data, error } = await resend.emails.send(emailPayload)
         if (error) {
             console.error('❌ [EMAIL SERVICE] Failed to send email:', {
                 error: error.message,

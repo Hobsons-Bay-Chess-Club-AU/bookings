@@ -1155,10 +1155,13 @@ export default function EventViewPage() {
                                                 <HiDocumentDuplicate className="h-4 w-4 mr-2" />
                                                 Clone Event
                                             </button>
-                                            <button className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                                            <Link
+                                                href={`/organizer/email-manager?eventId=${eventId}`}
+                                                className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+                                            >
                                                 <HiEnvelope className="h-4 w-4 mr-2" />
-                                                Send Marketing Email
-                                            </button>
+                                                Email Contact
+                                            </Link>
                                         </div>
                                     </div>
                                 </div>

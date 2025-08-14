@@ -460,6 +460,46 @@ export interface DiscountApplication {
     discount?: EventDiscount
 }
 
+export interface ScheduledEmail {
+    id: string
+    organizer_id: string
+    recipients: string[]
+    subject: string
+    message: string
+    context: Record<string, unknown>
+    scheduled_date: string
+    status: 'scheduled' | 'sent' | 'failed' | 'cancelled'
+    attachments: Array<{
+        filename: string;
+        blobUrl?: string;
+        content?: string; // For backward compatibility
+        contentType: string;
+    }>
+    sent_at?: string
+    error_message?: string
+    created_at: string
+    updated_at: string
+}
+
+export interface EmailLog {
+    id: string
+    organizer_id: string
+    recipients: string[]
+    subject: string
+    message: string
+    context: Record<string, unknown>
+    sent_count: number
+    failed_count: number
+    status: 'sent' | 'failed' | 'partial'
+    attachments: Array<{
+        filename: string;
+        blobUrl?: string;
+        content?: string; // For backward compatibility
+        contentType: string;
+    }>
+    created_at: string
+}
+
 export interface Database {
     public: {
         Tables: {
@@ -507,6 +547,16 @@ export interface Database {
                 Row: DiscountApplication
                 Insert: Omit<DiscountApplication, 'id' | 'created_at' | 'applied_at'>
                 Update: Partial<Omit<DiscountApplication, 'id' | 'created_at' | 'applied_at'>>
+            }
+            scheduled_emails: {
+                Row: ScheduledEmail
+                Insert: Omit<ScheduledEmail, 'id' | 'created_at' | 'updated_at' | 'sent_at'>
+                Update: Partial<Omit<ScheduledEmail, 'id' | 'created_at' | 'updated_at'>>
+            }
+            email_logs: {
+                Row: EmailLog
+                Insert: Omit<EmailLog, 'id' | 'created_at'>
+                Update: Partial<Omit<EmailLog, 'id' | 'created_at'>>
             }
         }
     }
