@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
+import { upload } from '@vercel/blob/client'
+import Image from 'next/image'
 import Link from 'next/link'
-import { HiExclamationTriangle, HiCheckCircle, HiExclamationCircle } from 'react-icons/hi2'
+import { HiExclamationTriangle, HiCheckCircle, HiExclamationCircle, HiPhoto, HiArrowUpTray, HiTrash } from 'react-icons/hi2'
 import MarkdownEditor from '@/components/ui/markdown-editor'
 import FormBuilder from '@/components/events/form-builder'
 import TimelineBuilder from '@/components/events/timeline-builder'
@@ -96,6 +98,8 @@ export default function EventForm({
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
     const errorRef = useRef<HTMLDivElement>(null)
     const firstFieldErrorRef = useRef<HTMLParagraphElement>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const [uploadingImage, setUploadingImage] = useState(false)
 
     // Auto-scroll to error message when error appears
     useEffect(() => {
@@ -243,6 +247,39 @@ export default function EventForm({
         }
         await onSubmit(formData, formFields, refundTimeline)
         if (afterSubmit) afterSubmit()
+    }
+
+    const handleSelectImageFile: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        if (!file.type.startsWith('image/')) {
+            setError('Please select a valid image file')
+            return
+        }
+        if (file.size > 8 * 1024 * 1024) { // 8MB limit
+            setError('Image is too large. Maximum size is 8MB')
+            return
+        }
+        setError('')
+        setSuccess('')
+        setUploadingImage(true)
+        try {
+            const blob = await upload(file.name, file, {
+                access: 'public',
+                handleUploadUrl: '/api/upload',
+                contentType: file.type
+            })
+            setFormData(prev => ({ ...prev, image_url: blob.url }))
+            setSuccess('Image uploaded successfully')
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Failed to upload image'
+            setError(message)
+        } finally {
+            setUploadingImage(false)
+            if (fileInputRef.current) {
+                fileInputRef.current.value = ''
+            }
+        }
     }
 
     return (
@@ -498,17 +535,65 @@ export default function EventForm({
 
                 <div className="md:col-span-2">
                     <label htmlFor="image_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Event Image URL
+                        Event Image
                     </label>
-                    <input
-                        type="url"
-                        id="image_url"
-                        name="image_url"
-                        value={formData.image_url}
-                        onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 dark:focus:border-indigo-400 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                        placeholder="https://example.com/image.jpg"
-                    />
+                    <div className="mt-1 space-y-3">
+                        <div className="flex items-center space-x-3">
+                            <input
+                                type="url"
+                                id="image_url"
+                                name="image_url"
+                                value={formData.image_url}
+                                onChange={handleChange}
+                                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 dark:focus:border-indigo-400 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                placeholder="https://example.com/image.jpg"
+                            />
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleSelectImageFile}
+                                className="hidden"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploadingImage}
+                                className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                                title="Upload image"
+                            >
+                                <HiArrowUpTray className="h-4 w-4 mr-2" />
+                                {uploadingImage ? 'Uploading...' : 'Upload'}
+                            </button>
+                            {formData.image_url && (
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, image_url: '' }))}
+                                    className="inline-flex items-center px-3 py-2 border border-red-300 dark:border-red-700 rounded-md bg-white dark:bg-gray-800 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    title="Remove image"
+                                >
+                                    <HiTrash className="h-4 w-4 mr-2" />
+                                    Remove
+                                </button>
+                            )}
+                        </div>
+                        {formData.image_url && (
+                            <div className="relative">
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center"><HiPhoto className="h-4 w-4 mr-1" /> Preview</div>
+                                <div className="relative w-full h-56">
+                                    <Image
+                                        src={formData.image_url}
+                                        alt="Event preview"
+                                        fill
+                                        className="object-cover rounded-md border border-gray-200 dark:border-gray-700"
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                        priority
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Paste an image URL or upload a file (PNG, JPG, WEBP, max 8MB).</p>
+                    </div>
                 </div>
 
                 {/* Organizer Contact Information */}

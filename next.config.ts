@@ -60,6 +60,11 @@ const nextConfig: NextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), web-share=(), xr-spatial-tracking=()',
           },
+          // Relax connect-src to allow Vercel Blob client uploads
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' https: data:; connect-src 'self' https://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://m.stripe.com https://va.vercel-scripts.com https://maps.googleapis.com wss://*.stripe.com https://hooks.stripe.com https://b.stripecdn.com https://pay.stripe.com https://www.google.com/maps/embed https://vercel.com https://*.vercel.com https://blob.vercel-storage.com https://*.vercel-storage.com; frame-src 'self' https://js.stripe.com https://checkout.stripe.com https://m.stripe.com https://www.google.com https://maps.google.com https://checkout.stripe.com https://pay.stripe.com https://www.google.com/maps/embed; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com; navigate-to 'self' https://checkout.stripe.com https://pay.stripe.com https://www.google.com/maps/embed; upgrade-insecure-requests",
+          },
         ],
       },
       {
@@ -110,6 +115,13 @@ const nextConfig: NextConfig = {
       'maps.googleapis.com',
       'maps.gstatic.com',
       'streetviewpixels-pa.googleapis.com',
+    ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.vercel-storage.com',
+        pathname: '/**',
+      },
     ],
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60,

@@ -4,8 +4,7 @@ import Link from 'next/link'
 import QRCode from 'react-qr-code'
 import MarkdownContent from '@/components/ui/html-content'
 import CopyButton from '@/components/ui/copy-button'
-import Image from 'next/image'
-import { HiStar, HiMapPin, HiQrCode, HiXMark } from 'react-icons/hi2'
+import { HiStar, HiMapPin, HiQrCode, HiXMark, HiLink } from 'react-icons/hi2'
 import type { Event } from '@/lib/types/database'
 import { formatInTimezone } from '@/lib/utils/timezone'
 
@@ -117,6 +116,15 @@ export default function EventCard({ event, hideBooking = false }: EventCardProps
       ref={cardRef}
       className="bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-lg relative flex flex-col h-full transition-all duration-300 ease-in-out hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.02] group border border-gray-100 dark:border-gray-700"
     >
+      {event.image_url && (
+        <>
+          <div
+            className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
+            style={{ backgroundImage: `url(${event.image_url})` }}
+          />
+          <div className="absolute inset-0 bg-black/50 dark:bg-black/70" />
+        </>
+      )}
       {/* QR Icon */}
       <button
         className="absolute top-1 right-1 z-20 p-1 bg-white dark:bg-gray-900 rounded-full shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 hover:shadow-lg hover:scale-110"
@@ -145,20 +153,7 @@ export default function EventCard({ event, hideBooking = false }: EventCardProps
         </div>
       )}
 
-      {event.image_url && (
-        <div className="h-48 bg-gray-200 dark:bg-gray-700 flex-shrink-0 overflow-hidden">
-          <Image
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            src={event.image_url}
-            alt={event.title}
-            width={400}
-            height={200}
-            priority={true}
-          />
-        </div>
-      )}
-      
-      <div className="p-6 flex flex-col flex-1">
+      <div className="p-6 flex flex-col flex-1 relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -234,7 +229,7 @@ export default function EventCard({ event, hideBooking = false }: EventCardProps
           {event.alias && (
             <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
               <div className="flex items-center space-x-2">
-                <span className="transition-transform duration-200 group-hover:scale-110">🔗</span>
+                <HiLink className="h-3.5 w-3.5 transition-transform duration-200 group-hover:scale-110" />
                 <span className="font-mono">{`/e/${event.alias}`}</span>
               </div>
               <CopyButton text={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/e/${event.alias}`} />

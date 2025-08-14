@@ -50,8 +50,8 @@ export const securityHeaders = {
     // Font sources - allow self and Google Fonts
     "font-src 'self' https://fonts.gstatic.com https://js.stripe.com https://b.stripecdn.com",
     
-    // Connect sources - allow self, Supabase, Stripe, analytics, and Google Maps
-    "connect-src 'self' https://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://m.stripe.com https://va.vercel-scripts.com https://maps.googleapis.com wss://*.stripe.com https://hooks.stripe.com https://b.stripecdn.com https://pay.stripe.com https://www.google.com/maps/embed",
+    // Connect sources - allow self, Supabase, Stripe, analytics, Google Maps, and Vercel Blob
+    "connect-src 'self' https://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://m.stripe.com https://va.vercel-scripts.com https://maps.googleapis.com wss://*.stripe.com https://hooks.stripe.com https://b.stripecdn.com https://pay.stripe.com https://www.google.com/maps/embed https://vercel.com https://*.vercel.com https://blob.vercel-storage.com https://*.vercel-storage.com",
     
     // Frame sources - allow Stripe checkout and Google Maps
     "frame-src 'self' https://js.stripe.com https://checkout.stripe.com https://m.stripe.com https://www.google.com https://maps.google.com https://checkout.stripe.com https://pay.stripe.com https://www.google.com/maps/embed",

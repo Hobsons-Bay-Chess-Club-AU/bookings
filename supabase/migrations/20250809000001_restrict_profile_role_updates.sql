@@ -5,6 +5,7 @@
 CREATE OR REPLACE FUNCTION enforce_profile_role_admin_only()
 RETURNS trigger AS $$
 BEGIN
+  SET search_path = '';
   IF TG_OP = 'INSERT' THEN
     -- Non-admins may only insert with default 'user' role
     IF get_user_role(auth.uid()) <> 'admin' AND NEW.role IS DISTINCT FROM 'user'::user_role THEN
