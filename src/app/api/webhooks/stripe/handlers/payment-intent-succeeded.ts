@@ -1,5 +1,5 @@
 import Stripe from 'stripe'
-import { createWebhookSupabaseClient, capturePaymentEvent, sendBookingConfirmationEmailWithLogging, sendOrganizerNotificationEmailWithLogging } from './utils'
+import { createWebhookSupabaseClient, capturePaymentEvent, sendBookingConfirmationEmailWithLogging, sendOrganizerNotificationEmailWithLogging, computeMembershipLookupFields } from './utils'
 
 // Helper function to create a delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
@@ -100,6 +100,9 @@ export async function handlePaymentIntentSucceeded(event: Stripe.Event) {
 
             // Send organizer notification email
             await sendOrganizerNotificationEmailWithLogging(supabase, booking)
+
+            // Compute backend-only computed fields for participants
+            await computeMembershipLookupFields(supabase, booking.events, booking.id)
         }
     } else {
         console.log('⏭️ SKIPPING UPDATE (payment_intent.succeeded):', {

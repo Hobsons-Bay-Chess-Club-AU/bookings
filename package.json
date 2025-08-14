@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "stripe": "stripe listen --forward-to ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}/api/webhooks/stripe",
+    "stripe": "stripe listen --forward-to ${NEXT_PUBLIC_APP_URL:-http://localhost:1234}/api/webhooks/stripe",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",

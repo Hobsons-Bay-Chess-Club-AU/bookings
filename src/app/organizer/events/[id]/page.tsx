@@ -22,6 +22,7 @@ import {
     HiArrowTopRightOnSquare
 } from 'react-icons/hi2'
 import { Event, EventPricing, EventDiscount, Booking, Participant, FormField, EventSection } from '@/lib/types/database'
+import FormBuilder from '@/components/events/form-builder'
 
 interface ParticipantWithSection extends Participant {
     section?: EventSection
@@ -53,6 +54,10 @@ export default function EventViewPage() {
     const [participants, setParticipants] = useState<ParticipantWithSection[]>([])
     const [customFields, setCustomFields] = useState<FormField[]>([])
     const [sections, setSections] = useState<EventSection[]>([])
+    const [isManagingFields, setIsManagingFields] = useState(false)
+    const [editingFields, setEditingFields] = useState<FormField[]>([])
+    const [fieldsError, setFieldsError] = useState('')
+    const [fieldsSuccess, setFieldsSuccess] = useState('')
     const [stats, setStats] = useState({
         totalBookings: 0,
         confirmedBookings: 0,
@@ -908,73 +913,108 @@ export default function EventViewPage() {
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
                         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Custom Form Fields</h3>
-                            <Link
-                                href={`/organizer/events/${eventId}/edit`}
-                                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm font-medium"
-                            >
-                                Edit Event →
-                            </Link>
+                            {!isManagingFields ? (
+                                <button
+                                    onClick={() => { setIsManagingFields(true); setEditingFields(customFields); setFieldsError(''); setFieldsSuccess('') }}
+                                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm font-medium"
+                                >
+                                    Manage Fields
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => { setIsManagingFields(false); setFieldsError(''); setFieldsSuccess('') }}
+                                    className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm font-medium"
+                                >
+                                    Close
+                                </button>
+                            )}
                         </div>
                         <div className="p-6">
-                            {customFields.length === 0 ? (
-                                <div className="text-center py-8">
-                                    <HiDocumentText className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-                                    <p className="text-gray-500 dark:text-gray-400 mb-4">No custom form fields configured for this event.</p>
-                                    <p className="text-sm text-gray-400 dark:text-gray-500">Custom fields are configured when editing the event.</p>
+                            {isManagingFields ? (
+                                <div>
+                                    {fieldsError && (
+                                        <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded">{fieldsError}</div>
+                                    )}
+                                    {fieldsSuccess && (
+                                        <div className="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded">{fieldsSuccess}</div>
+                                    )}
+                                    <FormBuilder
+                                        fields={editingFields}
+                                        onChange={setEditingFields}
+                                        context="event"
+                                    />
+                                    <div className="flex justify-end space-x-3 mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+                                        <button
+                                            onClick={() => { setIsManagingFields(false); setEditingFields(customFields) }}
+                                            className="px-4 py-2 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                setFieldsError(''); setFieldsSuccess('')
+                                                try {
+                                                    const { error: updateError } = await supabase
+                                                        .from('events')
+                                                        .update({ custom_form_fields: editingFields, updated_at: new Date().toISOString() })
+                                                        .eq('id', eventId)
+                                                    if (updateError) throw new Error(updateError.message)
+                                                    setCustomFields(editingFields)
+                                                    setFieldsSuccess('Custom fields updated successfully')
+                                                } catch (e) {
+                                                    setFieldsError(e instanceof Error ? e.message : 'Failed to update custom fields')
+                                                }
+                                            }}
+                                            className="px-4 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                                        >
+                                            Save Changes
+                                        </button>
+                                    </div>
                                 </div>
                             ) : (
-                                <div className="space-y-4">
-                                    {customFields.map((field, index) => (
-                                        <div key={field.id || index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <h4 className="font-medium text-gray-900 dark:text-gray-100">{field.label}</h4>
-                                                <div className="flex items-center space-x-2">
-                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                        field.required ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
-                                                    }`}>
-                                                        {field.required ? 'Required' : 'Optional'}
-                                                    </span>
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
-                                                        {field.type}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            {field.description && (
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{field.description}</p>
-                                            )}
-                                            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                                                <p><strong>Field Name:</strong> {field.name}</p>
-                                                {field.placeholder && (
-                                                    <p><strong>Placeholder:</strong> {field.placeholder}</p>
-                                                )}
-                                                {field.options && field.options.length > 0 && (
-                                                    <p><strong>Options:</strong> {field.options.join(', ')}</p>
-                                                )}
-                                                {field.validation && (
-                                                    <div>
-                                                        <p><strong>Validation:</strong></p>
-                                                        <ul className="ml-4 space-y-1">
-                                                            {field.validation.minLength && (
-                                                                <li>Min length: {field.validation.minLength}</li>
-                                                            )}
-                                                            {field.validation.maxLength && (
-                                                                <li>Max length: {field.validation.maxLength}</li>
-                                                            )}
-                                                            {field.validation.min !== undefined && (
-                                                                <li>Min value: {field.validation.min}</li>
-                                                            )}
-                                                            {field.validation.max !== undefined && (
-                                                                <li>Max value: {field.validation.max}</li>
-                                                            )}
-                                                            {field.validation.regex && (
-                                                                <li>Pattern: {field.validation.regex}</li>
-                                                            )}
-                                                        </ul>
-                                                    </div>
-                                                )}
-                                            </div>
+                                <div>
+                                    {customFields.length === 0 ? (
+                                        <div className="text-center py-8">
+                                            <HiDocumentText className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                                            <p className="text-gray-500 dark:text-gray-400 mb-4">No custom form fields configured for this event.</p>
+                                            <button
+                                                onClick={() => { setIsManagingFields(true); setEditingFields(customFields) }}
+                                                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm font-medium"
+                                            >
+                                                Add Fields
+                                            </button>
                                         </div>
-                                    ))}
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {customFields.map((field, index) => (
+                                                <div key={field.id || index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <h4 className="font-medium text-gray-900 dark:text-gray-100">{field.label}</h4>
+                                                        <div className="flex items-center space-x-2">
+                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${field.required ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}`}>
+                                                                {field.required ? 'Required' : 'Optional'}
+                                                            </span>
+                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                                                                {field.type}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    {field.description && (
+                                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{field.description}</p>
+                                                    )}
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                                                        <p><strong>Field Name:</strong> {field.name}</p>
+                                                        {field.placeholder && (
+                                                            <p><strong>Placeholder:</strong> {field.placeholder}</p>
+                                                        )}
+                                                        {field.options && field.options.length > 0 && (
+                                                            <p><strong>Options:</strong> {field.options.join(', ')}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>

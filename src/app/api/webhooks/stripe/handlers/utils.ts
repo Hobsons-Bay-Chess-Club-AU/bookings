@@ -1,6 +1,7 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { sendBookingConfirmationEmail, sendWhitelistedBookingEmail, sendOrganizerBookingNotificationEmail } from '@/lib/email/service'
 import { PaymentEventData } from './types'
+import type { MembershipLookupConfig } from '@/lib/types/database'
 
 // Create service role client for webhooks to bypass RLS
 export const createWebhookSupabaseClient = () => {
@@ -153,3 +154,136 @@ export const sendOrganizerNotificationEmailWithLogging = async (supabase: any, b
         return { success: false, error: 'Failed to send organizer notification' }
     }
 } 
+
+// Compute backend-only computed fields for participants (Membership Lookup)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const computeMembershipLookupFields = async (supabase: any, event: any, bookingId: string) => {
+    try {
+        console.log('🧮 COMPUTE START', {
+            eventId: event?.id,
+            hasCustomFields: Boolean(event?.custom_form_fields),
+            customFieldCount: Array.isArray(event?.custom_form_fields) ? event?.custom_form_fields.length : 0
+        })
+        if (event?.custom_form_fields && Array.isArray(event.custom_form_fields)) {
+            const computedFields = event.custom_form_fields.filter((f: { type?: string; name?: string }) => f.type === 'computed_membership_lookup')
+            console.log('🧮 COMPUTED FIELDS FOUND', {
+                count: computedFields.length,
+                names: computedFields.map((f: { name?: string }) => f.name)
+            })
+            if (computedFields.length > 0) {
+                const { data: participants } = await supabase
+                    .from('participants')
+                    .select('id, first_name, last_name, date_of_birth, custom_data')
+                    .eq('booking_id', bookingId)
+                console.log('👥 PARTICIPANTS TO COMPUTE', {
+                    bookingId,
+                    count: participants?.length || 0,
+                    ids: (participants || []).map((p: { id: string }) => p.id)
+                })
+                if (participants && participants.length > 0) {
+                    for (const participant of participants as Array<{ id: string; first_name?: string; last_name?: string; date_of_birth?: string; custom_data?: Record<string, unknown> }>) {
+                        console.log('➡️ PARTICIPANT', {
+                            id: participant.id,
+                            first_name: participant.first_name,
+                            last_name: participant.last_name,
+                            date_of_birth: participant.date_of_birth
+                        })
+                        const newCustomData: Record<string, unknown> = { ...(participant.custom_data || {}) }
+                        for (const field of computedFields as Array<{ name: string; type?: string; config?: MembershipLookupConfig }>) {
+                            const config = (field.config || {}) as MembershipLookupConfig
+                            const targetEventId = config?.target_event_id
+                            console.log('🔧 FIELD CONFIG', {
+                                fieldName: field.name,
+                                targetEventId,
+                                match_on: config?.match_on,
+                                case_insensitive: Boolean(config?.case_insensitive),
+                                normalize_spaces: Boolean(config?.normalize_spaces),
+                                match_value: config?.match_value,
+                                no_match_value: config?.no_match_value
+                            })
+                            if (!targetEventId) {
+                                console.log('⚠️ No target_event_id, assigning no_match_value')
+                                newCustomData[field.name] = (config?.no_match_value ?? 'NO') as string
+                                continue
+                            }
+                            const matchFields = (config?.match_on && Array.isArray(config.match_on) && config.match_on.length > 0)
+                                ? config.match_on
+                                : ['first_name', 'last_name', 'date_of_birth']
+                            const matchValue = (config?.match_value ?? 'YES') as string
+                            const noMatchValue = (config?.no_match_value ?? 'NO') as string
+
+                            const normalize = (s?: string) => {
+                                if (!s) return ''
+                                let v = s
+                                if (config?.normalize_spaces) v = v.replace(/\s+/g, ' ').trim()
+                                if (config?.case_insensitive) v = v.toLowerCase()
+                                return v
+                            }
+                            const pFirst = normalize(participant.first_name)
+                            const pLast = normalize(participant.last_name)
+                            const pDob = normalize(participant.date_of_birth)
+                            console.log('🧾 NORMALIZED PARTICIPANT', { pFirst, pLast, pDob, matchFields })
+
+                            const { data: targetBookingIds } = await supabase
+                                .from('bookings')
+                                .select('id')
+                                .eq('event_id', targetEventId)
+                            const bookingIds = (targetBookingIds || []).map((b: { id: string }) => b.id)
+                            console.log('🎯 TARGET EVENT BOOKINGS', { targetEventId, bookingCount: bookingIds.length })
+
+                            const { data: targetParticipants } = await supabase
+                                .from('participants')
+                                .select('first_name,last_name,date_of_birth')
+                                .in('booking_id', bookingIds)
+                            console.log('🎯 TARGET PARTICIPANTS', { count: targetParticipants?.length || 0 })
+                            if (!targetParticipants || targetParticipants.length === 0) {
+                                console.log('ℹ️ No target participants found, assigning no_match_value')
+                                newCustomData[field.name] = noMatchValue
+                                continue
+                            }
+
+                            let isMatch = false
+                            for (const tp of targetParticipants as Array<{ first_name?: string; last_name?: string; date_of_birth?: string }>) {
+                                const tFirst = normalize(tp.first_name)
+                                const tLast = normalize(tp.last_name)
+                                const tDob = normalize(tp.date_of_birth)
+                                const checks: Record<string, boolean> = {
+                                    first_name: Boolean(pFirst) && Boolean(tFirst) && pFirst === tFirst,
+                                    last_name: Boolean(pLast) && Boolean(tLast) && pLast === tLast,
+                                    date_of_birth: Boolean(pDob) && Boolean(tDob) && pDob === tDob,
+                                }
+                                const keyList = matchFields.filter((k): k is 'first_name' | 'last_name' | 'date_of_birth' => (
+                                    k === 'first_name' || k === 'last_name' || k === 'date_of_birth'
+                                ))
+                                isMatch = keyList.every((k) => checks[k])
+                                if (isMatch) {
+                                    console.log('✅ MATCH FOUND', { keyList, checks })
+                                    break
+                                }
+                            }
+
+                            newCustomData[field.name] = isMatch ? matchValue : noMatchValue
+                            console.log('📝 FIELD RESULT', { fieldName: field.name, value: newCustomData[field.name] })
+                        }
+
+                        const { error: updateParticipantError } = await supabase
+                            .from('participants')
+                            .update({ custom_data: newCustomData })
+                            .eq('id', participant.id)
+                        if (updateParticipantError) {
+                            console.error('❌ Failed updating participant custom_data', { participantId: participant.id, error: updateParticipantError })
+                        } else {
+                            console.log('💾 Participant custom_data updated', { participantId: participant.id })
+                        }
+                    }
+                } else {
+                    console.log('ℹ️ No participants found for booking to compute')
+                }
+            } else {
+                console.log('ℹ️ No computed_membership_lookup fields found on event')
+            }
+        }
+    } catch (computeErr) {
+        console.error('Error computing membership lookup fields:', computeErr)
+    }
+}

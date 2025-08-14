@@ -78,7 +78,9 @@ export async function POST(request: NextRequest) {
             options,
             validation,
             placeholder,
-            is_global = false
+            is_global = false,
+            admin_only = false,
+            config = null
         } = body
 
         // Validate required fields
@@ -123,7 +125,9 @@ export async function POST(request: NextRequest) {
                 options: options || null,
                 validation: validation || null,
                 placeholder: placeholder || null,
-                is_global: canCreateGlobal
+                is_global: canCreateGlobal,
+                admin_only: !!admin_only,
+                config: config
             })
             .select()
             .single()

@@ -6,7 +6,7 @@ export type RefundStatus = 'none' | 'requested' | 'processing' | 'completed' | '
 export type EventStatus = 'draft' | 'published' | 'cancelled' | 'completed' | 'entry_closed'
 export type MembershipType = 'member' | 'non_member' | 'all'
 export type PricingType = 'early_bird' | 'regular' | 'late_bird' | 'special'
-export type FormFieldType = 'text' | 'email' | 'phone' | 'number' | 'date' | 'select' | 'multiselect' | 'checkbox' | 'textarea' | 'file' | 'fide_id' | 'acf_id'
+export type FormFieldType = 'text' | 'email' | 'phone' | 'number' | 'date' | 'select' | 'multiselect' | 'checkbox' | 'textarea' | 'file' | 'fide_id' | 'acf_id' | 'computed_membership_lookup'
 export type TimelineType = 'refund'
 export type RefundValueType = 'percentage' | 'fixed'
 export type MailingListStatus = 'subscribed' | 'unsubscribed'
@@ -153,6 +153,22 @@ export interface FormField {
     options?: string[] | number[] | FieldOption[] | undefined
     validation?: FormFieldValidation | undefined
     placeholder?: string
+    // When true, field is hidden from end-users and visible only to admins (e.g., computed fields)
+    admin_only?: boolean
+    // Extra configuration for advanced/custom field types. For computed fields this holds rule config
+    config?: Record<string, unknown>
+}
+
+// Configuration for the computed_membership_lookup field type
+export interface MembershipLookupConfig {
+    target_event_id: string
+    match_on?: Array<'first_name' | 'last_name' | 'date_of_birth'>
+    match_value?: string
+    no_match_value?: string
+    case_insensitive?: boolean
+    normalize_spaces?: boolean
+    show_in_admin_list?: boolean
+    admin_column_label?: string
 }
 
 export interface CustomField {
@@ -170,6 +186,9 @@ export interface CustomField {
     usage_count: number
     created_at: string
     updated_at: string
+    // Extended to support computed field configuration reuse from library
+    admin_only?: boolean
+    config?: Record<string, unknown>
 }
 
 export type CustomDataValue = string | number | boolean | PlayerData | Record<string, unknown> | null

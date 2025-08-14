@@ -15,9 +15,10 @@ interface FormBuilderProps {
     fields: FormField[]
     onChange: (fields: FormField[]) => void
     context?: 'event' | 'library' // Context where FormBuilder is being used
+    onSaved?: () => void
 }
 
-export default function FormBuilder({ fields, onChange, context = 'event' }: FormBuilderProps) {
+export default function FormBuilder({ fields, onChange, context = 'event', onSaved }: FormBuilderProps) {
     const [editingField, setEditingField] = useState<FormField | null>(null)
     const [isAdding, setIsAdding] = useState(false)
     const [showLibrary, setShowLibrary] = useState(false)
@@ -28,7 +29,10 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
     const [saveToLibrary, setSaveToLibrary] = useState(false)
     const [useAdvancedOptions, setUseAdvancedOptions] = useState(false)
     const [showConfirmModal, setShowConfirmModal] = useState(false)
+    const [saveError, setSaveError] = useState('')
     const [fieldToDelete, setFieldToDelete] = useState<string | null>(null)
+    const [organizerEvents, setOrganizerEvents] = useState<Array<{ id: string; title: string }>>([])
+    const [eventsLoading, setEventsLoading] = useState(false)
 
     const fieldTypes: { value: FormFieldType; label: string; description: string }[] = [
         { value: 'text', label: 'Text Input', description: 'Single line text field' },
@@ -42,7 +46,8 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
         { value: 'checkbox', label: 'Checkbox', description: 'True/false checkbox' },
         { value: 'file', label: 'File Upload', description: 'File attachment' },
         { value: 'fide_id', label: 'FIDE Player', description: 'Search and select FIDE-rated chess player' },
-        { value: 'acf_id', label: 'ACF Player', description: 'Search and select ACF-rated chess player' }
+        { value: 'acf_id', label: 'ACF Player', description: 'Search and select ACF-rated chess player' },
+        { value: 'computed_membership_lookup', label: 'Computed: Membership Lookup', description: 'Computed in backend after booking; not visible to users' }
     ]
 
     const createNewField = (): FormField => ({
@@ -54,7 +59,9 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
         required: false,
         options: [],
         validation: {} as unknown as FormFieldValidation, // Initialize with empty validation
-        placeholder: ''
+        placeholder: '',
+        admin_only: false,
+        config: {}
     })
 
     // Fetch custom fields from library
@@ -87,11 +94,31 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
         }
     }, [showLibrary, fetchCustomFields])
 
+    // Fetch organizer events for dropdown in computed field config
+    useEffect(() => {
+        const loadEvents = async () => {
+            try {
+                setEventsLoading(true)
+                const res = await fetch('/api/organizer/events', { cache: 'no-store' })
+                if (res.ok) {
+                    const data: Array<{ id: string; title: string }> = await res.json()
+                    setOrganizerEvents(data)
+                }
+            } catch (err) {
+                // Silent fail; fallback to manual input
+            } finally {
+                setEventsLoading(false)
+            }
+        }
+        loadEvents()
+    }, [])
+
     const handleAddField = () => {
         setEditingField(createNewField())
         setIsAdding(true)
         setSaveToLibrary(context === 'library') // Auto-save to library when in library context
         setUseAdvancedOptions(false)
+        setSaveError('')
     }
 
     const handleAddFromLibrary = () => {
@@ -109,7 +136,9 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
             required: customField.required,
             options: customField.options,
             validation: customField.validation as unknown as FormFieldValidation,
-            placeholder: customField.placeholder
+            placeholder: customField.placeholder,
+            admin_only: Boolean(customField.admin_only),
+            config: (customField.config || {}) as Record<string, unknown>
         }
 
         onChange([...fields, formField])
@@ -133,6 +162,7 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
     const handleEditField = (field: FormField) => {
         setEditingField({ ...field })
         setIsAdding(false)
+        setSaveError('')
 
         // Check if field uses advanced options (has objects with value/label)
         const hasAdvancedOptions = (field.options || []).some(opt =>
@@ -143,10 +173,11 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
 
     const handleSaveField = async () => {
         if (!editingField) return
+        setSaveError('')
 
         // Validate required fields
         if (!editingField.name || !editingField.label) {
-            alert('Name and label are required')
+            setSaveError('Name and label are required')
             return
         }
 
@@ -160,7 +191,7 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
 
         // Handle different contexts
         if (context === 'library') {
-            // In library context, always save to library
+            // Save to library: create or update depending on isAdding
             try {
                 const customFieldData = {
                     name: editingField.name,
@@ -170,25 +201,29 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
                     required: editingField.required,
                     options: editingField.options,
                     validation: editingField.validation,
-                    placeholder: editingField.placeholder
+                    placeholder: editingField.placeholder,
+                    admin_only: editingField.admin_only || false,
+                    config: editingField.config || null
                 }
 
-                const response = await fetch('/api/organizer/custom-fields', {
-                    method: 'POST',
+                const url = isAdding ? '/api/organizer/custom-fields' : `/api/organizer/custom-fields/${editingField.id}`
+                const method = isAdding ? 'POST' : 'PUT'
+                const response = await fetch(url, {
+                    method,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(customFieldData)
                 })
 
                 if (!response.ok) {
                     const error = await response.json()
-                    throw new Error(error.error || 'Failed to save to library')
+                    throw new Error(error.error || `Failed to ${isAdding ? 'create' : 'update'} field`)
                 }
 
-                // Call onChange to trigger parent component refresh
-                onChange([])
+                // Notify parent
+                if (onSaved) onSaved()
             } catch (error) {
                 console.error('Error saving to library:', error)
-                alert('Failed to save to library: ' + (error instanceof Error ? error.message : 'Unknown error'))
+                setSaveError(error instanceof Error ? error.message : 'Failed to save to library')
                 return
             }
         } else {
@@ -210,7 +245,9 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
                         required: editingField.required,
                         options: editingField.options,
                         validation: editingField.validation,
-                        placeholder: editingField.placeholder
+                        placeholder: editingField.placeholder,
+                        admin_only: editingField.admin_only || false,
+                        config: editingField.config || null
                     }
 
                     const response = await fetch('/api/organizer/custom-fields', {
@@ -222,11 +259,11 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
                     if (!response.ok) {
                         const error = await response.json()
                         console.error('Failed to save to library:', error)
-                        alert('Field saved to event but failed to save to library: ' + (error.error || 'Unknown error'))
+                        setSaveError('Field saved to event but failed to save to library: ' + (error.error || 'Unknown error'))
                     }
                 } catch (error) {
                     console.error('Error saving to library:', error)
-                    alert('Field saved to event but failed to save to library')
+                    setSaveError('Field saved to event but failed to save to library')
                 }
             }
         }
@@ -521,12 +558,19 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
                                     onClick={() => {
                                         setEditingField(null)
                                         setIsAdding(false)
+                                        setSaveError('')
                                     }}
                                     className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
                                 >
                                     ✕
                                 </button>
                             </div>
+
+                            {saveError && (
+                                <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded">
+                                    {saveError}
+                                </div>
+                            )}
 
                             <div className="space-y-4">
                                 {/* Basic Info */}
@@ -564,7 +608,7 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
                                     </label>
                                     <input
                                         type="text"
-                                        value={editingField.description}
+                        value={editingField.description ?? ''}
                                         onChange={(e) => updateEditingField({ description: e.target.value })}
                                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                         placeholder="Help text for participants"
@@ -587,6 +631,9 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
                                                 </option>
                                             ))}
                                         </select>
+                                        {editingField.type === 'computed_membership_lookup' && (
+                                            <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">Backend-only computed field. Hidden from participants and visible to admins only.</p>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -594,7 +641,7 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
                                         </label>
                                         <input
                                             type="text"
-                                            value={editingField.placeholder}
+                        value={editingField.placeholder ?? ''}
                                             onChange={(e) => updateEditingField({ placeholder: e.target.value })}
                                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                             placeholder="Placeholder text"
@@ -612,6 +659,20 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
                                     />
                                     <label htmlFor="required" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                                         Required field
+                                    </label>
+                                </div>
+
+                                {/* Admin-only visibility toggle for computed fields */}
+                                <div className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        id="admin_only"
+                                        checked={!!editingField.admin_only}
+                                        onChange={(e) => updateEditingField({ admin_only: e.target.checked })}
+                                        className="h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500"
+                                    />
+                                    <label htmlFor="admin_only" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                        Admin-only (hide from participants)
                                     </label>
                                 </div>
 
@@ -643,14 +704,14 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
                                                         <>
                                                             <input
                                                                 type="text"
-                                                                value={typeof option === 'object' && 'value' in option ? (option as OptionObject).value : String(option)}
+                                                value={typeof option === 'object' && 'value' in option ? ((option as OptionObject).value ?? '') : String(option ?? '')}
                                                                 onChange={(e) => updateOption(index, e.target.value, 'value')}
                                                                 className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                                                 placeholder="Value (stored)"
                                                             />
                                                             <input
                                                                 type="text"
-                                                                value={typeof option === 'object' && 'label' in option ? (option as OptionObject).label : String(option)}
+                                                value={typeof option === 'object' && 'label' in option ? ((option as OptionObject).label ?? '') : String(option ?? '')}
                                                                 onChange={(e) => updateOption(index, e.target.value, 'label')}
                                                                 className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                                                 placeholder="Label (displayed)"
@@ -660,8 +721,8 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
                                                         <input
                                                             type="text"
                                                             value={typeof option === 'string' ? option : (typeof option === 'object' && ('label' in option || 'value' in option) ?
-                                                                (option as OptionObject).label || (option as OptionObject).value || '' :
-                                                                String(option))}
+                                                                ((option as OptionObject).label ?? (option as OptionObject).value ?? '') :
+                                                                String(option ?? ''))}
                                                             onChange={(e) => updateOption(index, e.target.value)}
                                                             className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                                                             placeholder={`Option ${index + 1}`}
@@ -690,6 +751,104 @@ export default function FormBuilder({ fields, onChange, context = 'event' }: For
                                                 Advanced mode: Value is stored in database, Label is shown to users
                                             </p>
                                         )}
+                                    </div>
+                                )}
+
+                                {/* Config for computed membership lookup */}
+                                {editingField.type === 'computed_membership_lookup' && (
+                                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Membership Lookup Settings</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Target Event</label>
+                                                <select
+                                                    value={String(((editingField.config as Record<string, unknown>)?.['target_event_id'] as string) ?? '')}
+                                                    onChange={(e) => updateEditingField({ config: { ...(editingField.config || {}), target_event_id: e.target.value } })}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                                >
+                                                    <option value="">Select an event...</option>
+                                                    {organizerEvents.map((ev) => (
+                                                        <option key={ev.id} value={ev.id}>{ev.title}</option>
+                                                    ))}
+                                                </select>
+                                                {eventsLoading && (
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Loading events…</p>
+                                                )}
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Required. Choose the event to match against.</p>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Match Fields</label>
+                                                <div className="flex flex-wrap gap-3 text-sm">
+                                                    {['first_name','last_name','date_of_birth'].map((k) => {
+                                                        const selected = Array.isArray(((editingField.config as Record<string, unknown>)?.['match_on'] as unknown[])) ? ((editingField.config as Record<string, unknown>)['match_on'] as string[]).includes(k) : true
+                                                        return (
+                                                            <label key={k} className="inline-flex items-center gap-1">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={selected}
+                                                                    onChange={(e) => {
+                                                                        const prev = Array.isArray(((editingField.config as Record<string, unknown>)?.['match_on'] as unknown[])) ? ([...((editingField.config as Record<string, unknown>)['match_on'] as string[])]) : ['first_name','last_name','date_of_birth']
+                                                                        const next = e.target.checked ? Array.from(new Set([...prev, k])) : prev.filter((x) => x !== k)
+                                                                        updateEditingField({ config: { ...(editingField.config || {}), match_on: next } })
+                                                                    }}
+                                                                />
+                                                                <span className="capitalize">{k.replace('_',' ')}</span>
+                                                            </label>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Value When Match</label>
+                                                <input
+                                                    type="text"
+                                                    value={String(((editingField.config as Record<string, unknown>)?.['match_value'] as string) ?? 'YES')}
+                                                    onChange={(e) => updateEditingField({ config: { ...(editingField.config || {}), match_value: e.target.value } })}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Value When No Match</label>
+                                                <input
+                                                    type="text"
+                                                    value={String(((editingField.config as Record<string, unknown>)?.['no_match_value'] as string) ?? 'NO')}
+                                                    onChange={(e) => updateEditingField({ config: { ...(editingField.config || {}), no_match_value: e.target.value } })}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                                />
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <div className="flex items-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="show_in_admin_list"
+                                                    checked={Boolean(((editingField.config as Record<string, unknown>)?.['show_in_admin_list'] as boolean))}
+                                                        onChange={(e) => updateEditingField({ config: { ...(editingField.config || {}), show_in_admin_list: e.target.checked } })}
+                                                        className="h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500"
+                                                    />
+                                                    <label htmlFor="show_in_admin_list" className="ml-2 text-sm text-gray-700 dark:text-gray-300">Show as column in participants list (admin)</label>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    id="case_insensitive"
+                                                    checked={Boolean(((editingField.config as Record<string, unknown>)?.['case_insensitive'] as boolean))}
+                                                    onChange={(e) => updateEditingField({ config: { ...(editingField.config || {}), case_insensitive: e.target.checked } })}
+                                                    className="h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500"
+                                                />
+                                                <label htmlFor="case_insensitive" className="ml-2 text-sm text-gray-700 dark:text-gray-300">Case-insensitive match</label>
+                                            </div>
+                                            <div className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    id="normalize_spaces"
+                                                    checked={Boolean(((editingField.config as Record<string, unknown>)?.['normalize_spaces'] as boolean))}
+                                                    onChange={(e) => updateEditingField({ config: { ...(editingField.config || {}), normalize_spaces: e.target.checked } })}
+                                                    className="h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500"
+                                                />
+                                                <label htmlFor="normalize_spaces" className="ml-2 text-sm text-gray-700 dark:text-gray-300">Normalize spaces</label>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
 

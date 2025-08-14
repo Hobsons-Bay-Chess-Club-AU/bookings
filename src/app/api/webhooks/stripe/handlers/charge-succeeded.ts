@@ -1,5 +1,5 @@
 import Stripe from 'stripe'
-import { createWebhookSupabaseClient, capturePaymentEvent, sendBookingConfirmationEmailWithLogging, sendOrganizerNotificationEmailWithLogging } from './utils'
+import { createWebhookSupabaseClient, capturePaymentEvent, sendBookingConfirmationEmailWithLogging, sendOrganizerNotificationEmailWithLogging, computeMembershipLookupFields } from './utils'
 
 export async function handleChargeSucceeded(event: Stripe.Event) {
     const charge = event.data.object as Stripe.Charge
@@ -90,6 +90,9 @@ export async function handleChargeSucceeded(event: Stripe.Event) {
 
             // Send organizer notification email
             await sendOrganizerNotificationEmailWithLogging(supabase, booking)
+
+            // Compute backend-only computed fields for participants
+            await computeMembershipLookupFields(supabase, booking.events, booking.id)
         }
     } else {
         console.log('⏭️ SKIPPING UPDATE (charge.succeeded):', {

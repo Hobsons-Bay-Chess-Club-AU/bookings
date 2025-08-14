@@ -678,6 +678,14 @@ export default function EventParticipantsPageClient({
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Booked By
                                     </th>
+                                    {/* Computed admin-only columns */}
+                                    {Array.isArray(event.custom_form_fields) && event.custom_form_fields
+                                        .filter((f) => f.type === 'computed_membership_lookup' && Boolean((f.config as Record<string, unknown>)?.['show_in_admin_list'] as boolean))
+                                        .map((f) => (
+                                            <th key={f.name} className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                {f.label || f.name}
+                                            </th>
+                                        ))}
                                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Actions
                                     </th>
@@ -778,6 +786,16 @@ export default function EventParticipantsPageClient({
                                                 <div className="text-gray-500 dark:text-gray-400">{participant.bookings.profiles.email}</div>
                                             </div>
                                         </td>
+                                        {/* Computed admin-only column values */}
+                                        {Array.isArray(event.custom_form_fields) && event.custom_form_fields
+                                            .filter((f) => f.type === 'computed_membership_lookup' && Boolean((f.config as Record<string, unknown>)?.['show_in_admin_list'] as boolean))
+                                            .map((f) => (
+                                                <td key={`${participant.id}-${f.name}`} className="px-6 py-4 text-sm">
+                                                    <div className="text-sm text-gray-900 dark:text-gray-100">
+                                                        {renderCustomFieldValue(participant.custom_data?.[f.name])}
+                                                    </div>
+                                                </td>
+                                            ))}
                                         <td className="px-6 py-4 text-right text-sm font-medium relative">
                                             <button
                                                 onClick={() => toggleDropdown(participant.id!)}

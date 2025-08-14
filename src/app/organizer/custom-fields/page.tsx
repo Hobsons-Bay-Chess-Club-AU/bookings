@@ -146,7 +146,9 @@ export default function CustomFieldsPage() {
             required: customField.required,
             options: customField.options,
             validation: customField.validation,
-            placeholder: customField.placeholder
+            placeholder: customField.placeholder,
+            admin_only: customField.admin_only || false,
+            config: customField.config || {}
         }
     }
 
@@ -165,7 +167,7 @@ export default function CustomFieldsPage() {
     // If we're in creation mode, show the form directly
     if (isCreating) {
         return (
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-7xl mx-auto">
                 <div className="mb-8">
                     <div className="flex items-center justify-between">
                         <div>
@@ -192,6 +194,10 @@ export default function CustomFieldsPage() {
                         fields={[]}
                         onChange={handleCreateField}
                         context="library"
+                        onSaved={() => {
+                            setIsCreating(false)
+                            fetchCustomFields()
+                        }}
                     />
                 </div>
             </div>
@@ -455,6 +461,10 @@ export default function CustomFieldsPage() {
                                         fields={[convertToFormField(editingField) as FormField]}
                                         onChange={handleUpdateField}
                                         context="library"
+                                        onSaved={() => {
+                                            setEditingField(null)
+                                            fetchCustomFields()
+                                        }}
                                     />
 
                                     <div className="flex items-center justify-end mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">

@@ -60,7 +60,9 @@ export async function PUT(
             required,
             options,
             validation,
-            placeholder
+            placeholder,
+            admin_only = false,
+            config = null
         } = body
 
         // Validate required fields
@@ -123,6 +125,8 @@ export async function PUT(
                 options: options || null,
                 validation: validation || null,
                 placeholder: placeholder || null,
+                admin_only: !!admin_only,
+                config: config,
                 updated_at: new Date().toISOString()
             })
             .eq('id', fieldId)

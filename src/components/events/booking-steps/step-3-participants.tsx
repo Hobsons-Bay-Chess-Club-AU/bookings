@@ -394,7 +394,7 @@ export default function Step3Participants({
                     {/* Custom Fields */}
                     <DynamicFormFieldset
                         key={`participant-${currentParticipantIndex}`}
-                        fields={formFields}
+                        fields={formFields.filter((f) => f.type !== 'computed_membership_lookup' && !f.admin_only)}
                         values={currentParticipant.custom_data || {}}
                         onChange={handleCustomFieldChange}
                         className="md:col-span-2"
