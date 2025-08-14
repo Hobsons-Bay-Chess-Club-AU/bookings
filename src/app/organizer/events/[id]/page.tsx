@@ -21,6 +21,7 @@ import {
     HiDocumentText,
     HiArrowTopRightOnSquare
 } from 'react-icons/hi2'
+import { FullPageLoader } from '@/components/ui/loading-states'
 import { Event, EventPricing, EventDiscount, Booking, Participant, FormField, EventSection } from '@/lib/types/database'
 import FormBuilder from '@/components/events/form-builder'
 
@@ -253,11 +254,7 @@ export default function EventViewPage() {
     }
 
     if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900">
-                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
-            </div>
-        )
+        return <FullPageLoader />
     }
 
     if (!event) {

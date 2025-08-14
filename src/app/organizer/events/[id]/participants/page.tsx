@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Event, Participant, Booking, Profile, EventSection } from '@/lib/types/database'
 import EventParticipantsPageClient from './page-client'
+import { FullPageLoader } from '@/components/ui/loading-states'
 
 interface ParticipantWithBooking extends Participant {
     bookings: (Booking & {
@@ -92,14 +93,7 @@ export default function EventParticipantsPage() {
     }, [eventId, supabase])
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading participants...</p>
-                </div>
-            </div>
-        )
+        return <FullPageLoader text="Loading participants..." />
     }
 
     if (error || !event) {

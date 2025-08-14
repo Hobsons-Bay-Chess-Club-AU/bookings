@@ -7,6 +7,7 @@ import Link from 'next/link'
 import JsonViewer from '@/components/JsonViewer'
 import { HiExclamationCircle, HiDocumentText, HiLightningBolt } from 'react-icons/hi'
 import { HiCog6Tooth, HiClipboardDocumentList, HiArrowTopRightOnSquare } from 'react-icons/hi2'
+import { SectionLoader } from '@/components/ui/loading-states'
 
 interface PaymentEvent {
     id: string
@@ -296,10 +297,8 @@ export default function PaymentEventsPage() {
 
             {/* Main Content */}
             {authLoading ? (
-                <div className="text-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-                    <p className="mt-2 text-gray-600 dark:text-gray-400">Loading...</p>
-                </div>
+                <SectionLoader size="md" text="Loading..." className="py-12" minHeight=""
+                />
             ) : error ? (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
                     <div className="flex">
@@ -313,10 +312,7 @@ export default function PaymentEventsPage() {
                     </div>
                 </div>
             ) : loading ? (
-                <div className="text-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-                    <p className="mt-2 text-gray-600 dark:text-gray-400">Loading payment events...</p>
-                </div>
+                <SectionLoader size="md" text="Loading payment events..." className="py-12" minHeight="" />
             ) : (
                 <div className="space-y-6">
                     {/* Booking Summary */}

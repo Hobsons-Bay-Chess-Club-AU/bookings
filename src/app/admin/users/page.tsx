@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { UserRole } from '@/lib/types/database'
 import AdminUsersPageClient from './page-client'
+import { SectionLoader } from '@/components/ui/loading-states'
 
 type User = {
   id: string
@@ -72,11 +73,7 @@ export default function AdminUsersPage() {
     }, [supabase])
 
     if (loading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
-            </div>
-        )
+        return <SectionLoader minHeight="h-64" size="lg" />
     }
 
     return <AdminUsersPageClient users={users} />

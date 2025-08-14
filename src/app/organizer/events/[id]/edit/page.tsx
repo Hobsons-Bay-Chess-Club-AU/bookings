@@ -10,6 +10,7 @@ import EventForm, { EventFormValues } from '../../EventForm'
 import Breadcrumb from '@/components/ui/breadcrumb'
 import { FormField, Event, RefundTimelineItem, EventTimeline } from '@/lib/types/database'
 import { TIMEZONE_OPTIONS, DEFAULT_TIMEZONE } from '@/lib/utils/timezone'
+import { SectionLoader } from '@/components/ui/loading-states'
 
 export default function EditEventPage() {
     const [formData, setFormData] = useState({
@@ -316,14 +317,7 @@ export default function EditEventPage() {
     }
 
     if (initialLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-96">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading event...</p>
-                </div>
-            </div>
-        )
+        return <SectionLoader text="Loading event..." />
     }
 
     if (error && !event) {

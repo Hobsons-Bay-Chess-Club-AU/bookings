@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import AdminBookingsPageClient from './page-client'
 import { HiExclamationCircle } from 'react-icons/hi'
+import { SectionLoader } from '@/components/ui/loading-states'
 
 interface Booking {
     id: string
@@ -142,11 +143,7 @@ export default function AdminBookingsPage() {
     }, [supabase])
 
     if (loading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
-            </div>
-        )
+        return <SectionLoader minHeight="h-64" size="lg" />
     }
 
     if (error) {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { SectionLoader } from '@/components/ui/loading-states'
 
 export default function LogoutPage() {
     const [status, setStatus] = useState<'logging-out' | 'verifying' | 'success' | 'error'>('logging-out')
@@ -123,7 +124,7 @@ export default function LogoutPage() {
                 <div className="text-center">
                     <div className="mx-auto h-16 w-16 flex items-center justify-center">
                         {(status === 'logging-out' || status === 'verifying') && (
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                            <SectionLoader size="lg" minHeight="" />
                         )}
                         {status === 'success' && (
                             <div className="text-green-600 text-4xl">✓</div>

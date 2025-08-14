@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import TurndownService from 'turndown'
 // ...existing code...
+import { SectionLoader } from '@/components/ui/loading-states'
 
 // Simple Rich Text Editor component
 function SimpleRichTextEditor({ value, onChange, placeholder }: {
@@ -218,10 +219,7 @@ function HtmlToMarkdownConverter() {
     if (!isClient) {
         return (
             <div className="space-y-6">
-                <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading editor...</p>
-                </div>
+                <SectionLoader size="md" text="Loading editor..." className="py-8" minHeight="" />
             </div>
         )
     }

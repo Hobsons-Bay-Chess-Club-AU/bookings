@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { CustomField, FormField, FormFieldType } from '@/lib/types/database'
 import FormBuilder from '@/components/events/form-builder'
 import { HiDocumentText, HiUser, HiGlobeAlt, HiStar, HiPlus } from 'react-icons/hi2'
+import { SectionLoader } from '@/components/ui/loading-states'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
 
 export default function CustomFieldsPage() {
@@ -207,12 +208,7 @@ export default function CustomFieldsPage() {
     return (
         <>
             {loading ? (
-                <div className="flex justify-center items-center min-h-96">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Loading custom fields...</p>
-                    </div>
-                </div>
+                <SectionLoader text="Loading custom fields..." />
             ) : (
                 <>
                     {/* Page Header */}

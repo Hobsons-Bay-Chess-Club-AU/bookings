@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import { SectionLoader } from '@/components/ui/loading-states'
 // ...existing code...
 import { Content } from '@/lib/types/database'
 import {
@@ -205,10 +206,7 @@ export default function CMSPage() {
                 {/* Content List */}
                 <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
                     {loading ? (
-                        <div className="p-8 text-center">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                            <p className="mt-2 text-gray-600 dark:text-gray-400">Loading content...</p>
-                        </div>
+                        <SectionLoader size="md" text="Loading content..." className="p-8" minHeight="" />
                     ) : content.length === 0 ? (
                         <div className="p-8 text-center">
                             <div className="text-4xl mb-4">📄</div>

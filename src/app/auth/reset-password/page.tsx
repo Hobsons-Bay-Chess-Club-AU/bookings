@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { SectionLoader } from '@/components/ui/loading-states'
 
 export default function ResetPasswordPage() {
     const [password, setPassword] = useState('')
@@ -74,10 +75,7 @@ export default function ResetPasswordPage() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-md w-full space-y-8">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Verifying reset link...</p>
-                    </div>
+                    <SectionLoader size="md" text="Verifying reset link..." minHeight="" />
                 </div>
             </div>
         )

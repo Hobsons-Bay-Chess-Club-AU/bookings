@@ -24,6 +24,7 @@ import {
     HiEye,
     HiArrowPath
 } from 'react-icons/hi2';
+import { SectionLoader } from '@/components/ui/loading-states'
 
 interface BookingWithDetails extends Booking {
     event: Event;
@@ -251,11 +252,7 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
     };
 
     if (loading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
-            </div>
-        );
+        return <SectionLoader minHeight="h-64" size="lg" />
     }
 
     if (error || !booking) {

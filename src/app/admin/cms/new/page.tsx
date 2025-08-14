@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import MarkdownEditor from '@/components/ui/markdown-editor'
+import { SectionLoader } from '@/components/ui/loading-states'
 
 interface ContentFormData {
     title: string
@@ -196,12 +197,7 @@ export default function ContentFormPage({ params }: ContentFormPageProps) {
     }
 
     if (loading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                <span className="ml-2 text-gray-600 dark:text-gray-400">Loading content...</span>
-            </div>
-        )
+        return <SectionLoader minHeight="h-64" size="md" text="Loading content..." />
     }
 
     return (
