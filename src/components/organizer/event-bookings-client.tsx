@@ -164,12 +164,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
         }
     }
 
-    const toggleMenu = (bookingId: string) => {
-        setOpenMenus(prev => ({
-            ...prev,
-            [bookingId]: !prev[bookingId]
-        }))
-    }
+    
 
     const openPaymentModal = (booking: BookingWithProfile) => {
         setPaymentModal({ isOpen: true, booking })
@@ -676,7 +671,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                             <ActionMenu groupId="bookings" strategy="fixed"
                                                 trigger={({ buttonProps }) => (
                                                     <button
-                                                        {...(buttonProps as any)}
+                                                        {...buttonProps}
                                                         className="inline-flex items-center p-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                                                     >
                                                         <FiSettings className="w-4 h-4" />
@@ -844,7 +839,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                             <ActionMenu groupId="bookings" strategy="fixed"
                                                 trigger={({ buttonProps }) => (
                                                     <button
-                                                        {...(buttonProps as any)}
+                                                        {...buttonProps}
                                                         className="inline-flex items-center p-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                                                     >
                                                         <FiSettings className="w-4 h-4" />

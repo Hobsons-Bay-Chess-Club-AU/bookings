@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Event } from '@/lib/types/database'
 import CopyButton from '@/components/ui/copy-button'
@@ -326,7 +326,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                     className="relative z-20"
                                                     trigger={({ buttonProps }) => (
                                                         <button
-                                                            {...(buttonProps as any)}
+                                                            {...buttonProps}
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
                                                                 if (typeof buttonProps.onClick === 'function') buttonProps.onClick(e)
@@ -480,7 +480,7 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                 <ActionMenu
                                                     trigger={({ buttonProps }) => (
                                                         <button
-                                                            {...(buttonProps as any)}
+                                                            {...buttonProps}
                                                             className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                                                             title="Event Actions"
                                                         >

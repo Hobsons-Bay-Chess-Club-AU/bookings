@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { Event, Participant, Booking, Profile, EventSection } from '@/lib/types/database'
-import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight, HiXMark, HiEnvelope, HiPhone } from 'react-icons/hi2'
+import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight, HiXMark, HiEnvelope } from 'react-icons/hi2'
 import Breadcrumb from '@/components/ui/breadcrumb'
 import SectionTransferModal from '@/components/events/section-transfer-modal'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
@@ -38,7 +38,7 @@ export default function EventParticipantsPageClient({
     const [selectedParticipantForWithdrawal, setSelectedParticipantForWithdrawal] = useState<ParticipantWithBooking | null>(null)
     const [withdrawalMessage, setWithdrawalMessage] = useState('')
     const [isWithdrawing, setIsWithdrawing] = useState(false)
-    const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({})
+    
 
     useEffect(() => {
         if (!openDropdownId) return
@@ -871,7 +871,7 @@ export default function EventParticipantsPageClient({
                                                     strategy="fixed"
                                                     trigger={({ buttonProps }) => (
                                                         <button
-                                                            {...(buttonProps as any)}
+                                                            {...buttonProps}
                                                             onClick={(e) => {
                                                                 if (typeof buttonProps.onClick === 'function') buttonProps.onClick(e)
                                                                 setOpenDropdownId(prev => (prev === (participant.id as string) ? null : (participant.id as string)))

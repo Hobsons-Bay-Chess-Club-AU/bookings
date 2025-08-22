@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { EventPricing, PricingType, MembershipType, Event } from '@/lib/types/database'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
 import { createClient } from '@/lib/supabase/client'
@@ -513,7 +513,7 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                                 <ActionMenu
                                                     trigger={({ buttonProps }) => (
                                                         <button
-                                                            {...(buttonProps as any)}
+                                                            {...buttonProps}
                                                             className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                                                             title="Pricing Actions"
                                                         >
@@ -623,7 +623,7 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                             <ActionMenu
                                                 trigger={({ buttonProps }) => (
                                                     <button
-                                                        {...(buttonProps as any)}
+                                                        {...buttonProps}
                                                         className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                                                         title="Pricing Actions"
                                                     >

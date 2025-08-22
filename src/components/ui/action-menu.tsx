@@ -8,7 +8,7 @@ export interface ActionMenuProps {
     closeOnMenuClick?: boolean
     strategy?: 'auto' | 'fixed'
     groupId?: string
-    trigger: (opts: { open: boolean; toggle: () => void; buttonProps: React.HTMLAttributes<HTMLElement> }) => React.ReactNode
+    trigger: (opts: { open: boolean; toggle: () => void; buttonProps: React.ComponentPropsWithoutRef<'button'> & { ref: React.Ref<HTMLButtonElement> } }) => React.ReactNode
     children: React.ReactNode
 }
 
@@ -30,17 +30,14 @@ export default function ActionMenu({
 }: ActionMenuProps) {
     const [open, setOpen] = useState(false)
     const [desktopPos, setDesktopPos] = useState<{ top: number; left: number } | null>(null)
-    const anchorRef = useRef<HTMLButtonElement | HTMLDivElement | null>(null)
+    const anchorRef = useRef<HTMLButtonElement | null>(null)
     const desktopMenuRef = useRef<HTMLDivElement | null>(null)
     const mobileMenuRef = useRef<HTMLDivElement | null>(null)
     const instanceIdRef = useRef<string>('')
     if (!instanceIdRef.current) {
-        try {
-            // @ts-ignore - crypto may not exist in all envs
-            instanceIdRef.current = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `am-${Math.random().toString(36).slice(2)}`
-        } catch {
-            instanceIdRef.current = `am-${Math.random().toString(36).slice(2)}`
-        }
+        const g = (typeof globalThis !== 'undefined' ? (globalThis as unknown as { crypto?: { randomUUID?: () => string } }) : {})
+        const rand = g.crypto?.randomUUID ? g.crypto.randomUUID() : `am-${Math.random().toString(36).slice(2)}`
+        instanceIdRef.current = rand
     }
 
     const toggle = useCallback(() => {
@@ -147,7 +144,7 @@ export default function ActionMenu({
         return () => window.removeEventListener(eventName, handler)
     }, [groupId])
 
-    const handleMenuClickCapture: React.MouseEventHandler<HTMLDivElement> = useCallback((e) => {
+    const handleMenuClickCapture: React.MouseEventHandler<HTMLDivElement> = useCallback(() => {
         if (!closeOnMenuClick) return
         // If any click inside menu, close it after event finishes
         // Allow consumer handlers to run first
@@ -156,19 +153,20 @@ export default function ActionMenu({
 
     const commonMenuClasses = `bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 ${widthClass} ${menuClassName}`
 
-    const buttonProps: React.HTMLAttributes<HTMLElement> & { ref?: (el: any) => void } = {
+    const setAnchorRef = (el: HTMLButtonElement | null) => {
+        anchorRef.current = el
+    }
+
+    const buttonProps: React.ComponentPropsWithoutRef<'button'> & { ref: React.Ref<HTMLButtonElement> } = {
         onClick: (e) => {
             e.stopPropagation()
             toggle()
         },
         'aria-haspopup': 'menu',
         'aria-expanded': open,
+        ref: setAnchorRef,
     }
 
-    // Provide ref via a separate prop on the object; consumer spreads it
-    ;(buttonProps as any).ref = (el: any) => {
-        anchorRef.current = el
-    }
 
     return (
         <div className={`relative inline-block ${className}`}>

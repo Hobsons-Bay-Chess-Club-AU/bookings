@@ -759,7 +759,7 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                             <ActionMenu
                                 trigger={({ buttonProps }) => (
                                     <button
-                                        {...(buttonProps as any)}
+                                        {...buttonProps}
                                         className="inline-flex items-center p-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                                         title="Actions"
                                     >
