@@ -127,10 +127,10 @@ export default function LogoutPage() {
                             <SectionLoader size="lg" minHeight="" />
                         )}
                         {status === 'success' && (
-                            <div className="text-green-600 text-4xl">✓</div>
+                            <div className="text-green-600 text-4xl">✔</div>
                         )}
                         {status === 'error' && (
-                            <div className="text-yellow-600 text-4xl">⚠️</div>
+                            <div className="text-yellow-600 text-4xl">!</div>
                         )}
                     </div>
 
@@ -159,7 +159,7 @@ export default function LogoutPage() {
                     {status === 'success' && (
                         <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
                             <div className="text-sm text-green-800">
-                                ✅ Authentication state confirmed: You are now signed out
+                                Authentication state confirmed: You are now signed out
                             </div>
                         </div>
                     )}

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { Event, Participant, Booking, Profile, EventSection } from '@/lib/types/database'
-import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight, HiXMark, HiEnvelope } from 'react-icons/hi2'
+import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight, HiXMark, HiEnvelope, HiClipboardDocumentList, HiTrophy, HiQuestionMarkCircle, HiCheckCircle, HiClock, HiXCircle, HiMagnifyingGlass } from 'react-icons/hi2'
 import Breadcrumb from '@/components/ui/breadcrumb'
 import SectionTransferModal from '@/components/events/section-transfer-modal'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
@@ -398,7 +398,7 @@ export default function EventParticipantsPageClient({
                     <div className="p-5">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <span className="text-2xl">📋</span>
+                                <HiClipboardDocumentList className="text-2xl text-gray-400" />
                             </div>
                             <div className="ml-5 w-0 flex-1">
                                 <dl>
@@ -420,7 +420,7 @@ export default function EventParticipantsPageClient({
                             <div className="p-5">
                                 <div className="flex items-center">
                                     <div className="flex-shrink-0">
-                                        <span className="text-2xl">🏆</span>
+                                        <HiTrophy className="text-2xl text-gray-400" />
                                     </div>
                                     <div className="ml-5 w-0 flex-1">
                                         <dl>
@@ -440,7 +440,7 @@ export default function EventParticipantsPageClient({
                             <div className="p-5">
                                 <div className="flex items-center">
                                     <div className="flex-shrink-0">
-                                        <span className="text-2xl">❓</span>
+                                        <HiQuestionMarkCircle className="text-2xl text-gray-400" />
                                     </div>
                                     <div className="ml-5 w-0 flex-1">
                                         <dl>
@@ -462,7 +462,7 @@ export default function EventParticipantsPageClient({
                             <div className="p-5">
                                 <div className="flex items-center">
                                     <div className="flex-shrink-0">
-                                        <span className="text-2xl">✅</span>
+                                        <HiCheckCircle className="text-2xl text-gray-400" />
                                     </div>
                                     <div className="ml-5 w-0 flex-1">
                                         <dl>
@@ -482,7 +482,7 @@ export default function EventParticipantsPageClient({
                             <div className="p-5">
                                 <div className="flex items-center">
                                     <div className="flex-shrink-0">
-                                        <span className="text-2xl">⏳</span>
+                                        <HiClock className="text-2xl text-gray-400" />
                                     </div>
                                     <div className="ml-5 w-0 flex-1">
                                         <dl>
@@ -502,7 +502,7 @@ export default function EventParticipantsPageClient({
                             <div className="p-5">
                                 <div className="flex items-center">
                                     <div className="flex-shrink-0">
-                                        <span className="text-2xl">❌</span>
+                                        <HiXCircle className="text-2xl text-gray-400" />
                                     </div>
                                     <div className="ml-5 w-0 flex-1">
                                         <dl>
@@ -587,7 +587,7 @@ export default function EventParticipantsPageClient({
                 <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
-                            <span className="text-blue-600 dark:text-blue-400 mr-2">🔍</span>
+                            <HiMagnifyingGlass className="text-blue-600 dark:text-blue-400 mr-2 h-4 w-4" />
                             <span className="text-sm text-blue-800 dark:text-blue-300">
                                 Showing {filteredParticipants.length} of {participants.length} participant{filteredParticipants.length !== 1 ? 's' : ''} matching &quot;{searchTerm}&quot;
                             </span>
@@ -616,14 +616,14 @@ export default function EventParticipantsPageClient({
                                     className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                                 />
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <span className="text-gray-400 dark:text-gray-500">🔍</span>
+                                    <HiMagnifyingGlass className="text-gray-400 dark:text-gray-500 h-4 w-4" />
                                 </div>
                                 {searchTerm && (
                                     <button
                                         onClick={() => handleSearchChange('')}
                                         className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
                                     >
-                                        ✕
+                                        <HiXMark className="h-4 w-4" />
                                     </button>
                                 )}
                             </div>
@@ -999,7 +999,7 @@ export default function EventParticipantsPageClient({
                                     onClick={() => setSelectedParticipant(null)}
                                     className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
                                 >
-                                    ✕
+                                    <HiXMark className="h-4 w-4" />
                                 </button>
                             </div>
 

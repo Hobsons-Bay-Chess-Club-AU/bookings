@@ -11,7 +11,9 @@ import {
     HiPencilSquare,
     HiClock,
     HiTrash,
-    HiShieldCheck
+    HiShieldCheck,
+    HiExclamationTriangle,
+    HiDocument
 } from 'react-icons/hi2'
 
 interface ContentWithProfiles extends Content {
@@ -209,7 +211,7 @@ export default function CMSPage() {
                         <SectionLoader size="md" text="Loading content..." className="p-8" minHeight="" />
                     ) : content.length === 0 ? (
                         <div className="p-8 text-center">
-                            <div className="text-4xl mb-4">📄</div>
+                            <HiDocument className="text-4xl mb-4 mx-auto text-gray-400 dark:text-gray-500" />
                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No content found</h3>
                             <p className="text-gray-600 dark:text-gray-400 mb-4">
                                 {searchTerm || publishedFilter !== 'all'
@@ -431,7 +433,7 @@ export default function CMSPage() {
                     <div className="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
                         <div className="mt-3 text-center">
                             <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30">
-                                <span className="text-red-600 dark:text-red-400 text-xl">⚠️</span>
+                                <HiExclamationTriangle className="text-red-600 dark:text-red-400 text-xl" />
                             </div>
                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mt-2">Delete Content</h3>
                             <div className="mt-2 px-7 py-3">

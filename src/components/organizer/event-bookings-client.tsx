@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Event } from '@/lib/types/database'
 import { FiSettings, FiEye, FiCreditCard, FiMail, FiPhone, FiUser, FiArrowRight } from 'react-icons/fi'
-import { HiCalendarDays, HiClock, HiMapPin } from 'react-icons/hi2'
+import { HiCalendarDays, HiClock, HiMapPin, HiMagnifyingGlass, HiXMark, HiTicket, HiArrowPath, HiCurrencyDollar, HiDocumentArrowDown } from 'react-icons/hi2'
 import { BookingWithProfile } from '@/lib/types/ui'
 import BookingTransferModal from '@/components/events/booking-transfer-modal'
 import ReleaseWhitelistModal from '@/components/ui/release-whitelist-modal'
@@ -85,7 +85,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
             case 'cancelled':
                 return '❌'
             case 'refunded':
-                return '💰'
+                return '$'
             default:
                 return '❓'
         }
@@ -265,7 +265,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                 onClick={closePaymentModal}
                                 className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
                             >
-                                ✕
+                                <HiXMark className="h-4 w-4" />
                             </button>
                         </div>
                         <div className="space-y-3 text-sm">
@@ -367,7 +367,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                 <span>{event.location}</span>
                             </div>
                             <div className="flex items-center">
-                                <span className="mr-2">💰</span>
+                                <HiCurrencyDollar className="mr-2" />
                                 <span>{event.price === 0 ? 'Varies' : `AUD ${event.price.toFixed(2)} per ticket`}</span>
                             </div>
                         </div>
@@ -424,7 +424,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                 <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
-                            <span className="text-blue-600 dark:text-blue-400 mr-2">🔍</span>
+                            <HiMagnifyingGlass className="text-blue-600 dark:text-blue-400 mr-2" />
                             <span className="text-sm text-blue-800 dark:text-blue-300">
                                 Showing {filteredBookings.length} of {totalBookings} booking{filteredBookings.length !== 1 ? 's' : ''}
                                 {activeFilter !== 'all' && ` with ${activeFilter} status`}
@@ -466,14 +466,14 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                             />
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span className="text-gray-400 dark:text-gray-500">🔍</span>
+                                <HiMagnifyingGlass className="text-gray-400 dark:text-gray-500" />
                             </div>
                             {searchTerm && (
                                 <button
                                     onClick={() => handleSearchChange('')}
                                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"
                                 >
-                                    ✕
+                                    <HiXMark className="h-4 w-4" />
                                 </button>
                             )}
                         </div>
@@ -519,7 +519,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
 
                 {filteredBookings.length === 0 ? (
                     <div className="text-center py-12">
-                        <span className="text-4xl mb-4 block">🎫</span>
+                        <HiTicket className="text-4xl mb-4 block mx-auto text-gray-400 dark:text-gray-500" />
                         <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                             {activeFilter === 'all'
                                 ? 'No bookings yet'
@@ -608,13 +608,8 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                     Booked {new Date(booking.booking_date || booking.created_at).toLocaleDateString('en-AU')}
                                                 </div>
                                                 {booking.transferred_from_event_id && (
-                                                    <div className="text-xs text-blue-600 dark:text-blue-400">
-                                                        🔄 Transferred
-                                                        {booking.transferred_at && (
-                                                            <span className="text-gray-500 dark:text-gray-400 ml-1">
-                                                                on {new Date(booking.transferred_at).toLocaleDateString()}
-                                                            </span>
-                                                        )}
+                                                    <div className="text-xs text-blue-600 dark:text-blue-400 flex items-center">
+                                                        <HiArrowPath className="h-3 w-3 mr-1" /> Transferred
                                                     </div>
                                                 )}
                                             </div>
@@ -652,7 +647,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                 </span>
                                                 {booking.refund_status && booking.refund_status !== 'none' && (
                                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
-                                                        💰 Refund: {booking.refund_status}
+                                                        <HiCurrencyDollar className="h-3 w-3 mr-1" /> Refund: {booking.refund_status}
                                                     </span>
                                                 )}
                                             </div>
@@ -737,7 +732,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                         title="Refund booking"
                                                         data-menu-item
                                                     >
-                                                        💰 Process Refund
+                                                        <HiCurrencyDollar className="mr-2" /> Process Refund
                                                     </button>
                                                 )}
                                             </ActionMenu>
@@ -765,7 +760,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                     </span>
                                                     {booking.refund_status && booking.refund_status !== 'none' && (
                                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
-                                                            💰 Refund: {booking.refund_status}
+                                                            <HiCurrencyDollar className="h-3 w-3 mr-1" /> Refund: {booking.refund_status}
                                                         </span>
                                                     )}
                                                 </div>
@@ -803,15 +798,14 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                             <div className="flex items-center justify-between text-sm">
                                                 <div className="flex items-center space-x-4">
                                                     <div className="flex items-center">
-                                                        <span className="mr-2">🆔</span>
                                                         <span className="font-mono text-gray-900 dark:text-gray-100">
                                                             {booking.booking_id || booking.id.slice(0, 8)}
                                                         </span>
                                                     </div>
                                                     {booking.transferred_from_event_id && (
-                                                        <div className="text-blue-600 dark:text-blue-400">
-                                                            <span className="mr-1">🔄</span>
-                                                            Transferred
+                                                        <div className="text-blue-600 dark:text-blue-400 flex items-center">
+                                                            <HiArrowPath className="h-3 w-3 mr-1" />
+                                                            <span>Transferred</span>
                                                             {booking.transferred_at && (
                                                                 <span className="text-gray-500 dark:text-gray-400 ml-2">
                                                                     on {new Date(booking.transferred_at).toLocaleDateString()}
@@ -820,9 +814,9 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                         </div>
                                                     )}
                                                     {booking.refund_amount && (
-                                                        <div className="text-purple-600 dark:text-purple-400">
-                                                            <span className="mr-1">💰</span>
-                                                            Refunded: AUD ${booking.refund_amount.toFixed(2)}
+                                                        <div className="text-purple-600 dark:text-purple-400 flex items-center">
+                                                            <HiCurrencyDollar className="h-3 w-3 mr-1" />
+                                                            <span>Refunded: AUD ${booking.refund_amount.toFixed(2)}</span>
                                                             {booking.refund_processed_at && (
                                                                 <span className="text-gray-500 dark:text-gray-400 ml-2">
                                                                     on {formatRefundDate(booking.refund_processed_at)}
@@ -893,7 +887,7 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                                         title="Refund booking"
                                                         data-menu-item
                                                     >
-                                                        💰 Process Refund
+                                                        <HiCurrencyDollar className="mr-2" /> Process Refund
                                                     </button>
                                                 )}
                                             </ActionMenu>
@@ -973,13 +967,13 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Export & Actions</h3>
                     <div className="flex flex-wrap gap-4">
                         <button className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                            📊 Export to CSV ({filteredBookings.length} bookings)
+                            <HiDocumentArrowDown className="mr-2" /> Export to CSV ({filteredBookings.length} bookings)
                         </button>
                         <button className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                            📧 Email Filtered Customers ({filteredBookings.length})
+                            <FiMail className="mr-2" /> Email Filtered Customers ({filteredBookings.length})
                         </button>
                         <button className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                            🎫 Generate Check-in List ({filteredBookings.length})
+                            <HiTicket className="mr-2" /> Generate Check-in List ({filteredBookings.length})
                         </button>
                     </div>
                     {searchTerm && (

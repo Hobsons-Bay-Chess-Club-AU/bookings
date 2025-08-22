@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { EventPricing, PricingType, MembershipType, Event } from '@/lib/types/database'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
 import { createClient } from '@/lib/supabase/client'
-import { HiDocumentDuplicate, HiCog6Tooth, HiPencilSquare, HiEye, HiTrash } from 'react-icons/hi2'
+import { HiDocumentDuplicate, HiCog6Tooth, HiPencilSquare, HiEye, HiTrash, HiCurrencyDollar } from 'react-icons/hi2'
 import ActionMenu from '@/components/ui/action-menu'
 
 interface PricingManagerProps {
@@ -411,7 +411,7 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
                 {pricing.length === 0 ? (
                     <div className="text-center py-12">
-                        <span className="text-4xl mb-4 block">💰</span>
+                        <HiCurrencyDollar className="text-4xl mb-4 mx-auto text-gray-400 dark:text-gray-500" />
                         <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                             No pricing tiers yet
                         </h3>
