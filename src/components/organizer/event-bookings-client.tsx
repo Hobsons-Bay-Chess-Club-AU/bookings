@@ -8,6 +8,7 @@ import { HiCalendarDays, HiClock, HiMapPin } from 'react-icons/hi2'
 import { BookingWithProfile } from '@/lib/types/ui'
 import BookingTransferModal from '@/components/events/booking-transfer-modal'
 import ReleaseWhitelistModal from '@/components/ui/release-whitelist-modal'
+import ActionMenu from '@/components/ui/action-menu'
 
 type FilterStatus = 'all' | 'confirmed' | 'pending' | 'cancelled' | 'refunded' | 'whitelisted'
 
@@ -672,76 +673,79 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-                                            <button
-                                                onClick={() => toggleMenu(booking.id)}
-                                                className="inline-flex items-center p-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                            <ActionMenu groupId="bookings" strategy="fixed"
+                                                trigger={({ buttonProps }) => (
+                                                    <button
+                                                        {...(buttonProps as any)}
+                                                        className="inline-flex items-center p-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                                    >
+                                                        <FiSettings className="w-4 h-4" />
+                                                    </button>
+                                                )}
                                             >
-                                                <FiSettings className="w-4 h-4" />
-                                            </button>
-
-                                            {/* Dropdown Menu */}
-                                            {openMenus[booking.id] && (
-                                                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg py-1 z-10 border border-gray-200 dark:border-gray-600">
-                                                    <Link
-                                                        href={`/organizer/events/${event.id}/bookings/${booking.id}`}
-                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
-                                                        onClick={() => setOpenMenus({})}
-                                                    >
-                                                        <FiEye className="mr-2 w-4 h-4" />
-                                                        View Details
-                                                    </Link>
-                                                    <Link
-                                                        href={`/organizer/email-manager?bookingId=${booking.id}`}
-                                                        className="flex items-center px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                                                        onClick={() => setOpenMenus({})}
-                                                    >
-                                                        <FiMail className="mr-2 w-4 h-4" />
-                                                        Email Contact
-                                                    </Link>
+                                                <Link
+                                                    href={`/organizer/events/${event.id}/bookings/${booking.id}`}
+                                                    className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                                    data-menu-item
+                                                >
+                                                    <FiEye className="mr-2 w-4 h-4" />
+                                                    View Details
+                                                </Link>
+                                                <Link
+                                                    href={`/organizer/email-manager?bookingId=${booking.id}`}
+                                                    className="flex items-center px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                    data-menu-item
+                                                >
+                                                    <FiMail className="mr-2 w-4 h-4" />
+                                                    Email Contact
+                                                </Link>
+                                                <button
+                                                    onClick={() => openPaymentModal(booking)}
+                                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                                    data-menu-item
+                                                >
+                                                    <FiCreditCard className="mr-2 w-4 h-4" />
+                                                    Payment Info
+                                                </button>
+                                                <button
+                                                    onClick={() => openTransferModal(booking)}
+                                                    className="flex items-center w-full px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                    data-menu-item
+                                                >
+                                                    <FiArrowRight className="mr-2 w-4 h-4" />
+                                                    Transfer Booking
+                                                </button>
+                                                {booking.status === 'pending' && (
                                                     <button
-                                                        onClick={() => openPaymentModal(booking)}
-                                                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
-                                                    >
-                                                        <FiCreditCard className="mr-2 w-4 h-4" />
-                                                        Payment Info
-                                                    </button>
-                                                    <button
-                                                        onClick={() => openTransferModal(booking)}
-                                                        className="flex items-center w-full px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                                                    >
-                                                        <FiArrowRight className="mr-2 w-4 h-4" />
-                                                        Transfer Booking
-                                                    </button>
-                                                    {booking.status === 'pending' && (
-                                                        <button
                                                         className="flex items-center w-full px-4 py-2 text-sm text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
-                                                            title="Manual confirmation (if needed)"
-                                                        >
-                                                            ✓ Mark Confirmed
-                                                        </button>
-                                                    )}
-                                                    {booking.status === 'whitelisted' && (
-                                                        <button
-                                                            onClick={() => {
-                                                                setSelectedBooking(booking)
-                                                                setShowReleaseModal(true)
-                                                                setOpenMenus({ ...openMenus, [booking.id]: false })
-                                                            }}
-                                                            className="flex items-center w-full px-4 py-2 text-sm text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-                                                        >
-                                                            ⏱ Release Whitelisted
-                                                        </button>
-                                                    )}
-                                                    {(booking.status === 'confirmed' || booking.status === 'verified') && (
-                                                        <button
-                                                            className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                                            title="Refund booking"
-                                                        >
-                                                            💰 Process Refund
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            )}
+                                                        title="Manual confirmation (if needed)"
+                                                        data-menu-item
+                                                    >
+                                                        ✓ Mark Confirmed
+                                                    </button>
+                                                )}
+                                                {booking.status === 'whitelisted' && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedBooking(booking)
+                                                            setShowReleaseModal(true)
+                                                        }}
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                                                        data-menu-item
+                                                    >
+                                                        ⏱ Release Whitelisted
+                                                    </button>
+                                                )}
+                                                {(booking.status === 'confirmed' || booking.status === 'verified') && (
+                                                    <button
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                        title="Refund booking"
+                                                        data-menu-item
+                                                    >
+                                                        💰 Process Refund
+                                                    </button>
+                                                )}
+                                            </ActionMenu>
                                         </td>
                                     </tr>
                                 ))}
@@ -837,64 +841,67 @@ export default function EventBookingsClient({ event, bookings }: EventBookingsCl
 
                                         {/* Actions Menu */}
                                         <div className="ml-6 flex-shrink-0 relative">
-                                            <button
-                                                onClick={() => toggleMenu(booking.id)}
-                                                className="inline-flex items-center p-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                            <ActionMenu groupId="bookings" strategy="fixed"
+                                                trigger={({ buttonProps }) => (
+                                                    <button
+                                                        {...(buttonProps as any)}
+                                                        className="inline-flex items-center p-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                                    >
+                                                        <FiSettings className="w-4 h-4" />
+                                                    </button>
+                                                )}
                                             >
-                                                <FiSettings className="w-4 h-4" />
-                                            </button>
-
-                                            {/* Dropdown Menu */}
-                                            {openMenus[booking.id] && (
-                                                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg py-1 z-10 border border-gray-200 dark:border-gray-600">
-                                                    <Link
-                                                        href={`/organizer/events/${event.id}/bookings/${booking.id}`}
-                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
-                                                        onClick={() => setOpenMenus({})}
-                                                    >
-                                                        <FiEye className="mr-2 w-4 h-4" />
-                                                        View Details
-                                                    </Link>
-                                                    <Link
-                                                        href={`/organizer/email-manager?bookingId=${booking.id}`}
-                                                        className="flex items-center px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                                                        onClick={() => setOpenMenus({})}
-                                                    >
-                                                        <FiMail className="mr-2 w-4 h-4" />
-                                                        Email Contact
-                                                    </Link>
+                                                <Link
+                                                    href={`/organizer/events/${event.id}/bookings/${booking.id}`}
+                                                    className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                                    data-menu-item
+                                                >
+                                                    <FiEye className="mr-2 w-4 h-4" />
+                                                    View Details
+                                                </Link>
+                                                <Link
+                                                    href={`/organizer/email-manager?bookingId=${booking.id}`}
+                                                    className="flex items-center px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                    data-menu-item
+                                                >
+                                                    <FiMail className="mr-2 w-4 h-4" />
+                                                    Email Contact
+                                                </Link>
+                                                <button
+                                                    onClick={() => openPaymentModal(booking)}
+                                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                                    data-menu-item
+                                                >
+                                                    <FiCreditCard className="mr-2 w-4 h-4" />
+                                                    Payment Info
+                                                </button>
+                                                <button
+                                                    onClick={() => openTransferModal(booking)}
+                                                    className="flex items-center w-full px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                    data-menu-item
+                                                >
+                                                    <FiArrowRight className="mr-2 w-4 h-4" />
+                                                    Transfer Booking
+                                                </button>
+                                                {booking.status === 'pending' && (
                                                     <button
-                                                        onClick={() => openPaymentModal(booking)}
-                                                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
+                                                        title="Manual confirmation (if needed)"
+                                                        data-menu-item
                                                     >
-                                                        <FiCreditCard className="mr-2 w-4 h-4" />
-                                                        Payment Info
+                                                        ✓ Mark Confirmed
                                                     </button>
+                                                )}
+                                                {(booking.status === 'confirmed' || booking.status === 'verified') && (
                                                     <button
-                                                        onClick={() => openTransferModal(booking)}
-                                                        className="flex items-center w-full px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                        title="Refund booking"
+                                                        data-menu-item
                                                     >
-                                                        <FiArrowRight className="mr-2 w-4 h-4" />
-                                                        Transfer Booking
+                                                        💰 Process Refund
                                                     </button>
-                                                    {booking.status === 'pending' && (
-                                                        <button
-                                                            className="flex items-center w-full px-4 py-2 text-sm text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
-                                                            title="Manual confirmation (if needed)"
-                                                        >
-                                                            ✓ Mark Confirmed
-                                                        </button>
-                                                    )}
-                                                    {(booking.status === 'confirmed' || booking.status === 'verified') && (
-                                                        <button
-                                                            className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                                            title="Refund booking"
-                                                        >
-                                                            💰 Process Refund
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            )}
+                                                )}
+                                            </ActionMenu>
                                         </div>
                                     </div>
 

@@ -22,9 +22,11 @@ import {
     HiInformationCircle,
     HiArrowRight,
     HiEye,
-    HiArrowPath
+    HiArrowPath,
+    HiCog6Tooth
 } from 'react-icons/hi2';
 import { SectionLoader } from '@/components/ui/loading-states'
+import ActionMenu from '@/components/ui/action-menu'
 
 interface BookingWithDetails extends Booking {
     event: Event;
@@ -749,75 +751,81 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
 
                     {/* Organizer Actions */}
                     <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-                        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                            <HiDocumentText className="h-5 w-5 mr-2" />
-                            Organizer Actions
-                        </h2>
-                        <div className="space-y-3">
-                            {booking.status === 'pending' && (
-                                <>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 flex items-center">
+                                <HiDocumentText className="h-5 w-5 mr-2" />
+                                Organizer Actions
+                            </h2>
+                            <ActionMenu
+                                trigger={({ buttonProps }) => (
                                     <button
-                                        onClick={() => handleActionClick('confirm', 'confirmed')}
-                                        disabled={actionLoading}
-                                        className="w-full flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                                        {...(buttonProps as any)}
+                                        className="inline-flex items-center p-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                        title="Actions"
                                     >
-                                        <HiCheckCircle className="h-4 w-4 mr-2" />
-                                        Confirm Booking
+                                        <HiCog6Tooth className="w-4 h-4" />
                                     </button>
-                                    <button
-                                        onClick={() => handleActionClick('cancel', 'cancelled')}
-                                        disabled={actionLoading}
-                                        className="w-full flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
-                                    >
-                                        <HiXCircle className="h-4 w-4 mr-2" />
-                                        Cancel Booking
-                                    </button>
-                                </>
-                            )}
-                            {booking.status === 'confirmed' && (
-                                <>
-                                    <button
-                                        onClick={() => handleActionClick('verify', 'verified')}
-                                        disabled={actionLoading}
-                                        className="w-full flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-                                    >
-                                        <HiCheckCircle className="h-4 w-4 mr-2" />
-                                        Mark as Verified
-                                    </button>
-                                    <button
-                                        onClick={() => handleActionClick('cancel', 'cancelled')}
-                                        disabled={actionLoading}
-                                        className="w-full flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
-                                    >
-                                        <HiXCircle className="h-4 w-4 mr-2" />
-                                        Cancel Booking
-                                    </button>
-                                </>
-                            )}
-                            {booking.status === 'whitelisted' && (
-                                <>
-                                    <button
-                                        onClick={() => handleActionClick('release-whitelist', 'pending')}
-                                        disabled={actionLoading}
-                                        className="w-full flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50"
-                                    >
-                                        <HiArrowPath className="h-4 w-4 mr-2" />
-                                        Release Whitelist
-                                    </button>
-                                    <button
-                                        onClick={() => handleActionClick('cancel', 'cancelled')}
-                                        disabled={actionLoading}
-                                        className="w-full flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50"
-                                    >
-                                        <HiXCircle className="h-4 w-4 mr-2" />
-                                        Cancel Booking
-                                    </button>
-                                </>
-                            )}
-                            <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                                <HiInformationCircle className="h-3 w-3 mr-1" />
-                                Status changes will be logged and may trigger notifications.
-                            </div>
+                                )}
+                            >
+                                {booking.status === 'pending' && (
+                                    <>
+                                        <button
+                                            onClick={() => handleActionClick('confirm', 'confirmed')}
+                                            className="flex items-center w-full px-4 py-2 text-sm text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 text-left"
+                                            data-menu-item
+                                        >
+                                            <HiCheckCircle className="mr-2 h-4 w-4" /> Confirm Booking
+                                        </button>
+                                        <button
+                                            onClick={() => handleActionClick('cancel', 'cancelled')}
+                                            className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-left"
+                                            data-menu-item
+                                        >
+                                            <HiXCircle className="mr-2 h-4 w-4" /> Cancel Booking
+                                        </button>
+                                    </>
+                                )}
+                                {booking.status === 'confirmed' && (
+                                    <>
+                                        <button
+                                            onClick={() => handleActionClick('verify', 'verified')}
+                                            className="flex items-center w-full px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-left"
+                                            data-menu-item
+                                        >
+                                            <HiCheckCircle className="mr-2 h-4 w-4" /> Mark as Verified
+                                        </button>
+                                        <button
+                                            onClick={() => handleActionClick('cancel', 'cancelled')}
+                                            className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-left"
+                                            data-menu-item
+                                        >
+                                            <HiXCircle className="mr-2 h-4 w-4" /> Cancel Booking
+                                        </button>
+                                    </>
+                                )}
+                                {booking.status === 'whitelisted' && (
+                                    <>
+                                        <button
+                                            onClick={() => handleActionClick('release-whitelist', 'pending')}
+                                            className="flex items-center w-full px-4 py-2 text-sm text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 text-left"
+                                            data-menu-item
+                                        >
+                                            <HiArrowPath className="mr-2 h-4 w-4" /> Release Whitelist
+                                        </button>
+                                        <button
+                                            onClick={() => handleActionClick('cancel', 'cancelled')}
+                                            className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-left"
+                                            data-menu-item
+                                        >
+                                            <HiXCircle className="mr-2 h-4 w-4" /> Cancel Booking
+                                        </button>
+                                    </>
+                                )}
+                            </ActionMenu>
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                            <HiInformationCircle className="h-3 w-3 mr-1" />
+                            Status changes will be logged and may trigger notifications.
                         </div>
                     </div>
                 </div>

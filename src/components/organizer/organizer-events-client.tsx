@@ -22,6 +22,7 @@ import {
     HiDocumentDuplicate,
     HiTag
 } from 'react-icons/hi2'
+import ActionMenu from '@/components/ui/action-menu'
 
 export interface EventWithBookings extends Event {
     totalBookings: number
@@ -39,8 +40,6 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
-    const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({})
-    const [desktopMenuPos, setDesktopMenuPos] = useState<{ top: number; left: number } | null>(null)
 
     const [cloningEventId, setCloningEventId] = useState<string | null>(null)
 
@@ -92,61 +91,14 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
         }
     }
 
-    const toggleDropdown = (eventId: string) => {
-        setOpenDropdownId(openDropdownId === eventId ? null : eventId)
-    }
-
-    const openDesktopDropdown = (id: string, anchorEl: HTMLElement) => {
-        if (openDropdownId === id) {
-            setOpenDropdownId(null)
-            return
-        }
-        const rect = anchorEl.getBoundingClientRect()
-        const menuWidth = 192 // w-48
-        const viewportPadding = 8
-        let left = rect.right - menuWidth
-        if (left < viewportPadding) left = viewportPadding
-        let top = rect.bottom + 8
-        const assumedMenuHeight = 320
-        if (top + assumedMenuHeight > window.innerHeight - viewportPadding) {
-            top = Math.max(viewportPadding, rect.top - assumedMenuHeight - 8)
-        }
-        setDesktopMenuPos({ top, left })
-        setOpenDropdownId(id)
-    }
-
     useEffect(() => {
         if (!openDropdownId) return
-        const handleWindowChange = () => {
-            setOpenDropdownId(null)
-        }
+        const handleWindowChange = () => setOpenDropdownId(null)
         window.addEventListener('scroll', handleWindowChange, true)
         window.addEventListener('resize', handleWindowChange)
         return () => {
             window.removeEventListener('scroll', handleWindowChange, true)
             window.removeEventListener('resize', handleWindowChange)
-        }
-    }, [openDropdownId])
-
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (openDropdownId) {
-                const dropdownElement = dropdownRefs.current[openDropdownId]
-                
-                // Check if the click target is a menu item
-                const target = event.target as HTMLElement;
-                const isMenuItem = target.closest('[data-menu-item]');
-                
-                // Only close if click is outside the dropdown AND not on a menu item
-                if (dropdownElement && !dropdownElement.contains(event.target as Node) && !isMenuItem) {
-                    setOpenDropdownId(null)
-                }
-            }
-        }
-        document.addEventListener('mousedown', handleClickOutside)
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside)
         }
     }, [openDropdownId])
 
@@ -370,139 +322,96 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                 {event.price === 0 ? 'Varies' : `AUD ${event.price.toFixed(2)}`}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (window.matchMedia('(min-width: 1024px)').matches) {
-                                                        openDesktopDropdown(event.id, e.currentTarget)
-                                                    } else {
-                                                        toggleDropdown(event.id)
-                                                    }
-                                                }}
-                                                    className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors relative z-20"
-                                                    title="Event Actions"
+                                                <ActionMenu
+                                                    className="relative z-20"
+                                                    trigger={({ buttonProps }) => (
+                                                        <button
+                                                            {...(buttonProps as any)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                if (typeof buttonProps.onClick === 'function') buttonProps.onClick(e)
+                                                                setOpenDropdownId(prev => (prev === event.id ? null : event.id))
+                                                            }}
+                                                            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                                                            title="Event Actions"
+                                                        >
+                                                            <HiCog6Tooth className="h-5 w-5" />
+                                                        </button>
+                                                    )}
                                                 >
-                                                    <HiCog6Tooth className="h-5 w-5" />
-                                                </button>
-                                                
-                                                {/* Desktop Dropdown Menu */}
-                                                {openDropdownId === event.id && desktopMenuPos && (
-                                                    <div
-                                                        ref={(el) => { dropdownRefs.current[event.id] = el }}
-                                                        style={{ position: 'fixed', top: desktopMenuPos.top, left: desktopMenuPos.left }}
-                                                        className="w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-[9999] hidden lg:block"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                        }}
+                                                    <Link
+                                                        href={`/organizer/events/${event.id}/bookings`}
+                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                        data-menu-item
                                                     >
-                                                        <div className="py-1" onClick={(e) => {
-                                                            e.stopPropagation();
-                                                        }}>
-                                                            <Link
-                                                                href={`/organizer/events/${event.id}/bookings`}
-                                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setOpenDropdownId(null);
-                                                                }}
-                                                                data-menu-item
-                                                            >
-                                                                <HiClipboardDocumentList className="mr-2 h-4 w-4" /> View Bookings
-                                                            </Link>
-                                                            <Link
-                                                                href={`/organizer/events/${event.id}/participants`}
-                                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setOpenDropdownId(null);
-                                                                }}
-                                                                data-menu-item
-                                                            >
-                                                                <HiUsers className="mr-2 h-4 w-4" /> View Participants
-                                                            </Link>
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleOpenSettings(event);
-                                                                }}
-                                                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
-                                                                data-menu-item
-                                                            >
-                                                                <HiCog8Tooth className="mr-2 h-4 w-4" /> Event Settings
-                                                            </button>
-                                                            <Link
-                                                                href={`/organizer/events/${event.id}/pricing`}
-                                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setOpenDropdownId(null);
-                                                                }}
-                                                                data-menu-item
-                                                            >
-                                                                <HiCurrencyDollar className="mr-2 h-4 w-4" /> Manage Pricing
-                                                            </Link>
-                                                            <Link
-                                                                href={`/organizer/events/${event.id}/discounts`}
-                                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setOpenDropdownId(null);
-                                                                }}
-                                                                data-menu-item
-                                                            >
-                                                                <HiTag className="mr-2 h-4 w-4" /> Manage Discounts
-                                                            </Link>
-                                                            <Link
-                                                                href={`/organizer/email-manager?eventId=${event.id}`}
-                                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setOpenDropdownId(null);
-                                                                }}
-                                                                data-menu-item
-                                                            >
-                                                                <HiEnvelope className="mr-2 h-4 w-4" /> Email Contact
-                                                            </Link>
-                                                            {event.alias && (
-                                                                <div className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                                                    <span className="flex items-center">
-                                                                        <HiLink className="mr-2 h-4 w-4" />
-                                                                    </span>
-                                                                    <div className="flex items-center space-x-1">
-                                                                        <span className="text-xs font-mono text-indigo-600 dark:text-indigo-400">
-                                                                            /e/{event.alias}
-                                                                        </span>
-                                                                        <CopyButton text={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/e/${event.alias}`} />
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                            <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                                                            <Link
-                                                                href={`/organizer/events/${event.id}/edit`}
-                                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setOpenDropdownId(null);
-                                                                }}
-                                                                data-menu-item
-                                                            >
-                                                                <HiPencilSquare className="mr-2 h-4 w-4" /> Edit Event
-                                                            </Link>
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleCloneEvent(event.id);
-                                                                }}
-                                                                disabled={cloningEventId === event.id}
-                                                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left disabled:opacity-50 disabled:cursor-not-allowed"
-                                                                data-menu-item
-                                                            >
-                                                                <HiDocumentDuplicate className="mr-2 h-4 w-4" />
-                                                                {cloningEventId === event.id ? 'Cloning...' : 'Clone Event'}
-                                                            </button>
+                                                        <HiClipboardDocumentList className="mr-2 h-4 w-4" /> View Bookings
+                                                    </Link>
+                                                    <Link
+                                                        href={`/organizer/events/${event.id}/participants`}
+                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                        data-menu-item
+                                                    >
+                                                        <HiUsers className="mr-2 h-4 w-4" /> View Participants
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => handleOpenSettings(event)}
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                        data-menu-item
+                                                    >
+                                                        <HiCog8Tooth className="mr-2 h-4 w-4" /> Event Settings
+                                                    </button>
+                                                    <Link
+                                                        href={`/organizer/events/${event.id}/pricing`}
+                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                        data-menu-item
+                                                    >
+                                                        <HiCurrencyDollar className="mr-2 h-4 w-4" /> Manage Pricing
+                                                    </Link>
+                                                    <Link
+                                                        href={`/organizer/events/${event.id}/discounts`}
+                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                        data-menu-item
+                                                    >
+                                                        <HiTag className="mr-2 h-4 w-4" /> Manage Discounts
+                                                    </Link>
+                                                    <Link
+                                                        href={`/organizer/email-manager?eventId=${event.id}`}
+                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                        data-menu-item
+                                                    >
+                                                        <HiEnvelope className="mr-2 h-4 w-4" /> Email Contact
+                                                    </Link>
+                                                    {event.alias && (
+                                                        <div className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                                            <span className="flex items-center">
+                                                                <HiLink className="mr-2 h-4 w-4" />
+                                                            </span>
+                                                            <div className="flex items-center space-x-1">
+                                                                <span className="text-xs font-mono text-indigo-600 dark:text-indigo-400">
+                                                                    /e/{event.alias}
+                                                                </span>
+                                                                <CopyButton text={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/e/${event.alias}`} />
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    )}
+                                                    <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                                    <Link
+                                                        href={`/organizer/events/${event.id}/edit`}
+                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                        data-menu-item
+                                                    >
+                                                        <HiPencilSquare className="mr-2 h-4 w-4" /> Edit Event
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => handleCloneEvent(event.id)}
+                                                        disabled={cloningEventId === event.id}
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        data-menu-item
+                                                    >
+                                                        <HiDocumentDuplicate className="mr-2 h-4 w-4" />
+                                                        {cloningEventId === event.id ? 'Cloning...' : 'Clone Event'}
+                                                    </button>
+                                                </ActionMenu>
                                             </td>
                                         </tr>
                                     ))}
@@ -568,104 +477,90 @@ export default function OrganizerEventsClient({ events, totalRevenue, totalBooki
                                                 {event.price === 0 ? 'Varies' : `AUD ${event.price.toFixed(2)} per ticket`}
                                             </span>
                                             <div className="relative">
-                                                <button
-                                                    onClick={() => toggleDropdown(event.id)}
-                                                    className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                                                    title="Event Actions"
+                                                <ActionMenu
+                                                    trigger={({ buttonProps }) => (
+                                                        <button
+                                                            {...(buttonProps as any)}
+                                                            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                                                            title="Event Actions"
+                                                        >
+                                                            <HiCog6Tooth className="h-5 w-5" />
+                                                        </button>
+                                                    )}
                                                 >
-                                                    <HiCog6Tooth className="h-5 w-5" />
-                                                </button>
-
-                                                {/* Mobile Dropdown Menu */}
-                                                {openDropdownId === event.id && (
-                                                    <div
-                                                        ref={(el) => { dropdownRefs.current[event.id] = el }}
-                                                        className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50 lg:hidden"
+                                                    <Link
+                                                        href={`/organizer/events/${event.id}/bookings`}
+                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                        data-menu-item
                                                     >
-                                                        <div className="py-1">
-                                                            <Link
-                                                                href={`/organizer/events/${event.id}/bookings`}
-                                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                                onClick={() => setOpenDropdownId(null)}
-                                                                data-menu-item
-                                                            >
-                                                                <HiClipboardDocumentList className="mr-2 h-4 w-4" /> View Bookings
-                                                            </Link>
-                                                            <Link
-                                                                href={`/organizer/events/${event.id}/participants`}
-                                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                                onClick={() => setOpenDropdownId(null)}
-                                                                data-menu-item
-                                                            >
-                                                                <HiUsers className="mr-2 h-4 w-4" /> View Participants
-                                                            </Link>
-                                                            <button
-                                                                onClick={() => handleOpenSettings(event)}
-                                                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
-                                                                data-menu-item
-                                                            >
-                                                                <HiCog8Tooth className="mr-2 h-4 w-4" /> Event Settings
-                                                            </button>
-                                                            <Link
-                                                                href={`/organizer/events/${event.id}/pricing`}
-                                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                                onClick={() => setOpenDropdownId(null)}
-                                                                data-menu-item
-                                                            >
-                                                                <HiCurrencyDollar className="mr-2 h-4 w-4" /> Manage Pricing
-                                                            </Link>
-                                                            <Link
-                                                                href={`/organizer/events/${event.id}/discounts`}
-                                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                                onClick={() => setOpenDropdownId(null)}
-                                                                data-menu-item
-                                                            >
-                                                                <HiTag className="mr-2 h-4 w-4" /> Manage Discounts
-                                                            </Link>
-                                                            <Link
-                                                                href={`/organizer/email-manager?eventId=${event.id}`}
-                                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                                onClick={() => {
-                                                                    setOpenDropdownId(null)
-                                                                }}
-                                                                data-menu-item
-                                                            >
-                                                                <HiEnvelope className="mr-2 h-4 w-4" /> Email Contact
-                                                            </Link>
-                                                            {event.alias && (
-                                                                <div className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                                                    <span className="flex items-center">
-                                                                        <HiLink className="mr-2 h-4 w-4" />
-                                                                    </span>
-                                                                    <div className="flex items-center space-x-1">
-                                                                        <span className="text-xs font-mono text-indigo-600 dark:text-indigo-400">
-                                                                            /e/{event.alias}
-                                                                        </span>
-                                                                        <CopyButton text={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/e/${event.alias}`} />
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                            <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                                                            <Link
-                                                                href={`/organizer/events/${event.id}/edit`}
-                                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                                onClick={() => setOpenDropdownId(null)}
-                                                                data-menu-item
-                                                            >
-                                                                <HiPencilSquare className="mr-2 h-4 w-4" /> Edit Event
-                                                            </Link>
-                                                            <button
-                                                                onClick={() => handleCloneEvent(event.id)}
-                                                                disabled={cloningEventId === event.id}
-                                                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left disabled:opacity-50 disabled:cursor-not-allowed"
-                                                                data-menu-item
-                                                            >
-                                                                <HiDocumentDuplicate className="mr-2 h-4 w-4" />
-                                                                {cloningEventId === event.id ? 'Cloning...' : 'Clone Event'}
-                                                            </button>
+                                                        <HiClipboardDocumentList className="mr-2 h-4 w-4" /> View Bookings
+                                                    </Link>
+                                                    <Link
+                                                        href={`/organizer/events/${event.id}/participants`}
+                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                        data-menu-item
+                                                    >
+                                                        <HiUsers className="mr-2 h-4 w-4" /> View Participants
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => handleOpenSettings(event)}
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                        data-menu-item
+                                                    >
+                                                        <HiCog8Tooth className="mr-2 h-4 w-4" /> Event Settings
+                                                    </button>
+                                                    <Link
+                                                        href={`/organizer/events/${event.id}/pricing`}
+                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                        data-menu-item
+                                                    >
+                                                        <HiCurrencyDollar className="mr-2 h-4 w-4" /> Manage Pricing
+                                                    </Link>
+                                                    <Link
+                                                        href={`/organizer/events/${event.id}/discounts`}
+                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                        data-menu-item
+                                                    >
+                                                        <HiTag className="mr-2 h-4 w-4" /> Manage Discounts
+                                                    </Link>
+                                                    <Link
+                                                        href={`/organizer/email-manager?eventId=${event.id}`}
+                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                        data-menu-item
+                                                    >
+                                                        <HiEnvelope className="mr-2 h-4 w-4" /> Email Contact
+                                                    </Link>
+                                                    {event.alias && (
+                                                        <div className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                                            <span className="flex items-center">
+                                                                <HiLink className="mr-2 h-4 w-4" />
+                                                            </span>
+                                                            <div className="flex items-center space-x-1">
+                                                                <span className="text-xs font-mono text-indigo-600 dark:text-indigo-400">
+                                                                    /e/{event.alias}
+                                                                </span>
+                                                                <CopyButton text={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/e/${event.alias}`} />
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    )}
+                                                    <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                                    <Link
+                                                        href={`/organizer/events/${event.id}/edit`}
+                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                        data-menu-item
+                                                    >
+                                                        <HiPencilSquare className="mr-2 h-4 w-4" /> Edit Event
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => handleCloneEvent(event.id)}
+                                                        disabled={cloningEventId === event.id}
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        data-menu-item
+                                                    >
+                                                        <HiDocumentDuplicate className="mr-2 h-4 w-4" />
+                                                        {cloningEventId === event.id ? 'Cloning...' : 'Clone Event'}
+                                                    </button>
+                                                </ActionMenu>
                                             </div>
                                         </div>
                                     </div>

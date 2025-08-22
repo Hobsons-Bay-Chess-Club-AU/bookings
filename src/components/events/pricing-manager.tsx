@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { EventPricing, PricingType, MembershipType, Event } from '@/lib/types/database'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
 import { createClient } from '@/lib/supabase/client'
 import { HiDocumentDuplicate, HiCog6Tooth, HiPencilSquare, HiEye, HiTrash } from 'react-icons/hi2'
+import ActionMenu from '@/components/ui/action-menu'
 
 interface PricingManagerProps {
     eventId: string
@@ -20,8 +21,7 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
     const [error, setError] = useState('')
     const [showConfirmModal, setShowConfirmModal] = useState(false)
     const [pricingToDelete, setPricingToDelete] = useState<string | null>(null)
-    const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
-    const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({})
+    
 
     const [formData, setFormData] = useState({
         name: '',
@@ -120,7 +120,6 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
         })
         setEditingId(pricingItem.id)
         setIsAdding(true)
-        setOpenDropdownId(null) // Close dropdown
     }
 
     const handleClone = (pricingItem: EventPricing) => {
@@ -136,7 +135,6 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
         })
         setEditingId(null) // No editing ID since this is a new item
         setIsAdding(true)
-        setOpenDropdownId(null) // Close dropdown
     }
 
     const handleToggleActive = async (pricingId: string, currentActive: boolean) => {
@@ -152,7 +150,6 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
             setPricing(prev => prev.map(p =>
                 p.id === pricingId ? { ...p, is_active: !currentActive } : p
             ))
-            setOpenDropdownId(null) // Close dropdown
         } catch (err: unknown) {
             setError((err as Error).message || 'Failed to update pricing status')
         } finally {
@@ -163,7 +160,6 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
     const handleDelete = async (pricingId: string) => {
         setPricingToDelete(pricingId)
         setShowConfirmModal(true)
-        setOpenDropdownId(null) // Close dropdown
     }
 
     const confirmDelete = async () => {
@@ -207,31 +203,7 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
         }
     }
 
-    const toggleDropdown = (pricingId: string) => {
-        setOpenDropdownId(openDropdownId === pricingId ? null : pricingId)
-    }
-
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (openDropdownId) {
-                const dropdownElement = dropdownRefs.current[openDropdownId]
-                
-                // Check if the click target is a menu item
-                const target = event.target as HTMLElement;
-                const isMenuItem = target.closest('[data-menu-item]');
-                
-                // Only close if click is outside the dropdown AND not on a menu item
-                if (dropdownElement && !dropdownElement.contains(event.target as Node) && !isMenuItem) {
-                    setOpenDropdownId(null)
-                }
-            }
-        }
-        document.addEventListener('mousedown', handleClickOutside)
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside)
-        }
-    }, [openDropdownId])
+    // ActionMenu handles dropdown behavior
 
     return (
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
@@ -538,57 +510,51 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-                                                <button
-                                                    onClick={() => toggleDropdown(pricingItem.id)}
-                                                    className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors relative z-20"
-                                                    title="Pricing Actions"
+                                                <ActionMenu
+                                                    trigger={({ buttonProps }) => (
+                                                        <button
+                                                            {...(buttonProps as any)}
+                                                            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                                                            title="Pricing Actions"
+                                                        >
+                                                            <HiCog6Tooth className="h-5 w-5" />
+                                                        </button>
+                                                    )}
                                                 >
-                                                    <HiCog6Tooth className="h-5 w-5" />
-                                                </button>
-
-                                                {/* Desktop Dropdown Menu */}
-                                                {openDropdownId === pricingItem.id && (
-                                                    <div
-                                                        ref={(el) => { dropdownRefs.current[pricingItem.id] = el }}
-                                                        className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-[9999]"
+                                                    <button
+                                                        onClick={() => handleEdit(pricingItem)}
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                        data-menu-item
                                                     >
-                                                        <div className="py-1">
-                                                            <button
-                                                                onClick={() => handleEdit(pricingItem)}
-                                                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
-                                                                data-menu-item
-                                                            >
-                                                                <HiPencilSquare className="mr-2 h-4 w-4" /> Edit
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleClone(pricingItem)}
-                                                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
-                                                                data-menu-item
-                                                            >
-                                                                <HiDocumentDuplicate className="mr-2 h-4 w-4" /> Clone
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleToggleActive(pricingItem.id, pricingItem.is_active)}
-                                                                className={`flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-left ${
-                                                                    pricingItem.is_active 
-                                                                        ? 'text-yellow-700 dark:text-yellow-400' 
-                                                                        : 'text-green-700 dark:text-green-400'
-                                                                }`}
-                                                                data-menu-item
-                                                            >
-                                                                <HiEye className="mr-2 h-4 w-4" />
-                                                                {pricingItem.is_active ? 'Deactivate' : 'Activate'}
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDelete(pricingItem.id)}
-                                                                className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
-                                                                data-menu-item
-                                                            >
-                                                                <HiTrash className="mr-2 h-4 w-4" /> Delete
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
+                                                        <HiPencilSquare className="mr-2 h-4 w-4" /> Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleClone(pricingItem)}
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                        data-menu-item
+                                                    >
+                                                        <HiDocumentDuplicate className="mr-2 h-4 w-4" /> Clone
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleToggleActive(pricingItem.id, pricingItem.is_active)}
+                                                        className={`flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-left ${
+                                                            pricingItem.is_active 
+                                                                ? 'text-yellow-700 dark:text-yellow-400' 
+                                                                : 'text-green-700 dark:text-green-400'
+                                                        }`}
+                                                        data-menu-item
+                                                    >
+                                                        <HiEye className="mr-2 h-4 w-4" />
+                                                        {pricingItem.is_active ? 'Deactivate' : 'Activate'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(pricingItem.id)}
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                        data-menu-item
+                                                    >
+                                                        <HiTrash className="mr-2 h-4 w-4" /> Delete
+                                                    </button>
+                                                </ActionMenu>
                                             </td>
                                         </tr>
                                     ))}
@@ -654,57 +620,51 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                         </div>
 
                                         <div className="ml-6 flex-shrink-0 relative">
-                                            <button
-                                                onClick={() => toggleDropdown(pricingItem.id)}
-                                                className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                                                title="Pricing Actions"
+                                            <ActionMenu
+                                                trigger={({ buttonProps }) => (
+                                                    <button
+                                                        {...(buttonProps as any)}
+                                                        className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                                                        title="Pricing Actions"
+                                                    >
+                                                        <HiCog6Tooth className="h-5 w-5" />
+                                                    </button>
+                                                )}
                                             >
-                                                <HiCog6Tooth className="h-5 w-5" />
-                                            </button>
-
-                                            {/* Mobile Dropdown Menu */}
-                                            {openDropdownId === pricingItem.id && (
-                                                <div
-                                                    ref={(el) => { dropdownRefs.current[pricingItem.id] = el }}
-                                                    className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50 lg:hidden"
+                                                <button
+                                                    onClick={() => handleEdit(pricingItem)}
+                                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                    data-menu-item
                                                 >
-                                                    <div className="py-1">
-                                                        <button
-                                                            onClick={() => handleEdit(pricingItem)}
-                                                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
-                                                            data-menu-item
-                                                        >
-                                                            <HiPencilSquare className="mr-2 h-4 w-4" /> Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleClone(pricingItem)}
-                                                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
-                                                            data-menu-item
-                                                        >
-                                                            <HiDocumentDuplicate className="mr-2 h-4 w-4" /> Clone
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleToggleActive(pricingItem.id, pricingItem.is_active)}
-                                                            className={`flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-left ${
-                                                                pricingItem.is_active 
-                                                                    ? 'text-yellow-700 dark:text-yellow-400' 
-                                                                    : 'text-green-700 dark:text-green-400'
-                                                            }`}
-                                                            data-menu-item
-                                                        >
-                                                            <HiEye className="mr-2 h-4 w-4" />
-                                                            {pricingItem.is_active ? 'Deactivate' : 'Activate'}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDelete(pricingItem.id)}
-                                                            className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
-                                                            data-menu-item
-                                                        >
-                                                            <HiTrash className="mr-2 h-4 w-4" /> Delete
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            )}
+                                                    <HiPencilSquare className="mr-2 h-4 w-4" /> Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => handleClone(pricingItem)}
+                                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                    data-menu-item
+                                                >
+                                                    <HiDocumentDuplicate className="mr-2 h-4 w-4" /> Clone
+                                                </button>
+                                                <button
+                                                    onClick={() => handleToggleActive(pricingItem.id, pricingItem.is_active)}
+                                                    className={`flex items-center w-full px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-left ${
+                                                        pricingItem.is_active 
+                                                            ? 'text-yellow-700 dark:text-yellow-400' 
+                                                            : 'text-green-700 dark:text-green-400'
+                                                    }`}
+                                                    data-menu-item
+                                                >
+                                                    <HiEye className="mr-2 h-4 w-4" />
+                                                    {pricingItem.is_active ? 'Deactivate' : 'Activate'}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(pricingItem.id)}
+                                                    className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                    data-menu-item
+                                                >
+                                                    <HiTrash className="mr-2 h-4 w-4" /> Delete
+                                                </button>
+                                            </ActionMenu>
                                         </div>
                                     </div>
                                 </div>

@@ -3,10 +3,11 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { Event, Participant, Booking, Profile, EventSection } from '@/lib/types/database'
-import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight, HiXMark, HiEnvelope } from 'react-icons/hi2'
+import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight, HiXMark, HiEnvelope, HiPhone } from 'react-icons/hi2'
 import Breadcrumb from '@/components/ui/breadcrumb'
 import SectionTransferModal from '@/components/events/section-transfer-modal'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
+import ActionMenu from '@/components/ui/action-menu'
 
 interface ParticipantWithBooking extends Participant {
     bookings: (Booking & {
@@ -39,24 +40,16 @@ export default function EventParticipantsPageClient({
     const [isWithdrawing, setIsWithdrawing] = useState(false)
     const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
-    // Close dropdown when clicking outside
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (openDropdownId && dropdownRefs.current[openDropdownId]) {
-                const dropdown = dropdownRefs.current[openDropdownId]
-                if (dropdown && !dropdown.contains(event.target as Node)) {
-                    setOpenDropdownId(null)
-                }
-            }
+        if (!openDropdownId) return
+        const handleWindowChange = () => setOpenDropdownId(null)
+        window.addEventListener('scroll', handleWindowChange, true)
+        window.addEventListener('resize', handleWindowChange)
+        return () => {
+            window.removeEventListener('scroll', handleWindowChange, true)
+            window.removeEventListener('resize', handleWindowChange)
         }
-
-        document.addEventListener('mousedown', handleClickOutside)
-        return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [openDropdownId])
-
-    const toggleDropdown = (participantId: string) => {
-        setOpenDropdownId(openDropdownId === participantId ? null : participantId)
-    }
 
     const handleWithdrawParticipant = async () => {
         if (!selectedParticipantForWithdrawal || !withdrawalMessage.trim()) {
@@ -731,9 +724,7 @@ export default function EventParticipantsPageClient({
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Participant
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                        Contact
-                                    </th>
+                                    
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Gender
                                     </th>
@@ -788,29 +779,7 @@ export default function EventParticipantsPageClient({
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-sm text-gray-900 dark:text-gray-100">
-                                                {(participant.contact_email || participant.bookings.profiles.email) && (
-                                                    <div className="flex items-center">
-                                                        <span>{participant.contact_email || participant.bookings.profiles.email}</span>
-                                                        {!participant.contact_email && participant.bookings.profiles.email && (
-                                                            <span className="ml-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded">from booker</span>
-                                                        )}
-                                                    </div>
-                                                )}
-                                                {(participant.contact_phone || participant.bookings.profiles.phone) && (
-                                                    <div className="text-gray-500 dark:text-gray-400 flex items-center">
-                                                        <span>{participant.contact_phone || participant.bookings.profiles.phone}</span>
-                                                        {!participant.contact_phone && participant.bookings.profiles.phone && (
-                                                            <span className="ml-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded">from booker</span>
-                                                        )}
-                                                    </div>
-                                                )}
-                                                {!participant.contact_email && !participant.contact_phone && !participant.bookings.profiles.email && !participant.bookings.profiles.phone && (
-                                                    <span className="text-gray-400 dark:text-gray-500">No contact info</span>
-                                                )}
-                                            </div>
-                                        </td>
+                                        
                                         <td className="px-6 py-4">
                                             <div className="text-sm text-gray-900 dark:text-gray-100">
                                                 {participant.gender ? (
@@ -897,70 +866,63 @@ export default function EventParticipantsPageClient({
                                                     </div>
                                                 </td>
                                             ))}
-                                        <td className="px-6 py-4 text-right text-sm font-medium relative">
-                                            <button
-                                                onClick={() => toggleDropdown(participant.id!)}
-                                                className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                                                title="Participant Actions"
-                                            >
-                                                <HiCog6Tooth className="h-5 w-5" />
-                                            </button>
-
-                                            {/* Dropdown Menu */}
-                                            {openDropdownId === participant.id && (
-                                                <div
-                                                    ref={(el) => { dropdownRefs.current[participant.id!] = el }}
-                                                    className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+                                            <td className="px-6 py-4 text-right text-sm font-medium relative">
+                                                <ActionMenu
+                                                    strategy="fixed"
+                                                    trigger={({ buttonProps }) => (
+                                                        <button
+                                                            {...(buttonProps as any)}
+                                                            onClick={(e) => {
+                                                                if (typeof buttonProps.onClick === 'function') buttonProps.onClick(e)
+                                                                setOpenDropdownId(prev => (prev === (participant.id as string) ? null : (participant.id as string)))
+                                                            }}
+                                                            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                                                            title="Participant Actions"
+                                                        >
+                                                            <HiCog6Tooth className="h-5 w-5" />
+                                                        </button>
+                                                    )}
                                                 >
-                                                    <div className="py-1">
+                                                    <button
+                                                        onClick={() => setSelectedParticipant(participant)}
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                                                        data-menu-item
+                                                    >
+                                                        <HiEye className="mr-2 h-4 w-4" /> View Details
+                                                    </button>
+                                                    <Link
+                                                        href={`/organizer/email-manager?participantId=${participant.id}`}
+                                                        className="flex items-center w-full px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-left"
+                                                        data-menu-item
+                                                    >
+                                                        <HiEnvelope className="mr-2 h-4 w-4" /> Email Contact
+                                                    </Link>
+                                                    {event.has_sections && sections.length > 1 && (
                                                         <button
                                                             onClick={() => {
                                                                 setSelectedParticipant(participant)
-                                                                setOpenDropdownId(null)
+                                                                setShowTransferConfirmation(true)
                                                             }}
-                                                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
-                                                            data-menu-item
-                                                        >
-                                                            <HiEye className="mr-2 h-4 w-4" /> View Details
-                                                        </button>
-                                                        <Link
-                                                            href={`/organizer/email-manager?participantId=${participant.id}`}
-                                                            onClick={() => setOpenDropdownId(null)}
                                                             className="flex items-center w-full px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-left"
                                                             data-menu-item
                                                         >
-                                                            <HiEnvelope className="mr-2 h-4 w-4" /> Email Contact
-                                                        </Link>
-                                                        {event.has_sections && sections.length > 1 && (
-                                                            <button
-                                                                onClick={() => {
-                                                                    setSelectedParticipant(participant)
-                                                                    setShowTransferConfirmation(true)
-                                                                    setOpenDropdownId(null)
-                                                                }}
-                                                                className="flex items-center w-full px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-left"
-                                                                data-menu-item
-                                                            >
-                                                                <HiArrowRight className="mr-2 h-4 w-4" /> Transfer
-                                                            </button>
-                                                        )}
-                                                        {participant.status !== 'cancelled' && (
-                                                            <button
-                                                                onClick={() => {
-                                                                    setSelectedParticipantForWithdrawal(participant)
-                                                                    setShowWithdrawModal(true)
-                                                                    setOpenDropdownId(null)
-                                                                }}
-                                                                className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-left"
-                                                                data-menu-item
-                                                            >
-                                                                <HiXMark className="mr-2 h-4 w-4" /> Withdraw
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </td>
+                                                            <HiArrowRight className="mr-2 h-4 w-4" /> Transfer
+                                                        </button>
+                                                    )}
+                                                    {participant.status !== 'cancelled' && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedParticipantForWithdrawal(participant)
+                                                                setShowWithdrawModal(true)
+                                                            }}
+                                                            className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-left"
+                                                            data-menu-item
+                                                        >
+                                                            <HiXMark className="mr-2 h-4 w-4" /> Withdraw
+                                                        </button>
+                                                    )}
+                                                </ActionMenu>
+                                            </td>
                                     </tr>
                                 ))}
                             </tbody>
