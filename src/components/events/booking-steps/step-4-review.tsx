@@ -35,6 +35,17 @@ interface Step4ReviewProps {
         finalAmount: number
     } | null
     discountLoading?: boolean
+    appliedDiscountCode?: {
+        discount: {
+            id: string
+            name: string
+            description?: string
+            value_type: string
+            value: number
+        }
+        discountAmount: number
+        finalAmount: number
+    } | null
     contactInfo: {
         first_name: string
         last_name: string
@@ -66,6 +77,7 @@ export default function Step4Review({
     selectedSections = [],
     discountInfo,
     discountLoading,
+    appliedDiscountCode,
     contactInfo,
     participants,
     formFields = [],
@@ -181,6 +193,22 @@ export default function Step4Review({
                             </div>
                         )}
                         
+                        {/* Discount Code */}
+                        {appliedDiscountCode && (
+                            <div className="flex justify-between items-start text-sm gap-2">
+                                <span className="text-green-600 dark:text-green-300 text-left flex-1 min-w-0">
+                                    <span className="break-words">{appliedDiscountCode.discount.name}</span>
+                                    <span className="block text-xs">(Discount code)</span>
+                                    {appliedDiscountCode.discount.description && (
+                                        <span className="block text-xs">{appliedDiscountCode.discount.description}</span>
+                                    )}
+                                </span>
+                                <span className="text-green-600 dark:text-green-300 font-medium flex-shrink-0">
+                                    -${appliedDiscountCode.discountAmount.toFixed(2)}
+                                </span>
+                            </div>
+                        )}
+                        
                         {discountInfo && discountInfo.totalDiscount > 0 && (
                             <>
                                 {discountInfo.appliedDiscounts.map((appliedDiscount, index) => (
@@ -197,15 +225,19 @@ export default function Step4Review({
                                         </span>
                                     </div>
                                 ))}
-                                <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-700 dark:text-gray-300 font-medium">Total Discount</span>
-                                        <span className="text-green-600 dark:text-green-300 font-medium">
-                                            -${discountInfo.totalDiscount.toFixed(2)}
-                                        </span>
-                                    </div>
-                                </div>
                             </>
+                        )}
+                        
+                        {/* Total Discount */}
+                        {((discountInfo && discountInfo.totalDiscount > 0) || appliedDiscountCode) && (
+                            <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-700 dark:text-gray-300 font-medium">Total Discount</span>
+                                    <span className="text-green-600 dark:text-green-300 font-medium">
+                                        -${((discountInfo?.totalDiscount || 0) + (appliedDiscountCode?.discountAmount || 0)).toFixed(2)}
+                                    </span>
+                                </div>
+                            </div>
                         )}
                         
                         <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">

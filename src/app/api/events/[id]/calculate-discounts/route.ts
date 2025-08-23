@@ -25,6 +25,7 @@ interface EventDiscount {
     discount_type: string
     value_type: string
     value: number
+    code?: string
     start_date?: string
     end_date?: string
     min_quantity?: number
@@ -59,7 +60,7 @@ export async function POST(
     try {
         const { id } = await params
         const supabase = await createClient()
-        const { participants, baseAmount, quantity } = await request.json()
+        const { participants, baseAmount, quantity, discountCode } = await request.json()
 
         if (!participants || !Array.isArray(participants)) {
             return NextResponse.json(
@@ -130,8 +131,47 @@ export async function POST(
         let totalDiscount = 0
         const appliedDiscounts: AppliedDiscount[] = []
 
-        // Check each discount
+        // Check discount code first if provided
+        if (discountCode) {
+            const codeDiscount = discounts.find(d => 
+                d.discount_type === 'code' && 
+                d.code?.toUpperCase() === discountCode.toUpperCase().trim()
+            )
+            
+            if (codeDiscount) {
+                // Check if discount code is within date range
+                const now = new Date()
+                if (codeDiscount.start_date && new Date(codeDiscount.start_date) > now) {
+                    // Code not yet active, but don't fail - just skip it
+                } else if (codeDiscount.end_date && new Date(codeDiscount.end_date) < now) {
+                    // Code expired, but don't fail - just skip it
+                } else if (codeDiscount.min_quantity && quantity < codeDiscount.min_quantity) {
+                    // Quantity too low, but don't fail - just skip it
+                } else if (codeDiscount.max_quantity && quantity > codeDiscount.max_quantity) {
+                    // Quantity too high, but don't fail - just skip it
+                } else if (codeDiscount.max_uses && codeDiscount.current_uses >= codeDiscount.max_uses) {
+                    // Usage limit reached, but don't fail - just skip it
+                } else {
+                    // Apply the discount code
+                    const discountAmount = calculateDiscountAmount(codeDiscount, baseAmount, 1) // Code discounts apply once regardless of quantity
+                    if (discountAmount > 0) {
+                        totalDiscount += discountAmount
+                        appliedDiscounts.push({
+                            discount: codeDiscount,
+                            amount: discountAmount,
+                            type: 'code'
+                        })
+                    }
+                }
+            }
+        }
+
+        // Check each discount (excluding code discounts as they're handled above)
         for (const discount of discounts) {
+            // Skip code discounts as they're handled above
+            if (discount.discount_type === 'code') {
+                continue
+            }
             // Check if discount is within date range
             const now = new Date()
             if (discount.start_date && new Date(discount.start_date) > now) {

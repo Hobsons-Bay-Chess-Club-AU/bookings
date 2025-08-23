@@ -86,6 +86,18 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
     } | null>(null)
     const [discountLoading, setDiscountLoading] = useState(false)
     const [hasDiscounts, setHasDiscounts] = useState(false)
+    const [hasDiscountCodes, setHasDiscountCodes] = useState(false)
+    const [appliedDiscountCode, setAppliedDiscountCode] = useState<{
+        discount: {
+            id: string
+            name: string
+            description?: string
+            value_type: string
+            value: number
+        }
+        discountAmount: number
+        finalAmount: number
+    } | null>(null)
     const [localHasUserInteracted, setLocalHasUserInteracted] = useState(false)
     
     // Use context's hasUserInteracted if provided, otherwise use local state
@@ -148,7 +160,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
         ? originalBookingAmount 
         : baseAmount
     
-    const totalAmount = discountInfo?.finalAmount ?? displayAmount
+    const totalAmount = appliedDiscountCode?.finalAmount ?? discountInfo?.finalAmount ?? displayAmount
     
 
     
@@ -301,11 +313,16 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                 // Check if event has discounts
                 const { data: discounts } = await supabase
                     .from('event_discounts')
-                    .select('id')
+                    .select('id, discount_type')
                     .eq('event_id', event.id)
                     .eq('is_active', true)
                 
-                setHasDiscounts(Boolean(discounts && discounts.length > 0))
+                const hasAnyDiscounts = Boolean(discounts && discounts.length > 0)
+                const hasCodeDiscounts = Boolean(discounts && discounts.some(d => d.discount_type === 'code'))
+                const hasOtherDiscounts = Boolean(discounts && discounts.some(d => d.discount_type !== 'code'))
+                
+                setHasDiscounts(hasOtherDiscounts)
+                setHasDiscountCodes(hasCodeDiscounts)
 
             } catch (err: unknown) {
                 console.error('Error fetching data:', err)
@@ -616,7 +633,8 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                 body: JSON.stringify({
                     participants,
                     baseAmount,
-                    quantity
+                    quantity,
+                    discountCode: appliedDiscountCode?.discount?.id ? null : null // We'll handle discount codes separately for now
                 })
             })
 
@@ -633,7 +651,27 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
         } finally {
             setDiscountLoading(false)
         }
-    }, [participants, baseAmount, quantity, event.id])
+    }, [participants, baseAmount, quantity, event.id, appliedDiscountCode])
+
+    // Handle discount code application
+    const handleDiscountCodeApplied = (discountInfo: {
+        discount: {
+            id: string
+            name: string
+            description?: string
+            value_type: string
+            value: number
+        }
+        discountAmount: number
+        finalAmount: number
+    } | null) => {
+        setAppliedDiscountCode(discountInfo)
+    }
+
+    // Handle discount code removal
+    const handleDiscountCodeRemoved = () => {
+        setAppliedDiscountCode(null)
+    }
 
     // Recalculate discounts when participants or quantity changes
     useEffect(() => {
@@ -811,6 +849,32 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                     throw new Error('No sections selected for multi-section event')
                 }
 
+                // Check if this is now a free event (due to discount codes)
+                if (totalAmount === 0) {
+                    console.log('🎉 Free event (possibly due to discount code), confirming booking directly')
+                    
+                    // Update booking status to confirmed for free events
+                    const { error: confirmError } = await supabase
+                        .from('bookings')
+                        .update({ 
+                            status: 'confirmed',
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', currentBookingId)
+
+                    if (confirmError) {
+                        throw new Error(confirmError.message)
+                    }
+
+                    // Set current booking ID and proceed to success
+                    setCurrentBookingId(currentBookingId)
+                    setStep(5)
+                    if (onStepChange) {
+                        onStepChange(5)
+                    }
+                    return
+                }
+
                 // Prepare request body
                 const requestBody = {
                     bookingId: currentBookingId,
@@ -958,6 +1022,24 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                 }
             }
 
+            // Create discount code application record if discount code was applied
+            if (appliedDiscountCode) {
+                try {
+                    await supabase
+                        .from('discount_applications')
+                        .insert({
+                            booking_id: booking.id,
+                            discount_id: appliedDiscountCode.discount.id,
+                            applied_value: appliedDiscountCode.discountAmount,
+                            original_amount: baseAmount,
+                            final_amount: appliedDiscountCode.finalAmount
+                        })
+                } catch (discountError) {
+                    console.error('Error creating discount code application record:', discountError)
+                    // Don't fail the booking if discount tracking fails
+                }
+            }
+
             // Create participants records
             
             const participantCreationErrors: string[] = []
@@ -1088,8 +1170,8 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                 } catch (emailError) {
                     console.error('❌ [BOOKING-FORM] Error sending whitelisted booking email:', emailError)
                 }
-            } else if (isFreeEvent) {
-                console.log('🎉 Free event detected, setting up redirect')
+            } else if (isFreeEvent || totalAmount === 0) {
+                console.log('🎉 Free event detected (original or due to discount code), setting up redirect')
                 console.log('📝 Setting currentBookingId:', booking.id)
                 console.log('📝 Setting step to 5')
                 console.log('📝 Setting shouldRedirect to true')
@@ -1367,6 +1449,12 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                     loading={loading}
                     error={error}
                     hasDiscounts={hasDiscounts}
+                    hasDiscountCodes={hasDiscountCodes}
+                    eventId={event.id}
+                    baseAmount={baseAmount}
+                    onDiscountCodeApplied={handleDiscountCodeApplied}
+                    onDiscountCodeRemoved={handleDiscountCodeRemoved}
+                    appliedDiscountCode={appliedDiscountCode}
                 />
             )}
 
@@ -1519,6 +1607,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                     processingFee={processingFee}
                     discountInfo={discountInfo}
                     discountLoading={discountLoading}
+                    appliedDiscountCode={appliedDiscountCode}
                     contactInfo={contactInfo}
                     participants={participants}
                     formFields={formFields}

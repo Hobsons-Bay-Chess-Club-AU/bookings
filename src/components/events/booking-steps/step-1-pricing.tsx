@@ -1,7 +1,7 @@
 "use client"
 
-// ...existing code...
 import { EventPricing } from '@/lib/types/database'
+import DiscountCodeInput from '../discount-code-input'
 
 interface Step1PricingProps {
     availablePricing: EventPricing[]
@@ -15,6 +15,32 @@ interface Step1PricingProps {
     loading: boolean
     error: string
     hasDiscounts?: boolean
+    hasDiscountCodes?: boolean
+    eventId?: string
+    baseAmount?: number
+    onDiscountCodeApplied?: (discountInfo: {
+        discount: {
+            id: string
+            name: string
+            description?: string
+            value_type: string
+            value: number
+        }
+        discountAmount: number
+        finalAmount: number
+    } | null) => void
+    onDiscountCodeRemoved?: () => void
+    appliedDiscountCode?: {
+        discount: {
+            id: string
+            name: string
+            description?: string
+            value_type: string
+            value: number
+        }
+        discountAmount: number
+        finalAmount: number
+    } | null
 }
 
 export default function Step1Pricing({
@@ -28,7 +54,13 @@ export default function Step1Pricing({
     onContinue,
     loading,
     error,
-    hasDiscounts = false
+    hasDiscounts = false,
+    hasDiscountCodes = false,
+    eventId,
+    baseAmount,
+    onDiscountCodeApplied,
+    onDiscountCodeRemoved,
+    appliedDiscountCode
 }: Step1PricingProps) {
     return (
         <form onSubmit={(e) => { e.preventDefault(); onContinue(); }} className="space-y-6">
@@ -170,6 +202,21 @@ export default function Step1Pricing({
                     Maximum {maxQuantity} tickets per booking
                 </p>
             </div>
+
+            {/* Discount Code Input */}
+            {hasDiscountCodes && eventId && baseAmount && (
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <DiscountCodeInput
+                        eventId={eventId}
+                        baseAmount={baseAmount}
+                        quantity={quantity}
+                        onDiscountApplied={onDiscountCodeApplied}
+                        onDiscountRemoved={onDiscountCodeRemoved}
+                        appliedDiscount={appliedDiscountCode}
+                        disabled={loading}
+                    />
+                </div>
+            )}
 
             {/* Total Amount */}
             <div className="flex items-center justify-between mt-6">
