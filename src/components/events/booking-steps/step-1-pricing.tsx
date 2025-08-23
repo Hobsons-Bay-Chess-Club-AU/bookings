@@ -101,12 +101,14 @@ export default function Step1Pricing({
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${pricing.pricing_type === 'early_bird' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
                                                     pricing.pricing_type === 'regular' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
                                                         pricing.pricing_type === 'late_bird' ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' :
-                                                            'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
+                                                            pricing.pricing_type === 'conditional_free' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                                                                'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
                                                     }`}>
                                                     {pricing.pricing_type === 'early_bird' ? 'Early Bird' :
                                                         pricing.pricing_type === 'regular' ? 'Regular' :
                                                             pricing.pricing_type === 'late_bird' ? 'Late Bird' :
-                                                                'Special'}
+                                                                pricing.pricing_type === 'conditional_free' ? 'Conditional Free' :
+                                                                    'Special'}
                                                 </span>
                                             </div>
                                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{pricing.description}</p>
@@ -150,12 +152,14 @@ export default function Step1Pricing({
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${availablePricing[0].pricing_type === 'early_bird' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
                                                 availablePricing[0].pricing_type === 'regular' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
                                                     availablePricing[0].pricing_type === 'late_bird' ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' :
-                                                        'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
+                                                        availablePricing[0].pricing_type === 'conditional_free' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                                                            'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
                                                 }`}>
                                                 {availablePricing[0].pricing_type === 'early_bird' ? 'Early Bird' :
                                                     availablePricing[0].pricing_type === 'regular' ? 'Regular' :
                                                         availablePricing[0].pricing_type === 'late_bird' ? 'Late Bird' :
-                                                            'Special'}
+                                                            availablePricing[0].pricing_type === 'conditional_free' ? 'Conditional Free' :
+                                                                'Special'}
                                             </span>
                                         </div>
                                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{availablePricing[0].description}</p>

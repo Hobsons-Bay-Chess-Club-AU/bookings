@@ -100,12 +100,12 @@ export async function PATCH(
                     .update({ current_attendees: newCount })
                     .eq('id', eventId)
             }
-            // If previously whitelisted, set participants to active
+            // If previously whitelisted or pending_approval, set participants to active
             await supabase
                 .from('participants')
                 .update({ status: 'active' })
                 .eq('booking_id', bookingId)
-                .eq('status', 'whitelisted')
+                .in('status', ['whitelisted', 'pending_approval'])
         }
 
         return NextResponse.json({ message: 'Booking status updated successfully', booking: updatedBooking })

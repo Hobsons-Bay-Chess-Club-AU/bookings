@@ -1,11 +1,11 @@
 import { FieldOption } from "@stripe/stripe-js"
 
 export type UserRole = 'user' | 'admin' | 'organizer' | 'customer_support'
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'refunded' | 'verified' | 'whitelisted'
+export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'refunded' | 'verified' | 'whitelisted' | 'pending_approval'
 export type RefundStatus = 'none' | 'requested' | 'processing' | 'completed' | 'failed'
 export type EventStatus = 'draft' | 'published' | 'cancelled' | 'completed' | 'entry_closed'
 export type MembershipType = 'member' | 'non_member' | 'all'
-export type PricingType = 'early_bird' | 'regular' | 'late_bird' | 'special'
+export type PricingType = 'early_bird' | 'regular' | 'late_bird' | 'special' | 'conditional_free'
 export type FormFieldType = 'text' | 'email' | 'phone' | 'number' | 'date' | 'select' | 'multiselect' | 'checkbox' | 'textarea' | 'file' | 'fide_id' | 'acf_id' | 'computed_membership_lookup'
 export type TimelineType = 'refund'
 export type RefundValueType = 'percentage' | 'fixed'
@@ -203,7 +203,7 @@ export interface Participant {
     gender?: string
     section_id?: string
     custom_data?: Record<string, CustomDataValue>
-    status?: 'active' | 'whitelisted' | 'cancelled'
+    status?: 'active' | 'whitelisted' | 'cancelled' | 'pending_approval'
     price_paid?: number // Amount paid for this specific participant
     created_at?: string
     updated_at?: string

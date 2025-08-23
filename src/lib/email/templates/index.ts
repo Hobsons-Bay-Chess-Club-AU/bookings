@@ -17,6 +17,8 @@ export { default as OrganizerCustomEmail } from './organizer-custom-email'
 export { default as ParticipantWithdrawalEmail } from './participant-withdrawal'
 export { default as OrganizerParticipantWithdrawalEmail } from './organizer-participant-withdrawal'
 export { default as ParticipantDataChangeEmail } from './participant-data-change'
+export { default as ConditionalFreeApprovedEmail } from './conditional-free-approved'
+export { default as ConditionalFreeRequestNotificationEmail } from './conditional-free-request-notification'
 
 // Render Functions
 export { renderBookingConfirmationEmail } from './booking-confirmation'
@@ -33,6 +35,8 @@ export { renderOrganizerCustomEmail } from './organizer-custom-email'
 export { renderParticipantWithdrawalEmail } from './participant-withdrawal'
 export { renderOrganizerParticipantWithdrawalEmail } from './organizer-participant-withdrawal'
 export { renderParticipantDataChangeEmail } from './participant-data-change'
+export { renderConditionalFreeApprovedEmail } from './conditional-free-approved'
+export { renderConditionalFreeRequestNotificationEmail } from './conditional-free-request-notification'
 
 // Legacy exports for backward compatibility
 export { BookingConfirmationEmail as BookingConfirmationEmailLegacy } from '../templates'

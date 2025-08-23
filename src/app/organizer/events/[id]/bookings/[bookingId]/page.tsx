@@ -144,6 +144,8 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                 return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
             case 'pending':
                 return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300';
+            case 'pending_approval':
+                return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
             case 'cancelled':
                 return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
             case 'refunded':
@@ -159,6 +161,8 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
             case 'verified':
                 return <HiCheckCircle className="h-5 w-5" />;
             case 'pending':
+                return <HiClock className="h-5 w-5" />;
+            case 'pending_approval':
                 return <HiClock className="h-5 w-5" />;
             case 'cancelled':
                 return <HiXCircle className="h-5 w-5" />;
@@ -183,6 +187,11 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
             case 'verify':
                 title = 'Mark as Verified';
                 message = 'Are you sure you want to mark this booking as verified? This indicates the participant has attended.';
+                variant = 'info';
+                break;
+            case 'approve-conditional-free':
+                title = 'Approve Conditional Free Entry';
+                message = 'Are you sure you want to approve this conditional free entry request? This will confirm the booking and send an approval email to the user.';
                 variant = 'info';
                 break;
             case 'cancel':
@@ -222,6 +231,14 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ bookingId: booking.id }),
+                });
+            } else if (confirmAction.type === 'approve-conditional-free') {
+                // Call the conditional free approval API
+                response = await fetch(`/api/organizer/events/${eventId}/bookings/${booking.id}/approve-conditional-free`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                 });
             } else {
                 // Call the regular status update API
@@ -675,6 +692,24 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                                             data-menu-item
                                         >
                                             <HiArrowPath className="mr-2 h-4 w-4" /> Release Whitelist
+                                        </button>
+                                        <button
+                                            onClick={() => handleActionClick('cancel', 'cancelled')}
+                                            className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-left"
+                                            data-menu-item
+                                        >
+                                            <HiXCircle className="mr-2 h-4 w-4" /> Cancel Booking
+                                        </button>
+                                    </>
+                                )}
+                                {booking.status === 'pending_approval' && (
+                                    <>
+                                        <button
+                                            onClick={() => handleActionClick('approve-conditional-free', 'confirmed')}
+                                            className="flex items-center w-full px-4 py-2 text-sm text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 text-left"
+                                            data-menu-item
+                                        >
+                                            <HiCheckCircle className="mr-2 h-4 w-4" /> Approve Conditional Free Entry
                                         </button>
                                         <button
                                             onClick={() => handleActionClick('cancel', 'cancelled')}

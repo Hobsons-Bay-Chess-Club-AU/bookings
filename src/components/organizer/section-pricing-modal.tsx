@@ -346,6 +346,7 @@ function EditPricingForm({ pricing, onSubmit, onCancel, loading }: EditPricingFo
                             <option value="early_bird">Early Bird</option>
                             <option value="late_bird">Late Bird</option>
                             <option value="special">Special</option>
+                            <option value="conditional_free">Conditional Free</option>
                         </select>
                     </div>
                     <div>
@@ -519,6 +520,7 @@ function AddPricingForm({ onSubmit, onCancel, loading }: AddPricingFormProps) {
                             <option value="early_bird">Early Bird</option>
                             <option value="late_bird">Late Bird</option>
                             <option value="special">Special</option>
+                            <option value="conditional_free">Conditional Free</option>
                         </select>
                     </div>
                     <div>

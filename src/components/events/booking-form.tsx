@@ -51,6 +51,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
     const [isLegitimateResume, setIsLegitimateResume] = useState(false)
     const [originalBookingAmount, setOriginalBookingAmount] = useState<number | null>(null)
     const [wasCreatedAsWhitelisted, setWasCreatedAsWhitelisted] = useState(false)
+    const [wasCreatedAsConditionalFree, setWasCreatedAsConditionalFree] = useState(false)
     const [agreedToTerms, setAgreedToTerms] = useState(false)
     const [optInMarketing, setOptInMarketing] = useState(false)
     const [shouldRedirect, setShouldRedirect] = useState(false)
@@ -168,6 +169,11 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
     const isFreeEvent = isMultiSectionEvent 
         ? (selectedSections.length === 0 || selectedSections.every(selection => selection.pricing.price === 0))
         : (displayAmount === 0 || selectedPricing?.price === 0)
+    
+    // Check if this is a conditional free entry (requires approval)
+    const isConditionalFreeEntry = isMultiSectionEvent
+        ? selectedSections.some(selection => selection.pricing.pricing_type === 'conditional_free')
+        : (selectedPricing?.pricing_type === 'conditional_free')
     
     // Processing fee estimation for display (final fee calculated server-side)
     const processingFee = totalAmount > 0 ? totalAmount * 0.017 + 0.30 : 0
@@ -931,7 +937,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                 quantity: number
                 unit_price: number
                 total_amount: number
-                status: 'confirmed' | 'pending' | 'whitelisted'
+                status: 'confirmed' | 'pending' | 'whitelisted' | 'pending_approval'
                 pricing_id?: string
                 is_multi_section?: boolean
             } = {
@@ -940,7 +946,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                 quantity: isMultiSectionEvent ? selectedSections.reduce((sum, selection) => sum + selection.quantity, 0) : quantity,
                 unit_price: isMultiSectionEvent ? 0 : selectedPricing.price, // Will be calculated from sections
                 total_amount: totalAmount,
-                status: shouldWhitelist ? 'whitelisted' : (isFreeEvent ? 'confirmed' : 'pending'),
+                status: shouldWhitelist ? 'whitelisted' : (isConditionalFreeEntry ? 'pending_approval' : (isFreeEvent ? 'confirmed' : 'pending')),
                 is_multi_section: isMultiSectionEvent
             }
             
@@ -1080,7 +1086,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                             gender: participant.gender,
                             custom_data: participant.custom_data || {},
                             section_id: sectionId,
-                            status: shouldWhitelist ? 'whitelisted' : 'active'
+                            status: shouldWhitelist ? 'whitelisted' : (isConditionalFreeEntry ? 'pending_approval' : 'active')
                         })
                         .select()
                         .single()
@@ -1169,6 +1175,38 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                     }
                 } catch (emailError) {
                     console.error('❌ [BOOKING-FORM] Error sending whitelisted booking email:', emailError)
+                }
+            } else if (isConditionalFreeEntry) {
+                // Conditional free entry path: show pending approval message
+                setCurrentBookingId(booking.id)
+                setWasCreatedAsConditionalFree(true)
+                setStep(5)
+                if (onStepChange) {
+                    onStepChange(5)
+                }
+                setShouldRedirect(false)
+                
+                console.log('✅ [BOOKING-FORM] Conditional free entry booking created, awaiting approval')
+
+                // Send notification email to organizer
+                try {
+                    const notificationResponse = await fetch('/api/email/conditional-free-request-notification', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            bookingId: booking.id
+                        })
+                    })
+
+                    if (notificationResponse.ok) {
+                        console.log('✅ [BOOKING-FORM] Conditional free request notification sent to organizer')
+                    } else {
+                        console.error('❌ [BOOKING-FORM] Failed to send conditional free request notification')
+                    }
+                } catch (notificationError) {
+                    console.error('❌ [BOOKING-FORM] Error sending conditional free request notification:', notificationError)
                 }
             } else if (isFreeEvent || totalAmount === 0) {
                 console.log('🎉 Free event detected (original or due to discount code), setting up redirect')
@@ -1647,6 +1685,23 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                                     </h3>
                                     <div className="mt-2 text-sm text-amber-700">
                                         <p>Your details have been captured on the whitelist. The organizer will release your spot when available. You will receive an email and can complete payment from your dashboard at that time.</p>
+                                        <p className="mt-2">Booking ID: {currentBookingId}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : wasCreatedAsConditionalFree ? (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <div className="h-6 w-6 rounded-full bg-blue-600" />
+                                </div>
+                                <div className="ml-3">
+                                    <h3 className="text-sm font-medium text-blue-800">
+                                        Conditional Free Entry Request Submitted
+                                    </h3>
+                                    <div className="mt-2 text-sm text-blue-700">
+                                        <p>Your conditional free entry request has been submitted and is awaiting organizer approval. You will receive an email notification once your request has been reviewed.</p>
                                         <p className="mt-2">Booking ID: {currentBookingId}</p>
                                     </div>
                                 </div>

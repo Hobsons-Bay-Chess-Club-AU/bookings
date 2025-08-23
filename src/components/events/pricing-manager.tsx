@@ -293,6 +293,7 @@ export default function PricingManager({ eventId, initialPricing, event }: Prici
                                     <option value="regular">Regular</option>
                                     <option value="late_bird">Late Bird</option>
                                     <option value="special">Special</option>
+                                    <option value="conditional_free">Conditional Free</option>
                                 </select>
                             </div>
                             <div>

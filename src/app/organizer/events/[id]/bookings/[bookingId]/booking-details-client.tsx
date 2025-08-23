@@ -195,6 +195,10 @@ export default function BookingDetailsClient({ booking, eventId }: BookingDetail
                                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300">
                                                 Cancelled
                                             </span>
+                                        ) : participant.status === 'pending_approval' ? (
+                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                                                Pending Approval
+                                            </span>
                                         ) : (
                                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300">
                                                 Active
@@ -258,6 +262,10 @@ export default function BookingDetailsClient({ booking, eventId }: BookingDetail
                                             {participant.status === 'cancelled' ? (
                                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300">
                                                     Cancelled
+                                                </span>
+                                            ) : participant.status === 'pending_approval' ? (
+                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                                                    Pending Approval
                                                 </span>
                                             ) : (
                                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300">
