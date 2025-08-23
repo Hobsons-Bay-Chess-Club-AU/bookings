@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { Booking, Event, Participant } from '@/lib/types/database'
 import { HiPencil, HiXCircle, HiCheckCircle, HiExclamationTriangle } from 'react-icons/hi2'
+import { formatParticipantName } from '@/lib/utils/name-formatting'
 
 interface BookingDetailsClientProps {
     booking: Booking & { event: Event }
@@ -258,8 +259,7 @@ export default function BookingDetailsClient({ booking, participants }: BookingD
                             </div>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800 dark:text-gray-200">
-                                <div><span className="font-medium">First Name:</span> {participant.first_name}</div>
-                                <div><span className="font-medium">Last Name:</span> {participant.last_name}</div>
+                                <div><span className="font-medium">Name:</span> {formatParticipantName(participant)}</div>
                                 {participant.date_of_birth && <div><span className="font-medium">Date of Birth:</span> {participant.date_of_birth}</div>}
                                 {participant.contact_email && <div><span className="font-medium">Contact Email:</span> {participant.contact_email}</div>}
                                 {participant.contact_phone && <div><span className="font-medium">Contact Phone:</span> {participant.contact_phone}</div>}

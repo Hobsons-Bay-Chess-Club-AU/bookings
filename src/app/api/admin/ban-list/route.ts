@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
         // Apply filters
         if (search) {
-            query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%`)
+            query = query.or(`first_name.ilike.%${search}%,middle_name.ilike.%${search}%,last_name.ilike.%${search}%`)
         }
 
         if (active !== null) {
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const { first_name, last_name, date_of_birth, notes } = await request.json()
+        const { first_name, middle_name, last_name, date_of_birth, notes } = await request.json()
 
         if (!first_name || !last_name || !date_of_birth) {
             return NextResponse.json(
@@ -100,6 +100,7 @@ export async function POST(request: NextRequest) {
             .from('ban_list')
             .insert({
                 first_name,
+                middle_name: middle_name || null,
                 last_name,
                 date_of_birth,
                 notes,

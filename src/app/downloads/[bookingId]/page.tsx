@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfile } from '@/lib/utils/auth'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
+import { formatParticipantName } from '@/lib/utils/name-formatting'
 import { HiDocumentText, HiReceiptRefund, HiArrowLeft, HiArrowDownTray } from 'react-icons/hi2'
 
 interface DownloadPageProps {
@@ -182,7 +183,7 @@ export default async function DownloadPage({ params }: DownloadPageProps) {
                                     <div key={participant.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                         <div>
                                             <p className="font-medium text-gray-900 dark:text-gray-100">
-                                                {participant.first_name} {participant.last_name}
+                                                {formatParticipantName(participant)}
                                                 {participant.section ? ` - ${participant.section.title}` : ''}
                                             </p>
                                             {participant.date_of_birth && (

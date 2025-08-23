@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Event, EventPricing, Participant, FormField, EventSection, SectionPricing } from '@/lib/types/database'
+import { formatParticipantName } from '@/lib/utils/name-formatting'
 
 interface Step4ReviewProps {
     event: Event
@@ -272,7 +273,7 @@ export default function Step4Review({
                         {participants.map((participant, index) => (
                             <div key={index} className="border-b border-gray-200 dark:border-gray-700 pb-2 last:border-b-0">
                                 <p className="text-gray-700 dark:text-gray-300 font-medium break-words">
-                                    {index + 1}. {participant.first_name} {participant.last_name}
+                                    {index + 1}. {participant.first_name && participant.last_name ? formatParticipantName(participant as { first_name: string; middle_name?: string; last_name: string }) : 'Participant'}
                                 </p>
                                 {participant.contact_email && (
                                     <p className="text-gray-600 dark:text-gray-400 text-sm break-all">{participant.contact_email}</p>

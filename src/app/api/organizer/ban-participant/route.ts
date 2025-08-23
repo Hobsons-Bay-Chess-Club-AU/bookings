@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
         // Start a transaction
         const { data: banEntry, error: banError } = await supabase.rpc('add_participant_to_ban_list', {
             p_first_name: participant.first_name,
+            p_middle_name: participant.middle_name || null,
             p_last_name: participant.last_name,
             p_date_of_birth: participant.date_of_birth,
             p_created_by: profile.id,

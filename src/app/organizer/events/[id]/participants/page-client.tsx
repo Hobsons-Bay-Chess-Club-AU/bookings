@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Event, Participant, Booking, Profile, EventSection } from '@/lib/types/database'
 import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight, HiXMark, HiEnvelope, HiClipboardDocumentList, HiTrophy, HiQuestionMarkCircle, HiCheckCircle, HiClock, HiXCircle, HiMagnifyingGlass, HiNoSymbol, HiPencil, HiExclamationTriangle } from 'react-icons/hi2'
+import { formatParticipantName, formatParticipantInitials } from '@/lib/utils/name-formatting'
 import Breadcrumb from '@/components/ui/breadcrumb'
 import SectionTransferModal from '@/components/events/section-transfer-modal'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
@@ -380,6 +381,7 @@ export default function EventParticipantsPageClient({
         // Create CSV headers
         const headers = [
             'First Name',
+            'Middle Name',
             'Last Name',
             'Date of Birth',
             'Gender',
@@ -399,6 +401,7 @@ export default function EventParticipantsPageClient({
         // Create CSV rows from filtered participants
         const rows = filteredParticipants.map(p => [
             p.first_name,
+            p.middle_name || '',
             p.last_name,
             p.date_of_birth || '',
             p.gender ? p.gender.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : '',
@@ -867,13 +870,13 @@ export default function EventParticipantsPageClient({
                                                 <div className="flex-shrink-0 h-10 w-10">
                                                     <div className="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
                                                         <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
-                                                            {participant.first_name.charAt(0)}{participant.last_name.charAt(0)}
+                                                            {formatParticipantInitials(participant)}
                                                         </span>
                                                     </div>
                                                 </div>
                                                 <div className="ml-4">
                                                     <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                        {participant.first_name} {participant.last_name}
+                                                        {formatParticipantName(participant)}
                                                     </div>
                                                     {participant.date_of_birth && (
                                                         <div className="text-sm text-gray-500 dark:text-gray-400">

@@ -201,6 +201,7 @@ export default function Step3Participants({
                     },
                     body: JSON.stringify({
                         first_name: participant.first_name,
+                        middle_name: participant.middle_name || null,
                         last_name: participant.last_name,
                         date_of_birth: participant.date_of_birth
                     })
@@ -348,7 +349,7 @@ export default function Step3Participants({
                     return null
                 })()}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Fixed Fields */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -360,6 +361,17 @@ export default function Step3Participants({
                             onChange={(e) => handleParticipantChange('first_name', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                             required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            Middle Name
+                        </label>
+                        <input
+                            type="text"
+                            value={currentParticipant.middle_name || ''}
+                            onChange={(e) => handleParticipantChange('middle_name', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                         />
                     </div>
                     <div>

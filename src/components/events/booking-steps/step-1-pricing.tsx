@@ -74,8 +74,15 @@ export default function Step1Pricing({
             {availablePricing.length > 1 && (
                 <div className='text-gray-900 dark:text-gray-100'>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
-                        Select Pricing Option
+                        Select Pricing Option *
                     </label>
+                    {!selectedPricing && (
+                        <div className="mb-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-md">
+                            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                                Please select a pricing option to continue.
+                            </p>
+                        </div>
+                    )}
                     <div className="space-y-3">
                         {availablePricing.map((pricing) => (
                             <div
@@ -131,19 +138,30 @@ export default function Step1Pricing({
             {availablePricing.length === 1 && (
                 <div className='text-gray-900 dark:text-gray-100'>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
-                        Pricing Option
+                        Pricing Option *
                     </label>
+                    {!selectedPricing && (
+                        <div className="mb-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-md">
+                            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                                Please select the pricing option to continue.
+                            </p>
+                        </div>
+                    )}
                     <div className="space-y-3">
                         <div
-                            className="relative rounded-lg border p-4 border-indigo-600 ring-2 ring-indigo-600 bg-indigo-50 dark:bg-indigo-900/20"
+                            className={`relative rounded-lg border p-4 cursor-pointer ${selectedPricing?.id === availablePricing[0].id
+                                ? 'border-indigo-600 ring-2 ring-indigo-600 bg-indigo-50 dark:bg-indigo-900/20'
+                                : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-gray-800'
+                                }`}
+                            onClick={() => setSelectedPricing(availablePricing[0])}
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center">
                                     <input
                                         type="radio"
                                         name="pricing-option"
-                                        checked={true}
-                                        readOnly
+                                        checked={selectedPricing?.id === availablePricing[0].id}
+                                        onChange={() => setSelectedPricing(availablePricing[0])}
                                         className="h-4 w-4 text-indigo-600 border-gray-300 dark:border-gray-700 focus:ring-indigo-500 dark:bg-gray-800 dark:checked:bg-indigo-600"
                                     />
                                     <div className="ml-3">
@@ -243,10 +261,10 @@ export default function Step1Pricing({
             <div className="flex space-x-4 mt-8">
                 <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || !selectedPricing}
                     className="flex-1 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {loading ? 'Loading...' : 'Continue'}
+                    {loading ? 'Loading...' : !selectedPricing ? 'Select Pricing Option' : 'Continue'}
                 </button>
             </div>
         </form>

@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf'
 import QRCode from 'qrcode'
 import { Event, Booking, Participant } from '@/lib/types/database'
+import { formatParticipantName } from '@/lib/utils/name-formatting'
 
 export interface TicketData {
     event: Event
@@ -242,7 +243,7 @@ export class TicketGenerator {
         // Left column
         pdf.setFontSize(20)
         pdf.setFont('helvetica', 'bold')
-        pdf.text(`${participant.first_name} ${participant.last_name}`, margin, 60)
+        pdf.text(formatParticipantName(participant), margin, 60)
 
         let yPosition = 80
         const lineHeight = 8

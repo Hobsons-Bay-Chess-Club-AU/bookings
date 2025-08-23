@@ -19,6 +19,7 @@ interface WhitelistReleasedEmailData {
   sectionName?: string
   participants?: Array<{
     first_name: string
+    middle_name?: string
     last_name: string
     date_of_birth?: string
     contact_email?: string
@@ -113,7 +114,7 @@ function WhitelistReleasedEmail({
           {participants.map((participant, index) => (
             <EmailCard key={index} backgroundColor="#f7fafc" borderColor="#3b82f6">
               <EmailText style={{ marginBottom: '10px' }}>
-                <strong>Participant {index + 1}:</strong> {participant.first_name} {participant.last_name}
+                <strong>Participant {index + 1}:</strong> {participant.middle_name ? `${participant.first_name} ${participant.middle_name} ${participant.last_name}` : `${participant.first_name} ${participant.last_name}`}
               </EmailText>
               {participant.date_of_birth && (
                 <EmailText style={{ marginBottom: '10px' }}>

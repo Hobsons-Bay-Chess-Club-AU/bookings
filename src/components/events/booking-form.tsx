@@ -41,6 +41,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
     const [pricingLoading, setPricingLoading] = useState(true)
     const [contactInfo, setContactInfo] = useState({
         first_name: '',
+        middle_name: '',
         last_name: '',
         email: '',
         phone: ''
@@ -154,7 +155,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
     // Calculate total amount based on event type
     const baseAmount = isMultiSectionEvent 
         ? selectedSections.reduce((sum, selection) => sum + (selection.pricing.price * selection.quantity), 0)
-        : (selectedPricing ? selectedPricing.price * quantity : (event.price * quantity))
+        : (selectedPricing ? selectedPricing.price * quantity : 0)
     
     // If we're resuming a booking that can't be resumed but has pricing info, use that for display
     const displayAmount = originalBookingAmount !== null && baseAmount === 0 
@@ -306,11 +307,12 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                         updated_at: new Date().toISOString()
                     }
                     setAvailablePricing([defaultPricing])
-                    setSelectedPricing(defaultPricing)
+                    // Don't auto-select even default pricing - let user choose explicitly
+                    setSelectedPricing(null)
                 } else {
                     setAvailablePricing(pricing)
-                    // Auto-select the first (cheapest) available pricing
-                    setSelectedPricing(pricing[0])
+                    // Don't auto-select pricing - let user choose explicitly
+                    setSelectedPricing(null)
                 }
 
                 // Set form fields from event
@@ -368,12 +370,12 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
         }
     }, [hasUserInteracted, step, isMultiSectionEvent])
 
-    // Auto-select pricing when available pricing changes
-    useEffect(() => {
-        if (availablePricing.length > 0 && !selectedPricing) {
-            setSelectedPricing(availablePricing[0])
-        }
-    }, [availablePricing, selectedPricing, step])
+    // Don't auto-select pricing - let user choose explicitly
+    // useEffect(() => {
+    //     if (availablePricing.length > 0 && !selectedPricing) {
+    //         setSelectedPricing(availablePricing[0])
+    //     }
+    // }, [availablePricing, selectedPricing, step])
 
     // Auto-advance to step 1 for single events when pricing loads
     useEffect(() => {
@@ -553,12 +555,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
             return
         }
 
-        // If no pricing is selected but we have available pricing, auto-select the first one
-        if (!selectedPricing && availablePricing.length > 0) {
-            setSelectedPricing(availablePricing[0])
-        }
-
-        // If still no pricing selected, show error
+        // Require user to explicitly select a pricing option
         if (!selectedPricing) {
             setError('Please select a pricing option')
             return
@@ -573,6 +570,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
 
             setContactInfo({
                 first_name: firstName,
+                middle_name: '',
                 last_name: lastName,
                 email: user.email || '',
                 phone: user.phone || ''
@@ -600,6 +598,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
 
                 return {
                     first_name: contactInfo.first_name,
+                    middle_name: contactInfo.middle_name,
                     last_name: contactInfo.last_name,
                     email: contactInfo.email,
                     phone: contactInfo.phone,
@@ -1511,6 +1510,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
 
                             setContactInfo({
                                 first_name: firstName,
+                                middle_name: '',
                                 last_name: lastName,
                                 email: user.email || '',
                                 phone: user.phone || ''

@@ -17,7 +17,7 @@ export async function PUT(
         }
 
         const { id } = await params
-        const { first_name, last_name, date_of_birth, active, notes } = await request.json()
+        const { first_name, middle_name, last_name, date_of_birth, active, notes } = await request.json()
 
         if (!first_name || !last_name || !date_of_birth) {
             return NextResponse.json(
@@ -32,6 +32,7 @@ export async function PUT(
             .from('ban_list')
             .update({
                 first_name,
+                middle_name: middle_name || null,
                 last_name,
                 date_of_birth,
                 active,

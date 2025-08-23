@@ -519,7 +519,7 @@ export default function BanListClient() {
                 onClose={() => setShowDeleteModal(false)}
                 onConfirm={handleDelete}
                 title="Delete Ban Entry"
-                message={`Are you sure you want to delete the ban entry for ${selectedEntry?.first_name} ${selectedEntry?.last_name}? This action cannot be undone.`}
+                message={`Are you sure you want to delete the ban entry for ${selectedEntry?.first_name}${selectedEntry?.middle_name ? ` ${selectedEntry.middle_name}` : ''} ${selectedEntry?.last_name}? This action cannot be undone.`}
                 confirmText="Delete"
                 cancelText="Cancel"
                 variant="danger"

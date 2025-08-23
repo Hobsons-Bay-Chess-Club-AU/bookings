@@ -24,6 +24,7 @@ interface BookingData {
 interface ParticipantData {
     id: string
     first_name: string
+    middle_name?: string
     last_name: string
     contact_email?: string
     booking?: {
@@ -464,7 +465,7 @@ function loadParticipantRecipients(participant: ParticipantData): EmailRecipient
         return [{
             email,
             name: participant.first_name && participant.last_name 
-                ? `${participant.first_name} ${participant.last_name}`
+                ? (participant.middle_name ? `${participant.first_name} ${participant.middle_name} ${participant.last_name}` : `${participant.first_name} ${participant.last_name}`)
                 : participant.booking?.user?.full_name || email,
             type: 'participant' as const,
             source: `Participant ${participant.id}`

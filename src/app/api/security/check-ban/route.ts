@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
     try {
-        const { first_name, last_name, date_of_birth } = await request.json()
+        const { first_name, middle_name, last_name, date_of_birth } = await request.json()
 
         if (!first_name || !last_name || !date_of_birth) {
             return NextResponse.json(
@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
         // Use the database function to check if participant is banned
         const { data, error } = await supabase.rpc('is_participant_banned', {
             p_first_name: first_name,
+            p_middle_name: middle_name || null,
             p_last_name: last_name,
             p_date_of_birth: date_of_birth
         })

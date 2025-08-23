@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf'
 import { Event, Booking, Participant } from '@/lib/types/database'
+import { formatParticipantName } from '@/lib/utils/name-formatting'
 
 export interface ReceiptData {
     event: Event
@@ -177,7 +178,7 @@ export class ReceiptGenerator {
             pdf.text('Customer:', margin, yPosition)
             pdf.setFont('helvetica', 'normal')
             const customerName = participants.length > 0 
-                ? `${participants[0].first_name} ${participants[0].last_name}`
+                ? formatParticipantName(participants[0])
                 : 'Event Participant'
             pdf.text(customerName, margin + 50, yPosition)
             yPosition +=lineHeight

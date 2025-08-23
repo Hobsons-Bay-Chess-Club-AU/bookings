@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { Booking, Event, Participant } from '@/lib/types/database'
 import { HiXCircle, HiCheckCircle, HiExclamationTriangle, HiUsers, HiEnvelope, HiPhone, HiPencil } from 'react-icons/hi2'
+import { formatParticipantName } from '@/lib/utils/name-formatting'
 import EditParticipantModal from '@/components/organizer/edit-participant-modal'
 
 interface BookingDetailsClientProps {
@@ -247,7 +248,7 @@ export default function BookingDetailsClient({ booking, eventId }: BookingDetail
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <div className="font-medium text-gray-900 dark:text-gray-100">
-                                                {participant.first_name} {participant.last_name}
+                                                {formatParticipantName(participant)}
                                             </div>
                                             {participant.date_of_birth && (
                                                 <div className="text-sm text-gray-600 dark:text-gray-400">

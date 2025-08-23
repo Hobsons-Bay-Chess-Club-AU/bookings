@@ -27,6 +27,7 @@ interface OrganizerCustomEmailData {
   participant?: {
     id: string
     first_name: string
+    middle_name?: string
     last_name: string
     booking?: {
       booking_id?: string
@@ -61,7 +62,7 @@ function OrganizerCustomEmail({
   // Get recipient name for personalization
   const getRecipientName = () => {
     if (participant && participant.first_name && participant.last_name) {
-      return `${participant.first_name} ${participant.last_name}`
+      return participant.middle_name ? `${participant.first_name} ${participant.middle_name} ${participant.last_name}` : `${participant.first_name} ${participant.last_name}`
     }
     if (user?.full_name) {
       return user.full_name
@@ -151,7 +152,7 @@ function OrganizerCustomEmail({
         <EmailCard backgroundColor="#f0fdf4" borderColor="#22c55e">
           <EmailHeading level={3}>Participant Information</EmailHeading>
           <EmailText style={{ marginBottom: '10px' }}>
-            <strong>Name:</strong> {participant.first_name} {participant.last_name}
+            <strong>Name:</strong> {participant.middle_name ? `${participant.first_name} ${participant.middle_name} ${participant.last_name}` : `${participant.first_name} ${participant.last_name}`}
           </EmailText>
           <EmailText style={{ marginBottom: '0' }}>
             <strong>Participant ID:</strong> {participant.id}

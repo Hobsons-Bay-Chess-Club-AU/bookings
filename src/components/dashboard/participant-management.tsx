@@ -9,6 +9,7 @@ import {
     HiUser,
     HiCurrencyDollar
 } from 'react-icons/hi2'
+import { formatParticipantName } from '@/lib/utils/name-formatting'
 import { Participant, Booking, Event } from '@/lib/types/database'
 
 interface ParticipantManagementProps {
@@ -80,7 +81,7 @@ function EditParticipantModal({ participant, isOpen, onClose, onSave, event }: E
             <div className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                        Edit Participant: {participant.first_name} {participant.last_name}
+                        Edit Participant: {formatParticipantName(participant)}
                     </h3>
                     <button
                         onClick={onClose}
@@ -418,7 +419,7 @@ export default function ParticipantManagement({ booking, participants, onPartici
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                            {participant.first_name} {participant.last_name}
+                                            {formatParticipantName(participant)}
                                         </p>
                                         {participant.contact_email && (
                                             <p className="text-sm text-gray-500 dark:text-gray-400">

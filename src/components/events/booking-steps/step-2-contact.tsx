@@ -2,6 +2,7 @@
 
 interface ContactInfo {
     first_name: string
+    middle_name: string
     last_name: string
     email: string
     phone: string
@@ -66,7 +67,7 @@ export default function Step2Contact({
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                         First Name *
@@ -77,6 +78,17 @@ export default function Step2Contact({
                         onChange={(e) => handleInputChange('first_name', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                         required
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        Middle Name
+                    </label>
+                    <input
+                        type="text"
+                        value={contactInfo.middle_name}
+                        onChange={(e) => handleInputChange('middle_name', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                     />
                 </div>
                 <div>

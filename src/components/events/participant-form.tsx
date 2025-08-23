@@ -7,6 +7,7 @@ type ExtendedParticipant = Partial<Participant> & {
     contact_email?: string
     contact_phone?: string
     first_name?: string
+    middle_name?: string
     last_name?: string
     date_of_birth?: string
     custom_data?: Record<string, unknown>
@@ -28,6 +29,7 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
         const newParticipants = Array.from({ length: quantity }, (_, index) =>
             participants[index] || {
                 first_name: '',
+                middle_name: '',
                 last_name: '',
                 date_of_birth: '',
                 contact_email: '',
@@ -46,6 +48,7 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
         if (!newParticipants[index]) {
             newParticipants[index] = {
                 first_name: '',
+                middle_name: '',
                 last_name: '',
                 date_of_birth: '',
                 contact_email: '',
@@ -54,7 +57,7 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
             }
         }
 
-        if (['first_name', 'last_name', 'date_of_birth', 'contact_email', 'contact_phone'].includes(field)) {
+        if (['first_name', 'middle_name', 'last_name', 'date_of_birth', 'contact_email', 'contact_phone'].includes(field)) {
             newParticipants[index] = { ...newParticipants[index], [field]: value }
         } else {
             // Custom field
@@ -349,7 +352,7 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
             {/* Form Fields */}
             <div className="space-y-6">
                 {/* Fixed Fields */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             First Name <span className="text-red-500">*</span>
@@ -364,6 +367,17 @@ export default function ParticipantForm({ fields, participants, onChange, quanti
                         {errors[`${currentStep}_first_name`] && (
                             <p className="text-sm text-red-600 mt-1">{errors[`${currentStep}_first_name`]}</p>
                         )}
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Middle Name
+                        </label>
+                        <input
+                            type="text"
+                            value={participant.middle_name || ''}
+                            onChange={(e) => updateParticipant(currentStep, 'middle_name', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
