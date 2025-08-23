@@ -148,6 +148,7 @@ import { resend } from './client'
 import { createClient } from '@/lib/supabase/server'
 import { CalendarEvent, generateGoogleCalendarUrl, generateOutlookCalendarUrl, generateIcsFile } from '@/lib/utils/calendar'
 import { ReceiptGenerator } from '@/lib/receipt/receipt-generator'
+import { TermsPDFGenerator } from '@/lib/email/terms-pdf-generator'
 
 interface EmailData {
     booking: Booking
@@ -361,6 +362,53 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
             // Continue without receipt attachment
         }
 
+        // Generate terms & conditions PDF
+        let termsBuffer: Buffer | null = null
+        let termsFilename = ''
+        try {
+            console.log('📄 [BOOKING CONFIRMATION] Generating terms & conditions PDF:', {
+                bookingId: booking.id,
+                eventTitle: event.title,
+                hasEventTerms: !!event.settings?.terms_conditions,
+                timestamp: new Date().toISOString()
+            })
+
+            // Check if event has specific terms & conditions
+            if (event.settings?.terms_conditions) {
+                // Generate event-specific terms PDF
+                termsBuffer = await TermsPDFGenerator.generateEventTermsPDF(
+                    event.settings.terms_conditions,
+                    event.title
+                )
+                termsFilename = `event_terms_${event.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${startDate
+                    .toISOString()
+                    .slice(0, 10)}.pdf`
+            } else {
+                // Generate general terms PDF
+                termsBuffer = await TermsPDFGenerator.generateTermsPDF(event.title)
+                termsFilename = `terms_conditions_${startDate
+                    .toISOString()
+                    .slice(0, 10)}.pdf`
+            }
+            
+            if (termsBuffer) {
+                console.log('✅ [BOOKING CONFIRMATION] Terms & conditions PDF generated successfully:', {
+                    bookingId: booking.id,
+                    termsSize: termsBuffer.length,
+                    termsFilename,
+                    timestamp: new Date().toISOString()
+                })
+            }
+        } catch (termsError) {
+            console.error('❌ [BOOKING CONFIRMATION] Failed to generate terms & conditions PDF:', {
+                bookingId: booking.id,
+                error: termsError instanceof Error ? termsError.message : 'Unknown error',
+                errorStack: termsError instanceof Error ? termsError.stack : undefined,
+                timestamp: new Date().toISOString()
+            })
+            // Continue without terms attachment
+        }
+
         // Prepare attachments
         const attachments = [
             {
@@ -379,6 +427,19 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
             
             attachments.push({
                 filename: receiptFilename,
+                content: base64Content,
+                contentType: 'application/pdf'
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any)
+        }
+
+        // Add terms & conditions attachment if generated successfully
+        if (termsBuffer) {
+            // Convert to base64 for Resend API
+            const base64Content = termsBuffer.toString('base64')
+            
+            attachments.push({
+                filename: termsFilename,
                 content: base64Content,
                 contentType: 'application/pdf'
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -525,11 +586,77 @@ export async function sendWhitelistedBookingEmail(data: EmailData) {
             timestamp: new Date().toISOString()
         })
 
+        // Generate terms & conditions PDF for whitelisted booking
+        let termsBuffer: Buffer | null = null
+        let termsFilename = ''
+        try {
+            console.log('📄 [WHITELISTED BOOKING] Generating terms & conditions PDF:', {
+                bookingId: booking.id,
+                eventTitle: event.title,
+                hasEventTerms: !!event.settings?.terms_conditions,
+                timestamp: new Date().toISOString()
+            })
+
+            const startDate = new Date(event.start_date)
+
+            // Check if event has specific terms & conditions
+            if (event.settings?.terms_conditions) {
+                // Generate event-specific terms PDF
+                termsBuffer = await TermsPDFGenerator.generateEventTermsPDF(
+                    event.settings.terms_conditions,
+                    event.title
+                )
+                termsFilename = `event_terms_${event.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${startDate
+                    .toISOString()
+                    .slice(0, 10)}.pdf`
+            } else {
+                // Generate general terms PDF
+                termsBuffer = await TermsPDFGenerator.generateTermsPDF(event.title)
+                termsFilename = `terms_conditions_${startDate
+                    .toISOString()
+                    .slice(0, 10)}.pdf`
+            }
+            
+            if (termsBuffer) {
+                console.log('✅ [WHITELISTED BOOKING] Terms & conditions PDF generated successfully:', {
+                    bookingId: booking.id,
+                    termsSize: termsBuffer.length,
+                    termsFilename,
+                    timestamp: new Date().toISOString()
+                })
+            }
+        } catch (termsError) {
+            console.error('❌ [WHITELISTED BOOKING] Failed to generate terms & conditions PDF:', {
+                bookingId: booking.id,
+                error: termsError instanceof Error ? termsError.message : 'Unknown error',
+                errorStack: termsError instanceof Error ? termsError.stack : undefined,
+                timestamp: new Date().toISOString()
+            })
+            // Continue without terms attachment
+        }
+
+        // Prepare attachments
+        const attachments = []
+        
+        // Add terms & conditions attachment if generated successfully
+        if (termsBuffer) {
+            // Convert to base64 for Resend API
+            const base64Content = termsBuffer.toString('base64')
+            
+            attachments.push({
+                filename: termsFilename,
+                content: base64Content,
+                contentType: 'application/pdf'
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any)
+        }
+
         console.log('📤 [WHITELISTED BOOKING] Sending email via Resend:', {
             bookingId: booking.id,
             from: process.env.RESEND_FROM_EMAIL || "",
             to: user.email,
             subject: `Booking Reserved: ${event.title}`,
+            attachmentCount: attachments.length,
             timestamp: new Date().toISOString()
         })
 
@@ -538,7 +665,8 @@ export async function sendWhitelistedBookingEmail(data: EmailData) {
             to: user.email,
             subject: `Booking Reserved: ${event.title}`,
             html,
-            text
+            text,
+            attachments
         })
 
         if (error) {

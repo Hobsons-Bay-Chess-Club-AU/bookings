@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Event, EventPricing, Participant, FormField, EventSection, SectionPricing } from '@/lib/types/database'
 
 interface Step4ReviewProps {
@@ -80,6 +81,28 @@ export default function Step4Review({
     shouldWhitelist = false,
     isMultiSectionEvent = false
 }: Step4ReviewProps) {
+    const [showTermsModal, setShowTermsModal] = useState(false)
+    
+    // Handle escape key to close modal
+    useEffect(() => {
+        const handleEscapeKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && showTermsModal) {
+                setShowTermsModal(false)
+            }
+        }
+
+        if (showTermsModal) {
+            document.addEventListener('keydown', handleEscapeKey)
+            // Prevent body scroll when modal is open
+            document.body.style.overflow = 'hidden'
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleEscapeKey)
+            document.body.style.overflow = 'unset'
+        }
+    }, [showTermsModal])
+    
     const isFreeEvent = isMultiSectionEvent 
         ? (selectedSections.length === 0 || selectedSections.every(selection => selection.pricing.price === 0))
         : (totalAmount === 0 || selectedPricing?.price === 0)
@@ -283,12 +306,7 @@ export default function Step4Review({
                                         , and the{' '}
                                         <button
                                             type="button"
-                                            onClick={() => {
-                                                const modal = document.getElementById('event-terms-modal') as HTMLDialogElement | null
-                                                if (modal) {
-                                                    modal.showModal()
-                                                }
-                                            }}
+                                            onClick={() => setShowTermsModal(true)}
                                             className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 underline"
                                         >
                                             Event Terms & Conditions
@@ -300,36 +318,52 @@ export default function Step4Review({
                         </div>
 
                         {/* Event Terms & Conditions Modal */}
-                        {event.settings?.terms_conditions && (
-                            <dialog id="event-terms-modal" className="modal">
-                                <div className="modal-box max-w-2xl w-full mx-4 bg-white dark:bg-gray-800">
-                                    <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-4">
-                                        Event Terms & Conditions
-                                    </h3>
-                                    <div className="prose dark:prose-invert max-w-none overflow-y-auto max-h-96">
-                                        <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 text-sm break-words">
-                                            {event.settings.terms_conditions}
-                                        </div>
-                                    </div>
-                                    <div className="modal-action">
+                        {showTermsModal && event.settings?.terms_conditions && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                                {/* Backdrop */}
+                                <div 
+                                    className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" 
+                                    onClick={() => setShowTermsModal(false)}
+                                ></div>
+                                
+                                {/* Modal Content */}
+                                <div className="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-t-lg">
+                                        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                            Event Terms & Conditions
+                                        </h3>
                                         <button
                                             type="button"
-                                            onClick={() => {
-                                                const modal = document.getElementById('event-terms-modal') as HTMLDialogElement | null
-                                                if (modal) {
-                                                    modal.close()
-                                                }
-                                            }}
-                                            className="btn btn-primary"
+                                            onClick={() => setShowTermsModal(false)}
+                                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                            aria-label="Close modal"
                                         >
-                                            Close
+                                            ×
+                                        </button>
+                                    </div>
+                                    
+                                    {/* Content */}
+                                    <div className="flex-1 overflow-y-auto p-6">
+                                        <div className="prose dark:prose-invert max-w-none">
+                                            <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed text-base font-normal">
+                                                {event.settings.terms_conditions}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Footer */}
+                                    <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowTermsModal(false)}
+                                            className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+                                        >
+                                            I Understand
                                         </button>
                                     </div>
                                 </div>
-                                <form method="dialog" className="modal-backdrop">
-                                    <button>close</button>
-                                </form>
-                            </dialog>
+                            </div>
                         )}
 
                         <div className="flex items-start space-x-3">
