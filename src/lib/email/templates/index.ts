@@ -14,6 +14,9 @@ export { default as OrganizerBookingNotificationEmail } from './organizer-bookin
 export { default as WhitelistedBookingEmail } from './whitelisted-booking'
 export { default as WhitelistReleasedEmail } from './whitelist-released'
 export { default as OrganizerCustomEmail } from './organizer-custom-email'
+export { default as ParticipantWithdrawalEmail } from './participant-withdrawal'
+export { default as OrganizerParticipantWithdrawalEmail } from './organizer-participant-withdrawal'
+export { default as ParticipantDataChangeEmail } from './participant-data-change'
 
 // Render Functions
 export { renderBookingConfirmationEmail } from './booking-confirmation'
@@ -27,6 +30,9 @@ export { renderOrganizerBookingNotificationEmail } from './organizer-booking-not
 export { renderWhitelistedBookingEmail } from './whitelisted-booking'
 export { renderWhitelistReleasedEmail } from './whitelist-released'
 export { renderOrganizerCustomEmail } from './organizer-custom-email'
+export { renderParticipantWithdrawalEmail } from './participant-withdrawal'
+export { renderOrganizerParticipantWithdrawalEmail } from './organizer-participant-withdrawal'
+export { renderParticipantDataChangeEmail } from './participant-data-change'
 
 // Legacy exports for backward compatibility
 export { BookingConfirmationEmail as BookingConfirmationEmailLegacy } from '../templates'

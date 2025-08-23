@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Breadcrumb from '@/components/ui/breadcrumb'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
+import BookingDetailsClient from './booking-details-client'
 import { Booking, Event, Profile, Participant, DiscountApplication } from '@/lib/types/database';
 import {
     HiTicket,
@@ -413,149 +414,12 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
                         </div>
                     </div>
 
-                    {/* Participants */}
+                    {/* Participants with Management */}
                     {booking.participants && booking.participants.length > 0 && (
-                        <div className="bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
-                            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                                    <HiUsers className="h-5 w-5 mr-2" />
-                                    Participants ({booking.participants.length})
-                                </h2>
-                            </div>
-                            
-                            <div className="overflow-x-auto">
-                                {/* Desktop Table */}
-                                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 hidden lg:table">
-                                    <thead className="bg-gray-50 dark:bg-gray-700">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Name
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Contact
-                                            </th>
-                                            {booking.event.has_sections && (
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                    Section
-                                                </th>
-                                            )}
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Additional Info
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                        {booking.participants.map((participant, index) => (
-                                            <tr key={participant.id || index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                        {participant.first_name} {participant.last_name}
-                                                    </div>
-                                                    {participant.date_of_birth && (
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                            DOB: {participant.date_of_birth}
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="space-y-1">
-                                                                                {participant.contact_email && (
-                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                <HiEnvelope className="h-3 w-3 mr-1" />
-                                {participant.contact_email}
-                            </div>
-                        )}
-                                                                                {participant.contact_phone && (
-                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                <HiPhone className="h-3 w-3 mr-1" />
-                                {participant.contact_phone}
-                            </div>
-                        )}
-                                                    </div>
-                                                </td>
-                                                {booking.event.has_sections && (
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm text-gray-900 dark:text-gray-100">
-                                                            {participant.section?.title || '—'}
-                                                        </div>
-                                                        {participant.section?.description && (
-                                                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                                {participant.section.description}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                )}
-                                                    <td className="px-6 py-4">
-                                                        {participant.custom_data && Object.keys(participant.custom_data).length > 0 ? (
-                                                            <div className="text-xs text-gray-600 dark:text-gray-400">
-                                                                {Object.entries(participant.custom_data).map(([key, value]) => (
-                                                                    <React.Fragment key={key}>
-                                                                        {renderCustomField(key, value)}
-                                                                    </React.Fragment>
-                                                                ))}
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-xs text-gray-400 dark:text-gray-500">No additional info</span>
-                                                        )}
-                                                    </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-
-                                {/* Mobile Cards */}
-                                <div className="lg:hidden divide-y divide-gray-200 dark:divide-gray-700">
-                                    {booking.participants.map((participant, index) => (
-                                        <div key={participant.id || index} className="p-6">
-                                            <div className="space-y-3">
-                                                <div>
-                                                    <div className="font-medium text-gray-900 dark:text-gray-100">
-                                                        {participant.first_name} {participant.last_name}
-                                                    </div>
-                                                    {participant.date_of_birth && (
-                                                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                            DOB: {participant.date_of_birth}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                {booking.event.has_sections && (
-                                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                        <span className="font-medium">Section:</span>{' '}
-                                                        {participant.section?.title || '—'}
-                                                    </div>
-                                                )}
-                                                
-                                                <div className="space-y-2">
-                                                    {participant.contact_email && (
-                                                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                                            <HiEnvelope className="h-4 w-4 mr-2" />
-                                                            {participant.contact_email}
-                                                        </div>
-                                                    )}
-                                                    {participant.contact_phone && (
-                                                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                                            <HiPhone className="h-4 w-4 mr-2" />
-                                                            {participant.contact_phone}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                
-                                                    {participant.custom_data && Object.keys(participant.custom_data).length > 0 && (
-                                                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                            <div className="font-medium mb-1">Additional Info:</div>
-                                                            {Object.entries(participant.custom_data).map(([key, value]) => (
-                                                                <div key={key} className="text-xs">
-                                                                    {renderCustomField(key, value)}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
+                        <BookingDetailsClient 
+                            booking={booking}
+                            eventId={eventId}
+                        />
                     )}
                 </div>
 

@@ -204,6 +204,7 @@ export interface Participant {
     section_id?: string
     custom_data?: Record<string, CustomDataValue>
     status?: 'active' | 'whitelisted' | 'cancelled'
+    price_paid?: number // Amount paid for this specific participant
     created_at?: string
     updated_at?: string
     section?: EventSection

@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Event, Participant, Booking, Profile, EventSection } from '@/lib/types/database'
-import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight, HiXMark, HiEnvelope, HiClipboardDocumentList, HiTrophy, HiQuestionMarkCircle, HiCheckCircle, HiClock, HiXCircle, HiMagnifyingGlass, HiNoSymbol } from 'react-icons/hi2'
+import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight, HiXMark, HiEnvelope, HiClipboardDocumentList, HiTrophy, HiQuestionMarkCircle, HiCheckCircle, HiClock, HiXCircle, HiMagnifyingGlass, HiNoSymbol, HiPencil, HiExclamationTriangle } from 'react-icons/hi2'
 import Breadcrumb from '@/components/ui/breadcrumb'
 import SectionTransferModal from '@/components/events/section-transfer-modal'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
 import ActionMenu from '@/components/ui/action-menu'
+import EditParticipantModal from '@/components/organizer/edit-participant-modal'
 
 interface ParticipantWithBooking extends Participant {
     bookings: (Booking & {
@@ -42,6 +43,13 @@ export default function EventParticipantsPageClient({
     const [selectedParticipantForBan, setSelectedParticipantForBan] = useState<ParticipantWithBooking | null>(null)
     const [banReason, setBanReason] = useState('')
     const [isBanning, setIsBanning] = useState(false)
+    const [showEditModal, setShowEditModal] = useState(false)
+    const [selectedParticipantForEdit, setSelectedParticipantForEdit] = useState<ParticipantWithBooking | null>(null)
+    const [isEditing, setIsEditing] = useState(false)
+    const [showSuccessModal, setShowSuccessModal] = useState(false)
+    const [successMessage, setSuccessMessage] = useState('')
+    const [showErrorModal, setShowErrorModal] = useState(false)
+    const [error, setError] = useState('')
     
 
     useEffect(() => {
@@ -56,7 +64,7 @@ export default function EventParticipantsPageClient({
     }, [openDropdownId])
 
     const handleWithdrawParticipant = async () => {
-        if (!selectedParticipantForWithdrawal || !withdrawalMessage.trim()) {
+        if (!selectedParticipantForWithdrawal) {
             return
         }
 
@@ -68,7 +76,8 @@ export default function EventParticipantsPageClient({
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    message: withdrawalMessage.trim()
+                    reason: withdrawalMessage.trim() || undefined,
+                    notify_booker: true
                 }),
             })
 
@@ -77,11 +86,21 @@ export default function EventParticipantsPageClient({
                 throw new Error(errorData.error || 'Failed to withdraw participant')
             }
 
-            // Refresh the page to show updated data
-            window.location.reload()
+            const result = await response.json()
+            
+            // Show success message with refund information
+            if (result.refund_amount && result.refund_amount > 0) {
+                setSuccessMessage(`Participant withdrawn successfully. Refund amount: $${result.refund_amount.toFixed(2)} (${result.refund_percentage}%)`)
+            } else {
+                setSuccessMessage('Participant withdrawn successfully.')
+            }
+            setShowSuccessModal(true)
+            setShowWithdrawModal(false)
         } catch (error) {
             console.error('Error withdrawing participant:', error)
-            alert('Failed to withdraw participant. Please try again.')
+            const errorMessage = error instanceof Error ? error.message : 'Failed to withdraw participant'
+            setError(`${errorMessage}. Please try again.`)
+            setShowErrorModal(true)
         } finally {
             setIsWithdrawing(false)
             setShowWithdrawModal(false)
@@ -113,11 +132,14 @@ export default function EventParticipantsPageClient({
                 throw new Error(errorData.error || 'Failed to ban participant')
             }
 
-            // Refresh the page to show updated data
-            window.location.reload()
+            setSuccessMessage('Participant banned successfully.')
+            setShowSuccessModal(true)
+            setShowBanModal(false)
         } catch (error) {
             console.error('Error banning participant:', error)
-            alert('Failed to ban participant. Please try again.')
+            const errorMessage = error instanceof Error ? error.message : 'Failed to ban participant'
+            setError(`${errorMessage}. Please try again.`)
+            setShowErrorModal(true)
         } finally {
             setIsBanning(false)
             setShowBanModal(false)
@@ -125,6 +147,45 @@ export default function EventParticipantsPageClient({
             setBanReason('')
         }
     }
+
+    const handleEditParticipant = async (participantId: string, formData: Record<string, unknown>) => {
+        if (!selectedParticipantForEdit) {
+            return
+        }
+
+        setIsEditing(true)
+        try {
+            const response = await fetch(`/api/organizer/events/${event.id}/participants/${selectedParticipantForEdit.id}/edit`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...formData,
+                    notify_booker: true
+                })
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Failed to update participant')
+            }
+
+            setSuccessMessage('Participant updated successfully. The booker has been notified of the changes.')
+            setShowSuccessModal(true)
+            setShowEditModal(false)
+        } catch (error) {
+            console.error('Error updating participant:', error)
+            const errorMessage = error instanceof Error ? error.message : 'Failed to update participant'
+            setError(`${errorMessage}. Please try again.`)
+            setShowErrorModal(true)
+        } finally {
+            setIsEditing(false)
+            setShowEditModal(false)
+            setSelectedParticipantForEdit(null)
+        }
+    }
+
     // Helper function to render custom field values
     const renderCustomFieldValue = (value: unknown): React.ReactNode => {
         // Handle null/undefined values
@@ -780,6 +841,9 @@ export default function EventParticipantsPageClient({
                                         Booking Info
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Price Paid
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Booked By
                                     </th>
                                     {/* Computed admin-only columns */}
@@ -892,6 +956,15 @@ export default function EventParticipantsPageClient({
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="text-sm text-gray-900 dark:text-gray-100">
+                                                {participant.price_paid && participant.price_paid > 0 ? (
+                                                    <div className="font-medium">${participant.price_paid.toFixed(2)}</div>
+                                                ) : (
+                                                    <span className="text-gray-400 dark:text-gray-500">Not available</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="text-sm text-gray-900 dark:text-gray-100">
                                                 <div>{participant.bookings.profiles.full_name || 'Unknown'}</div>
                                                 <div className="text-gray-500 dark:text-gray-400">{participant.bookings.profiles.email}</div>
                                             </div>
@@ -930,6 +1003,18 @@ export default function EventParticipantsPageClient({
                                                     >
                                                         <HiEye className="mr-2 h-4 w-4" /> View Details
                                                     </button>
+                                                    {participant.status !== 'cancelled' && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedParticipantForEdit(participant)
+                                                                setShowEditModal(true)
+                                                            }}
+                                                            className="flex items-center w-full px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-left"
+                                                            data-menu-item
+                                                        >
+                                                            <HiPencil className="mr-2 h-4 w-4" /> Edit Participant
+                                                        </button>
+                                                    )}
                                                     <Link
                                                         href={`/organizer/email-manager?participantId=${participant.id}`}
                                                         className="flex items-center w-full px-4 py-2 text-sm text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-left"
@@ -1330,9 +1415,24 @@ export default function EventParticipantsPageClient({
                             <p className="text-sm text-gray-600 dark:text-gray-400">
                                 This action cannot be undone. The participant and booker will be notified via email.
                             </p>
+                            {selectedParticipantForWithdrawal.price_paid && selectedParticipantForWithdrawal.price_paid > 0 && (
+                                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
+                                    <div className="flex items-start">
+                                        <HiExclamationTriangle className="h-5 w-5 text-amber-400 mr-2 mt-0.5" />
+                                        <div>
+                                            <h4 className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                                                Refund Information
+                                            </h4>
+                                            <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                                                A refund of ${selectedParticipantForWithdrawal.price_paid.toFixed(2)} may be applicable based on the event&apos;s refund policy.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                             <div>
                                 <label htmlFor="withdrawal-message" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                                    Reason for withdrawal <span className="text-red-500">*</span>
+                                    Reason for withdrawal (optional)
                                 </label>
                                 <textarea
                                     id="withdrawal-message"
@@ -1349,7 +1449,7 @@ export default function EventParticipantsPageClient({
                     confirmText={isWithdrawing ? "Withdrawing..." : "Withdraw Participant"}
                     cancelText="Cancel"
                     variant="danger"
-                    confirmDisabled={isWithdrawing || !withdrawalMessage.trim()}
+                    confirmDisabled={isWithdrawing}
                 />
             )}
 
@@ -1404,6 +1504,123 @@ export default function EventParticipantsPageClient({
                     variant="danger"
                     confirmDisabled={isBanning}
                 />
+            )}
+
+            {/* Edit Participant Modal */}
+            {showEditModal && selectedParticipantForEdit && (
+                <EditParticipantModal
+                    participant={selectedParticipantForEdit}
+                    isOpen={showEditModal}
+                    onClose={() => {
+                        if (!isEditing) {
+                            setShowEditModal(false)
+                            setSelectedParticipantForEdit(null)
+                        }
+                    }}
+                    onSave={handleEditParticipant}
+                    event={event}
+                />
+            )}
+
+            {/* Success Modal */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => {
+                        setShowSuccessModal(false)
+                        window.location.reload()
+                    }}></div>
+                    
+                    <div className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                Success
+                            </h3>
+                            <button
+                                onClick={() => {
+                                    setShowSuccessModal(false)
+                                    window.location.reload()
+                                }}
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div className="p-6">
+                            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
+                                <div className="flex items-start">
+                                    <HiCheckCircle className="h-5 w-5 text-green-400 mr-2 mt-0.5" />
+                                    <div>
+                                        <h4 className="text-sm font-medium text-green-800 dark:text-green-200">
+                                            Operation Successful
+                                        </h4>
+                                        <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                                            {successMessage}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 pt-4">
+                                <button
+                                    onClick={() => {
+                                        setShowSuccessModal(false)
+                                        window.location.reload()
+                                    }}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Error Modal */}
+            {showErrorModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" onClick={() => setShowErrorModal(false)}></div>
+                    
+                    <div className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                Error
+                            </h3>
+                            <button
+                                onClick={() => setShowErrorModal(false)}
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div className="p-6">
+                            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4">
+                                <div className="flex items-start">
+                                    <HiExclamationTriangle className="h-5 w-5 text-red-400 mr-2 mt-0.5" />
+                                    <div>
+                                        <h4 className="text-sm font-medium text-red-800 dark:text-red-200">
+                                            Operation Failed
+                                        </h4>
+                                        <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                                            {error}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 pt-4">
+                                <button
+                                    onClick={() => setShowErrorModal(false)}
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
         </>
     )

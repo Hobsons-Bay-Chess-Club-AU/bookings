@@ -11,6 +11,7 @@ import RefundRequestButton from '@/components/dashboard/refund-request-button'
 import ContactOrganizerButton from '@/components/messaging/contact-organizer-button'
 import ChatWidget from '@/components/messaging/chat-widget'
 import EventLocationMap from '@/components/events/event-location-map'
+import BookingDetailsClient from './booking-details-client'
 import { HiCalendarDays, HiClock, HiMapPin } from 'react-icons/hi2'
 import { HiHome } from 'react-icons/hi2'
 
@@ -375,100 +376,12 @@ export default async function BookingDetailsPage({ params, searchParams }: Booki
                                 </div>
                             )}
 
-                            {/* Participant Information */}
+                            {/* Participant Information with Management */}
                             {participants && participants.length > 0 && (
-                                <div className="mt-10">
-                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Participant Information</h2>
-                                    <div className="space-y-6">
-                                        {participants.map((p, idx) => (
-                                            <div key={p.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-                                                <div className="flex items-center mb-2">
-                                                    <span className="font-semibold text-gray-800 dark:text-gray-200 mr-2">Participant {idx + 1}{p.section ? ` - ${p.section.title}` : ''}</span>
-                                                </div>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-800 dark:text-gray-200">
-                                                    <div><span className="font-medium">First Name:</span> {p.first_name}</div>
-                                                    <div><span className="font-medium">Last Name:</span> {p.last_name}</div>
-                                                    {p.date_of_birth && <div><span className="font-medium">Date of Birth:</span> {p.date_of_birth}</div>}
-                                                    {p.contact_email && <div><span className="font-medium">Contact Email:</span> {p.contact_email}</div>}
-                                                    {p.contact_phone && <div><span className="font-medium">Contact Phone:</span> {p.contact_phone}</div>}
-                                                    {p.section && (
-                                                        <>
-                                                            <div className="md:col-span-2">
-                                                                <span className="font-medium">Section:</span> {p.section.title}
-                                                            </div>
-                                                            <div className="md:col-span-2">
-                                                                <span className="font-medium">Section Schedule:</span> {new Date(p.section.start_date).toLocaleString([], { hour: '2-digit', minute: '2-digit', year: 'numeric', month: 'long', day: 'numeric' })}
-                                                                {p.section.end_date ? ` - ${new Date(p.section.end_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
-                                                            </div>
-                                                        </>
-                                                    )}
-                                                    {/* Custom fields */}
-                                                    {p.custom_data && Object.entries(p.custom_data).map(([key, value]) => {
-                                                        let displayValue: string
-
-                                                        // Type guard for FIDE/ACF player object
-                                                        function isPlayerObject(val: unknown): val is { id: string, name: string, std_rating?: number, rapid_rating?: number, blitz_rating?: number } {
-                                                            return (
-                                                                typeof val === 'object' && val !== null &&
-                                                                'id' in val && typeof (val as { id: unknown }).id === 'string' &&
-                                                                'name' in val && typeof (val as { name: unknown }).name === 'string' &&
-                                                                'std_rating' in val
-                                                            )
-                                                        }
-
-                                                        if (Array.isArray(value)) {
-                                                            displayValue = value.join(', ')
-                                                        } else if (isPlayerObject(value)) {
-                                                            const ratings = []
-                                                            if (value.std_rating) ratings.push(`Std: ${value.std_rating}`)
-                                                            if (value.rapid_rating) ratings.push(`Rapid: ${value.rapid_rating}`)
-                                                            if (value.blitz_rating) ratings.push(`Blitz: ${value.blitz_rating}`)
-                                                            displayValue = `${value.name} (ID: ${value.id})${ratings.length > 0 ? ` - ${ratings.join(', ')}` : ''}`
-                                                        } else if (typeof value === 'object' && value !== null) {
-                                                            displayValue = JSON.stringify(value)
-                                                        } else {
-                                                            displayValue = String(value)
-                                                        }
-
-                                                        return (
-                                                            <div key={key}>
-                                                                <span className="font-medium">{key.replace(/_/g, ' ')}:</span>{' '}
-                                                                {/* Special handling for FIDE/ACF player objects with links */}
-                                                                {isPlayerObject(value) ? (
-                                                                    <span>
-                                                                        {value.name} (ID:{' '}
-                                                                        {key.toLowerCase().includes('fide') ? (
-                                                                            <a
-                                                                                href={`https://ratings.fide.com/profile/${value.id}`}
-                                                                                target="_blank"
-                                                                                rel="noopener noreferrer"
-                                                                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
-                                                                            >
-                                                                                {value.id}
-                                                                            </a>
-                                                                        ) : (
-                                                                            value.id
-                                                                        )}
-                                                                        )
-                                                                        {(() => {
-                                                                            const ratings = []
-                                                                            if (value.std_rating) ratings.push(`Std: ${value.std_rating}`)
-                                                                            if (value.rapid_rating) ratings.push(`Rapid: ${value.rapid_rating}`)
-                                                                            if (value.blitz_rating) ratings.push(`Blitz: ${value.blitz_rating}`)
-                                                                            return ratings.length > 0 ? ` - ${ratings.join(', ')}` : ''
-                                                                        })()}
-                                                                    </span>
-                                                                ) : (
-                                                                    displayValue
-                                                                )}
-                                                            </div>
-                                                        )
-                                                    })}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+                                <BookingDetailsClient 
+                                    booking={booking}
+                                    participants={participants}
+                                />
                             )}
 
                             {/* Calendar Integration */}
