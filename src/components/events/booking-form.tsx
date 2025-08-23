@@ -1449,6 +1449,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                     }}
                     loading={loading}
                     error={error}
+                    setError={setError}
                     userId={user?.id}
                     sections={event.sections || []}
                     isMultiSectionEvent={true}
@@ -1472,6 +1473,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                     }}
                     loading={loading}
                     error={error}
+                    setError={setError}
                     userId={user?.id}
                 />
             )}

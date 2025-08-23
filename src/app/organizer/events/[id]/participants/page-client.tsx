@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { Event, Participant, Booking, Profile, EventSection } from '@/lib/types/database'
-import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight, HiXMark, HiEnvelope, HiClipboardDocumentList, HiTrophy, HiQuestionMarkCircle, HiCheckCircle, HiClock, HiXCircle, HiMagnifyingGlass } from 'react-icons/hi2'
+import { HiUsers, HiArrowPath, HiCog6Tooth, HiEye, HiArrowRight, HiXMark, HiEnvelope, HiClipboardDocumentList, HiTrophy, HiQuestionMarkCircle, HiCheckCircle, HiClock, HiXCircle, HiMagnifyingGlass, HiNoSymbol } from 'react-icons/hi2'
 import Breadcrumb from '@/components/ui/breadcrumb'
 import SectionTransferModal from '@/components/events/section-transfer-modal'
 import ConfirmationModal from '@/components/ui/confirmation-modal'
@@ -38,6 +38,10 @@ export default function EventParticipantsPageClient({
     const [selectedParticipantForWithdrawal, setSelectedParticipantForWithdrawal] = useState<ParticipantWithBooking | null>(null)
     const [withdrawalMessage, setWithdrawalMessage] = useState('')
     const [isWithdrawing, setIsWithdrawing] = useState(false)
+    const [showBanModal, setShowBanModal] = useState(false)
+    const [selectedParticipantForBan, setSelectedParticipantForBan] = useState<ParticipantWithBooking | null>(null)
+    const [banReason, setBanReason] = useState('')
+    const [isBanning, setIsBanning] = useState(false)
     
 
     useEffect(() => {
@@ -83,6 +87,42 @@ export default function EventParticipantsPageClient({
             setShowWithdrawModal(false)
             setSelectedParticipantForWithdrawal(null)
             setWithdrawalMessage('')
+        }
+    }
+
+    const handleBanParticipant = async () => {
+        if (!selectedParticipantForBan) {
+            return
+        }
+
+        setIsBanning(true)
+        try {
+            const response = await fetch('/api/organizer/ban-participant', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    participant_id: selectedParticipantForBan.id,
+                    reason: banReason.trim() || `Banned from event: ${event.title}`
+                }),
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Failed to ban participant')
+            }
+
+            // Refresh the page to show updated data
+            window.location.reload()
+        } catch (error) {
+            console.error('Error banning participant:', error)
+            alert('Failed to ban participant. Please try again.')
+        } finally {
+            setIsBanning(false)
+            setShowBanModal(false)
+            setSelectedParticipantForBan(null)
+            setBanReason('')
         }
     }
     // Helper function to render custom field values
@@ -921,6 +961,18 @@ export default function EventParticipantsPageClient({
                                                             <HiXMark className="mr-2 h-4 w-4" /> Withdraw
                                                         </button>
                                                     )}
+                                                    {participant.status !== 'cancelled' && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedParticipantForBan(participant)
+                                                                setShowBanModal(true)
+                                                            }}
+                                                            className="flex items-center w-full px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-left"
+                                                            data-menu-item
+                                                        >
+                                                            <HiNoSymbol className="mr-2 h-4 w-4" /> Ban Participant
+                                                        </button>
+                                                    )}
                                                 </ActionMenu>
                                             </td>
                                     </tr>
@@ -1298,6 +1350,59 @@ export default function EventParticipantsPageClient({
                     cancelText="Cancel"
                     variant="danger"
                     confirmDisabled={isWithdrawing || !withdrawalMessage.trim()}
+                />
+            )}
+
+            {/* Ban Participant Modal */}
+            {showBanModal && selectedParticipantForBan && (
+                <ConfirmationModal
+                    isOpen={showBanModal}
+                    onClose={() => {
+                        if (!isBanning) {
+                            setShowBanModal(false)
+                            setSelectedParticipantForBan(null)
+                            setBanReason('')
+                        }
+                    }}
+                    onConfirm={handleBanParticipant}
+                    title="Ban Participant"
+                    message={
+                        <div className="space-y-4">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Are you sure you want to ban <span className="font-semibold">{selectedParticipantForBan.first_name} {selectedParticipantForBan.last_name}</span> from all future events?
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                This action will:
+                            </p>
+                            <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside space-y-1">
+                                <li>Cancel their current booking</li>
+                                <li>Add them to the global ban list</li>
+                                <li>Prevent them from registering for future events</li>
+                                <li>Send cancellation emails to the participant and booker</li>
+                            </ul>
+                            <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                                This action cannot be undone.
+                            </p>
+                            <div>
+                                <label htmlFor="ban-reason" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                                    Reason for ban (optional)
+                                </label>
+                                <textarea
+                                    id="ban-reason"
+                                    rows={3}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 dark:bg-gray-700 dark:text-gray-100"
+                                    placeholder="Please provide a reason for banning this participant..."
+                                    value={banReason}
+                                    onChange={(e) => setBanReason(e.target.value)}
+                                    disabled={isBanning}
+                                />
+                            </div>
+                        </div>
+                    }
+                    confirmText={isBanning ? "Banning..." : "Ban Participant"}
+                    cancelText="Cancel"
+                    variant="danger"
+                    confirmDisabled={isBanning}
                 />
             )}
         </>

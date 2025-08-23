@@ -23,6 +23,7 @@ interface Step3ParticipantsProps {
     onBack: () => void
     loading: boolean
     error: string
+    setError: (error: string) => void
     userId?: string
     // Multi-section props
     sections?: EventSection[]
@@ -40,6 +41,7 @@ export default function Step3Participants({
     onBack,
     loading,
     error,
+    setError,
     userId,
 
     isMultiSectionEvent = false,
@@ -183,9 +185,38 @@ export default function Step3Participants({
         setParticipants(newParticipants)
     }
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (!isCurrentParticipantValid()) {
             return
+        }
+
+        // Check if current participant is banned
+        const participant = currentParticipant
+        if (participant.first_name && participant.last_name && participant.date_of_birth) {
+            try {
+                const response = await fetch('/api/security/check-ban', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        first_name: participant.first_name,
+                        last_name: participant.last_name,
+                        date_of_birth: participant.date_of_birth
+                    })
+                })
+
+                if (response.ok) {
+                    const { is_banned } = await response.json()
+                    if (is_banned) {
+                        setError('Sorry, we cannot process your entry right now. Please contact the event organizer.')
+                        return
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking ban status:', error)
+                // Continue with booking if ban check fails
+            }
         }
 
         if (isLastParticipant) {

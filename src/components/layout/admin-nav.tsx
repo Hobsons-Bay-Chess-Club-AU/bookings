@@ -259,6 +259,9 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
                                 <Link href="/admin/users" className={getNavLinkClasses('/admin/users', true)}>
                                     Users
                                 </Link>
+                                <Link href="/admin/ban-list" className={getNavLinkClasses('/admin/ban-list', true)}>
+                                    Ban List
+                                </Link>
                             </>
                         )}
                         {/* User dropdown menu only (no horizontal admin/organizer links) */}
