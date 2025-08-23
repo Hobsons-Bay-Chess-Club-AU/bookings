@@ -236,10 +236,13 @@ function WhitelistedBookingEmail({
       <EmailCard backgroundColor="#f0f9ff" borderColor="#0ea5e9">
         <EmailHeading level={3}>Terms & Conditions</EmailHeading>
         <EmailText style={{ marginBottom: '15px' }}>
-          A copy of the terms & conditions you agreed to during booking has been attached to this email as a PDF document.
+          A comprehensive copy of all terms & conditions applicable to your booking has been attached to this email as a PDF document.
+        </EmailText>
+        <EmailText style={{ fontSize: '14px', color: '#6b7280', marginBottom: '10px' }}>
+          <strong>Important:</strong> This PDF includes both event-specific terms and our general site-wide terms & conditions. Your booking is subject to all terms outlined in this document.
         </EmailText>
         <EmailText style={{ fontSize: '14px', color: '#6b7280', marginBottom: '0' }}>
-          <strong>Note:</strong> Please keep this document for your records. The terms & conditions outline your rights and responsibilities as a participant in this event.
+          <strong>Please note:</strong> Keep this document for your records as it contains important information about your rights, responsibilities, and any applicable refund policies.
         </EmailText>
       </EmailCard>
 

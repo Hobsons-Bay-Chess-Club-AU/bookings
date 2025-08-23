@@ -366,19 +366,62 @@ export async function sendBookingConfirmationEmail(data: EmailData) {
         let termsBuffer: Buffer | null = null
         let termsFilename = ''
         try {
+            // Generate refund period text from timeline if available
+            let refundPeriodText: string | undefined
+            if (event.timeline?.refund && event.timeline.refund.length > 0) {
+                const refundItems = event.timeline.refund
+                    .sort((a, b) => {
+                        const aDate = a.from_date ? new Date(a.from_date).getTime() : 0
+                        const bDate = b.from_date ? new Date(b.from_date).getTime() : 0
+                        return aDate - bDate
+                    })
+                
+                refundPeriodText = `Refund Policy:\n\n`
+                refundItems.forEach((item, index) => {
+                    const fromDate = item.from_date 
+                        ? new Date(item.from_date).toLocaleDateString('en-AU', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })
+                        : 'From booking date'
+                    
+                    const toDate = item.to_date 
+                        ? new Date(item.to_date).toLocaleDateString('en-AU', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })
+                        : 'Until event date'
+                    
+                    const value = item.type === 'percentage' 
+                        ? `${item.value}% refund`
+                        : `$${item.value.toFixed(2)} refund`
+                    
+                    refundPeriodText += `${fromDate} to ${toDate}: ${value}\n`
+                    if (item.description) {
+                        refundPeriodText += `  ${item.description}\n`
+                    }
+                    refundPeriodText += '\n'
+                })
+            }
+
             console.log('📄 [BOOKING CONFIRMATION] Generating terms & conditions PDF:', {
                 bookingId: booking.id,
                 eventTitle: event.title,
                 hasEventTerms: !!event.settings?.terms_conditions,
+                hasRefundTimeline: !!event.timeline?.refund,
+                refundItemsCount: event.timeline?.refund?.length || 0,
                 timestamp: new Date().toISOString()
             })
 
             // Check if event has specific terms & conditions
             if (event.settings?.terms_conditions) {
-                // Generate event-specific terms PDF
+                // Generate event-specific terms PDF with site-wide terms included
                 termsBuffer = await TermsPDFGenerator.generateEventTermsPDF(
                     event.settings.terms_conditions,
-                    event.title
+                    event.title,
+                    refundPeriodText
                 )
                 termsFilename = `event_terms_${event.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${startDate
                     .toISOString()
@@ -599,12 +642,53 @@ export async function sendWhitelistedBookingEmail(data: EmailData) {
 
             const startDate = new Date(event.start_date)
 
+            // Generate refund period text from timeline if available
+            let refundPeriodText: string | undefined
+            if (event.timeline?.refund && event.timeline.refund.length > 0) {
+                const refundItems = event.timeline.refund
+                    .sort((a, b) => {
+                        const aDate = a.from_date ? new Date(a.from_date).getTime() : 0
+                        const bDate = b.from_date ? new Date(b.from_date).getTime() : 0
+                        return aDate - bDate
+                    })
+                
+                refundPeriodText = `Refund Policy:\n\n`
+                refundItems.forEach((item, index) => {
+                    const fromDate = item.from_date 
+                        ? new Date(item.from_date).toLocaleDateString('en-AU', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })
+                        : 'From booking date'
+                    
+                    const toDate = item.to_date 
+                        ? new Date(item.to_date).toLocaleDateString('en-AU', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })
+                        : 'Until event date'
+                    
+                    const value = item.type === 'percentage' 
+                        ? `${item.value}% refund`
+                        : `$${item.value.toFixed(2)} refund`
+                    
+                    refundPeriodText += `${fromDate} to ${toDate}: ${value}\n`
+                    if (item.description) {
+                        refundPeriodText += `  ${item.description}\n`
+                    }
+                    refundPeriodText += '\n'
+                })
+            }
+
             // Check if event has specific terms & conditions
             if (event.settings?.terms_conditions) {
-                // Generate event-specific terms PDF
+                // Generate event-specific terms PDF with site-wide terms included
                 termsBuffer = await TermsPDFGenerator.generateEventTermsPDF(
                     event.settings.terms_conditions,
-                    event.title
+                    event.title,
+                    refundPeriodText
                 )
                 termsFilename = `event_terms_${event.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${startDate
                     .toISOString()

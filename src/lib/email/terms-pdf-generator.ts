@@ -197,9 +197,9 @@ export class TermsPDFGenerator {
     }
 
     /**
-     * Generate terms PDF with event-specific content
+     * Generate terms PDF with event-specific content and site-wide terms
      */
-    public static async generateEventTermsPDF(eventTerms: string, eventTitle: string): Promise<Buffer | null> {
+    public static async generateEventTermsPDF(eventTerms: string, eventTitle: string, refundPeriod?: string): Promise<Buffer | null> {
         try {
             const pdf = new jsPDF('p', 'mm', 'a4')
             const pageWidth = pdf.internal.pageSize.getWidth()
@@ -232,14 +232,43 @@ export class TermsPDFGenerator {
             // Introduction
             pdf.setFontSize(10)
             pdf.setFont('helvetica', 'normal')
-            pdf.text('By accepting this booking, you agree to the following event-specific terms and conditions:', margin, yPosition)
+            pdf.text('By accepting this booking, you agree to the following terms and conditions:', margin, yPosition)
             yPosition += 10
+
+            // Refund Period (if specified)
+            if (refundPeriod) {
+                pdf.setFontSize(12)
+                pdf.setFont('helvetica', 'bold')
+                pdf.setTextColor(0, 0, 0)
+                pdf.text('Refund Policy:', margin, yPosition)
+                yPosition += 8
+                
+                pdf.setFontSize(10)
+                pdf.setFont('helvetica', 'normal')
+                const refundLines = pdf.splitTextToSize(refundPeriod, contentWidth)
+                for (const line of refundLines) {
+                    if (yPosition > pageHeight - 40) {
+                        pdf.addPage()
+                        yPosition = 20
+                    }
+                    pdf.text(line, margin, yPosition)
+                    yPosition += 6
+                }
+                yPosition += 10
+            }
+
+            // Event-Specific Terms
+            pdf.setFontSize(12)
+            pdf.setFont('helvetica', 'bold')
+            pdf.setTextColor(0, 0, 0)
+            pdf.text('Event-Specific Terms & Conditions:', margin, yPosition)
+            yPosition += 8
 
             // Convert markdown to text and split into lines
             const plainText = this.markdownToText(eventTerms)
             const lines = pdf.splitTextToSize(plainText, contentWidth)
 
-            // Add content
+            // Add event-specific content
             pdf.setFontSize(10)
             pdf.setFont('helvetica', 'normal')
             pdf.setTextColor(0, 0, 0)
@@ -278,6 +307,62 @@ export class TermsPDFGenerator {
                     // Regular text
                     pdf.text(line, margin, yPosition)
                     yPosition += 6
+                }
+            }
+
+            // Add site-wide terms
+            yPosition += 15
+            pdf.setFontSize(12)
+            pdf.setFont('helvetica', 'bold')
+            pdf.setTextColor(0, 0, 0)
+            pdf.text('Site-Wide Terms & Conditions:', margin, yPosition)
+            yPosition += 8
+
+            // Fetch and add site-wide terms
+            const siteTerms = await this.fetchTermsContent()
+            if (siteTerms) {
+                pdf.setFontSize(10)
+                pdf.setFont('helvetica', 'normal')
+                pdf.setTextColor(0, 0, 0)
+                
+                const siteTermsText = this.markdownToText(siteTerms.body)
+                const siteTermsLines = pdf.splitTextToSize(siteTermsText, contentWidth)
+
+                for (const line of siteTermsLines) {
+                    // Check if we need a new page
+                    if (yPosition > pageHeight - 40) {
+                        pdf.addPage()
+                        yPosition = 20
+                    }
+
+                    // Handle different line types
+                    if (line.trim().length === 0) {
+                        yPosition += 5 // Empty line
+                    } else if (line.startsWith('##')) {
+                        // Subheading
+                        pdf.setFontSize(12)
+                        pdf.setFont('helvetica', 'bold')
+                        pdf.text(line.replace(/^##\s+/, ''), margin, yPosition)
+                        yPosition += 8
+                        pdf.setFontSize(10)
+                        pdf.setFont('helvetica', 'normal')
+                    } else if (line.startsWith('#')) {
+                        // Main heading
+                        pdf.setFontSize(14)
+                        pdf.setFont('helvetica', 'bold')
+                        pdf.text(line.replace(/^#\s+/, ''), margin, yPosition)
+                        yPosition += 10
+                        pdf.setFontSize(10)
+                        pdf.setFont('helvetica', 'normal')
+                    } else if (line.startsWith('- ') || line.startsWith('* ')) {
+                        // List item
+                        pdf.text(`• ${line.substring(2)}`, margin + 5, yPosition)
+                        yPosition += 6
+                    } else {
+                        // Regular text
+                        pdf.text(line, margin, yPosition)
+                        yPosition += 6
+                    }
                 }
             }
 
