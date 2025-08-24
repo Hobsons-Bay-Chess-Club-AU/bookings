@@ -9,7 +9,7 @@ export type PricingType = 'early_bird' | 'regular' | 'late_bird' | 'special' | '
 export type FormFieldType = 'text' | 'email' | 'phone' | 'number' | 'date' | 'select' | 'multiselect' | 'checkbox' | 'textarea' | 'file' | 'fide_id' | 'acf_id' | 'computed_membership_lookup'
 export type TimelineType = 'refund'
 export type RefundValueType = 'percentage' | 'fixed'
-export type MailingListStatus = 'subscribed' | 'unsubscribed'
+export type MailingListStatus = 'subscribed' | 'unsubscribed' | 'pending'
 export type BookingAuditAction = 'transfer' | 'refund' | 'status_change' | 'modification'
 export type DiscountType = 'code' | 'participant_based' | 'seat_based'
 export type DiscountValueType = 'percentage' | 'fixed'
@@ -23,6 +23,7 @@ export interface MailingList {
     datetime: string
     filter_event: string[]
     unsubscribe_code: string
+    confirmation_token?: string
     created_at: string
     updated_at: string
 }
