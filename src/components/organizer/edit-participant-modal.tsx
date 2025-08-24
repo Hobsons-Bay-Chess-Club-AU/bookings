@@ -21,7 +21,8 @@ export default function EditParticipantModal({ participant, isOpen, onClose, onS
         contact_email: participant.contact_email || '',
         contact_phone: participant.contact_phone || '',
         date_of_birth: participant.date_of_birth || '',
-        custom_data: participant.custom_data || {}
+        custom_data: participant.custom_data || {},
+        external_verify: participant.external_verify || false
     })
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState('')
@@ -141,6 +142,24 @@ export default function EditParticipantModal({ participant, isOpen, onClose, onS
                                 onChange={(e) => setFormData(prev => ({ ...prev, date_of_birth: e.target.value }))}
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-gray-100"
                             />
+                        </div>
+
+                        <div className="col-span-full">
+                            <div className="flex items-center space-x-3">
+                                <input
+                                    type="checkbox"
+                                    id="external_verify"
+                                    checked={formData.external_verify}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, external_verify: e.target.checked }))}
+                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                />
+                                <label htmlFor="external_verify" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    External System Verified
+                                </label>
+                            </div>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                Mark this participant as verified in your external system
+                            </p>
                         </div>
                     </div>
 

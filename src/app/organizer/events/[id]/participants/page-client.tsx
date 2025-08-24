@@ -51,6 +51,7 @@ export default function EventParticipantsPageClient({
     const [successMessage, setSuccessMessage] = useState('')
     const [showErrorModal, setShowErrorModal] = useState(false)
     const [error, setError] = useState('')
+    const [isTogglingVerify, setIsTogglingVerify] = useState(false)
     
 
     useEffect(() => {
@@ -146,6 +147,38 @@ export default function EventParticipantsPageClient({
             setShowBanModal(false)
             setSelectedParticipantForBan(null)
             setBanReason('')
+        }
+    }
+
+    const handleToggleExternalVerify = async (participant: ParticipantWithBooking) => {
+        setIsTogglingVerify(true)
+        try {
+            const newVerifyStatus = !participant.external_verify
+            const response = await fetch(`/api/organizer/events/${event.id}/participants/${participant.id}/edit`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    external_verify: newVerifyStatus,
+                    notify_booker: false // Never notify booker for external_verify changes
+                })
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Failed to update verification status')
+            }
+
+            // Refresh the page to show updated status
+            window.location.reload()
+        } catch (error) {
+            console.error('Error toggling external verify:', error)
+            const errorMessage = error instanceof Error ? error.message : 'Failed to update verification status'
+            setError(`${errorMessage}. Please try again.`)
+            setShowErrorModal(true)
+        } finally {
+            setIsTogglingVerify(false)
         }
     }
 
@@ -841,6 +874,9 @@ export default function EventParticipantsPageClient({
                                         Status
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        External Verify
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Booking Info
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -920,7 +956,7 @@ export default function EventParticipantsPageClient({
                                                     participant.status === 'cancelled' 
                                                         ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                                                         : participant.status === 'whitelisted'
-                                                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+                                                        ? 'bg-blue-100 dark:bg-red-900/30 text-blue-800 dark:text-blue-300'
                                                         : participant.status === 'active'
                                                         ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                                                         : 'bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200'
@@ -930,6 +966,21 @@ export default function EventParticipantsPageClient({
                                                      participant.status === 'active' ? 'Active' :
                                                      'Active'}
                                                 </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="text-sm text-gray-900 dark:text-gray-100">
+                                                {participant.external_verify ? (
+                                                    <div className="flex items-center">
+                                                        <HiCheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                                                        <span className="text-green-700 dark:text-green-300">Verified</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center">
+                                                        <HiXCircle className="h-5 w-5 text-gray-400 mr-2" />
+                                                        <span className="text-gray-500 dark:text-gray-400">Not Verified</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
@@ -1016,6 +1067,26 @@ export default function EventParticipantsPageClient({
                                                             data-menu-item
                                                         >
                                                             <HiPencil className="mr-2 h-4 w-4" /> Edit Participant
+                                                        </button>
+                                                    )}
+                                                    {participant.status !== 'cancelled' && (
+                                                        <button
+                                                            onClick={() => handleToggleExternalVerify(participant)}
+                                                            disabled={isTogglingVerify}
+                                                            className="flex items-center w-full px-4 py-2 text-sm text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                                                            data-menu-item
+                                                        >
+                                                            {participant.external_verify ? (
+                                                                <>
+                                                                    <HiXCircle className="mr-2 h-4 w-4" />
+                                                                    {isTogglingVerify ? 'Updating...' : 'Mark as Not External Verified'}
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <HiCheckCircle className="mr-2 h-4 w-4" />
+                                                                    {isTogglingVerify ? 'Updating...' : 'Mark as External Verified'}
+                                                                </>
+                                                            )}
                                                         </button>
                                                     )}
                                                     <Link

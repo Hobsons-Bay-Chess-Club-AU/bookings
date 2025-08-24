@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from 'react'
 import { EventPricing } from '@/lib/types/database'
 import DiscountCodeInput from '../discount-code-input'
 
@@ -62,6 +63,13 @@ export default function Step1Pricing({
     onDiscountCodeRemoved,
     appliedDiscountCode
 }: Step1PricingProps) {
+    // Auto-select single pricing option
+    useEffect(() => {
+        if (availablePricing.length === 1 && !selectedPricing) {
+            setSelectedPricing(availablePricing[0])
+        }
+    }, [availablePricing, selectedPricing, setSelectedPricing])
+
     return (
         <form onSubmit={(e) => { e.preventDefault(); onContinue(); }} className="space-y-6">
             {error && (
@@ -138,15 +146,8 @@ export default function Step1Pricing({
             {availablePricing.length === 1 && (
                 <div className='text-gray-900 dark:text-gray-100'>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
-                        Pricing Option *
+                        Pricing Option
                     </label>
-                    {!selectedPricing && (
-                        <div className="mb-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-md">
-                            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                                Please select the pricing option to continue.
-                            </p>
-                        </div>
-                    )}
                     <div className="space-y-3">
                         <div
                             className={`relative rounded-lg border p-4 cursor-pointer ${selectedPricing?.id === availablePricing[0].id

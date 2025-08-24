@@ -10,6 +10,7 @@ interface EditParticipantRequest {
     contact_email?: string
     contact_phone?: string
     custom_data?: Record<string, unknown>
+    external_verify?: boolean
     notify_booker?: boolean
 }
 
@@ -87,7 +88,8 @@ export async function PUT(
             date_of_birth: participant.date_of_birth,
             contact_email: participant.contact_email,
             contact_phone: participant.contact_phone,
-            custom_data: participant.custom_data
+            custom_data: participant.custom_data,
+            external_verify: participant.external_verify
         }
 
         // Prepare update data (only include fields that are provided)
@@ -99,6 +101,7 @@ export async function PUT(
         if (updateData.contact_email !== undefined) updateFields.contact_email = updateData.contact_email
         if (updateData.contact_phone !== undefined) updateFields.contact_phone = updateData.contact_phone
         if (updateData.custom_data !== undefined) updateFields.custom_data = updateData.custom_data
+        if (updateData.external_verify !== undefined) updateFields.external_verify = updateData.external_verify
 
         // Update participant
         const { data: updatedParticipant, error: updateError } = await supabase
@@ -129,7 +132,7 @@ export async function PUT(
 
         // Send email notification to booker if requested
         if (notify_booker && participant.booking?.user?.email) {
-            // Determine what fields changed
+            // Determine what fields changed (excluding external_verify as it's internal organizer tracking)
             const changedFields: string[] = []
             if (updateData.first_name !== undefined && updateData.first_name !== originalData.first_name) {
                 changedFields.push('First Name')
@@ -150,6 +153,7 @@ export async function PUT(
                 changedFields.push('Additional Information')
             }
 
+            // Only send email if there are actual changes to participant data (not just external_verify)
             if (changedFields.length > 0) {
                 // Debug logging to identify empty event title issue
                 console.log('Debug - Email data:', {

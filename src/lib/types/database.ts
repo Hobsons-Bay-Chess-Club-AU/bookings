@@ -208,6 +208,7 @@ export interface Participant {
     custom_data?: Record<string, CustomDataValue>
     status?: 'active' | 'whitelisted' | 'cancelled' | 'pending_approval'
     price_paid?: number // Amount paid for this specific participant
+    external_verify?: boolean // Flag indicating if participant has been verified in organizer's external system
     created_at?: string
     updated_at?: string
     section?: EventSection
