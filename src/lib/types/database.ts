@@ -86,6 +86,7 @@ export interface EventSettings {
     notify_organizer_on_booking?: boolean
     terms_conditions?: string
     whitelist_enabled?: boolean
+    prevent_duplicates?: boolean // Default: true
 }
 
 export interface LocationSettings {

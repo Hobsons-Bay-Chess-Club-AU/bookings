@@ -32,6 +32,8 @@ export interface EventFormValues {
     }
     settings: {
         terms_conditions: string
+        prevent_duplicates?: boolean
+        notify_organizer_on_booking: boolean
     }
 }
 
@@ -88,7 +90,9 @@ export default function EventForm({
             direction_url: ''
         },
         settings: {
-            terms_conditions: ''
+            terms_conditions: '',
+            prevent_duplicates: true,
+            notify_organizer_on_booking: false
         },
         ...initialValues
     })
@@ -694,6 +698,32 @@ export default function EventForm({
                         </label>
                     </div>
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Promoted events appear first on the landing page</p>
+                </div>
+
+                <div>
+                    <div className="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="prevent_duplicates"
+                            checked={formData.settings.prevent_duplicates ?? true}
+                            onChange={(e) => {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    settings: {
+                                        ...prev.settings,
+                                        prevent_duplicates: e.target.checked
+                                    }
+                                }))
+                            }}
+                            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
+                        />
+                        <label htmlFor="prevent_duplicates" className="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Prevent Duplicate Entries
+                        </label>
+                    </div>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        When enabled, prevents multiple bookings for the same person (based on first name, last name, middle name, and date of birth)
+                    </p>
                 </div>
 
                 <div className="md:col-span-2">

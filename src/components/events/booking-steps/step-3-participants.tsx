@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from 'react'
-import { Participant, FormField, CustomDataValue, EventSection } from '@/lib/types/database'
+import { Participant, FormField, CustomDataValue, EventSection, Event } from '@/lib/types/database'
 import ParticipantSearchPopup from '../participant-search-popup'
 import { DynamicFormFieldset, isFieldValid } from '@/components/forms'
 import { validateSectionRules } from '@/lib/utils/section-rules'
@@ -30,6 +30,7 @@ interface Step3ParticipantsProps {
     isMultiSectionEvent?: boolean
 
     selectedSections?: SelectedSectionItem[]
+    event?: Event
 }
 
 export default function Step3Participants({
@@ -46,7 +47,8 @@ export default function Step3Participants({
 
     isMultiSectionEvent = false,
 
-    selectedSections = []
+    selectedSections = [],
+    event
 }: Step3ParticipantsProps) {
     const [currentParticipantIndex, setCurrentParticipantIndex] = useState(0)
     const [showSearchPopup, setShowSearchPopup] = useState(false)
@@ -190,35 +192,43 @@ export default function Step3Participants({
             return
         }
 
-        // Check if current participant is banned
+        // Validate current participant (ban check + duplicate check)
         const participant = currentParticipant
-        if (participant.first_name && participant.last_name && participant.date_of_birth) {
+        
+        if (participant.first_name && participant.last_name && participant.date_of_birth && event) {
             try {
-                const response = await fetch('/api/security/check-ban', {
+                const response = await fetch('/api/bookings/validate-participants', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        first_name: participant.first_name,
-                        middle_name: participant.middle_name || null,
-                        last_name: participant.last_name,
-                        date_of_birth: participant.date_of_birth
+                        eventId: event.id,
+                        participants: [participant]
                     })
                 })
 
                 if (response.ok) {
-                    const { is_banned } = await response.json()
-                    if (is_banned) {
-                        setError('Sorry, we cannot process your entry right now. Please contact the event organizer.')
-                        return
+                    const { valid, errors } = await response.json()
+                    if (!valid && errors && errors.length > 0) {
+                        setError(errors[0].error)
+                        return // Hard stop - don't continue to next step
                     }
+                } else {
+                    // If the API call fails, don't allow continuing
+                    setError('Unable to validate participant. Please try again.')
+                    return
                 }
             } catch (error) {
-                console.error('Error checking ban status:', error)
-                // Continue with booking if ban check fails
+                console.error('Error validating participant:', error)
+                // Don't continue if validation check fails - this is a hard stop
+                setError('Unable to validate participant. Please try again.')
+                return
             }
         }
+
+        // Clear any previous errors if validation passes
+        setError('')
 
         if (isLastParticipant) {
             onComplete()
@@ -285,6 +295,27 @@ export default function Step3Participants({
                     </div>
                 </div>
             </div>
+
+            {/* Duplicate Prevention Notice - Only show when participant is valid */}
+            {event?.settings?.prevent_duplicates !== false && isCurrentParticipantValid() && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
+                    <div className="flex">
+                        <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-amber-400 dark:text-amber-300" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                        </div>
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                                Duplicate Prevention
+                            </h3>
+                            <div className="mt-2 text-sm text-amber-700 dark:text-amber-100">
+                                <p>Each person can only register once for this event. The system will check for existing entries based on first name, last name, middle name, and date of birth.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Participant Form */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-white dark:bg-gray-800">

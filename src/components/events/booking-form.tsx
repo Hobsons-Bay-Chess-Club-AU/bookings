@@ -688,7 +688,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
     const handleContinueToReview = async () => {
         setError('')
 
-        if (!validateParticipants()) {
+        if (!(await validateParticipants())) {
             return
         }
 
@@ -728,7 +728,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
     //     return true
     // }
 
-    const validateParticipants = (): boolean => {
+    const validateParticipants = async (): Promise<boolean> => {
         for (let i = 0; i < participants.length; i++) {
             const participant = participants[i]
 
@@ -749,6 +749,33 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                 }
             }
         }
+
+        // Validate all participants (ban check + duplicate check)
+        try {
+            const response = await fetch('/api/bookings/validate-participants', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    eventId: event.id,
+                    participants: participants
+                })
+            })
+
+            if (response.ok) {
+                const { valid, errors } = await response.json()
+                if (!valid && errors && errors.length > 0) {
+                    // Show the first error found
+                    setError(errors[0].error)
+                    return false
+                }
+            }
+        } catch (error) {
+            console.error('Error validating participants:', error)
+            // Continue with booking if validation check fails
+        }
+
         return true
     }
 
@@ -779,7 +806,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                 throw new Error('Please select a pricing option')
             }
 
-            if (!validateParticipants()) {
+            if (!(await validateParticipants())) {
                 console.log('❌ Participants validation failed')
                 setLoading(false)
                 return
@@ -1580,6 +1607,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                     sections={event.sections || []}
                     isMultiSectionEvent={true}
                     selectedSections={selectedSections}
+                    event={event}
                 />
             )}
 
@@ -1601,6 +1629,7 @@ export default function BookingForm({ event, user, onStepChange, onUserInteracti
                     error={error}
                     setError={setError}
                     userId={user?.id}
+                    event={event}
                 />
             )}
 

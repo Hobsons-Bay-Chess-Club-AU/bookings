@@ -88,7 +88,8 @@ export default function NewEventPage() {
                     is_promoted: formData.is_promoted,
                     location_settings: formData.location_settings,
                     settings: {
-                        terms_conditions: sanitizedTermsConditions
+                        terms_conditions: sanitizedTermsConditions,
+                        prevent_duplicates: formData.settings.prevent_duplicates ?? true
                     }
                 })
                 .select()

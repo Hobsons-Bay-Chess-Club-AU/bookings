@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Breadcrumb from '@/components/ui/breadcrumb'
+import EventSettingsModal from '@/components/events/event-settings-modal'
 import { 
     HiCalendarDays, 
     HiUsers, 
@@ -22,7 +23,7 @@ import {
     HiArrowTopRightOnSquare
 } from 'react-icons/hi2'
 import { FullPageLoader } from '@/components/ui/loading-states'
-import { Event, EventPricing, EventDiscount, Booking, Participant, FormField, EventSection } from '@/lib/types/database'
+import { Event, EventPricing, EventDiscount, Booking, Participant, FormField, EventSection, EventSettings } from '@/lib/types/database'
 import FormBuilder from '@/components/events/form-builder'
 
 interface ParticipantWithSection extends Participant {
@@ -63,6 +64,7 @@ export default function EventViewPage() {
     const [editingFields, setEditingFields] = useState<FormField[]>([])
     const [fieldsError, setFieldsError] = useState('')
     const [fieldsSuccess, setFieldsSuccess] = useState('')
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
     const [stats, setStats] = useState({
         totalBookings: 0,
         confirmedBookings: 0,
@@ -251,6 +253,15 @@ export default function EventViewPage() {
             style: 'currency',
             currency: 'AUD'
         }).format(amount)
+    }
+
+    const handleSettingsUpdate = (updatedSettings: EventSettings) => {
+        if (event) {
+            setEvent({
+                ...event,
+                settings: updatedSettings
+            })
+        }
     }
 
     if (loading) {
@@ -1116,8 +1127,15 @@ export default function EventViewPage() {
                 {activeTab === 'settings' && (
                     <div className="space-y-6">
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-                            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Event Settings</h3>
+                                <button
+                                    onClick={() => setIsSettingsModalOpen(true)}
+                                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                >
+                                    <HiCog8Tooth className="h-4 w-4 mr-2" />
+                                    Edit Settings
+                                </button>
                             </div>
                             <div className="p-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1132,41 +1150,69 @@ export default function EventViewPage() {
                                                 <dt className="text-gray-600 dark:text-gray-400">Promoted:</dt>
                                                 <dd className="text-gray-900 dark:text-gray-100">{event.is_promoted ? 'Yes' : 'No'}</dd>
                                             </div>
-                                            <div className="flex justify-between">
-                                                <dt className="text-gray-600 dark:text-gray-400">Custom Form Fields:</dt>
-                                                <dd className="text-gray-900 dark:text-gray-100">{event.custom_form_fields?.length || 0} fields</dd>
-                                            </div>
                                         </dl>
                                     </div>
                                     <div>
-                                        <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-4">Quick Actions</h4>
-                                        <div className="space-y-3">
-                                            <Link
-                                                href={`/organizer/events/${eventId}/edit`}
-                                                className="flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
-                                            >
-                                                <HiPencilSquare className="h-4 w-4 mr-2" />
-                                                Edit Event Details
-                                            </Link>
-                                            <button className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
-                                                <HiDocumentDuplicate className="h-4 w-4 mr-2" />
-                                                Clone Event
-                                            </button>
-                                            <Link
-                                                href={`/organizer/email-manager?eventId=${eventId}`}
-                                                className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
-                                            >
-                                                <HiEnvelope className="h-4 w-4 mr-2" />
-                                                Email Contact
-                                            </Link>
-                                        </div>
+                                        <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-4">Event Settings</h4>
+                                        <dl className="space-y-3">
+                                            <div className="flex justify-between">
+                                                <dt className="text-gray-600 dark:text-gray-400">Show Participants Publicly:</dt>
+                                                <dd className="text-gray-900 dark:text-gray-100">{event.settings?.show_participants_public ? 'Yes' : 'No'}</dd>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <dt className="text-gray-600 dark:text-gray-400">Show Attendance Count:</dt>
+                                                <dd className="text-gray-900 dark:text-gray-100">{event.settings?.show_attendance_count ? 'Yes' : 'No'}</dd>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <dt className="text-gray-600 dark:text-gray-400">Allow Participant Contact:</dt>
+                                                <dd className="text-gray-900 dark:text-gray-100">{event.settings?.allow_participant_contact ? 'Yes' : 'No'}</dd>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <dt className="text-gray-600 dark:text-gray-400">Email Notifications:</dt>
+                                                <dd className="text-gray-900 dark:text-gray-100">{event.settings?.notify_organizer_on_booking ? 'Yes' : 'No'}</dd>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <dt className="text-gray-600 dark:text-gray-400">Whitelist When Full:</dt>
+                                                <dd className="text-gray-900 dark:text-gray-100">{event.settings?.whitelist_enabled ? 'Yes' : 'No'}</dd>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <dt className="text-gray-600 dark:text-gray-400">Prevent Duplicates:</dt>
+                                                <dd className="text-gray-900 dark:text-gray-100">{event.settings?.prevent_duplicates !== false ? 'Yes' : 'No'}</dd>
+                                            </div>
+                                        </dl>
                                     </div>
                                 </div>
+                                
+                                {event.settings?.show_participants_public && event.settings?.participant_display_fields && (
+                                    <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                                        <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-4">Public Display Fields</h4>
+                                        <div className="flex flex-wrap gap-2">
+                                            {event.settings.participant_display_fields.map((fieldId) => (
+                                                <span
+                                                    key={fieldId}
+                                                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
+                                                >
+                                                    {fieldId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
                 )}
             </div>
+
+            {/* Event Settings Modal */}
+            {event && (
+                <EventSettingsModal
+                    event={event}
+                    isOpen={isSettingsModalOpen}
+                    onClose={() => setIsSettingsModalOpen(false)}
+                    onUpdate={handleSettingsUpdate}
+                />
+            )}
         </div>
     )
 } 

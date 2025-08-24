@@ -125,8 +125,9 @@ export default function EditEventPage() {
                     location_settings: eventData.location_settings || { map_url: '', direction_url: '' },
                     settings: {
                         notify_organizer_on_booking: eventData.settings?.notify_organizer_on_booking || false,
-                        terms_conditions: eventData.settings?.terms_conditions || ''
-                    }
+                        terms_conditions: eventData.settings?.terms_conditions || '',
+                        prevent_duplicates: eventData.settings?.prevent_duplicates ?? true
+                    } as EventFormValues['settings']
                 })
 
                 // Set form fields
@@ -211,7 +212,8 @@ export default function EditEventPage() {
                     location_settings: finalLocationSettings,
                     settings: {
                         notify_organizer_on_booking: event?.settings?.notify_organizer_on_booking || false,
-                        terms_conditions: sanitizedTermsConditions
+                        terms_conditions: sanitizedTermsConditions,
+                        prevent_duplicates: values.settings.prevent_duplicates ?? true
                     },
                     updated_at: new Date().toISOString()
                 })
@@ -379,7 +381,11 @@ export default function EditEventPage() {
                                 map_url: typeof event.location_settings === 'object' && event.location_settings && 'map_url' in event.location_settings ? (event.location_settings as { map_url?: string }).map_url ?? '' : '',
                                 direction_url: typeof event.location_settings === 'object' && event.location_settings && 'direction_url' in event.location_settings ? (event.location_settings as { direction_url?: string }).direction_url ?? '' : ''
                             },
-                            settings: { terms_conditions: (typeof event.settings === 'object' && event.settings && 'terms_conditions' in event.settings ? (event.settings as { terms_conditions?: string }).terms_conditions : '') || '' }
+                            settings: { 
+                                terms_conditions: (typeof event.settings === 'object' && event.settings && 'terms_conditions' in event.settings ? (event.settings as { terms_conditions?: string }).terms_conditions : '') || '', 
+                                prevent_duplicates: (typeof event.settings === 'object' && event.settings && 'prevent_duplicates' in event.settings ? (event.settings as { prevent_duplicates?: boolean }).prevent_duplicates : true),
+                                notify_organizer_on_booking: (typeof event.settings === 'object' && event.settings && 'notify_organizer_on_booking' in event.settings ? (event.settings as { notify_organizer_on_booking?: boolean }).notify_organizer_on_booking : false) || false
+                            }
                         }) : undefined}
                         initialFormFields={formFields}
                         initialRefundTimeline={refundTimeline}
