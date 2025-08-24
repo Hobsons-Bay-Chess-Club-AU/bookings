@@ -54,7 +54,7 @@ export default async function EventParticipantsPage({ params }: ParticipantsPage
             <div className="bg-gray-50 dark:bg-gray-900">
                 {/* Breadcrumb */}
                 <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="py-4">
                             <nav className="flex" aria-label="Breadcrumb">
                                 <ol className="flex items-center space-x-4">
@@ -117,7 +117,7 @@ export default async function EventParticipantsPage({ params }: ParticipantsPage
         <div className="bg-gray-50 dark:bg-gray-900">
             {/* Breadcrumb */}
             <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="py-4">
                         <nav className="flex" aria-label="Breadcrumb">
                             <ol className="flex items-center space-x-4">
@@ -155,7 +155,7 @@ export default async function EventParticipantsPage({ params }: ParticipantsPage
                     </div>
                 </div>
             </div>
-            <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-9xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
                 {/* Event Header */}
                 <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
                     <div className="flex items-center justify-between">

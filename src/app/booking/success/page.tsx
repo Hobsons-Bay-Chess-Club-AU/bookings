@@ -193,7 +193,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
 
     return (
         <div className="bg-gray-50 dark:bg-gray-900">
-            <div className="max-w-7xl mx-auto py-2 px-2 md:px-4 lg:px-8">
+            <div className="max-w-9xl mx-auto py-2 px-2 md:px-4 lg:px-8">
                 <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                     {/* Success Header */}
                     <div className="bg-green-50 dark:bg-green-900/30 px-6 py-4 text-center">

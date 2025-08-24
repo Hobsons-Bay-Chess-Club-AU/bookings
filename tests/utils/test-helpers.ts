@@ -65,7 +65,7 @@ export async function checkSEOMetaTags(page: Page) {
  */
 export async function checkCommonPageElements(page: Page) {
   // Check for main content area
-  const mainContent = page.locator('main, [role="main"], .max-w-7xl');
+  const mainContent = page.locator('main, [role="main"], .max-w-9xl');
   await expect(mainContent).toBeVisible();
   
   // Check for navigation

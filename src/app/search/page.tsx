@@ -41,7 +41,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const events = keyword ? await searchEvents(keyword) : []
   return (
     <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
-      <div className="max-w-7xl mx-auto py-12 px-1 md:px-4">
+      <div className="max-w-9xl mx-auto py-12 px-1 md:px-4">
         <form
           action="/search"
           method="get"

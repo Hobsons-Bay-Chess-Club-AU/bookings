@@ -343,8 +343,8 @@ export default function DashboardClient({ bookings, participants }: DashboardCli
                 </div>
             )}
 
-            {/* Bookings List */}
-            <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+            {/* Bookings Table */}
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">My Bookings</h2>
                 </div>
@@ -378,166 +378,181 @@ export default function DashboardClient({ bookings, participants }: DashboardCli
                         )}
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {filteredBookings.map((booking) => (
-                            <div key={booking.id} className="p-4 md:p-6 dark:text-gray-100">
-                                {/* Mobile Card Layout */}
-                                <div className="md:hidden space-y-3">
-                                    <div className="flex items-start justify-between">
-                                        <Link
-                                            href={`/events/${booking.event.id}`}
-                                            className="text-lg font-medium text-indigo-600 hover:text-indigo-800 flex-1 mr-3"
-                                        >
-                                            {booking.event.title}
-                                        </Link>
-                                        <div className="flex flex-col items-end">
-                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                                                {getStatusIcon(booking.status)} {booking.status}
-                                            </span>
-                                            {getRefundStatusDisplay(booking)}
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2 text-sm text-gray-600 dark:text-gray-100">
-                                        <div className="flex items-center">
-                                            <HiCalendarDays className="h-4 w-4 mr-2 text-gray-400" />
-                                            <span>{new Date(booking.event.start_date).toLocaleDateString('en-US', {
-                                                weekday: 'short',
-                                                month: 'short',
-                                                day: 'numeric',
-                                                year: 'numeric'
-                                            })}</span>
-                                            <span className="mx-2">•</span>
-                                            <span>{new Date(booking.event.start_date).toLocaleTimeString([], {
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            })}</span>
-                                        </div>
-                                        <div className="flex items-center">
-                                            <HiMapPin className="h-4 w-4 mr-2 text-gray-400 dark:text-white-900" />
-                                            <span>{booking.event.location}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center">
-                                                <HiTicket className="h-4 w-4 mr-2 text-gray-400 dark:text-gray-100" />
-                                                <span>{booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}</span>
-                                            </div>
-                                            <div className="flex items-center">
-                                                <HiIdentification className="h-4 w-4 mr-2 text-gray-400" />
-                                                <span className="font-mono text-xs">{booking.booking_id || booking.id.slice(0, 8)}</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-between pt-2 border-t">
-                                            <span className="text-sm text-gray-500">
-                                                Booked: {new Date(booking.booking_date).toLocaleDateString()}
-                                            </span>
-                                            <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                                AUD ${booking.total_amount.toFixed(2)}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-3 flex gap-2">
-                                        <Link
-                                            href={`/booking/${booking.booking_id || booking.id}`}
-                                            className="flex-1 inline-flex justify-center items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                                        >
-                                            View Details
-                                        </Link>
-                                        {booking.status === 'pending' && (
-                                            <ResumePaymentButton
-                                                bookingId={booking.id}
-                                                eventTitle={booking.event.title}
-                                                totalAmount={booking.total_amount}
-                                                className="flex-1"
-                                            />
-                                        )}
-                                        {(booking.status === 'confirmed' || booking.status === 'verified') && (
-                                            <Link
-                                                href={`/downloads/${booking.id}`}
-                                                className="flex-1 inline-flex justify-center items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
-                                            >
-                                                <HiTicket className="h-4 w-4 mr-1" />
-                                                Downloads
-                                            </Link>
-                                        )}
-                                        <div className="flex-1">
-                                            <RefundRequestButton booking={booking} />
-                                        </div>
-                                        {(booking.status === 'confirmed' || booking.status === 'verified' || booking.status === 'whitelisted') && canWithdrawBooking(booking) && (
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedBookingForCancel(booking)
-                                                    setShowCancelModal(true)
-                                                }}
-                                                className="flex-1 inline-flex justify-center items-center px-3 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 dark:bg-gray-700 dark:text-red-300 dark:border-red-600 dark:hover:bg-red-900/20"
-                                            >
-                                                <HiXCircle className="h-4 w-4 mr-1" />
-                                                Withdraw
-                                            </button>
-                                        )}
-                                    </div>
-
-                                </div>
-
-                                {/* Desktop Table Layout */}
-                                <div className="hidden md:block dark:text-gray-100">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1 grid grid-cols-6 gap-4 items-center">
-                                            <div className="col-span-2 dark:text-gray-100">
-                                                <Link
-                                                    href={`/events/${booking.event.id}`}
-                                                    className="text-lg font-medium text-indigo-600 hover:text-indigo-800"
-                                                >
-                                                    {booking.event.title}
-                                                </Link>
-                                                <div className="text-sm text-gray-500 mt-1 dark:text-gray-100">
-                                                    {booking.event.location}
+                    <>
+                        {/* Desktop Table */}
+                        <div className="hidden lg:block">
+                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead className="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            Event
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            Date & Time
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            Tickets
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            Amount
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            Status
+                                        </th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    {filteredBookings.map((booking) => (
+                                        <tr key={booking.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div>
+                                                    <Link
+                                                        href={`/events/${booking.event.id}`}
+                                                        className="text-sm font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400"
+                                                    >
+                                                        {booking.event.title}
+                                                    </Link>
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                        {booking.event.location}
+                                                    </div>
                                                 </div>
-                                            </div>
-
-                                            <div className="text-sm text-gray-600 dark:text-gray-100">
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                                 <div>{new Date(booking.event.start_date).toLocaleDateString('en-US', {
                                                     month: 'short',
                                                     day: 'numeric',
                                                     year: 'numeric'
                                                 })}</div>
-                                                <div className="text-xs text-gray-500">
+                                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                    {new Date(booking.event.start_date).toLocaleTimeString([], {
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                                <div>{booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}</div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                                    {booking.booking_id || booking.id.slice(0, 8)}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                                <div className="font-medium">AUD ${booking.total_amount.toFixed(2)}</div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                    {new Date(booking.booking_date).toLocaleDateString()}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                                                    {getStatusIcon(booking.status)} {booking.status}
+                                                </span>
+                                                {getRefundStatusDisplay(booking)}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <div className="flex items-center justify-end space-x-2">
+                                                    <Link
+                                                        href={`/booking/${booking.booking_id || booking.id}`}
+                                                        className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                                    >
+                                                        View
+                                                    </Link>
+                                                    {booking.status === 'pending' && (
+                                                        <ResumePaymentButton
+                                                            bookingId={booking.id}
+                                                            eventTitle={booking.event.title}
+                                                            totalAmount={booking.total_amount}
+                                                            className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+                                                        />
+                                                    )}
+                                                    {(booking.status === 'confirmed' || booking.status === 'verified') && (
+                                                        <Link
+                                                            href={`/downloads/${booking.id}`}
+                                                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                                        >
+                                                            Download
+                                                        </Link>
+                                                    )}
+                                                    <RefundRequestButton 
+                                                        booking={booking} 
+                                                    />
+                                                    {(booking.status === 'confirmed' || booking.status === 'verified' || booking.status === 'whitelisted') && canWithdrawBooking(booking) && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedBookingForCancel(booking)
+                                                                setShowCancelModal(true)
+                                                            }}
+                                                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                                        >
+                                                            Withdraw
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile Cards */}
+                        <div className="lg:hidden">
+                            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                                {filteredBookings.map((booking) => (
+                                    <div key={booking.id} className="p-4">
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex-1">
+                                                <Link
+                                                    href={`/events/${booking.event.id}`}
+                                                    className="text-lg font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400"
+                                                >
+                                                    {booking.event.title}
+                                                </Link>
+                                                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                    {booking.event.location}
+                                                </div>
+                                            </div>
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                                                {getStatusIcon(booking.status)} {booking.status}
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                                            <div>
+                                                <div className="text-gray-500 dark:text-gray-400">Date & Time</div>
+                                                <div className="font-medium text-gray-900 dark:text-gray-100">
+                                                    {new Date(booking.event.start_date).toLocaleDateString('en-US', {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        year: 'numeric'
+                                                    })}
+                                                </div>
+                                                <div className="text-sm text-gray-500 dark:text-gray-400">
                                                     {new Date(booking.event.start_date).toLocaleTimeString([], {
                                                         hour: '2-digit',
                                                         minute: '2-digit'
                                                     })}
                                                 </div>
                                             </div>
-
-                                            <div className="text-sm text-gray-600 dark:text-gray-100">
-                                                <div>{booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}</div>
-                                                <div className="font-mono text-xs text-gray-500">
-                                                    ID: {booking.booking_id || booking.id.slice(0, 8)}
+                                            <div>
+                                                <div className="text-gray-500 dark:text-gray-400">Amount</div>
+                                                <div className="font-medium text-gray-900 dark:text-gray-100">
+                                                    AUD ${booking.total_amount.toFixed(2)}
                                                 </div>
-                                            </div>
-
-                                            <div className="text-sm text-gray-600 dark:text-gray-100">
-                                                <div className="font-medium text-gray-900 dark:text-gray-100">AUD ${booking.total_amount.toFixed(2)}</div>
-                                                <div className="text-xs text-gray-500">
-                                                    Booked: {new Date(booking.booking_date).toLocaleDateString()}
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex flex-col items-start">
-                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                                                        {getStatusIcon(booking.status)} {booking.status}
-                                                    </span>
-                                                    {getRefundStatusDisplay(booking)}
+                                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                    {booking.quantity} ticket{booking.quantity > 1 ? 's' : ''}
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="ml-4 flex-shrink-0 flex gap-2">
+                                        {getRefundStatusDisplay(booking)}
+
+                                        <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
                                             <Link
                                                 href={`/booking/${booking.booking_id || booking.id}`}
-                                                className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                                                className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                                             >
                                                 View Details
                                             </Link>
@@ -546,12 +561,13 @@ export default function DashboardClient({ bookings, participants }: DashboardCli
                                                     bookingId={booking.id}
                                                     eventTitle={booking.event.title}
                                                     totalAmount={booking.total_amount}
+                                                    className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
                                                 />
                                             )}
                                             {(booking.status === 'confirmed' || booking.status === 'verified') && (
                                                 <Link
                                                     href={`/downloads/${booking.id}`}
-                                                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
+                                                    className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
                                                 >
                                                     <HiTicket className="h-4 w-4 mr-1" />
                                                     Downloads
@@ -564,7 +580,7 @@ export default function DashboardClient({ bookings, participants }: DashboardCli
                                                         setSelectedBookingForCancel(booking)
                                                         setShowCancelModal(true)
                                                     }}
-                                                    className="inline-flex items-center px-3 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 dark:bg-gray-700 dark:text-red-300 dark:border-red-600 dark:hover:bg-red-900/20"
+                                                    className="inline-flex items-center px-3 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 dark:bg-gray-700 dark:text-red-300 dark:border-red-600 dark:hover:bg-red-900/20"
                                                 >
                                                     <HiXCircle className="h-4 w-4 mr-1" />
                                                     Withdraw
@@ -572,11 +588,10 @@ export default function DashboardClient({ bookings, participants }: DashboardCli
                                             )}
                                         </div>
                                     </div>
-
-                                </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    </>
                 )}
             </div>
 

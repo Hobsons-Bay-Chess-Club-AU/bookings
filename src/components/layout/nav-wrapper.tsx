@@ -10,7 +10,7 @@ const SiteNav = dynamic(() => import('./site-nav'), {
     ssr: false,
     loading: () => (
         <header className="bg-white shadow">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center py-6">
                     <div className="flex items-center">
                         <Link href="/" className="flex items-center">
@@ -78,7 +78,7 @@ export default function NavWrapper({ className, showTitle = true }: NavWrapperPr
         // Show static nav during SSR
         return (
             <header className={`bg-white shadow ${className || ''}`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center py-6">
                         {showTitle && (
                             <div className="flex items-center">

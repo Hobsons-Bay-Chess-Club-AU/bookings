@@ -202,7 +202,7 @@ export default function ContentFormPage({ params }: ContentFormPageProps) {
 
     return (
         <>
-            <div className="max-w-7xl mx-auto space-y-2">
+            <div className="max-w-9xl mx-auto space-y-2">
                 {/* Header */}
                 <div className="flex justify-between items-center">
                     <div>

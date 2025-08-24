@@ -124,7 +124,7 @@ export default async function ContentPage({ params }: ContentPageProps) {
     return (
         <div className="bg-gray-50 dark:bg-gray-900">
             {/* Content */}
-            <div className="max-w-7xl mx-auto py-2 md:py-12 px-2 md:px-4 sm:px-6 lg:px-8 text-gray-900 dark:text-gray-100">
+            <div className="max-w-9xl mx-auto py-2 md:py-12 px-2 md:px-4 sm:px-6 lg:px-8 text-gray-900 dark:text-gray-100">
                 {/* Breadcrumb Navigation */}
                 <nav className="mb-8 text-sm" aria-label="Breadcrumb">
                     <ol className="flex items-center space-x-2 text-gray-500 dark:text-gray-400">

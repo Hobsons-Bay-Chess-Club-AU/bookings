@@ -280,7 +280,7 @@ export default function EventViewPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto ">
+        <div className="max-w-9xl mx-auto ">
             {/* Breadcrumb */}
             <div className="mb-6">
                 <Breadcrumb 

@@ -168,7 +168,7 @@ export default function CustomFieldsPage() {
     // If we're in creation mode, show the form directly
     if (isCreating) {
         return (
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-9xl mx-auto">
                 <div className="mb-8">
                     <div className="flex items-center justify-between">
                         <div>

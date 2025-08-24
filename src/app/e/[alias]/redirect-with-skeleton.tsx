@@ -13,7 +13,7 @@ function EventSkeleton() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header Skeleton */}
       <div className="bg-white dark:bg-gray-800 shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-1/3 mb-4"></div>
             <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
@@ -22,7 +22,7 @@ function EventSkeleton() {
       </div>
 
       {/* Main Content Skeleton */}
-      <div className="max-w-7xl mx-auto py-2 md:py-12 px-2 md:px-4 sm:px-6 lg:px-8">
+      <div className="max-w-9xl mx-auto py-2 md:py-12 px-2 md:px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Event Details */}
           <div className="lg:col-span-2">

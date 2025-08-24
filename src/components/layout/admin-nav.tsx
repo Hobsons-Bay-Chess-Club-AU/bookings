@@ -219,7 +219,7 @@ export default function AdminNav({ className = '' }: AdminNavProps) {
 
     return (
         <nav className={`bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 ${className}`}>
-            <div className="max-w-7xl mx-auto px-2 py-2 md:px-4 sm:px-6 lg:px-8">
+            <div className="max-w-9xl mx-auto px-2 py-2 md:px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-12 md:h-16">
                     {/* Logo and site title */}
                     <div className="flex items-center">

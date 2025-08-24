@@ -64,7 +64,7 @@ export default function CookieConsent({ onAccept, onDecline }: CookieConsentProp
             <div className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-out ${isAnimating ? 'translate-y-0' : 'translate-y-full'
                 }`}>
                 <div className="bg-white dark:bg-gray-800 border-t-4 border-indigo-600 shadow-2xl">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                             {/* Content */}
                             <div className="flex-1">

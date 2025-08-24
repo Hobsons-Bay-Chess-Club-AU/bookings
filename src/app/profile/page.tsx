@@ -304,7 +304,7 @@ export default function ProfilePage() {
         <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
             {/* Page Header */}
             <div className="bg-white dark:bg-gray-800 shadow">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 </div>
             </div>

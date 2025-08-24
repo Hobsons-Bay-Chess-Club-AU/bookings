@@ -238,7 +238,7 @@ export default function PaymentEventsPage() {
     }, [])
 
     return (
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-9xl mx-auto">
             {/* Header */}
             <div className="bg-white dark:bg-gray-800 shadow mb-8 rounded-lg px-6 py-4">
                 <div className="flex justify-between items-center">

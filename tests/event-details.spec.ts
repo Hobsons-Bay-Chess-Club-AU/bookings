@@ -40,7 +40,7 @@ test.describe('Event Details Page', () => {
     await page.goto('/events/test-event-id');
     
     // Check for main content area
-    const mainContent = page.locator('main, [role="main"], .max-w-7xl');
+    const mainContent = page.locator('main, [role="main"], .max-w-9xl');
     await expect(mainContent).toBeVisible();
     
     // Check for event image (if exists)
@@ -98,7 +98,7 @@ test.describe('Event Details Page', () => {
     expect(bodyBox?.width).toBeLessThanOrEqual(375);
     
     // Check that content is still accessible
-    const mainContent = page.locator('main, [role="main"], .max-w-7xl');
+    const mainContent = page.locator('main, [role="main"], .max-w-9xl');
     await expect(mainContent).toBeVisible();
   });
 

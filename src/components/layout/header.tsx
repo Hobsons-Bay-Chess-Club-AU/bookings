@@ -33,7 +33,7 @@ export default function Header() {
   if (loading) {
     return (
       <header className="bg-white dark:bg-gray-800 shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hobsons Bay Chess Club - Booking System</h1>
@@ -49,7 +49,7 @@ export default function Header() {
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-6">
           <div className="flex items-center">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hobsons Bay Chess Club - Booking System</h1>

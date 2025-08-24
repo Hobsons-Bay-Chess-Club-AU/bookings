@@ -126,7 +126,7 @@ export default async function BookingDetailsPage({ params, searchParams }: Booki
         <div className="bg-gray-50 dark:bg-gray-900">
             {/* Breadcrumb */}
             <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="py-4">
                         <nav className="flex" aria-label="Breadcrumb">
                             <ol className="flex items-center space-x-4">
@@ -159,7 +159,7 @@ export default async function BookingDetailsPage({ params, searchParams }: Booki
             </div>
 
             <div className="py-2 px-2 md:py-4 md:px-6 lg:px-12">
-                <div className="max-w-7xl mx-auto lg:px-8">
+                <div className="max-w-9xl mx-auto lg:px-8">
                     <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
                         {/* Header */}
                         <div className="bg-indigo-50 dark:bg-indigo-900/20 px-6 py-6">
