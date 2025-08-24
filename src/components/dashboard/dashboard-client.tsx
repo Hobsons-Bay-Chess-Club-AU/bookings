@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import RefundRequestButton from './refund-request-button'
 import ResumePaymentButton from './resume-payment-button'
+import DiscountSavingsCard from './discount-savings-card'
 import { Booking, Event, Participant } from '@/lib/types/database'
 import { 
     HiTicket, 
@@ -315,6 +316,11 @@ export default function DashboardClient({ bookings, participants }: DashboardCli
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Discount Savings Card */}
+            <div className="mb-8">
+                <DiscountSavingsCard />
             </div>
 
             {/* Filter Indicator */}
