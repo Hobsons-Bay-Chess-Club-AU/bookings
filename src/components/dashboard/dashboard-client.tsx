@@ -13,9 +13,6 @@ import {
     HiXCircle, 
     HiCurrencyDollar, 
     HiMagnifyingGlass,
-    HiCalendarDays,
-    HiMapPin,
-    HiIdentification,
     HiExclamationTriangle
 } from 'react-icons/hi2'
 

@@ -1,19 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-interface ParticipantWithBooking {
-    id: string
-    first_name: string
-    last_name: string
-    middle_name?: string
-    date_of_birth: string
-    bookings: Array<{
-        id: string
-        event_id: string
-        status: string
-        booking_date: string
-    }>
-}
+
 
 export async function POST(request: NextRequest) {
     try {
@@ -97,7 +85,7 @@ export async function POST(request: NextRequest) {
                         // Continue if query fails
                     } else {
                         // Then get participants for those bookings
-                        const bookingIds = activeBookingIds?.map((b: any) => b.id) || []
+                        const bookingIds = activeBookingIds?.map((b: { id: string }) => b.id) || []
                         
                         const { data: allEventParticipants, error: allParticipantsError } = await supabase
                             .from('participants')
@@ -116,7 +104,12 @@ export async function POST(request: NextRequest) {
                             // Continue if query fails
                         } else {
                             // Find exact matches in the application logic
-                            const exactMatches = (allEventParticipants as any[])?.filter(existing => {
+                            const exactMatches = (allEventParticipants as Array<{
+                                first_name: string
+                                last_name: string
+                                middle_name?: string
+                                date_of_birth: string
+                            }>)?.filter(existing => {
                                 // Check if names and DOB match
                                 const nameMatch = existing.first_name?.trim() === participant.first_name?.trim() &&
                                                 existing.last_name?.trim() === participant.last_name?.trim() &&
