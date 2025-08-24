@@ -140,6 +140,28 @@ export default function DashboardClient({ bookings, participants }: DashboardCli
         return now < eventStartDate
     }, [])
 
+    const canRequestRefund = useCallback((booking: Booking & { event: Event }) => {
+        if (booking.status !== 'confirmed' && booking.status !== 'verified') return false
+        if (booking.refund_status !== 'none') return false
+        if (!booking.event?.timeline?.refund) return false
+
+        const now = new Date()
+        const refundTimeline = booking.event.timeline.refund
+
+        // Check if any timeline period allows refunds
+        for (const item of refundTimeline) {
+            const fromTime = item.from_date ? new Date(item.from_date).getTime() : 0
+            const toTime = item.to_date ? new Date(item.to_date).getTime() : new Date(booking.event.start_date).getTime()
+            const currentTime = now.getTime()
+
+            if (currentTime >= fromTime && currentTime <= toTime && item.value > 0) {
+                return true
+            }
+        }
+
+        return false
+    }, [])
+
     const handleCancelBooking = async () => {
         if (!selectedBookingForCancel) {
             return
@@ -201,7 +223,7 @@ export default function DashboardClient({ bookings, participants }: DashboardCli
     return (
         <>
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-8">
                 <div
                     className={getStatCardClass('all')}
                     onClick={() => setActiveFilter('all')}
@@ -475,7 +497,7 @@ export default function DashboardClient({ bookings, participants }: DashboardCli
                                                     <RefundRequestButton 
                                                         booking={booking} 
                                                     />
-                                                    {(booking.status === 'confirmed' || booking.status === 'verified' || booking.status === 'whitelisted') && canWithdrawBooking(booking) && (
+                                                    {(booking.status === 'confirmed' || booking.status === 'verified' || booking.status === 'whitelisted') && canWithdrawBooking(booking) && !canRequestRefund(booking) && (
                                                         <button
                                                             onClick={() => {
                                                                 setSelectedBookingForCancel(booking)
