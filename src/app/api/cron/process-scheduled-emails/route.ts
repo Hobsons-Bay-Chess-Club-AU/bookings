@@ -1,21 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email/service'
 import { renderOrganizerCustomEmail } from '@/lib/email/templates/organizer-custom-email'
 import { processAttachmentsForEmail, cleanupAttachmentBlobs } from '@/lib/email/attachments'
 
 export async function GET(request: NextRequest) {
     try {
-        // Verify this is a cron request (you can add more security here)
+        const receivedAt = new Date()
         const authHeader = request.headers.get('Authorization')
-        if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+        const expected = `Bearer ${process.env.CRON_SECRET}`
+        const isAuthorized = authHeader === expected
+        console.log('[CRON] process-scheduled-emails invoked', {
+            receivedAt: receivedAt.toISOString(),
+            hasAuthHeader: Boolean(authHeader),
+            isAuthorized
+        })
+
+        if (!isAuthorized) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const supabase = await createClient()
+        // Use service role to bypass RLS for backend batch processing
+        if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+            console.error('[CRON] Missing SUPABASE_SERVICE_ROLE_KEY env; cannot use service client')
+        }
+        const supabase = await createServiceClient()
 
-        // Get scheduled emails that are due
-        const now = new Date().toISOString()
+        // Get scheduled emails that are due (UTC) with a small lookahead buffer
+        const now = new Date()
+        const bufferMs = 10 * 1000 // 10 seconds
+        const windowUpper = new Date(now.getTime() + bufferMs)
+        const nowIso = now.toISOString()
+        const windowUpperIso = windowUpper.toISOString()
+        console.log('[CRON] Fetching due scheduled emails', {
+            nowIso,
+            windowUpperIso,
+            bufferMs,
+            filter: { status: 'scheduled', lte_scheduled_date: windowUpperIso }
+        })
         const { data: scheduledEmails, error: fetchError } = await supabase
             .from('scheduled_emails')
             .select(`
@@ -23,15 +45,87 @@ export async function GET(request: NextRequest) {
                 organizer:profiles!scheduled_emails_organizer_id_fkey(*)
             `)
             .eq('status', 'scheduled')
-            .lte('scheduled_date', now)
-            .limit(50) // Process max 50 emails per run
+            .lte('scheduled_date', windowUpperIso)
+            .limit(50)
+
+        console.log('[CRON] Query details', {
+            statusFilter: 'scheduled',
+            scheduledDateFilter: `<= ${windowUpperIso}`,
+            queryError: fetchError,
+            resultCount: scheduledEmails?.length || 0
+        })
+
+        // Debug: Check all scheduled emails to see what's in the database
+        const { data: allScheduled, error: debugError } = await supabase
+            .from('scheduled_emails')
+            .select('id, scheduled_date, status')
+            .eq('status', 'scheduled')
+            .order('scheduled_date', { ascending: true })
+            .limit(10)
+
+        console.log('[CRON] Debug - All scheduled emails in DB', {
+            debugError,
+            count: allScheduled?.length || 0,
+            emails: allScheduled?.map(e => ({
+                id: e.id,
+                scheduled_date: e.scheduled_date,
+                status: e.status
+            }))
+        })
+
+        // Debug: Check ALL emails regardless of status
+        const { data: allEmails, error: allEmailsError } = await supabase
+            .from('scheduled_emails')
+            .select('id, scheduled_date, status, created_at')
+            .order('created_at', { ascending: false })
+            .limit(5)
+
+        console.log('[CRON] Debug - ALL emails in DB (any status)', {
+            allEmailsError,
+            count: allEmails?.length || 0,
+            emails: allEmails?.map(e => ({
+                id: e.id,
+                scheduled_date: e.scheduled_date,
+                status: e.status,
+                created_at: e.created_at
+            }))
+        })
+
+        // Debug: Try a different approach - get all scheduled emails and filter in JS
+        const { data: allScheduledForDebug, error: debugFilterError } = await supabase
+            .from('scheduled_emails')
+            .select('id, scheduled_date, status')
+            .eq('status', 'scheduled')
+
+        if (allScheduledForDebug && allScheduledForDebug.length > 0) {
+            const dueEmails = allScheduledForDebug.filter(email => {
+                const emailDate = new Date(email.scheduled_date)
+                const windowDate = new Date(windowUpperIso)
+                const isDue = emailDate <= windowDate
+                console.log('[CRON] Debug - Email date comparison', {
+                    emailId: email.id,
+                    emailDate: email.scheduled_date,
+                    emailDateParsed: emailDate.toISOString(),
+                    windowDate: windowUpperIso,
+                    windowDateParsed: windowDate.toISOString(),
+                    isDue
+                })
+                return isDue
+            })
+            console.log('[CRON] Debug - JS filtered due emails', {
+                totalScheduled: allScheduledForDebug.length,
+                dueEmails: dueEmails.length,
+                dueEmailIds: dueEmails.map(e => e.id)
+            })
+        }
 
         if (fetchError) {
-            console.error('Error fetching scheduled emails:', fetchError)
+            console.error('[CRON] Error fetching scheduled emails:', fetchError)
             return NextResponse.json({ error: 'Failed to fetch scheduled emails' }, { status: 500 })
         }
 
         if (!scheduledEmails || scheduledEmails.length === 0) {
+            console.log('[CRON] No scheduled emails due at this time')
             return NextResponse.json({ 
                 success: true, 
                 message: 'No scheduled emails to process',
@@ -39,32 +133,28 @@ export async function GET(request: NextRequest) {
             })
         }
 
+        console.log('[CRON] Fetched scheduled emails', {
+            count: scheduledEmails.length,
+            sample: scheduledEmails.slice(0, 3).map(e => ({ id: e.id, scheduled_date: e.scheduled_date, status: e.status }))
+        })
+
         let processed = 0
         let successful = 0
         let failed = 0
 
-        // Process each scheduled email
         for (const email of scheduledEmails) {
             processed++
-            
+            console.log('[CRON] Processing email', { id: email.id, scheduled_date: email.scheduled_date, recipients: Array.isArray(email.recipients) ? email.recipients.length : 0 })
+
             try {
-                // Mark as processing to avoid duplicate processing
-                await supabase
-                    .from('scheduled_emails')
-                    .update({ 
-                        status: 'processing',
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', email.id)
-
-                // Remove duplicate recipients
+                // Note: Skipping temporary 'processing' status due to DB check constraint.
+                // We proceed to send and will conditionally update final status where status is still 'scheduled'.
                 const uniqueRecipients = [...new Set(email.recipients)] as string[]
+                console.log('[CRON] Unique recipients', { id: email.id, recipients: uniqueRecipients })
 
-                // Process message variables
                 const processedMessage = processMessageVariables(email.message, email.context, email.organizer)
                 const processedSubject = processMessageVariables(email.subject, email.context, email.organizer)
 
-                // Generate HTML email
                 const { html: emailHtml } = await renderOrganizerCustomEmail({
                     subject: processedSubject,
                     message: processedMessage,
@@ -107,20 +197,18 @@ export async function GET(request: NextRequest) {
                     } | undefined
                 })
 
-                // Process attachments (download from blob storage if needed)
                 let processedAttachments: Array<{
                     filename: string;
                     content: string;
                     contentType: string;
                 }> = []
-                
+
                 if (email.attachments && email.attachments.length > 0) {
                     try {
                         processedAttachments = await processAttachmentsForEmail(email.attachments)
-                        console.log(`Processed ${processedAttachments.length} attachments for scheduled email ${email.id}`)
+                        console.log('[CRON] Attachments processed', { id: email.id, count: processedAttachments.length })
                     } catch (error) {
-                        console.error(`Failed to process attachments for scheduled email ${email.id}:`, error)
-                        // Mark as failed and continue with next email
+                        console.error('[CRON] Attachment processing failed', { id: email.id, error })
                         await supabase
                             .from('scheduled_emails')
                             .update({ 
@@ -133,8 +221,7 @@ export async function GET(request: NextRequest) {
                     }
                 }
 
-                // Send to all recipients
-                const emailPromises = uniqueRecipients.map(async (recipientEmail: string) => {
+                const results = await Promise.allSettled(uniqueRecipients.map(async (recipientEmail: string) => {
                     try {
                         const result = await sendEmail({
                             to: recipientEmail,
@@ -142,24 +229,18 @@ export async function GET(request: NextRequest) {
                             html: emailHtml,
                             attachments: processedAttachments
                         })
+                        console.log('[CRON] Sent email to recipient', { id: email.id, recipientEmail })
                         return { success: true, email: recipientEmail, result }
                     } catch (error) {
-                        console.error(`Failed to send scheduled email to ${recipientEmail}:`, error)
-                        return { 
-                            success: false, 
-                            email: recipientEmail, 
-                            error: error instanceof Error ? error.message : 'Unknown error' 
-                        }
+                        console.error('[CRON] Failed sending to recipient', { id: email.id, recipientEmail, error })
+                        return { success: false, email: recipientEmail, error: error instanceof Error ? error.message : 'Unknown error' }
                     }
-                })
+                }))
 
-                const results = await Promise.allSettled(emailPromises)
-                const emailSuccessful = results.filter(result => 
-                    result.status === 'fulfilled' && result.value.success
-                ).length
+                const emailSuccessful = results.filter(r => r.status === 'fulfilled' && r.value.success).length
                 const emailFailed = results.length - emailSuccessful
+                console.log('[CRON] Send results', { id: email.id, emailSuccessful, emailFailed })
 
-                // Update scheduled email status
                 if (emailFailed === 0) {
                     successful++
                     await supabase
@@ -170,15 +251,14 @@ export async function GET(request: NextRequest) {
                             updated_at: new Date().toISOString()
                         })
                         .eq('id', email.id)
-                    
-                    // Clean up blob storage after successful send
+                        .eq('status', 'scheduled')
+
                     if (email.attachments && email.attachments.length > 0) {
                         try {
                             await cleanupAttachmentBlobs(email.attachments)
-                            console.log(`Successfully cleaned up attachment blobs for scheduled email ${email.id}`)
+                            console.log('[CRON] Cleaned up attachment blobs', { id: email.id })
                         } catch (error) {
-                            console.error(`Failed to cleanup attachment blobs for scheduled email ${email.id}:`, error)
-                            // Don't fail the email processing if cleanup fails
+                            console.error('[CRON] Cleanup attachment blobs failed', { id: email.id, error })
                         }
                     }
                 } else {
@@ -191,9 +271,9 @@ export async function GET(request: NextRequest) {
                             updated_at: new Date().toISOString()
                         })
                         .eq('id', email.id)
+                        .eq('status', 'scheduled')
                 }
 
-                // Log the email sending
                 await supabase
                     .from('email_logs')
                     .insert({
@@ -207,13 +287,12 @@ export async function GET(request: NextRequest) {
                         status: emailFailed === 0 ? 'sent' : (emailSuccessful === 0 ? 'failed' : 'partial')
                     })
 
-                console.log(`Processed scheduled email ${email.id}: ${emailSuccessful} sent, ${emailFailed} failed`)
+                console.log('[CRON] Processed scheduled email', { id: email.id, emailSuccessful, emailFailed })
 
             } catch (error) {
                 failed++
-                console.error(`Error processing scheduled email ${email.id}:`, error)
-                
-                // Mark as failed
+                console.error('[CRON] Error processing email', { id: email.id, error })
+
                 await supabase
                     .from('scheduled_emails')
                     .update({ 
@@ -222,9 +301,11 @@ export async function GET(request: NextRequest) {
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', email.id)
+                    .eq('status', 'scheduled')
             }
         }
 
+        console.log('[CRON] Summary', { processed, successful, failed })
         return NextResponse.json({
             success: true,
             message: `Processed ${processed} scheduled emails`,
@@ -268,14 +349,14 @@ function processMessageVariables(text: string, context: EmailContext | undefined
                   context?.participant?.booking?.event
     
     const variables = {
-        recipientName: 'Recipient', // Will be replaced per recipient if needed
+        recipientName: 'Recipient',
         eventName: event?.title || 'Event',
         eventDate: event?.start_date ? new Date(event.start_date as string).toLocaleDateString() : 'Event Date',
         eventLocation: event?.location || 'Event Location',
-        organizerName: organizer?.full_name || 'Event Organizer',
-        organizerEmail: organizer?.email || '',
+        organizerName: (organizer as { full_name?: string }).full_name || 'Event Organizer',
+        organizerEmail: (organizer as { email?: string }).email || '',
         customMessage: text.includes('{{customMessage}}') ? text.replace(/\{\{customMessage\}\}/g, '') : text,
-        amountDue: context?.booking?.total_amount?.toString() || '0.00'
+        amountDue: (context as { booking?: { total_amount?: number } } | undefined)?.booking?.total_amount?.toString() || '0.00'
     }
 
     let processedText = text
