@@ -15,9 +15,11 @@ export interface QstashScheduleOptions {
 let qstashClient: Client | null = null
 function getClient(): Client {
     if (!qstashClient) {
-        const token = process.env.QSTASH_TOKEN as string | undefined
-        const url = process.env.QSTASH_URL as string | undefined
-        qstashClient = url ? new Client({ token: token as string, url }) : new Client({ token: token as string })
+        const token = process.env.QSTASH_TOKEN
+        if (!token) {
+            throw new Error('QSTASH_TOKEN is not configured')
+        }
+        qstashClient = new Client({ token })
     }
     return qstashClient
 }
@@ -32,8 +34,8 @@ export async function scheduleOneTimeTrigger(options: QstashScheduleOptions): Pr
         const ms = when.getTime() - now.getTime()
         const minutes = Math.max(0, Math.ceil(ms / 60000))
 
-        // Prefer delay string (e.g., "100m") as per SDK example; fall back to notBefore
-        const delay = `${minutes}m`
+        // Use delay in minutes format that SDK expects
+        const delayMinutes = minutes > 0 ? minutes : 0
 
         const publishRes = await client.publishJSON({
             url: targetUrl,
@@ -43,7 +45,7 @@ export async function scheduleOneTimeTrigger(options: QstashScheduleOptions): Pr
                 ...(authorizationHeader ? { 'Upstash-Forward-Authorization': authorizationHeader } : {}),
                 ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
             },
-            ...(minutes > 0 ? { delay } : { notBefore: when.toISOString() }),
+            ...(delayMinutes > 0 ? { delay: delayMinutes } : {}),
         })
         return { success: true, id: (publishRes as unknown as { messageId?: string }).messageId }
     } catch (err) {
