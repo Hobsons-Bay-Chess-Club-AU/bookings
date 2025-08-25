@@ -127,6 +127,17 @@ export async function POST(request: NextRequest) {
                 const targetUrl = `${appUrl}/api/cron/process-scheduled-emails`
                 const idempotencyKey = generateMinuteBucketKey('process-scheduled-emails', scheduledDate)
 
+                // Debug logs (mask secrets, validate URL)
+                const hasScheme = /^https?:\/\//i.test(appUrl)
+                const normalizedTargetUrl = targetUrl
+                console.log('[QSTASH DEBUG] scheduling batch run', {
+                    appUrl,
+                    hasScheme,
+                    targetUrl: normalizedTargetUrl,
+                    scheduledDate,
+                    idempotencyKey
+                })
+
                 const qres = await scheduleOneTimeTrigger({
                     runAtIso: scheduledDate,
                     targetUrl,
