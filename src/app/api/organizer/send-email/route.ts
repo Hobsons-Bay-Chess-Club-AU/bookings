@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { scheduleOneTimeTrigger, generateMinuteBucketKey } from '@/lib/utils/qstash'
 import { sendEmail } from '@/lib/email/service'
 import { getCurrentProfile } from '@/lib/utils/auth'
 import { renderOrganizerCustomEmail } from '@/lib/email/templates/organizer-custom-email'
@@ -115,6 +116,32 @@ export async function POST(request: NextRequest) {
                     { error: 'Failed to schedule email' },
                     { status: 500 }
                 )
+            }
+            // Schedule a one-time QStash trigger to call our batch processor near scheduledDate
+            try {
+                const cronSecret = process.env.CRON_SECRET
+                const appUrl = process.env.NEXT_PUBLIC_APP_URL
+                if (!appUrl) throw new Error('NEXT_PUBLIC_APP_URL is not configured')
+                if (!cronSecret) throw new Error('CRON_SECRET is not configured')
+
+                const targetUrl = `${appUrl}/api/cron/process-scheduled-emails`
+                const idempotencyKey = generateMinuteBucketKey('process-scheduled-emails', scheduledDate)
+
+                const qres = await scheduleOneTimeTrigger({
+                    runAtIso: scheduledDate,
+                    targetUrl,
+                    authorizationHeader: `Bearer ${cronSecret}`,
+                    method: 'GET',
+                    idempotencyKey,
+                })
+
+                if (!qres.success) {
+                    console.error('Failed to schedule QStash trigger:', qres.error)
+                    // We still return 200 since the email is scheduled in DB; a separate periodic job could backstop
+                }
+            } catch (err) {
+                console.error('QStash scheduling error:', err)
+                // Do not fail the request; DB state is authoritative
             }
 
             return NextResponse.json({
