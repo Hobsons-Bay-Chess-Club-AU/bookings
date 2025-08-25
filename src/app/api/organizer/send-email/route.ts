@@ -124,7 +124,8 @@ export async function POST(request: NextRequest) {
                 if (!appUrl) throw new Error('NEXT_PUBLIC_APP_URL is not configured')
                 if (!cronSecret) throw new Error('CRON_SECRET is not configured')
 
-                const targetUrl = `${appUrl}/api/cron/process-scheduled-emails`
+                const baseUrl = appUrl.replace(/\/+$/g, '')
+                const targetUrl = `${baseUrl}/api/cron/process-scheduled-emails`
                 const idempotencyKey = generateMinuteBucketKey('process-scheduled-emails', scheduledDate)
 
                 // Debug logs (mask secrets, validate URL)
@@ -132,6 +133,7 @@ export async function POST(request: NextRequest) {
                 const normalizedTargetUrl = targetUrl
                 console.log('[QSTASH DEBUG] scheduling batch run', {
                     appUrl,
+                    baseUrl,
                     hasScheme,
                     targetUrl: normalizedTargetUrl,
                     scheduledDate,

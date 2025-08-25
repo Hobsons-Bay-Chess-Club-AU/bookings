@@ -1,5 +1,6 @@
-// Lightweight QStash client helper
-// Uses HTTP fetch to schedule a one-time delivery to our cron endpoint
+// QStash client helper built on @upstash/qstash
+// Schedules a one-time delivery to our cron endpoint using publishJSON
+import { Client } from '@upstash/qstash'
 
 export interface QstashScheduleOptions {
     runAtIso: string // ISO8601 timestamp when to trigger
@@ -10,47 +11,44 @@ export interface QstashScheduleOptions {
     idempotencyKey?: string
 }
 
-// QStash expects a bearer token in QSTASH_TOKEN env var
-const QSTASH_TOKEN = process.env.QSTASH_TOKEN
-const QSTASH_BASE = process.env.QSTASH_BASE_URL || 'https://qstash.upstash.io'
-
-if (!QSTASH_TOKEN) {
-    // Intentionally do not throw at import time to allow serverless edge to load without env in some envs
-    // Calls will fail with explicit error if token is missing.
+// QStash expects envs: QSTASH_URL (optional) and QSTASH_TOKEN (required)
+let qstashClient: Client | null = null
+function getClient(): Client {
+    if (!qstashClient) {
+        const token = process.env.QSTASH_TOKEN as string | undefined
+        const url = process.env.QSTASH_URL as string | undefined
+        qstashClient = url ? new Client({ token: token as string, url }) : new Client({ token: token as string })
+    }
+    return qstashClient
 }
 
 export async function scheduleOneTimeTrigger(options: QstashScheduleOptions): Promise<{ success: boolean; id?: string; error?: string }> {
     const { runAtIso, targetUrl, authorizationHeader, method = 'GET', body, idempotencyKey } = options
 
-    if (!QSTASH_TOKEN) {
-        return { success: false, error: 'QSTASH_TOKEN is not configured' }
+    try {
+        const client = getClient()
+        const when = new Date(runAtIso)
+        const now = new Date()
+        const ms = when.getTime() - now.getTime()
+        const minutes = Math.max(0, Math.ceil(ms / 60000))
+
+        // Prefer delay string (e.g., "100m") as per SDK example; fall back to notBefore
+        const delay = `${minutes}m`
+
+        const publishRes = await client.publishJSON({
+            url: targetUrl,
+            method,
+            body,
+            headers: {
+                ...(authorizationHeader ? { 'Upstash-Forward-Authorization': authorizationHeader } : {}),
+                ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+            },
+            ...(minutes > 0 ? { delay } : { notBefore: when.toISOString() }),
+        })
+        return { success: true, id: (publishRes as unknown as { messageId?: string }).messageId }
+    } catch (err) {
+        return { success: false, error: err instanceof Error ? err.message : 'QStash publish failed' }
     }
-
-    const headers: Record<string, string> = {
-        Authorization: `Bearer ${QSTASH_TOKEN}`,
-        'Content-Type': 'application/json',
-        'Upstash-Forward-Authorization': authorizationHeader ?? '',
-        'Upstash-Method': method,
-        'Upstash-Not-Before': new Date(runAtIso).toISOString(),
-    }
-
-    if (idempotencyKey) {
-        headers['Idempotency-Key'] = idempotencyKey
-    }
-
-    const res = await fetch(`${QSTASH_BASE}/v2/publish/${encodeURIComponent(targetUrl)}`, {
-        method: 'POST',
-        headers,
-        body: body ? JSON.stringify(body) : undefined,
-    })
-
-    if (!res.ok) {
-        const text = await res.text().catch(() => '')
-        return { success: false, error: `QStash publish failed: ${res.status} ${text}` }
-    }
-
-    const data = (await res.json().catch(() => ({}))) as { messageId?: string }
-    return { success: true, id: data.messageId }
 }
 
 // Utility to generate a minute-bucketed idempotency key for batch runs
