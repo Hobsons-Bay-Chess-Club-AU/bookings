@@ -54,33 +54,35 @@ export async function scheduleOneTimeTrigger(options: QstashScheduleOptions): Pr
             willUseDelay: delayMinutes > 0
         })
 
-        const publishOptions = {
-            url: targetUrl,
+        const scheduleOptions = {
+            destination: targetUrl,
             method,
-            body,
+            ...(body ? { body: body as BodyInit } : {}),
             headers: {
                 ...(authorizationHeader ? { 'Upstash-Forward-Authorization': authorizationHeader } : {}),
                 ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
             },
-            ...(delayMinutes > 0 ? { delay: delayMinutes } : {}),
+            delay: delayMinutes > 0 ? delayMinutes : undefined,
+            notBefore: delayMinutes === 0 ? when.toISOString() : undefined,
         }
 
-        console.log('[QSTASH] Publishing with options:', {
-            url: publishOptions.url,
-            method: publishOptions.method,
-            delay: publishOptions.delay,
-            headers: Object.keys(publishOptions.headers || {}),
-            bodyType: typeof publishOptions.body
+        console.log('[QSTASH] Creating schedule with options:', {
+            destination: scheduleOptions.destination,
+            method: scheduleOptions.method,
+            delay: scheduleOptions.delay,
+            notBefore: scheduleOptions.notBefore,
+            headers: Object.keys(scheduleOptions.headers || {}),
+            bodyType: typeof scheduleOptions.body
         })
 
-        const publishRes = await client.publishJSON(publishOptions)
+        const scheduleRes = await client.schedules.create(scheduleOptions)
         
-        console.log('[QSTASH] Publish successful:', {
-            response: publishRes,
-            messageId: (publishRes as unknown as { messageId?: string }).messageId
+        console.log('[QSTASH] Schedule created successfully:', {
+            response: scheduleRes,
+            scheduleId: (scheduleRes as unknown as { scheduleId?: string }).scheduleId
         })
 
-        return { success: true, id: (publishRes as unknown as { messageId?: string }).messageId }
+        return { success: true, id: (scheduleRes as unknown as { scheduleId?: string }).scheduleId }
     } catch (err) {
         console.error('[QSTASH] Publish failed:', {
             error: err,
