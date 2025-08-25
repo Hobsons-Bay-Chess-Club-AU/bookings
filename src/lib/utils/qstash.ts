@@ -41,48 +41,44 @@ export async function scheduleOneTimeTrigger(options: QstashScheduleOptions): Pr
         const when = new Date(runAtIso)
         const now = new Date()
         const ms = when.getTime() - now.getTime()
-        const minutes = Math.max(0, Math.ceil(ms / 60000))
-
-        // Use delay in minutes format that SDK expects
-        const delayMinutes = minutes > 0 ? minutes : 0
+        const delaySeconds = Math.max(0, Math.ceil(ms / 1000))
 
         console.log('[QSTASH] Calculated timing:', {
             scheduledTime: when.toISOString(),
             currentTime: now.toISOString(),
             timeDiffMs: ms,
-            delayMinutes,
-            willUseDelay: delayMinutes > 0
+            delaySeconds,
+            willUseDelay: delaySeconds > 0
         })
 
-        const scheduleOptions = {
-            destination: targetUrl,
+        const publishOptions = {
+            url: targetUrl,
             method,
-            ...(body ? { body: body as BodyInit } : {}),
+            ...(body ? { body } : {}),
             headers: {
                 ...(authorizationHeader ? { 'Upstash-Forward-Authorization': authorizationHeader } : {}),
                 ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
             },
-            delay: delayMinutes > 0 ? delayMinutes : undefined,
-            notBefore: delayMinutes === 0 ? when.toISOString() : undefined,
+            ...(delaySeconds > 0 ? { delay: delaySeconds } : { notBefore: Math.floor(when.getTime() / 1000) }),
         }
 
-        console.log('[QSTASH] Creating schedule with options:', {
-            destination: scheduleOptions.destination,
-            method: scheduleOptions.method,
-            delay: scheduleOptions.delay,
-            notBefore: scheduleOptions.notBefore,
-            headers: Object.keys(scheduleOptions.headers || {}),
-            bodyType: typeof scheduleOptions.body
+        console.log('[QSTASH] Publishing with options:', {
+            url: publishOptions.url,
+            method: publishOptions.method,
+            delay: (publishOptions as { delay?: number }).delay,
+            notBefore: (publishOptions as { notBefore?: number }).notBefore,
+            headers: Object.keys(publishOptions.headers || {}),
+            bodyType: typeof (publishOptions as { body?: unknown }).body
         })
 
-        const scheduleRes = await client.schedules.create(scheduleOptions)
+        const publishRes = await client.publishJSON(publishOptions as never)
         
-        console.log('[QSTASH] Schedule created successfully:', {
-            response: scheduleRes,
-            scheduleId: (scheduleRes as unknown as { scheduleId?: string }).scheduleId
+        console.log('[QSTASH] Publish successful:', {
+            response: publishRes,
+            messageId: (publishRes as unknown as { messageId?: string }).messageId
         })
 
-        return { success: true, id: (scheduleRes as unknown as { scheduleId?: string }).scheduleId }
+        return { success: true, id: (publishRes as unknown as { messageId?: string }).messageId }
     } catch (err) {
         console.error('[QSTASH] Publish failed:', {
             error: err,
