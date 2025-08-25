@@ -28,6 +28,15 @@ export async function scheduleOneTimeTrigger(options: QstashScheduleOptions): Pr
     const { runAtIso, targetUrl, authorizationHeader, method = 'GET', body, idempotencyKey } = options
 
     try {
+        console.log('[QSTASH] Starting publish request:', {
+            targetUrl,
+            method,
+            runAtIso,
+            hasBody: !!body,
+            hasAuthHeader: !!authorizationHeader,
+            hasIdempotencyKey: !!idempotencyKey
+        })
+
         const client = getClient()
         const when = new Date(runAtIso)
         const now = new Date()
@@ -37,7 +46,15 @@ export async function scheduleOneTimeTrigger(options: QstashScheduleOptions): Pr
         // Use delay in minutes format that SDK expects
         const delayMinutes = minutes > 0 ? minutes : 0
 
-        const publishRes = await client.publishJSON({
+        console.log('[QSTASH] Calculated timing:', {
+            scheduledTime: when.toISOString(),
+            currentTime: now.toISOString(),
+            timeDiffMs: ms,
+            delayMinutes,
+            willUseDelay: delayMinutes > 0
+        })
+
+        const publishOptions = {
             url: targetUrl,
             method,
             body,
@@ -46,9 +63,34 @@ export async function scheduleOneTimeTrigger(options: QstashScheduleOptions): Pr
                 ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
             },
             ...(delayMinutes > 0 ? { delay: delayMinutes } : {}),
+        }
+
+        console.log('[QSTASH] Publishing with options:', {
+            url: publishOptions.url,
+            method: publishOptions.method,
+            delay: publishOptions.delay,
+            headers: Object.keys(publishOptions.headers || {}),
+            bodyType: typeof publishOptions.body
         })
+
+        const publishRes = await client.publishJSON(publishOptions)
+        
+        console.log('[QSTASH] Publish successful:', {
+            response: publishRes,
+            messageId: (publishRes as unknown as { messageId?: string }).messageId
+        })
+
         return { success: true, id: (publishRes as unknown as { messageId?: string }).messageId }
     } catch (err) {
+        console.error('[QSTASH] Publish failed:', {
+            error: err,
+            errorMessage: err instanceof Error ? err.message : 'Unknown error',
+            errorStack: err instanceof Error ? err.stack : undefined,
+            targetUrl,
+            method,
+            runAtIso
+        })
+        
         return { success: false, error: err instanceof Error ? err.message : 'QStash publish failed' }
     }
 }
