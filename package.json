@@ -31,6 +31,7 @@
     "@types/stripe": "^8.0.416",
     "@uiw/react-json-view": "^2.0.0-alpha.34",
     "@uiw/react-md-editor": "^4.0.8",
+    "@upstash/qstash": "^2.8.2",
     "@upstash/ratelimit": "^2.0.6",
     "@upstash/redis": "^1.35.3",
     "@vercel/analytics": "^1.5.0",
